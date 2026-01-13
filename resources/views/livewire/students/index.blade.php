@@ -2,61 +2,84 @@
 
 declare(strict_types=1);
 
-use App\Models\User;
-use App\Models\StudentProfile;
-use App\Models\Profile;
 use App\Models\Classroom;
-use Livewire\Volt\Component;
-use Livewire\WithPagination;
-use Livewire\WithFileUploads;
-use Illuminate\Support\Facades\Hash;
+use App\Models\StudentProfile;
+use App\Models\User;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Storage;
+use Livewire\Volt\Component;
+use Livewire\WithFileUploads;
+use Livewire\WithPagination;
 
-new class extends Component {
-    use WithPagination, WithFileUploads;
+new class extends Component
+{
+    use WithFileUploads, WithPagination;
 
     public string $search = '';
-    
+
     // Form fields
     public string $name = '';
+
     public string $email = '';
+
     public string $nis = '';
+
     public string $nisn = '';
+
     public string $phone = '';
+
     public string $address = '';
+
     public string $dob = '';
+
     public string $pob = '';
+
     public ?int $classroom_id = null;
-    
+
     // New fields
     public $photo;
+
     public string $father_name = '';
+
     public string $mother_name = '';
+
     public string $guardian_name = '';
+
     public string $guardian_phone = '';
+
     public ?int $birth_order = null;
+
     public ?int $total_siblings = null;
+
     public string $previous_school = '';
+
     public string $status = 'baru';
 
     // Periodic Data fields
     public float $weight = 0;
+
     public float $height = 0;
+
     public float $head_circumference = 0;
+
     public int $semester = 1;
+
     public ?int $current_academic_year_id = null;
 
     public ?User $editing = null;
+
+    public ?User $viewing = null;
+
     public ?string $existingPhoto = null;
 
     public function rules(): array
     {
         return [
             'name' => ['required', 'string', 'max:255'],
-            'email' => ['required', 'email', 'unique:users,email,' . ($this->editing->id ?? 'NULL')],
-            'nis' => ['nullable', 'string', 'unique:student_profiles,nis,' . ($this->editing?->latestProfile?->profileable_id ?? 'NULL')],
-            'nisn' => ['nullable', 'string', 'unique:student_profiles,nisn,' . ($this->editing?->latestProfile?->profileable_id ?? 'NULL')],
+            'email' => ['nullable', 'email', 'unique:users,email,'.($this->editing->id ?? 'NULL')],
+            'nis' => ['nullable', 'string', 'unique:student_profiles,nis,'.($this->editing?->latestProfile?->profileable_id ?? 'NULL')],
+            'nisn' => ['nullable', 'string', 'unique:student_profiles,nisn,'.($this->editing?->latestProfile?->profileable_id ?? 'NULL')],
             'phone' => ['nullable', 'string'],
             'address' => ['nullable', 'string'],
             'dob' => ['nullable', 'date'],
@@ -138,8 +161,9 @@ new class extends Component {
             }
         });
 
-        $this->reset(['name', 'email', 'nis', 'nisn', 'phone', 'address', 'dob', 'pob', 'classroom_id', 'photo', 'father_name', 'mother_name', 'guardian_name', 'guardian_phone', 'birth_order', 'total_siblings', 'previous_school', 'status', 'editing', 'existingPhoto']);
-        $this->dispatch('close-modal', 'student-modal');
+        $this->reset(['name', 'email', 'nis', 'nisn', 'phone', 'address', 'dob', 'pob', 'classroom_id', 'photo', 'father_name', 'mother_name', 'guardian_name', 'guardian_phone', 'birth_order', 'total_siblings', 'previous_school', 'status', 'editing', 'viewing', 'existingPhoto']);
+
+        session()->flash('success', 'Data siswa berhasil disimpan!');
     }
 
     public function edit(User $user): void
@@ -147,7 +171,7 @@ new class extends Component {
         $this->editing = $user;
         $this->name = $user->name;
         $this->email = $user->email;
-        
+
         $profile = $user->latestProfile->profileable;
         $this->nis = $profile->nis ?? '';
         $this->nisn = $profile->nisn ?? '';
@@ -167,6 +191,18 @@ new class extends Component {
         $this->status = $profile->status ?? 'baru';
 
         $this->dispatch('open-modal', 'student-modal');
+    }
+
+    public function viewDetails(User $user): void
+    {
+        $this->viewing = $user;
+        $this->dispatch('open-modal', 'detail-modal');
+    }
+
+    public function openPeriodic(User $user): void
+    {
+        $this->editing = $user;
+        $this->dispatch('open-modal', 'periodic-modal');
     }
 
     public function savePeriodic(int $studentProfileId): void
@@ -215,9 +251,9 @@ new class extends Component {
         return [
             'students' => User::where('role', 'siswa')
                 ->with(['latestProfile.profileable.classroom'])
-                ->when($this->search, fn($q) => $q->where('name', 'like', "%{$this->search}%")
+                ->when($this->search, fn ($q) => $q->where('name', 'like', "%{$this->search}%")
                     ->orWhere('email', 'like', "%{$this->search}%")
-                    ->orWhereHas('latestProfile', fn($pq) => $pq->whereHasMorph('profileable', [StudentProfile::class], fn($sq) => $sq->where('nis', 'like', "%{$this->search}%")->orWhere('nisn', 'like', "%{$this->search}%"))))
+                    ->orWhereHas('latestProfile', fn ($pq) => $pq->whereHasMorph('profileable', [StudentProfile::class], fn ($sq) => $sq->where('nis', 'like', "%{$this->search}%")->orWhere('nisn', 'like', "%{$this->search}%"))))
                 ->latest()
                 ->paginate(15),
             'classrooms' => Classroom::with('academicYear')->get(),
@@ -226,6 +262,15 @@ new class extends Component {
 }; ?>
 
 <div class="p-6">
+    @if (session('success'))
+        <div x-data="{ show: true }" x-show="show" x-init="setTimeout(() => show = false, 3000)" class="mb-6 p-4 bg-green-50 dark:bg-green-900/20 border border-green-200 dark:border-green-800 rounded-lg">
+            <div class="flex items-center gap-3">
+                <flux:icon icon="check-circle" class="w-5 h-5 text-green-600 dark:text-green-400" />
+                <span class="text-green-800 dark:text-green-200">{{ session('success') }}</span>
+            </div>
+        </div>
+    @endif
+
     <div class="flex items-center justify-between mb-6">
         <div>
             <flux:heading size="xl" level="1">Manajemen Siswa</flux:heading>
@@ -257,7 +302,7 @@ new class extends Component {
                     @php $profile = $student->latestProfile?->profileable; @endphp
                     <tr wire:key="{{ $student->id }}" class="hover:bg-zinc-50 dark:hover:bg-zinc-800/50">
                         <td class="px-4 py-3">
-                            <div class="flex items-center gap-3">
+                            <button type="button" class="flex items-center gap-3 cursor-pointer text-left" wire:click="viewDetails({{ $student->id }})" x-on:click="$flux.modal('detail-modal').show()">
                                 <flux:avatar 
                                     :src="$profile?->photo ? asset('storage/' . $profile->photo) : null" 
                                     :name="$student->name" 
@@ -265,10 +310,10 @@ new class extends Component {
                                     size="sm" 
                                 />
                                 <div class="flex flex-col">
-                                    <span class="font-medium text-zinc-900 dark:text-white">{{ $student->name }}</span>
-                                    <span class="text-xs text-zinc-500">{{ $student->email }}</span>
+                                    <span class="font-medium text-zinc-900 dark:text-white hover:text-primary-600 dark:hover:text-primary-400 transition-colors">{{ $student->name }}</span>
+                                    <span class="text-xs text-zinc-500">{{ $student->email ?? '-' }}</span>
                                 </div>
-                            </div>
+                            </button>
                         </td>
                         <td class="px-4 py-3 text-zinc-600 dark:text-zinc-400">
                             <div class="flex flex-col">
@@ -292,11 +337,9 @@ new class extends Component {
                             </div>
                         </td>
                         <td class="px-4 py-3 text-right space-x-2">
-                            <flux:modal.trigger name="periodic-modal">
-                                <flux:button size="sm" variant="ghost" icon="chart-bar" wire:click="edit({{ $student->id }})" tooltip="Data Periodik" />
-                            </flux:modal.trigger>
-                            <flux:button size="sm" variant="ghost" icon="pencil-square" wire:click="edit({{ $student->id }})" />
-                            <flux:button size="sm" variant="ghost" icon="trash" class="text-red-500" wire:confirm="Yakin ingin menghapus siswa ini?" wire:click="delete({{ $student->id }})" />
+                            <flux:button size="sm" variant="ghost" icon="chart-bar" wire:click="openPeriodic({{ $student->id }})" x-on:click="$flux.modal('periodic-modal').show()" tooltip="Data Periodik" />
+                            <flux:button size="sm" variant="ghost" icon="pencil-square" wire:click="edit({{ $student->id }})" x-on:click="$flux.modal('student-modal').show()" tooltip="Edit Siswa" />
+                            <flux:button size="sm" variant="ghost" icon="trash" class="text-red-500" wire:confirm="Yakin ingin menghapus siswa ini?" wire:click="delete({{ $student->id }})" tooltip="Hapus Siswa" />
                         </td>
                     </tr>
                 @empty
@@ -315,7 +358,7 @@ new class extends Component {
     </div>
 
     <flux:modal name="student-modal" class="max-w-3xl">
-        <form wire:submit="save" class="space-y-8">
+        <form wire:submit="save" x-on:submit.prevent="$wire.save().then(() => $flux.modal('student-modal').close())" class="space-y-8">
             <div class="flex items-start justify-between">
                 <div>
                     <flux:heading size="lg">{{ $editing ? 'Edit Profil Siswa' : 'Tambah Siswa Baru' }}</flux:heading>
@@ -441,5 +484,140 @@ new class extends Component {
                 <flux:button type="submit" variant="primary">Simpan Data</flux:button>
             </div>
         </form>
+    </flux:modal>
+
+    <flux:modal name="detail-modal" class="max-w-4xl">
+        @if($viewing)
+            @php $viewProfile = $viewing->latestProfile?->profileable; @endphp
+            <div class="space-y-6">
+                <div class="flex items-start justify-between">
+                    <div>
+                        <flux:heading size="lg">Detail Siswa</flux:heading>
+                        <flux:subheading>Informasi lengkap data siswa</flux:subheading>
+                    </div>
+                </div>
+
+                <div class="flex items-start gap-6 pb-6 border-b border-zinc-200 dark:border-zinc-700">
+                    <div class="flex-shrink-0">
+                        @if($viewProfile?->photo)
+                            <img src="{{ asset('storage/' . $viewProfile->photo) }}" class="w-32 h-32 rounded-lg object-cover border-2 border-zinc-200 dark:border-zinc-700" alt="{{ $viewing->name }}" />
+                        @else
+                            <div class="w-32 h-32 rounded-lg bg-zinc-100 dark:bg-zinc-800 flex items-center justify-center">
+                                <flux:icon icon="user" class="w-16 h-16 text-zinc-400" />
+                            </div>
+                        @endif
+                    </div>
+                    
+                    <div class="flex-1 space-y-2">
+                        <div>
+                            <flux:heading size="xl">{{ $viewing->name }}</flux:heading>
+                            <flux:text class="text-zinc-600 dark:text-zinc-400">{{ $viewing->email }}</flux:text>
+                        </div>
+                        
+                        <div class="flex gap-2 items-center">
+                            @if($viewProfile?->classroom)
+                                <flux:badge variant="primary">{{ $viewProfile->classroom->name }}</flux:badge>
+                            @else
+                                <flux:badge variant="danger">Belum ada kelas</flux:badge>
+                            @endif
+                            
+                            <flux:badge variant="neutral">
+                                {{ ucfirst(str_replace('_', ' ', $viewProfile?->status ?? 'baru')) }}
+                            </flux:badge>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                    <div class="space-y-4">
+                        <flux:heading size="md" class="border-b pb-2">Identitas Siswa</flux:heading>
+                        
+                        <div class="space-y-3">
+                            <div>
+                                <flux:text size="xs" class="text-zinc-500 dark:text-zinc-400">NIS</flux:text>
+                                <flux:text>{{ $viewProfile?->nis ?? '-' }}</flux:text>
+                            </div>
+                            
+                            <div>
+                                <flux:text size="xs" class="text-zinc-500 dark:text-zinc-400">NISN</flux:text>
+                                <flux:text>{{ $viewProfile?->nisn ?? '-' }}</flux:text>
+                            </div>
+                            
+                            <div>
+                                <flux:text size="xs" class="text-zinc-500 dark:text-zinc-400">Tempat, Tanggal Lahir</flux:text>
+                                <flux:text>
+                                    {{ $viewProfile?->pob ?? '-' }}{{ $viewProfile?->dob ? ', ' . $viewProfile->dob->format('d F Y') : '' }}
+                                </flux:text>
+                            </div>
+                            
+                            <div>
+                                <flux:text size="xs" class="text-zinc-500 dark:text-zinc-400">No. Telepon</flux:text>
+                                <flux:text>{{ $viewProfile?->phone ?? '-' }}</flux:text>
+                            </div>
+                            
+                            <div>
+                                <flux:text size="xs" class="text-zinc-500 dark:text-zinc-400">Alamat</flux:text>
+                                <flux:text>{{ $viewProfile?->address ?? '-' }}</flux:text>
+                            </div>
+                            
+                            <div class="grid grid-cols-2 gap-3">
+                                <div>
+                                    <flux:text size="xs" class="text-zinc-500 dark:text-zinc-400">Anak Ke-</flux:text>
+                                    <flux:text>{{ $viewProfile?->birth_order ?? '-' }}</flux:text>
+                                </div>
+                                <div>
+                                    <flux:text size="xs" class="text-zinc-500 dark:text-zinc-400">Dari ... Bersaudara</flux:text>
+                                    <flux:text>{{ $viewProfile?->total_siblings ?? '-' }}</flux:text>
+                                </div>
+                            </div>
+                            
+                            <div>
+                                <flux:text size="xs" class="text-zinc-500 dark:text-zinc-400">Asal Sekolah</flux:text>
+                                <flux:text>{{ $viewProfile?->previous_school ?? '-' }}</flux:text>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="space-y-4">
+                        <flux:heading size="md" class="border-b pb-2">Data Orang Tua / Wali</flux:heading>
+                        
+                        <div class="space-y-3">
+                            <div>
+                                <flux:text size="xs" class="text-zinc-500 dark:text-zinc-400">Nama Ayah</flux:text>
+                                <flux:text>{{ $viewProfile?->father_name ?? '-' }}</flux:text>
+                            </div>
+                            
+                            <div>
+                                <flux:text size="xs" class="text-zinc-500 dark:text-zinc-400">Nama Ibu</flux:text>
+                                <flux:text>{{ $viewProfile?->mother_name ?? '-' }}</flux:text>
+                            </div>
+                            
+                            <div class="pt-4 space-y-3">
+                                <flux:heading size="sm">Kontak Wali</flux:heading>
+                                
+                                <div>
+                                    <flux:text size="xs" class="text-zinc-500 dark:text-zinc-400">Nama Wali</flux:text>
+                                    <flux:text>{{ $viewProfile?->guardian_name ?? '-' }}</flux:text>
+                                </div>
+                                
+                                <div>
+                                    <flux:text size="xs" class="text-zinc-500 dark:text-zinc-400">No. Telp Wali</flux:text>
+                                    <flux:text>{{ $viewProfile?->guardian_phone ?? '-' }}</flux:text>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="flex justify-end gap-2 pt-4 border-t border-zinc-200 dark:border-zinc-700">
+                    <flux:modal.close>
+                        <flux:button variant="ghost">Tutup</flux:button>
+                    </flux:modal.close>
+                    <flux:button variant="primary" icon="pencil-square" wire:click="edit({{ $viewing->id }})" x-on:click="$flux.modal('detail-modal').close(); $flux.modal('student-modal').show()">
+                        Edit Data
+                    </flux:button>
+                </div>
+            </div>
+        @endif
     </flux:modal>
 </div>
