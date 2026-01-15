@@ -12,8 +12,7 @@ use Livewire\Volt\Component;
 use Livewire\WithFileUploads;
 use Livewire\WithPagination;
 
-new class extends Component
-{
+new class extends Component {
     use WithFileUploads, WithPagination;
 
     public string $search = '';
@@ -56,6 +55,16 @@ new class extends Component
 
     public string $status = 'baru';
 
+    public string $nik = '';
+
+    public string $nik_ayah = '';
+
+    public string $nik_ibu = '';
+
+    public string $no_kk = '';
+
+    public string $no_akta = '';
+
     // Periodic Data fields
     public float $weight = 0;
 
@@ -80,12 +89,12 @@ new class extends Component
     public function rules(): array
     {
         $profileId = $this->editing?->latestProfile?->profileable_id;
-        
+
         return [
             'name' => ['required', 'string', 'max:255'],
-            'email' => ['required', 'email', 'unique:users,email,'.($this->editing->id ?? 'NULL')],
-            'nis' => ['nullable', 'string', $this->nis ? 'unique:student_profiles,nis,'.$profileId : ''],
-            'nisn' => ['nullable', 'string', $this->nisn ? 'unique:student_profiles,nisn,'.$profileId : ''],
+            'email' => ['required', 'email', 'unique:users,email,' . ($this->editing->id ?? 'NULL')],
+            'nis' => ['nullable', 'string', $this->nis ? 'unique:student_profiles,nis,' . $profileId : ''],
+            'nisn' => ['nullable', 'string', $this->nisn ? 'unique:student_profiles,nisn,' . $profileId : ''],
             'phone' => ['nullable', 'string'],
             'address' => ['nullable', 'string'],
             'dob' => ['required', 'date'],
@@ -100,6 +109,11 @@ new class extends Component
             'total_siblings' => ['nullable', 'integer', 'min:1'],
             'previous_school' => ['nullable', 'string', 'max:255'],
             'status' => ['required', 'in:baru,mutasi,naik_kelas,lulus,keluar'],
+            'nik' => ['required', 'string', 'max:16', 'unique:student_profiles,nik,' . $profileId],
+            'nik_ayah' => ['required', 'string', 'max:16'],
+            'nik_ibu' => ['required', 'string', 'max:16'],
+            'no_kk' => ['required', 'string', 'max:16'],
+            'no_akta' => ['required', 'string', 'max:255'],
         ];
     }
 
@@ -139,6 +153,11 @@ new class extends Component
                 'total_siblings' => $this->total_siblings,
                 'previous_school' => $this->previous_school ?: null,
                 'status' => $this->status,
+                'nik' => $this->nik,
+                'nik_ayah' => $this->nik_ayah,
+                'nik_ibu' => $this->nik_ibu,
+                'no_kk' => $this->no_kk,
+                'no_akta' => $this->no_akta,
             ];
 
             if ($this->editing) {
@@ -167,7 +186,7 @@ new class extends Component
             }
         });
 
-        $this->reset(['name', 'email', 'nis', 'nisn', 'phone', 'address', 'dob', 'pob', 'classroom_id', 'photo', 'father_name', 'mother_name', 'guardian_name', 'guardian_phone', 'birth_order', 'total_siblings', 'previous_school', 'status', 'editing', 'viewing', 'existingPhoto']);
+        $this->reset(['name', 'email', 'nis', 'nisn', 'phone', 'address', 'dob', 'pob', 'classroom_id', 'photo', 'father_name', 'mother_name', 'guardian_name', 'guardian_phone', 'birth_order', 'total_siblings', 'previous_school', 'status', 'nik', 'nik_ayah', 'nik_ibu', 'no_kk', 'no_akta', 'editing', 'viewing', 'existingPhoto']);
 
         session()->flash('success', 'Data siswa berhasil disimpan!');
         $this->dispatch('student-saved');
@@ -196,6 +215,11 @@ new class extends Component
         $this->total_siblings = $profile->total_siblings;
         $this->previous_school = $profile->previous_school ?? '';
         $this->status = $profile->status ?? 'baru';
+        $this->nik = $profile->nik ?? '';
+        $this->nik_ayah = $profile->nik_ayah ?? '';
+        $this->nik_ibu = $profile->nik_ibu ?? '';
+        $this->no_kk = $profile->no_kk ?? '';
+        $this->no_akta = $profile->no_akta ?? '';
 
         $this->dispatch('open-modal', 'student-modal');
     }
@@ -209,7 +233,7 @@ new class extends Component
     public function openPeriodic(User $user): void
     {
         $this->editing = $user;
-        
+
         // Preload existing periodic data for current academic year and semester
         $profile = $user->latestProfile?->profileable;
         if ($profile) {
@@ -217,7 +241,7 @@ new class extends Component
                 ->where('academic_year_id', $this->current_academic_year_id)
                 ->where('semester', $this->semester)
                 ->first();
-            
+
             if ($existingRecord) {
                 $this->weight = $existingRecord->weight;
                 $this->height = $existingRecord->height;
@@ -233,7 +257,7 @@ new class extends Component
                 $this->periodicDataLastUpdated = null;
             }
         }
-        
+
         $this->dispatch('open-modal', 'periodic-modal');
     }
 
@@ -246,7 +270,7 @@ new class extends Component
                     ->where('academic_year_id', $this->current_academic_year_id)
                     ->where('semester', $this->semester)
                     ->first();
-                
+
                 if ($existingRecord) {
                     $this->weight = $existingRecord->weight;
                     $this->height = $existingRecord->height;
@@ -266,7 +290,7 @@ new class extends Component
 
     public function createNew(): void
     {
-        $this->reset(['name', 'email', 'nis', 'nisn', 'phone', 'address', 'dob', 'pob', 'classroom_id', 'photo', 'father_name', 'mother_name', 'guardian_name', 'guardian_phone', 'birth_order', 'total_siblings', 'previous_school', 'status', 'editing', 'existingPhoto']);
+        $this->reset(['name', 'email', 'nis', 'nisn', 'phone', 'address', 'dob', 'pob', 'classroom_id', 'photo', 'father_name', 'mother_name', 'guardian_name', 'guardian_phone', 'birth_order', 'total_siblings', 'previous_school', 'status', 'nik', 'nik_ayah', 'nik_ibu', 'no_kk', 'no_akta', 'editing', 'existingPhoto']);
         $this->resetValidation();
     }
 
@@ -294,7 +318,7 @@ new class extends Component
         );
 
         $this->reset(['weight', 'height', 'head_circumference', 'semester', 'hasExistingPeriodicData', 'periodicDataLastUpdated']);
-        
+
         session()->flash('success', 'Data periodik berhasil disimpan!');
         $this->dispatch('periodic-saved');
     }
@@ -317,9 +341,9 @@ new class extends Component
         return [
             'students' => User::where('role', 'siswa')
                 ->with(['latestProfile.profileable.classroom'])
-                ->when($this->search, fn ($q) => $q->where('name', 'like', "%{$this->search}%")
+                ->when($this->search, fn($q) => $q->where('name', 'like', "%{$this->search}%")
                     ->orWhere('email', 'like', "%{$this->search}%")
-                    ->orWhereHas('latestProfile', fn ($pq) => $pq->whereHasMorph('profileable', [StudentProfile::class], fn ($sq) => $sq->where('nis', 'like', "%{$this->search}%")->orWhere('nisn', 'like', "%{$this->search}%"))))
+                    ->orWhereHas('latestProfile', fn($pq) => $pq->whereHasMorph('profileable', [StudentProfile::class], fn($sq) => $sq->where('nis', 'like', "%{$this->search}%")->orWhere('nisn', 'like', "%{$this->search}%"))))
                 ->latest()
                 ->paginate(15),
             'classrooms' => Classroom::with('academicYear')->get(),
@@ -329,7 +353,8 @@ new class extends Component
 
 <div class="p-6">
     @if (session('success'))
-        <div x-data="{ show: true }" x-show="show"  class="mb-6 p-4 bg-green-50 dark:bg-green-900/20 border border-green-200 dark:border-green-800 rounded-lg">
+        <div x-data="{ show: true }" x-show="show"
+            class="mb-6 p-4 bg-green-50 dark:bg-green-900/20 border border-green-200 dark:border-green-800 rounded-lg">
             <div class="flex items-center gap-3">
                 <flux:icon icon="check-circle" class="w-5 h-5 text-green-600 dark:text-green-400" />
                 <span class="text-green-800 dark:text-green-200">{{ session('success') }}</span>
@@ -344,8 +369,9 @@ new class extends Component
         </div>
 
         <div class="flex gap-2">
-            <flux:input wire:model.live.debounce.300ms="search" placeholder="Cari siswa..." icon="magnifying-glass" class="w-64" />
-            
+            <flux:input wire:model.live.debounce.300ms="search" placeholder="Cari siswa..." icon="magnifying-glass"
+                class="w-64" />
+
             <flux:modal.trigger name="student-modal">
                 <flux:button variant="primary" icon="plus" wire:click="createNew">Tambah Siswa</flux:button>
             </flux:modal.trigger>
@@ -356,11 +382,21 @@ new class extends Component
         <table class="w-full text-sm text-left border-collapse">
             <thead class="bg-zinc-50 dark:bg-zinc-800">
                 <tr>
-                    <th class="px-4 py-3 font-medium text-zinc-700 dark:text-zinc-300 border-b border-zinc-200 dark:border-zinc-700">Siswa</th>
-                    <th class="px-4 py-3 font-medium text-zinc-700 dark:text-zinc-300 border-b border-zinc-200 dark:border-zinc-700">NIS/NISN</th>
-                    <th class="px-4 py-3 font-medium text-zinc-700 dark:text-zinc-300 border-b border-zinc-200 dark:border-zinc-700">Kelas</th>
-                    <th class="px-4 py-3 font-medium text-zinc-700 dark:text-zinc-300 border-b border-zinc-200 dark:border-zinc-700">Orang Tua/Wali</th>
-                    <th class="px-4 py-3 font-medium text-zinc-700 dark:text-zinc-300 border-b border-zinc-200 dark:border-zinc-700 text-right">Aksi</th>
+                    <th
+                        class="px-4 py-3 font-medium text-zinc-700 dark:text-zinc-300 border-b border-zinc-200 dark:border-zinc-700">
+                        Siswa</th>
+                    <th
+                        class="px-4 py-3 font-medium text-zinc-700 dark:text-zinc-300 border-b border-zinc-200 dark:border-zinc-700">
+                        NIS/NISN</th>
+                    <th
+                        class="px-4 py-3 font-medium text-zinc-700 dark:text-zinc-300 border-b border-zinc-200 dark:border-zinc-700">
+                        Kelas</th>
+                    <th
+                        class="px-4 py-3 font-medium text-zinc-700 dark:text-zinc-300 border-b border-zinc-200 dark:border-zinc-700">
+                        Orang Tua/Wali</th>
+                    <th
+                        class="px-4 py-3 font-medium text-zinc-700 dark:text-zinc-300 border-b border-zinc-200 dark:border-zinc-700 text-right">
+                        Aksi</th>
                 </tr>
             </thead>
             <tbody class="divide-y divide-zinc-200 dark:divide-zinc-700">
@@ -368,15 +404,14 @@ new class extends Component
                     @php $profile = $student->latestProfile?->profileable; @endphp
                     <tr wire:key="{{ $student->id }}" class="hover:bg-zinc-50 dark:hover:bg-zinc-800/50">
                         <td class="px-4 py-3">
-                            <button type="button" class="flex items-center gap-3 cursor-pointer text-left" wire:click="viewDetails({{ $student->id }})" x-on:click="$flux.modal('detail-modal').show()">
-                                <flux:avatar 
-                                    :src="$profile?->photo ? asset('storage/' . $profile->photo) : null" 
-                                    :name="$student->name" 
-                                    :initials="$student->initials()" 
-                                    size="sm" 
-                                />
+                            <button type="button" class="flex items-center gap-3 cursor-pointer text-left"
+                                wire:click="viewDetails({{ $student->id }})"
+                                x-on:click="$flux.modal('detail-modal').show()">
+                                <flux:avatar :src="$profile?->photo ? asset('storage/' . $profile->photo) : null"
+                                    :name="$student->name" :initials="$student->initials()" size="sm" />
                                 <div class="flex flex-col">
-                                    <span class="font-medium text-zinc-900 dark:text-white hover:text-primary-600 dark:hover:text-primary-400 transition-colors">{{ $student->name }}</span>
+                                    <span
+                                        class="font-medium text-zinc-900 dark:text-white hover:text-primary-600 dark:hover:text-primary-400 transition-colors">{{ $student->name }}</span>
                                     <span class="text-xs text-zinc-500">{{ $student->email ?? '-' }}</span>
                                 </div>
                             </button>
@@ -403,9 +438,15 @@ new class extends Component
                             </div>
                         </td>
                         <td class="px-4 py-3 text-right space-x-2">
-                            <flux:button size="sm" variant="ghost" icon="chart-bar" wire:click="openPeriodic({{ $student->id }})" x-on:click="$flux.modal('periodic-modal').show()" tooltip="Data Periodik" />
-                            <flux:button size="sm" variant="ghost" icon="pencil-square" wire:click="edit({{ $student->id }})" x-on:click="$flux.modal('student-modal').show()" tooltip="Edit Siswa" />
-                            <flux:button size="sm" variant="ghost" icon="trash" class="text-red-500" wire:confirm="Yakin ingin menghapus siswa ini?" wire:click="delete({{ $student->id }})" tooltip="Hapus Siswa" />
+                            <flux:button size="sm" variant="ghost" icon="chart-bar"
+                                wire:click="openPeriodic({{ $student->id }})"
+                                x-on:click="$flux.modal('periodic-modal').show()" tooltip="Data Periodik" />
+                            <flux:button size="sm" variant="ghost" icon="pencil-square"
+                                wire:click="edit({{ $student->id }})" x-on:click="$flux.modal('student-modal').show()"
+                                tooltip="Edit Siswa" />
+                            <flux:button size="sm" variant="ghost" icon="trash" class="text-red-500"
+                                wire:confirm="Yakin ingin menghapus siswa ini?" wire:click="delete({{ $student->id }})"
+                                tooltip="Hapus Siswa" />
                         </td>
                     </tr>
                 @empty
@@ -430,20 +471,23 @@ new class extends Component
                     <flux:heading size="lg">{{ $editing ? 'Edit Profil Siswa' : 'Tambah Siswa Baru' }}</flux:heading>
                     <flux:subheading>Lengkapi data identitas dan akademik siswa.</flux:subheading>
                 </div>
-                
+
                 <div class="flex flex-col items-center gap-2">
                     <div class="relative group">
                         @if ($photo)
-                            <img src="{{ $photo->temporaryUrl() }}" class="w-24 h-24 rounded-lg object-cover border-2 border-primary-500" />
+                            <img src="{{ $photo->temporaryUrl() }}"
+                                class="w-24 h-24 rounded-lg object-cover border-2 border-primary-500" />
                         @elseif ($existingPhoto)
                             <img src="{{ asset('storage/' . $existingPhoto) }}" class="w-24 h-24 rounded-lg object-cover" />
                         @else
-                            <div class="w-24 h-24 rounded-lg bg-zinc-100 dark:bg-zinc-800 flex items-center justify-center text-zinc-400">
+                            <div
+                                class="w-24 h-24 rounded-lg bg-zinc-100 dark:bg-zinc-800 flex items-center justify-center text-zinc-400">
                                 <flux:icon icon="user" class="w-12 h-12" />
                             </div>
                         @endif
-                        
-                        <label class="absolute inset-0 flex items-center justify-center bg-black/50 text-white opacity-0 group-hover:opacity-100 transition-opacity rounded-lg cursor-pointer">
+
+                        <label
+                            class="absolute inset-0 flex items-center justify-center bg-black/50 text-white opacity-0 group-hover:opacity-100 transition-opacity rounded-lg cursor-pointer">
                             <flux:icon icon="camera" class="w-6 h-6" />
                             <input type="file" wire:model="photo" class="hidden" accept="image/*" />
                         </label>
@@ -457,13 +501,20 @@ new class extends Component
                 <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
                     <div class="space-y-4">
                         <flux:heading size="md" class="border-b pb-1">Identitas Siswa</flux:heading>
-                        
+
                         <flux:input wire:model="name" label="Nama Lengkap" />
                         <flux:input wire:model="email" label="Email" type="email" />
-                        
+
                         <div class="grid grid-cols-2 gap-3">
                             <flux:input wire:model="nis" label="NIS" />
                             <flux:input wire:model="nisn" label="NISN" />
+                        </div>
+
+                        <flux:input wire:model="nik" label="NIK Siswa" placeholder="16 digit NIK" />
+
+                        <div class="grid grid-cols-2 gap-3">
+                            <flux:input wire:model="no_kk" label="No. Kartu Keluarga" />
+                            <flux:input wire:model="no_akta" label="No. Akta Kelahiran" />
                         </div>
 
                         <div class="grid grid-cols-2 gap-3">
@@ -472,14 +523,14 @@ new class extends Component
                         </div>
 
                         <flux:input wire:model="phone" label="No. Telepon / WA" />
-                        
+
                         <flux:select wire:model="classroom_id" label="Kelas">
                             <option value="">Pilih Kelas</option>
                             @foreach($classrooms as $room)
                                 <option value="{{ $room->id }}">{{ $room->name }} ({{ $room->academicYear->name }})</option>
                             @endforeach
                         </flux:select>
-                        
+
                         <flux:textarea wire:model="address" label="Alamat" resize="none" rows="3" />
 
                         <div class="grid grid-cols-2 gap-3">
@@ -488,7 +539,7 @@ new class extends Component
                         </div>
 
                         <flux:input wire:model="previous_school" label="Asal Sekolah" />
-                        
+
                         <flux:select wire:model="status" label="Status Siswa">
                             <option value="baru">Baru</option>
                             <option value="mutasi">Mutasi / Pindahan</option>
@@ -500,10 +551,12 @@ new class extends Component
 
                     <div class="space-y-4">
                         <flux:heading size="md" class="border-b pb-1">Data Orang Tua / Wali</flux:heading>
-                        
+
                         <flux:input wire:model="father_name" label="Nama Ayah" />
+                        <flux:input wire:model="nik_ayah" label="NIK Ayah" />
                         <flux:input wire:model="mother_name" label="Nama Ibu" />
-                        
+                        <flux:input wire:model="nik_ibu" label="NIK Ibu" />
+
                         <div class="pt-4 space-y-4">
                             <flux:heading size="sm">Kontak Wali (Jika Ada)</flux:heading>
                             <flux:input wire:model="guardian_name" label="Nama Wali" />
@@ -525,27 +578,33 @@ new class extends Component
         </form>
     </flux:modal>
 
-    <flux:modal name="periodic-modal" class="max-w-md" x-on:periodic-saved.window="$flux.modal('periodic-modal').close()">
-        <form wire:submit.prevent="savePeriodic({{ $editing?->latestProfile?->profileable_id ?? 0 }})" class="space-y-6">
+    <flux:modal name="periodic-modal" class="max-w-md"
+        x-on:periodic-saved.window="$flux.modal('periodic-modal').close()">
+        <form wire:submit.prevent="savePeriodic({{ $editing?->latestProfile?->profileable_id ?? 0 }})"
+            class="space-y-6">
             <div>
                 <flux:heading size="lg">Data Periodik Siswa</flux:heading>
                 <flux:subheading>Input data berat badan, tinggi, dan lingkar kepala.</flux:subheading>
-                
+
                 @if($hasExistingPeriodicData)
-                    <div class="mt-3 p-3 bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-800 rounded-lg">
+                    <div
+                        class="mt-3 p-3 bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-800 rounded-lg">
                         <div class="flex items-center gap-2">
                             <flux:icon icon="information-circle" class="w-5 h-5 text-blue-600 dark:text-blue-400" />
                             <div>
                                 <span class="text-sm font-medium text-blue-800 dark:text-blue-200">Data sudah ada</span>
-                                <span class="text-xs text-blue-600 dark:text-blue-400 block">Terakhir diupdate {{ $periodicDataLastUpdated }}</span>
+                                <span class="text-xs text-blue-600 dark:text-blue-400 block">Terakhir diupdate
+                                    {{ $periodicDataLastUpdated }}</span>
                             </div>
                         </div>
                     </div>
                 @else
-                    <div class="mt-3 p-3 bg-amber-50 dark:bg-amber-900/20 border border-amber-200 dark:border-amber-800 rounded-lg">
+                    <div
+                        class="mt-3 p-3 bg-amber-50 dark:bg-amber-900/20 border border-amber-200 dark:border-amber-800 rounded-lg">
                         <div class="flex items-center gap-2">
                             <flux:icon icon="exclamation-triangle" class="w-5 h-5 text-amber-600 dark:text-amber-400" />
-                            <span class="text-sm font-medium text-amber-800 dark:text-amber-200">Belum ada data untuk semester ini</span>
+                            <span class="text-sm font-medium text-amber-800 dark:text-amber-200">Belum ada data untuk
+                                semester ini</span>
                         </div>
                     </div>
                 @endif
@@ -559,7 +618,8 @@ new class extends Component
 
                 <flux:input type="number" step="0.5" wire:model="weight" label="Berat Badan (kg)" suffix="kg" />
                 <flux:input type="number" step="1" wire:model="height" label="Tinggi Badan (cm)" suffix="cm" />
-                <flux:input type="number" step="0.1" wire:model="head_circumference" label="Lingkar Kepala (cm)" suffix="cm" />
+                <flux:input type="number" step="0.1" wire:model="head_circumference" label="Lingkar Kepala (cm)"
+                    suffix="cm" />
             </div>
 
             <div class="flex justify-end gap-2">
@@ -585,27 +645,29 @@ new class extends Component
                 <div class="flex items-start gap-6 pb-6 border-b border-zinc-200 dark:border-zinc-700">
                     <div class="flex-shrink-0">
                         @if($viewProfile?->photo)
-                            <img src="{{ asset('storage/' . $viewProfile->photo) }}" class="w-32 h-32 rounded-lg object-cover border-2 border-zinc-200 dark:border-zinc-700" alt="{{ $viewing->name }}" />
+                            <img src="{{ asset('storage/' . $viewProfile->photo) }}"
+                                class="w-32 h-32 rounded-lg object-cover border-2 border-zinc-200 dark:border-zinc-700"
+                                alt="{{ $viewing->name }}" />
                         @else
                             <div class="w-32 h-32 rounded-lg bg-zinc-100 dark:bg-zinc-800 flex items-center justify-center">
                                 <flux:icon icon="user" class="w-16 h-16 text-zinc-400" />
                             </div>
                         @endif
                     </div>
-                    
+
                     <div class="flex-1 space-y-2">
                         <div>
                             <flux:heading size="xl">{{ $viewing->name }}</flux:heading>
                             <flux:text class="text-zinc-600 dark:text-zinc-400">{{ $viewing->email }}</flux:text>
                         </div>
-                        
+
                         <div class="flex gap-2 items-center">
                             @if($viewProfile?->classroom)
                                 <flux:badge variant="primary">{{ $viewProfile->classroom->name }}</flux:badge>
                             @else
                                 <flux:badge variant="danger">Belum ada kelas</flux:badge>
                             @endif
-                            
+
                             <flux:badge variant="neutral">
                                 {{ ucfirst(str_replace('_', ' ', $viewProfile?->status ?? 'baru')) }}
                             </flux:badge>
@@ -616,46 +678,64 @@ new class extends Component
                 <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
                     <div class="space-y-4">
                         <flux:heading size="md" class="border-b pb-2">Identitas Siswa</flux:heading>
-                        
+
                         <div class="space-y-3">
                             <div>
                                 <flux:text size="xs" class="text-zinc-500 dark:text-zinc-400">NIS</flux:text>
                                 <flux:text>{{ $viewProfile?->nis ?? '-' }}</flux:text>
                             </div>
-                            
+
                             <div>
                                 <flux:text size="xs" class="text-zinc-500 dark:text-zinc-400">NISN</flux:text>
                                 <flux:text>{{ $viewProfile?->nisn ?? '-' }}</flux:text>
                             </div>
-                            
+
                             <div>
-                                <flux:text size="xs" class="text-zinc-500 dark:text-zinc-400">Tempat, Tanggal Lahir</flux:text>
+                                <flux:text size="xs" class="text-zinc-500 dark:text-zinc-400">NIK Siswa</flux:text>
+                                <flux:text>{{ $viewProfile?->nik ?? '-' }}</flux:text>
+                            </div>
+
+                            <div class="grid grid-cols-2 gap-3">
+                                <div>
+                                    <flux:text size="xs" class="text-zinc-500 dark:text-zinc-400">No. KK</flux:text>
+                                    <flux:text>{{ $viewProfile?->no_kk ?? '-' }}</flux:text>
+                                </div>
+                                <div>
+                                    <flux:text size="xs" class="text-zinc-500 dark:text-zinc-400">No. Akta</flux:text>
+                                    <flux:text>{{ $viewProfile?->no_akta ?? '-' }}</flux:text>
+                                </div>
+                            </div>
+
+                            <div>
+                                <flux:text size="xs" class="text-zinc-500 dark:text-zinc-400">Tempat, Tanggal Lahir
+                                </flux:text>
                                 <flux:text>
                                     {{ $viewProfile?->pob ?? '-' }}{{ $viewProfile?->dob ? ', ' . $viewProfile->dob->format('d F Y') : '' }}
                                 </flux:text>
                             </div>
-                            
+
                             <div>
                                 <flux:text size="xs" class="text-zinc-500 dark:text-zinc-400">No. Telepon</flux:text>
                                 <flux:text>{{ $viewProfile?->phone ?? '-' }}</flux:text>
                             </div>
-                            
+
                             <div>
                                 <flux:text size="xs" class="text-zinc-500 dark:text-zinc-400">Alamat</flux:text>
                                 <flux:text>{{ $viewProfile?->address ?? '-' }}</flux:text>
                             </div>
-                            
+
                             <div class="grid grid-cols-2 gap-3">
                                 <div>
                                     <flux:text size="xs" class="text-zinc-500 dark:text-zinc-400">Anak Ke-</flux:text>
                                     <flux:text>{{ $viewProfile?->birth_order ?? '-' }}</flux:text>
                                 </div>
                                 <div>
-                                    <flux:text size="xs" class="text-zinc-500 dark:text-zinc-400">Dari ... Bersaudara</flux:text>
+                                    <flux:text size="xs" class="text-zinc-500 dark:text-zinc-400">Dari ... Bersaudara
+                                    </flux:text>
                                     <flux:text>{{ $viewProfile?->total_siblings ?? '-' }}</flux:text>
                                 </div>
                             </div>
-                            
+
                             <div>
                                 <flux:text size="xs" class="text-zinc-500 dark:text-zinc-400">Asal Sekolah</flux:text>
                                 <flux:text>{{ $viewProfile?->previous_school ?? '-' }}</flux:text>
@@ -665,26 +745,26 @@ new class extends Component
 
                     <div class="space-y-4">
                         <flux:heading size="md" class="border-b pb-2">Data Orang Tua / Wali</flux:heading>
-                        
+
                         <div class="space-y-3">
                             <div>
                                 <flux:text size="xs" class="text-zinc-500 dark:text-zinc-400">Nama Ayah</flux:text>
-                                <flux:text>{{ $viewProfile?->father_name ?? '-' }}</flux:text>
+                                <flux:text>{{ $viewProfile?->father_name ?? '-' }} (NIK: {{ $viewProfile?->nik_ayah ?? '-' }})</flux:text>
                             </div>
                             
                             <div>
                                 <flux:text size="xs" class="text-zinc-500 dark:text-zinc-400">Nama Ibu</flux:text>
-                                <flux:text>{{ $viewProfile?->mother_name ?? '-' }}</flux:text>
+                                <flux:text>{{ $viewProfile?->mother_name ?? '-' }} (NIK: {{ $viewProfile?->nik_ibu ?? '-' }})</flux:text>
                             </div>
-                            
+
                             <div class="pt-4 space-y-3">
                                 <flux:heading size="sm">Kontak Wali</flux:heading>
-                                
+
                                 <div>
                                     <flux:text size="xs" class="text-zinc-500 dark:text-zinc-400">Nama Wali</flux:text>
                                     <flux:text>{{ $viewProfile?->guardian_name ?? '-' }}</flux:text>
                                 </div>
-                                
+
                                 <div>
                                     <flux:text size="xs" class="text-zinc-500 dark:text-zinc-400">No. Telp Wali</flux:text>
                                     <flux:text>{{ $viewProfile?->guardian_phone ?? '-' }}</flux:text>
@@ -706,7 +786,7 @@ new class extends Component
                 @if($periodicRecords && $periodicRecords->count() > 0)
                     <div class="pt-6 border-t border-zinc-200 dark:border-zinc-700">
                         <flux:heading size="md" class="mb-4">Data Periodik Terbaru</flux:heading>
-                        
+
                         <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
                             @foreach($periodicRecords as $record)
                                 <div class="p-4 bg-zinc-50 dark:bg-zinc-800 rounded-lg">
@@ -737,7 +817,8 @@ new class extends Component
                     <flux:modal.close>
                         <flux:button variant="ghost">Tutup</flux:button>
                     </flux:modal.close>
-                    <flux:button variant="primary" icon="pencil-square" wire:click="edit({{ $viewing->id }})" x-on:click="$flux.modal('detail-modal').close(); $flux.modal('student-modal').show()">
+                    <flux:button variant="primary" icon="pencil-square" wire:click="edit({{ $viewing->id }})"
+                        x-on:click="$flux.modal('detail-modal').close(); $flux.modal('student-modal').show()">
                         Edit Data
                     </flux:button>
                 </div>

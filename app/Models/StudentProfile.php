@@ -27,6 +27,11 @@ class StudentProfile extends Model
         'total_siblings',
         'previous_school',
         'status',
+        'nik',
+        'nik_ayah',
+        'nik_ibu',
+        'no_kk',
+        'no_akta',
     ];
 
     protected function casts(): array
