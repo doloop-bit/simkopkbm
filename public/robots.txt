@@ -1,2 +1,27 @@
 User-agent: *
-Disallow:
+Allow: /
+
+# Disallow admin routes
+Disallow: /admin/
+Disallow: /dashboard
+Disallow: /login
+Disallow: /register
+Disallow: /forgot-password
+Disallow: /reset-password
+Disallow: /verify-email
+Disallow: /confirm-password
+Disallow: /two-factor-challenge
+Disallow: /two-factor-recovery
+
+# Allow public routes
+Allow: /
+Allow: /tentang-kami
+Allow: /struktur-organisasi
+Allow: /fasilitas
+Allow: /program-pendidikan
+Allow: /berita
+Allow: /galeri
+Allow: /kontak
+
+# Sitemap
+Sitemap: /sitemap.xml

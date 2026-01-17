@@ -2,9 +2,8 @@
 
 use Illuminate\Support\Facades\Route;
 
-Route::get('/', function () {
-    return view('welcome');
-})->name('home');
+// Public website routes
+require __DIR__.'/public.php';
 
 Route::view('dashboard', 'dashboard')
     ->middleware(['auth', 'verified'])
@@ -15,5 +14,8 @@ require __DIR__.'/academic.php';
 require __DIR__.'/students.php';
 require __DIR__.'/financial.php';
 require __DIR__.'/ptk.php';
-
-
+require __DIR__.'/school-profile.php';
+require __DIR__.'/news.php';
+require __DIR__.'/gallery.php';
+require __DIR__.'/programs.php';
+require __DIR__.'/contact-inquiries.php';
