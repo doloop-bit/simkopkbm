@@ -1,8 +1,8 @@
 <?php
 
 use App\Models\GalleryPhoto;
+use App\Services\{ImageOptimizationService, CacheService};
 use Illuminate\Support\Facades\Storage;
-use Intervention\Image\Laravel\Facades\Image;
 use Livewire\Volt\Component;
 use Livewire\WithFileUploads;
 
@@ -53,23 +53,17 @@ new class extends Component
     {
         $this->validate();
 
+        $imageService = app(ImageOptimizationService::class);
+
         foreach ($this->photos as $photo) {
-            $filename = uniqid().'.'.$photo->extension();
-
-            // Store original
-            $originalPath = $photo->storeAs('gallery/original', $filename, 'public');
-
-            // Generate thumbnail (300x300)
-            $thumbnail = Image::read($photo->getRealPath())
-                ->cover(300, 300);
-            $thumbnailPath = 'gallery/thumbnails/'.$filename;
-            Storage::disk('public')->put($thumbnailPath, $thumbnail->encode());
-
-            // Generate web version (max 1200px width)
-            $web = Image::read($photo->getRealPath())
-                ->scaleDown(width: 1200);
-            $webPath = 'gallery/web/'.$filename;
-            Storage::disk('public')->put($webPath, $web->encode());
+            // Process image with optimization
+            $imagePaths = $imageService->processImage($photo, 'gallery', [
+                'original' => null,
+                'large' => 1200,
+                'medium' => 800,
+                'small' => 400,
+                'thumbnail' => 300,
+            ]);
 
             // Get the next order value
             $maxOrder = GalleryPhoto::max('order') ?? 0;
@@ -78,13 +72,24 @@ new class extends Component
                 'title' => $this->caption ?: 'Photo',
                 'caption' => $this->caption,
                 'category' => $this->category,
-                'original_path' => $originalPath,
-                'thumbnail_path' => $thumbnailPath,
-                'web_path' => $webPath,
+                'original_path' => $imagePaths['original'],
+                'thumbnail_path' => $imagePaths['thumbnail'],
+                'web_path' => $imagePaths['large'],
+                'medium_path' => $imagePaths['medium'] ?? null,
+                'small_path' => $imagePaths['small'] ?? null,
+                'original_webp_path' => $imagePaths['original_webp'] ?? null,
+                'thumbnail_webp_path' => $imagePaths['thumbnail_webp'] ?? null,
+                'web_webp_path' => $imagePaths['large_webp'] ?? null,
+                'medium_webp_path' => $imagePaths['medium_webp'] ?? null,
+                'small_webp_path' => $imagePaths['small_webp'] ?? null,
                 'order' => $maxOrder + 1,
                 'is_published' => true,
             ]);
         }
+
+        // Clear gallery cache after upload
+        $cacheService = app(CacheService::class);
+        $cacheService->clearGalleryCache();
 
         $this->reset(['photos', 'category', 'caption']);
         $this->loadCategories();
@@ -95,14 +100,30 @@ new class extends Component
     {
         $photo = GalleryPhoto::findOrFail($id);
 
-        // Delete all image versions
-        Storage::disk('public')->delete([
+        $imageService = app(ImageOptimizationService::class);
+        
+        // Collect all image paths
+        $imagePaths = array_filter([
             $photo->original_path,
             $photo->thumbnail_path,
             $photo->web_path,
+            $photo->medium_path,
+            $photo->small_path,
+            $photo->original_webp_path,
+            $photo->thumbnail_webp_path,
+            $photo->web_webp_path,
+            $photo->medium_webp_path,
+            $photo->small_webp_path,
         ]);
 
+        // Delete all image versions
+        $imageService->deleteImageVersions($imagePaths);
+
         $photo->delete();
+
+        // Clear gallery cache after deletion
+        $cacheService = app(CacheService::class);
+        $cacheService->clearGalleryCache();
 
         $this->loadCategories();
         session()->flash('message', 'Foto berhasil dihapus.');

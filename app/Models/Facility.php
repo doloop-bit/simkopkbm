@@ -24,6 +24,11 @@ class Facility extends Model
         ];
     }
 
+    public function scopeOrdered($query)
+    {
+        return $query->orderBy('order')->orderBy('name');
+    }
+
     public function schoolProfile()
     {
         return $this->belongsTo(SchoolProfile::class);

@@ -1,6 +1,7 @@
 <?php
 
 use App\Models\Program;
+use App\Services\CacheService;
 use Livewire\Volt\Component;
 use Livewire\Attributes\Layout;
 
@@ -8,8 +9,10 @@ new #[Layout('components.layouts.public')] class extends Component
 {
     public function with(): array
     {
+        $cacheService = app(CacheService::class);
+        
         return [
-            'programs' => Program::active()->ordered()->get(),
+            'programs' => $cacheService->getActivePrograms(),
             'title' => 'Program Pendidikan - ' . config('app.name'),
             'description' => 'Temukan berbagai program pendidikan di ' . config('app.name') . ' mulai dari PAUD, Paket A, Paket B, hingga Paket C yang disesuaikan dengan kebutuhan Anda.',
             'keywords' => 'Program Pendidikan, PAUD, Paket A, Paket B, Paket C, Kurikulum, Pendidikan Non Formal',

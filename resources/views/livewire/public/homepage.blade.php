@@ -4,17 +4,18 @@ use Livewire\Volt\Component;
 use Livewire\Attributes\Layout;
 use Illuminate\Support\Facades\Storage;
 use App\Models\{NewsArticle, Program, GalleryPhoto, SchoolProfile};
+use App\Services\CacheService;
 
 new #[Layout('components.layouts.public')] class extends Component {
     public function with(): array
     {
-        $schoolProfile = SchoolProfile::active();
+        $cacheService = app(CacheService::class);
         
         return [
-            'schoolProfile' => $schoolProfile,
-            'latestNews' => NewsArticle::published()->latestPublished()->limit(3)->get(),
-            'programs' => Program::active()->ordered()->get(),
-            'featuredPhotos' => GalleryPhoto::published()->ordered()->limit(6)->get(),
+            'schoolProfile' => $cacheService->getSchoolProfile(),
+            'latestNews' => $cacheService->getLatestNews(3),
+            'programs' => $cacheService->getActivePrograms(),
+            'featuredPhotos' => $cacheService->getFeaturedPhotos(6),
             'title' => 'Beranda - ' . config('app.name'),
             'description' => 'Selamat datang di ' . config('app.name') . ' - Pusat Kegiatan Belajar Masyarakat yang menyediakan pendidikan berkualitas untuk semua. Temukan program PAUD, Paket A, B, dan C.',
             'keywords' => 'PKBM, Pusat Kegiatan Belajar Masyarakat, Pendidikan, PAUD, Paket A, Paket B, Paket C, Sekolah, Beranda',
@@ -226,12 +227,18 @@ new #[Layout('components.layouts.public')] class extends Component {
             <div class="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-3 sm:gap-4">
                 @foreach($featuredPhotos as $photo)
                     <a href="{{ route('public.gallery') }}" class="group relative overflow-hidden rounded-xl sm:rounded-2xl aspect-square shadow-lg hover:shadow-2xl transition-all duration-300 transform hover:scale-105">
-                        <img src="{{ Storage::url($photo->thumbnail_path) }}" alt="{{ $photo->title }}" class="w-full h-full object-cover group-hover:scale-110 transition-transform duration-500">
+                        <x-optimized-image
+                            :src="Storage::url($photo->thumbnail_path)"
+                            :webp-src="$photo->thumbnail_webp_path ? Storage::url($photo->thumbnail_webp_path) : null"
+                            :alt="$photo->title"
+                            class="w-full h-full object-cover group-hover:scale-110 transition-transform duration-500"
+                            :lazy="true"
+                        />
                         <div class="absolute inset-0 bg-gradient-to-t from-black/60 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300"></div>
                         <div class="absolute bottom-0 left-0 right-0 p-2 sm:p-4 text-white transform translate-y-full group-hover:translate-y-0 transition-transform duration-300">
                             <h3 class="font-semibold text-xs sm:text-sm mb-1">{{ $photo->title }}</h3>
-                            @if($photo->description)
-                                <p class="text-xs text-gray-200 hidden sm:block">{{ Str::limit($photo->description, 50) }}</p>
+                            @if($photo->caption)
+                                <p class="text-xs text-gray-200 hidden sm:block">{{ Str::limit($photo->caption, 50) }}</p>
                             @endif
                         </div>
                         <!-- Overlay icon -->

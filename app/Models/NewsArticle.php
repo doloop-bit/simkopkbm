@@ -67,6 +67,14 @@ class NewsArticle extends Model
     }
 
     /**
+     * Scope a query to order articles by latest (published_at or created_at).
+     */
+    public function scopeLatest($query)
+    {
+        return $query->orderByDesc('published_at')->orderByDesc('created_at');
+    }
+
+    /**
      * Check if the article is published.
      */
     public function isPublished(): bool

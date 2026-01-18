@@ -4,6 +4,7 @@ use Livewire\Volt\Component;
 use Livewire\Attributes\Layout;
 use Illuminate\Support\Facades\Storage;
 use App\Models\GalleryPhoto;
+use App\Services\CacheService;
 
 new #[Layout('components.layouts.public')] class extends Component {
     public $selectedCategory = '';
@@ -11,14 +12,8 @@ new #[Layout('components.layouts.public')] class extends Component {
 
     public function mount(): void
     {
-        $this->categories = GalleryPhoto::published()
-            ->whereNotNull('category')
-            ->distinct()
-            ->pluck('category')
-            ->filter()
-            ->sort()
-            ->values()
-            ->toArray();
+        $cacheService = app(CacheService::class);
+        $this->categories = $cacheService->getGalleryCategories();
     }
 
     public function filterByCategory($category = ''): void
@@ -100,18 +95,19 @@ new #[Layout('components.layouts.public')] class extends Component {
             <div class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 gap-3 sm:gap-4 lg:gap-6">
                 @foreach($photos as $photo)
                     <div class="group relative overflow-hidden rounded-lg bg-gray-200 aspect-square">
-                        <img 
-                            src="{{ Storage::url($photo->thumbnail_path) }}" 
-                            alt="{{ $photo->title }}"
+                        <x-optimized-image
+                            :src="Storage::url($photo->thumbnail_path)"
+                            :webp-src="$photo->thumbnail_webp_path ? Storage::url($photo->thumbnail_webp_path) : null"
+                            :alt="$photo->title"
                             class="w-full h-full object-cover group-hover:scale-110 transition duration-300 cursor-pointer"
-                            onclick="openLightbox('{{ Storage::url($photo->image_path) }}', '{{ addslashes($photo->title) }}', '{{ addslashes($photo->description ?? '') }}')"
-                            loading="lazy"
-                        >
+                            onclick="openLightbox('{{ $photo->web_path ? Storage::url($photo->web_path) : Storage::url($photo->original_path) }}', '{{ addslashes($photo->title) }}', '{{ addslashes($photo->caption ?? '') }}')"
+                            :lazy="true"
+                        />
                         <div class="absolute inset-0 bg-black bg-opacity-0 group-hover:bg-opacity-40 transition duration-300 flex items-center justify-center">
                             <div class="text-white opacity-0 group-hover:opacity-100 transition duration-300 text-center p-2 sm:p-4">
                                 <h3 class="font-semibold text-xs sm:text-sm mb-1">{{ $photo->title }}</h3>
-                                @if($photo->description)
-                                    <p class="text-xs text-gray-200 hidden sm:block">{{ Str::limit($photo->description, 50) }}</p>
+                                @if($photo->caption)
+                                    <p class="text-xs text-gray-200 hidden sm:block">{{ Str::limit($photo->caption, 50) }}</p>
                                 @endif
                             </div>
                         </div>

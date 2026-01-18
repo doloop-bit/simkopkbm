@@ -1,6 +1,7 @@
 <?php
 
 use App\Models\SchoolProfile;
+use App\Services\CacheService;
 use Illuminate\Support\Facades\Storage;
 use Livewire\Volt\Component;
 use Livewire\WithFileUploads;
@@ -131,6 +132,10 @@ new class extends Component {
         ]);
 
         $this->profile->save();
+
+        // Clear cache after saving
+        $cacheService = app(CacheService::class);
+        $cacheService->clearSchoolProfileCache();
 
         // Reset logo upload field
         $this->logo = null;

@@ -1,6 +1,7 @@
 <?php
 
 use App\Models\NewsArticle;
+use App\Services\CacheService;
 use Illuminate\Support\Facades\Storage;
 use Livewire\Volt\Component;
 use Livewire\WithPagination;
@@ -31,6 +32,10 @@ new class extends Component {
         }
         
         $article->delete();
+        
+        // Clear news cache after deletion
+        $cacheService = app(CacheService::class);
+        $cacheService->clearNewsCache();
         
         session()->flash('message', 'Artikel berhasil dihapus.');
     }

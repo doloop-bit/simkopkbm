@@ -1,6 +1,7 @@
 <?php
 
 use App\Models\Program;
+use App\Services\CacheService;
 use Illuminate\Support\Facades\Storage;
 use Livewire\Volt\Component;
 use Livewire\WithFileUploads;
@@ -84,6 +85,10 @@ new class extends Component
             session()->flash('message', 'Program berhasil ditambahkan.');
         }
 
+        // Clear programs cache after save
+        $cacheService = app(CacheService::class);
+        $cacheService->clearProgramsCache();
+
         $this->reset();
     }
 
@@ -115,6 +120,11 @@ new class extends Component
         }
         
         $program->delete();
+        
+        // Clear programs cache after deletion
+        $cacheService = app(CacheService::class);
+        $cacheService->clearProgramsCache();
+        
         session()->flash('message', 'Program berhasil dihapus.');
     }
 

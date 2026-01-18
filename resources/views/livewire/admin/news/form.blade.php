@@ -1,6 +1,7 @@
 <?php
 
 use App\Models\NewsArticle;
+use App\Services\CacheService;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Str;
 use Livewire\Volt\Component;
@@ -108,6 +109,10 @@ new class extends Component
         } else {
             $this->article = NewsArticle::create($data);
         }
+
+        // Clear news cache after saving
+        $cacheService = app(CacheService::class);
+        $cacheService->clearNewsCache();
 
         session()->flash('message', 'Artikel berhasil disimpan.');
         $this->redirect(route('admin.news.index'), navigate: true);
