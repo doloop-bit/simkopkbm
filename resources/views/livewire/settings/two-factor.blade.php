@@ -182,7 +182,7 @@ new class extends Component {
 
     <flux:heading class="sr-only">{{ __('Two-Factor Authentication Settings') }}</flux:heading>
 
-    <x-settings.layout
+    <x-admin.settings.layout
         :heading="__('Two Factor Authentication')"
         :subheading="__('Manage your two-factor authentication settings')"
     >
@@ -231,7 +231,7 @@ new class extends Component {
                 </div>
             @endif
         </div>
-    </x-settings.layout>
+    </x-admin.settings.layout>
 
     <flux:modal
         name="two-factor-setup-modal"

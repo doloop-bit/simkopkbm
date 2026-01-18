@@ -74,7 +74,7 @@ new class extends Component {
 
     <flux:heading class="sr-only">{{ __('Profile Settings') }}</flux:heading>
 
-    <x-settings.layout :heading="__('Profile')" :subheading="__('Update your name and email address')">
+    <x-admin.settings.layout :heading="__('Profile')" :subheading="__('Update your name and email address')">
         <form wire:submit="updateProfileInformation" class="my-6 w-full space-y-6">
             <flux:input wire:model="name" :label="__('Name')" type="text" required autofocus autocomplete="name" />
 
@@ -107,12 +107,12 @@ new class extends Component {
                     </flux:button>
                 </div>
 
-                <x-action-message class="me-3" on="profile-updated">
+                <x-admin.action-message class="me-3" on="profile-updated">
                     {{ __('Saved.') }}
-                </x-action-message>
+                </x-admin.action-message>
             </div>
         </form>
 
         <livewire:settings.delete-user-form />
-    </x-settings.layout>
+    </x-admin.settings.layout>
 </section>

@@ -24,14 +24,14 @@
             }"
         >
             <div x-show="!showRecoveryInput">
-                <x-auth-header
+                <x-layouts.auth.auth-header
                     :title="__('Authentication Code')"
                     :description="__('Enter the authentication code provided by your authenticator application.')"
                 />
             </div>
 
             <div x-show="showRecoveryInput">
-                <x-auth-header
+                <x-layouts.auth.auth-header
                     :title="__('Recovery Code')"
                     :description="__('Please confirm access to your account by entering one of your emergency recovery codes.')"
                 />

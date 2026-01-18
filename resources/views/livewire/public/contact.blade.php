@@ -6,7 +6,7 @@ use Livewire\Attributes\Validate;
 use App\Models\{ContactInquiry, SchoolProfile};
 use Illuminate\Support\Facades\Mail;
 
-new #[Layout('components.layouts.public')] class extends Component {
+new #[Layout('components.public.layouts.public')] class extends Component {
     #[Validate('required|string|max:255')]
     public $name = '';
 

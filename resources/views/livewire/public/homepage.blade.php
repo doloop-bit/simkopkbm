@@ -6,7 +6,7 @@ use Illuminate\Support\Facades\Storage;
 use App\Models\{NewsArticle, Program, GalleryPhoto, SchoolProfile};
 use App\Services\CacheService;
 
-new #[Layout('components.layouts.public')] class extends Component {
+new #[Layout('components.public.layouts.public')] class extends Component {
     public function with(): array
     {
         $cacheService = app(CacheService::class);
@@ -227,7 +227,7 @@ new #[Layout('components.layouts.public')] class extends Component {
             <div class="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-3 sm:gap-4">
                 @foreach($featuredPhotos as $photo)
                     <a href="{{ route('public.gallery') }}" class="group relative overflow-hidden rounded-xl sm:rounded-2xl aspect-square shadow-lg hover:shadow-2xl transition-all duration-300 transform hover:scale-105">
-                        <x-optimized-image
+                        <x-global.optimized-image
                             :src="Storage::url($photo->thumbnail_path)"
                             :webp-src="$photo->thumbnail_webp_path ? Storage::url($photo->thumbnail_webp_path) : null"
                             :alt="$photo->title"

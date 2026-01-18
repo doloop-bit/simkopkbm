@@ -6,7 +6,7 @@ use Livewire\Volt\Component;
 use Livewire\Attributes\Layout;
 use Illuminate\Support\Facades\Storage;
 
-new #[Layout('components.layouts.public')] class extends Component
+new #[Layout('components.public.layouts.public')] class extends Component
 {
     public Program $program;
 

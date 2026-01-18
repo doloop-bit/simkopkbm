@@ -4,7 +4,7 @@ use App\Models\Facility;
 use Livewire\Volt\Component;
 use Livewire\Attributes\Layout;
 
-new #[Layout('components.layouts.public')] class extends Component
+new #[Layout('components.public.layouts.public')] class extends Component
 {
     public function with(): array
     {

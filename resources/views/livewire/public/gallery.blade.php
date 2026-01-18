@@ -6,7 +6,7 @@ use Illuminate\Support\Facades\Storage;
 use App\Models\GalleryPhoto;
 use App\Services\CacheService;
 
-new #[Layout('components.layouts.public')] class extends Component {
+new #[Layout('components.public.layouts.public')] class extends Component {
     public $selectedCategory = '';
     public $categories = [];
 
@@ -95,7 +95,7 @@ new #[Layout('components.layouts.public')] class extends Component {
             <div class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 gap-3 sm:gap-4 lg:gap-6">
                 @foreach($photos as $photo)
                     <div class="group relative overflow-hidden rounded-lg bg-gray-200 aspect-square">
-                        <x-optimized-image
+                        <x-global.optimized-image
                             :src="Storage::url($photo->thumbnail_path)"
                             :webp-src="$photo->thumbnail_webp_path ? Storage::url($photo->thumbnail_webp_path) : null"
                             :alt="$photo->title"
