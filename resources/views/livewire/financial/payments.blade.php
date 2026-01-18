@@ -5,10 +5,11 @@ declare(strict_types=1);
 use App\Models\User;
 use App\Models\StudentBilling;
 use App\Models\Transaction;
+use Livewire\Attributes\Layout;
 use Livewire\Volt\Component;
 use Illuminate\Support\Facades\DB;
 
-new class extends Component {
+new #[Layout('components.admin.layouts.app')] class extends Component {
     public ?int $student_id = null;
     public string $search = '';
     

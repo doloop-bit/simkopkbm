@@ -7,13 +7,14 @@ use App\Models\Profile;
 use App\Models\TeacherProfile;
 use App\Models\StaffProfile;
 use App\Models\Level;
+use Livewire\Attributes\Layout;
 use Livewire\Volt\Component;
 use Livewire\WithPagination;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Validation\Rule;
 
-new class extends Component {
+new #[Layout('components.admin.layouts.app')] class extends Component {
     use WithPagination;
 
     public string $search = '';

@@ -6,10 +6,11 @@ use App\Models\Classroom;
 use App\Models\AcademicYear;
 use App\Models\Level;
 use App\Models\User;
+use Livewire\Attributes\Layout;
 use Livewire\Volt\Component;
 use Livewire\WithPagination;
 
-new class extends Component {
+new #[Layout('components.admin.layouts.app')] class extends Component {
     use WithPagination;
 
     public string $name = '';

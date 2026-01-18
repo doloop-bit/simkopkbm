@@ -3,10 +3,11 @@
 use App\Models\GalleryPhoto;
 use App\Services\{ImageOptimizationService, CacheService};
 use Illuminate\Support\Facades\Storage;
+use Livewire\Attributes\Layout;
 use Livewire\Volt\Component;
 use Livewire\WithFileUploads;
 
-new class extends Component
+new #[Layout('components.admin.layouts.app')] class extends Component
 {
     use WithFileUploads;
 

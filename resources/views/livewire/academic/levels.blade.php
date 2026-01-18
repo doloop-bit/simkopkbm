@@ -3,9 +3,10 @@
 declare(strict_types=1);
 
 use App\Models\Level;
+use Livewire\Attributes\Layout;
 use Livewire\Volt\Component;
 
-new class extends Component {
+new #[Layout('components.admin.layouts.app')] class extends Component {
     public string $name = '';
     public string $type = 'class_teacher';
 

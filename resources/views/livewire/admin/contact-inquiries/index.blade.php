@@ -5,7 +5,7 @@ use Livewire\Attributes\Layout;
 use Livewire\WithPagination;
 use Livewire\Volt\Component;
 
-new class extends Component {
+new #[Layout('components.admin.layouts.app')] class extends Component {
     use WithPagination;
 
     public function markAsRead($id): void

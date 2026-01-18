@@ -8,10 +8,11 @@ use App\Models\AttendanceItem;
 use App\Models\Classroom;
 use App\Models\Subject;
 use App\Models\AcademicYear;
+use Livewire\Attributes\Layout;
 use Livewire\Volt\Component;
 use Illuminate\Support\Facades\DB;
 
-new class extends Component {
+new #[Layout('components.admin.layouts.app')] class extends Component {
     public ?int $academic_year_id = null;
     public ?int $classroom_id = null;
     public ?int $subject_id = null;

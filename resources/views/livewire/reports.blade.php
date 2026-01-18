@@ -9,9 +9,10 @@ use App\Models\FeeCategory;
 use App\Models\Attendance;
 use App\Models\Classroom;
 use App\Models\AcademicYear;
+use Livewire\Attributes\Layout;
 use Livewire\Volt\Component;
 
-new class extends Component {
+new #[Layout('components.admin.layouts.app')] class extends Component {
     public string $tab = 'financial';
     
     // Financial Filters

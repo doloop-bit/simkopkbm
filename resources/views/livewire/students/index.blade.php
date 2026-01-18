@@ -8,11 +8,12 @@ use App\Models\User;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Storage;
+use Livewire\Attributes\Layout;
 use Livewire\Volt\Component;
 use Livewire\WithFileUploads;
 use Livewire\WithPagination;
 
-new class extends Component {
+new #[Layout('components.admin.layouts.app')] class extends Component {
     use WithFileUploads, WithPagination;
 
     public string $search = '';
