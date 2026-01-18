@@ -99,10 +99,10 @@ new #[Layout('components.layouts.public')] class extends Component {
             </svg>
         </div>
         
-        <div class="relative max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-20">
+        <div class="relative max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-16 sm:py-20">
             <div class="text-center">
-                <h1 class="text-4xl md:text-5xl font-bold mb-4">Hubungi Kami</h1>
-                <p class="text-xl md:text-2xl text-green-100">
+                <h1 class="text-3xl sm:text-4xl md:text-5xl font-bold mb-4">Hubungi Kami</h1>
+                <p class="text-lg sm:text-xl md:text-2xl text-green-100">
                     Kami siap membantu dan menjawab pertanyaan Anda
                 </p>
                 <div class="w-24 h-1 bg-white/30 mx-auto mt-6 rounded-full"></div>
@@ -111,25 +111,25 @@ new #[Layout('components.layouts.public')] class extends Component {
     </div>
 
     <!-- Contact Content -->
-    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-16">
-        <div class="grid grid-cols-1 lg:grid-cols-2 gap-12">
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12 sm:py-16">
+        <div class="grid grid-cols-1 lg:grid-cols-2 gap-8 lg:gap-12">
             <!-- Contact Information -->
             <div>
-                <h2 class="text-2xl font-bold text-gray-900 mb-6">Informasi Kontak</h2>
+                <h2 class="text-xl sm:text-2xl font-bold text-gray-900 mb-6">Informasi Kontak</h2>
                 
                 @if($schoolProfile)
                     <div class="space-y-6">
                         <!-- Address -->
                         <div class="flex items-start">
                             <div class="flex-shrink-0">
-                                <svg class="w-6 h-6 text-blue-600 mt-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <svg class="w-5 sm:w-6 h-5 sm:h-6 text-blue-600 mt-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z" />
                                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 11a3 3 0 11-6 0 3 3 0 016 0z" />
                                 </svg>
                             </div>
-                            <div class="ml-4">
-                                <h3 class="text-lg font-medium text-gray-900">Alamat</h3>
-                                <p class="text-gray-600">{{ $schoolProfile->address }}</p>
+                            <div class="ml-3 sm:ml-4">
+                                <h3 class="text-base sm:text-lg font-medium text-gray-900">Alamat</h3>
+                                <p class="text-gray-600 text-sm sm:text-base">{{ $schoolProfile->address }}</p>
                             </div>
                         </div>
 
@@ -137,13 +137,13 @@ new #[Layout('components.layouts.public')] class extends Component {
                         @if($schoolProfile->phone)
                             <div class="flex items-start">
                                 <div class="flex-shrink-0">
-                                    <svg class="w-6 h-6 text-blue-600 mt-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <svg class="w-5 sm:w-6 h-5 sm:h-6 text-blue-600 mt-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 5a2 2 0 012-2h3.28a1 1 0 01.948.684l1.498 4.493a1 1 0 01-.502 1.21l-2.257 1.13a11.042 11.042 0 005.516 5.516l1.13-2.257a1 1 0 011.21-.502l4.493 1.498a1 1 0 01.684.949V19a2 2 0 01-2 2h-1C9.716 21 3 14.284 3 6V5z" />
                                     </svg>
                                 </div>
-                                <div class="ml-4">
-                                    <h3 class="text-lg font-medium text-gray-900">Telepon</h3>
-                                    <p class="text-gray-600">{{ $schoolProfile->phone }}</p>
+                                <div class="ml-3 sm:ml-4">
+                                    <h3 class="text-base sm:text-lg font-medium text-gray-900">Telepon</h3>
+                                    <p class="text-gray-600 text-sm sm:text-base">{{ $schoolProfile->phone }}</p>
                                 </div>
                             </div>
                         @endif
@@ -152,13 +152,13 @@ new #[Layout('components.layouts.public')] class extends Component {
                         @if($schoolProfile->email)
                             <div class="flex items-start">
                                 <div class="flex-shrink-0">
-                                    <svg class="w-6 h-6 text-blue-600 mt-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <svg class="w-5 sm:w-6 h-5 sm:h-6 text-blue-600 mt-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 8l7.89 4.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" />
                                     </svg>
                                 </div>
-                                <div class="ml-4">
-                                    <h3 class="text-lg font-medium text-gray-900">Email</h3>
-                                    <p class="text-gray-600">{{ $schoolProfile->email }}</p>
+                                <div class="ml-3 sm:ml-4">
+                                    <h3 class="text-base sm:text-lg font-medium text-gray-900">Email</h3>
+                                    <p class="text-gray-600 text-sm sm:text-base">{{ $schoolProfile->email }}</p>
                                 </div>
                             </div>
                         @endif
@@ -167,13 +167,13 @@ new #[Layout('components.layouts.public')] class extends Component {
                         @if($schoolProfile->operating_hours)
                             <div class="flex items-start">
                                 <div class="flex-shrink-0">
-                                    <svg class="w-6 h-6 text-blue-600 mt-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <svg class="w-5 sm:w-6 h-5 sm:h-6 text-blue-600 mt-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
                                     </svg>
                                 </div>
-                                <div class="ml-4">
-                                    <h3 class="text-lg font-medium text-gray-900">Jam Operasional</h3>
-                                    <p class="text-gray-600">{{ $schoolProfile->operating_hours }}</p>
+                                <div class="ml-3 sm:ml-4">
+                                    <h3 class="text-base sm:text-lg font-medium text-gray-900">Jam Operasional</h3>
+                                    <p class="text-gray-600 text-sm sm:text-base">{{ $schoolProfile->operating_hours }}</p>
                                 </div>
                             </div>
                         @endif
@@ -182,10 +182,10 @@ new #[Layout('components.layouts.public')] class extends Component {
                     <!-- Map -->
                     @if($schoolProfile->latitude && $schoolProfile->longitude)
                         <div class="mt-8">
-                            <h3 class="text-lg font-medium text-gray-900 mb-4">Lokasi</h3>
-                            <div class="bg-gray-200 rounded-lg h-64 flex items-center justify-center">
+                            <h3 class="text-base sm:text-lg font-medium text-gray-900 mb-4">Lokasi</h3>
+                            <div class="bg-gray-200 rounded-lg h-48 sm:h-64 flex items-center justify-center">
                                 <div class="text-center text-gray-500">
-                                    <svg class="w-12 h-12 mx-auto mb-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <svg class="w-10 sm:w-12 h-10 sm:h-12 mx-auto mb-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z" />
                                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 11a3 3 0 11-6 0 3 3 0 016 0z" />
                                     </svg>
@@ -204,7 +204,7 @@ new #[Layout('components.layouts.public')] class extends Component {
 
             <!-- Contact Form -->
             <div>
-                <h2 class="text-2xl font-bold text-gray-900 mb-6">Kirim Pesan</h2>
+                <h2 class="text-xl sm:text-2xl font-bold text-gray-900 mb-6">Kirim Pesan</h2>
 
                 <!-- Success Message -->
                 @if($showSuccess)
@@ -232,7 +232,7 @@ new #[Layout('components.layouts.public')] class extends Component {
                     </div>
                 @endif
 
-                <form wire:submit="submit" class="space-y-6">
+                <form wire:submit="submit" class="space-y-4 sm:space-y-6">
                     <!-- Name -->
                     <div>
                         <label for="name" class="block text-sm font-medium text-gray-700 mb-2">
@@ -242,7 +242,7 @@ new #[Layout('components.layouts.public')] class extends Component {
                             type="text" 
                             id="name" 
                             wire:model="name"
-                            class="w-full px-4 py-3 border border-gray-300 rounded-xl shadow-sm focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-green-500 transition-colors duration-200"
+                            class="w-full px-3 sm:px-4 py-2 sm:py-3 border border-gray-300 rounded-xl shadow-sm focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-green-500 transition-colors duration-200 text-sm sm:text-base"
                             placeholder="Masukkan nama lengkap Anda"
                         >
                         @error('name')
@@ -259,7 +259,7 @@ new #[Layout('components.layouts.public')] class extends Component {
                             type="email" 
                             id="email" 
                             wire:model="email"
-                            class="w-full px-4 py-3 border border-gray-300 rounded-xl shadow-sm focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-green-500 transition-colors duration-200"
+                            class="w-full px-3 sm:px-4 py-2 sm:py-3 border border-gray-300 rounded-xl shadow-sm focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-green-500 transition-colors duration-200 text-sm sm:text-base"
                             placeholder="nama@email.com"
                         >
                         @error('email')
@@ -276,7 +276,7 @@ new #[Layout('components.layouts.public')] class extends Component {
                             type="tel" 
                             id="phone" 
                             wire:model="phone"
-                            class="w-full px-4 py-3 border border-gray-300 rounded-xl shadow-sm focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-green-500 transition-colors duration-200"
+                            class="w-full px-3 sm:px-4 py-2 sm:py-3 border border-gray-300 rounded-xl shadow-sm focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-green-500 transition-colors duration-200 text-sm sm:text-base"
                             placeholder="08xxxxxxxxxx"
                         >
                         @error('phone')
@@ -293,7 +293,7 @@ new #[Layout('components.layouts.public')] class extends Component {
                             type="text" 
                             id="subject" 
                             wire:model="subject"
-                            class="w-full px-4 py-3 border border-gray-300 rounded-xl shadow-sm focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-green-500 transition-colors duration-200"
+                            class="w-full px-3 sm:px-4 py-2 sm:py-3 border border-gray-300 rounded-xl shadow-sm focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-green-500 transition-colors duration-200 text-sm sm:text-base"
                             placeholder="Subjek pesan Anda"
                         >
                         @error('subject')
@@ -310,7 +310,7 @@ new #[Layout('components.layouts.public')] class extends Component {
                             id="message" 
                             wire:model="message"
                             rows="5"
-                            class="w-full px-4 py-3 border border-gray-300 rounded-xl shadow-sm focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-green-500 transition-colors duration-200"
+                            class="w-full px-3 sm:px-4 py-2 sm:py-3 border border-gray-300 rounded-xl shadow-sm focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-green-500 transition-colors duration-200 text-sm sm:text-base"
                             placeholder="Tulis pesan Anda di sini..."
                         ></textarea>
                         @error('message')
@@ -323,7 +323,7 @@ new #[Layout('components.layouts.public')] class extends Component {
                         <button 
                             type="submit"
                             wire:loading.attr="disabled"
-                            class="w-full flex justify-center py-4 px-6 border border-transparent rounded-xl shadow-lg text-base font-semibold text-white bg-gradient-to-r from-green-600 to-emerald-600 hover:from-green-700 hover:to-emerald-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-green-500 disabled:opacity-50 disabled:cursor-not-allowed transition-all duration-200 transform hover:scale-105"
+                            class="w-full flex justify-center py-3 sm:py-4 px-4 sm:px-6 border border-transparent rounded-xl shadow-lg text-sm sm:text-base font-semibold text-white bg-gradient-to-r from-green-600 to-emerald-600 hover:from-green-700 hover:to-emerald-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-green-500 disabled:opacity-50 disabled:cursor-not-allowed transition-all duration-200 transform hover:scale-105"
                         >
                             <span wire:loading.remove>Kirim Pesan</span>
                             <span wire:loading class="flex items-center">
