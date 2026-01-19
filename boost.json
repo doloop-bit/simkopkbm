@@ -1,9 +1,9 @@
 {
     "agents": [
-        "kiro"
+        "gemini"
     ],
     "editors": [
-        "kiro"
+        "gemini"
     ],
     "guidelines": [
         "laravel/fortify"
