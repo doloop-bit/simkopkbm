@@ -5,7 +5,7 @@ use Illuminate\Support\Facades\Route;
 // Public website routes
 require __DIR__.'/public.php';
 
-Route::view('dashboard', 'dashboard')
+Route::view('admin/dashboard', 'admin.dashboard')
     ->middleware(['auth', 'verified'])
     ->name('dashboard');
 

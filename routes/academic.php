@@ -3,7 +3,7 @@
 use Illuminate\Support\Facades\Route;
 use Livewire\Volt\Volt;
 
-Route::middleware(['auth', 'verified', 'role:admin'])->group(function () {
+Route::middleware(['auth', 'verified', 'role:admin'])->prefix('admin')->group(function () {
     Volt::route('/academic/years', 'admin.academic.academic-years')->name('academic.years');
     Volt::route('/academic/levels', 'admin.academic.levels')->name('academic.levels');
     Volt::route('/academic/classrooms', 'admin.academic.classrooms')->name('academic.classrooms');
