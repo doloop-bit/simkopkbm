@@ -23,7 +23,7 @@
             <x-admin.header />
 
             {{-- Main content --}}
-            <flux:main>
+            <flux:main class="transition-opacity duration-200">
                 {{ $slot }}
             </flux:main>
         </div>
