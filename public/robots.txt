@@ -24,4 +24,4 @@ Allow: /galeri
 Allow: /kontak
 
 # Sitemap
-Sitemap: /sitemap.xml
+Sitemap: https://pkbmblc.sch.id/sitemap.xml
