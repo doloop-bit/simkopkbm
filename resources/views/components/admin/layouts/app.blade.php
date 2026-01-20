@@ -3,7 +3,7 @@
 ])
 
 <!DOCTYPE html>
-<html lang="{{ str_replace('_', '-', app()->getLocale()) }}" class="h-full dark">
+<html lang="{{ str_replace('_', '-', app()->getLocale()) }}" class="dark">
 <head>
     <meta name="csrf-token" content="{{ csrf_token() }}">
     
@@ -13,21 +13,13 @@
     
     @include('partials.head')
 </head>
-<body class="h-full font-sans antialiased bg-white dark:bg-zinc-900">
-    <div class="flex h-full">
-        {{-- Sidebar component (handles both desktop and mobile) --}}
-        <x-admin.sidebar />
-        
-        <div class="flex-1 flex flex-col">
-            {{-- Mobile header with user menu --}}
-            <x-admin.header />
+<body class="min-h-screen bg-white font-sans antialiased dark:bg-zinc-900">
+    <x-admin.sidebar />
+    <x-admin.header />
 
-            {{-- Main content --}}
-            <flux:main class="transition-opacity duration-200">
-                {{ $slot }}
-            </flux:main>
-        </div>
-    </div>
+    <flux:main>
+        {{ $slot }}
+    </flux:main>
 
     @fluxScripts
 </body>
