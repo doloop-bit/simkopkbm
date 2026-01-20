@@ -17,6 +17,10 @@ new #[Layout('components.admin.layouts.app')] class extends Component {
     use WithFileUploads, WithPagination;
 
     public string $search = '';
+    public string $sortField = 'created_at';
+    public string $sortDirection = 'desc';
+    public ?int $filter_classroom_id = null;
+    public ?int $filter_level_id = null;
 
     // Form fields
     public string $name = '';
@@ -337,17 +341,38 @@ new #[Layout('components.admin.layouts.app')] class extends Component {
         $user->delete();
     }
 
+    public function sortBy(string $field): void
+    {
+        if ($this->sortField === $field) {
+            $this->sortDirection = $this->sortDirection === 'asc' ? 'desc' : 'asc';
+        } else {
+            $this->sortField = $field;
+            $this->sortDirection = 'asc';
+        }
+    }
+
+    public function export(): \Symfony\Component\HttpFoundation\BinaryFileResponse
+    {
+        return \Maatwebsite\Excel\Facades\Excel::download(
+            new \App\Exports\StudentsExport($this->search, $this->filter_classroom_id, $this->filter_level_id),
+            'data_siswa_' . now()->format('Y-m-d_H-i-s') . '.xlsx'
+        );
+    }
+
     public function with(): array
     {
         return [
             'students' => User::where('role', 'siswa')
-                ->with(['latestProfile.profileable.classroom'])
+                ->with(['latestProfile.profileable.classroom.level'])
                 ->when($this->search, fn($q) => $q->where('name', 'like', "%{$this->search}%")
                     ->orWhere('email', 'like', "%{$this->search}%")
                     ->orWhereHas('latestProfile', fn($pq) => $pq->whereHasMorph('profileable', [StudentProfile::class], fn($sq) => $sq->where('nis', 'like', "%{$this->search}%")->orWhere('nisn', 'like', "%{$this->search}%"))))
-                ->latest()
+                ->when($this->filter_classroom_id, fn($q) => $q->whereHas('latestProfile', fn($pq) => $pq->whereHasMorph('profileable', [StudentProfile::class], fn($sq) => $sq->where('classroom_id', $this->filter_classroom_id))))
+                ->when($this->filter_level_id, fn($q) => $q->whereHas('latestProfile', fn($pq) => $pq->whereHasMorph('profileable', [StudentProfile::class], fn($sq) => $sq->whereHas('classroom', fn($cq) => $cq->where('level_id', $this->filter_level_id)))))
+                ->orderBy($this->sortField === 'name' ? 'name' : ($this->sortField === 'email' ? 'email' : 'created_at'), $this->sortDirection)
                 ->paginate(15),
             'classrooms' => Classroom::with('academicYear')->get(),
+            'levels' => \App\Models\Level::all(),
         ];
     }
 }; ?>
@@ -379,73 +404,99 @@ new #[Layout('components.admin.layouts.app')] class extends Component {
         </div>
     </div>
 
-    <div class="overflow-hidden border rounded-lg border-zinc-200 dark:border-zinc-700">
+    <div class="overflow-hidden border rounded-xl border-zinc-200 dark:border-zinc-700 bg-white dark:bg-zinc-900 shadow-sm">
+        <div class="p-4 border-b border-zinc-200 dark:border-zinc-700 flex flex-col md:flex-row gap-4 items-center justify-between bg-zinc-50/50 dark:bg-zinc-800/50">
+            <div class="flex flex-1 gap-3 w-full md:w-auto">
+                <flux:select wire:model.live="filter_level_id" placeholder="Pilih Tingkat" class="max-w-[200px]">
+                    <option value="">Semua Tingkat</option>
+                    @foreach($levels as $level)
+                        <option value="{{ $level->id }}">{{ $level->name }}</option>
+                    @endforeach
+                </flux:select>
+                <flux:select wire:model.live="filter_classroom_id" placeholder="Semua Kelas" class="max-w-[200px]">
+                    <option value="">Semua Kelas</option>
+                    @foreach($classrooms as $room)
+                        <option value="{{ $room->id }}">{{ $room->name }}</option>
+                    @endforeach
+                </flux:select>
+            </div>
+            
+            <div class="flex gap-2 w-full md:w-auto justify-end">
+                <flux:button wire:click="export" icon="arrow-down-tray" variant="outline">Export XLSX</flux:button>
+            </div>
+        </div>
+
         <table class="w-full text-sm text-left border-collapse">
-            <thead class="bg-zinc-50 dark:bg-zinc-800">
+            <thead class="bg-zinc-50 dark:bg-zinc-800/50">
                 <tr>
-                    <th
-                        class="px-4 py-3 font-medium text-zinc-700 dark:text-zinc-300 border-b border-zinc-200 dark:border-zinc-700">
-                        Siswa</th>
-                    <th
-                        class="px-4 py-3 font-medium text-zinc-700 dark:text-zinc-300 border-b border-zinc-200 dark:border-zinc-700">
-                        NIS/NISN</th>
-                    <th
-                        class="px-4 py-3 font-medium text-zinc-700 dark:text-zinc-300 border-b border-zinc-200 dark:border-zinc-700">
-                        Kelas</th>
-                    <th
-                        class="px-4 py-3 font-medium text-zinc-700 dark:text-zinc-300 border-b border-zinc-200 dark:border-zinc-700">
-                        Orang Tua/Wali</th>
-                    <th
-                        class="px-4 py-3 font-medium text-zinc-700 dark:text-zinc-300 border-b border-zinc-200 dark:border-zinc-700 text-right">
-                        Aksi</th>
+                    <th class="px-4 py-3 font-semibold text-zinc-900 dark:text-zinc-100 border-b border-zinc-200 dark:border-zinc-700">
+                        <button wire:click="sortBy('name')" class="flex items-center gap-1 hover:text-primary-600 transition-colors">
+                            Siswa
+                            @if($sortField === 'name')
+                                <flux:icon :icon="$sortDirection === 'asc' ? 'chevron-up' : 'chevron-down'" class="w-3 h-3" />
+                            @endif
+                        </button>
+                    </th>
+                    <th class="px-4 py-3 font-semibold text-zinc-900 dark:text-zinc-100 border-b border-zinc-200 dark:border-zinc-700">
+                        NIS/NISN
+                    </th>
+                    <th class="px-4 py-3 font-semibold text-zinc-900 dark:text-zinc-100 border-b border-zinc-200 dark:border-zinc-700">
+                        Kelas
+                    </th>
+                    <th class="px-4 py-3 font-semibold text-zinc-900 dark:text-zinc-100 border-b border-zinc-200 dark:border-zinc-700">
+                        Orang Tua/Wali
+                    </th>
+                    <th class="px-4 py-3 font-semibold text-zinc-900 dark:text-zinc-100 border-b border-zinc-200 dark:border-zinc-700 text-right">
+                        Aksi
+                    </th>
                 </tr>
             </thead>
             <tbody class="divide-y divide-zinc-200 dark:divide-zinc-700">
                 @forelse ($students as $student)
                     @php $profile = $student->latestProfile?->profileable; @endphp
-                    <tr wire:key="{{ $student->id }}" class="hover:bg-zinc-50 dark:hover:bg-zinc-800/50">
-                        <td class="px-4 py-3">
-                            <button type="button" class="flex items-center gap-3 cursor-pointer text-left"
+                    <tr wire:key="{{ $student->id }}" class="hover:bg-zinc-50/80 dark:hover:bg-zinc-800/30 transition-colors group">
+                        <td class="px-4 py-4">
+                            <button type="button" class="flex items-center gap-3 cursor-pointer text-left focus:outline-none"
                                 wire:click="viewDetails({{ $student->id }})"
                                 x-on:click="$flux.modal('detail-modal').show()">
                                 <flux:avatar :src="$profile?->photo ? asset('storage/' . $profile->photo) : null"
-                                    :name="$student->name" :initials="$student->initials()" size="sm" />
+                                    :name="$student->name" :initials="$student->initials()" size="sm" class="group-hover:ring-2 ring-primary-500/20 transition-all" />
                                 <div class="flex flex-col">
                                     <span
-                                        class="font-medium text-zinc-900 dark:text-white hover:text-primary-600 dark:hover:text-primary-400 transition-colors">{{ $student->name }}</span>
+                                        class="font-semibold text-zinc-900 dark:text-white group-hover:text-primary-600 dark:group-hover:text-primary-400 transition-colors">{{ $student->name }}</span>
                                     <span class="text-xs text-zinc-500">{{ $student->email ?? '-' }}</span>
                                 </div>
                             </button>
                         </td>
-                        <td class="px-4 py-3 text-zinc-600 dark:text-zinc-400">
+                        <td class="px-4 py-4 text-zinc-600 dark:text-zinc-400">
                             <div class="flex flex-col">
-                                <span>NIS: {{ $profile->nis ?? '-' }}</span>
-                                <span class="text-xs">NISN: {{ $profile->nisn ?? '-' }}</span>
+                                <span class="text-sm font-medium">{{ $profile->nis ?? '-' }}</span>
+                                <span class="text-[10px] uppercase tracking-wider opacity-60">NISN: {{ $profile->nisn ?? '-' }}</span>
                             </div>
                         </td>
-                        <td class="px-4 py-3">
+                        <td class="px-4 py-4">
                             @if($profile?->classroom)
-                                <flux:badge size="sm" variant="neutral">
+                                <flux:badge size="sm" variant="neutral" class="bg-zinc-100 dark:bg-zinc-800 border-zinc-200 dark:border-zinc-700">
                                     {{ $profile->classroom->name }}
                                 </flux:badge>
                             @else
                                 <span class="text-xs text-red-500 italic">Belum ada kelas</span>
                             @endif
                         </td>
-                        <td class="px-4 py-3 text-zinc-600 dark:text-zinc-400">
+                        <td class="px-4 py-4 text-zinc-600 dark:text-zinc-400">
                             <div class="flex flex-col">
-                                <span>{{ $profile->father_name ?: ($profile->mother_name ?: ($profile->guardian_name ?: '-')) }}</span>
-                                <span class="text-xs">{{ $profile->guardian_phone ?: ($profile->phone ?: '-') }}</span>
+                                <span class="text-sm font-medium">{{ $profile->father_name ?: ($profile->mother_name ?: ($profile->guardian_name ?: '-')) }}</span>
+                                <span class="text-xs opacity-75">{{ $profile->guardian_phone ?: ($profile->phone ?: '-') }}</span>
                             </div>
                         </td>
-                        <td class="px-4 py-3 text-right space-x-2">
+                        <td class="px-4 py-4 text-right space-x-1">
                             <flux:button size="sm" variant="ghost" icon="chart-bar"
                                 wire:click="openPeriodic({{ $student->id }})"
                                 x-on:click="$flux.modal('periodic-modal').show()" tooltip="Data Periodik" />
                             <flux:button size="sm" variant="ghost" icon="pencil-square"
                                 wire:click="edit({{ $student->id }})" x-on:click="$flux.modal('student-modal').show()"
                                 tooltip="Edit Siswa" />
-                            <flux:button size="sm" variant="ghost" icon="trash" class="text-red-500"
+                            <flux:button size="sm" variant="ghost" icon="trash" class="text-red-500 hover:bg-red-50 dark:hover:bg-red-900/20"
                                 wire:confirm="Yakin ingin menghapus siswa ini?" wire:click="delete({{ $student->id }})"
                                 tooltip="Hapus Siswa" />
                         </td>
