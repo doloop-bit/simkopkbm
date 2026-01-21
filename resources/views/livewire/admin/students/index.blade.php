@@ -91,6 +91,9 @@ new #[Layout('components.admin.layouts.app')] class extends Component {
 
     public ?string $periodicDataLastUpdated = null;
 
+    public $importFile;
+    public $importErrors = [];
+
     public function rules(): array
     {
         $profileId = $this->editing?->latestProfile?->profileable_id;
@@ -359,6 +362,79 @@ new #[Layout('components.admin.layouts.app')] class extends Component {
         );
     }
 
+    public function downloadTemplate(): \Symfony\Component\HttpFoundation\BinaryFileResponse
+    {
+        return \Maatwebsite\Excel\Facades\Excel::download(
+            new \App\Exports\StudentsTemplateExport,
+            'template_import_siswa.xlsx'
+        );
+    }
+
+    public function import(): void
+    {
+        $this->validate([
+            'importFile' => 'required|mimes:xlsx,xls,csv|max:10240',
+        ]);
+
+        $this->importErrors = [];
+
+        try {
+            \Maatwebsite\Excel\Facades\Excel::import(new \App\Imports\StudentsImport, $this->importFile);
+            
+            $this->dispatch('close-modal', 'import-modal');
+            $this->reset(['importFile', 'importErrors']);
+            session()->flash('success', 'Data siswa berhasil diimport!');
+        } catch (\Maatwebsite\Excel\Validators\ValidationException $e) {
+            $failures = $e->failures();
+            foreach ($failures as $failure) {
+                $this->importErrors[] = [
+                    'row' => $failure->row(),
+                    'errors' => $failure->errors(),
+                ];
+            }
+        } catch (\Illuminate\Database\QueryException $e) {
+            // Parse database constraint violations
+            $errorMessage = $e->getMessage();
+            
+            if (str_contains($errorMessage, 'UNIQUE constraint failed: student_profiles.nisn')) {
+                $this->importErrors[] = [
+                    'row' => 'Database',
+                    'errors' => ['NISN sudah terdaftar di sistem. Periksa data duplikat di file Excel Anda.'],
+                ];
+            } elseif (str_contains($errorMessage, 'UNIQUE constraint failed: student_profiles.nik')) {
+                $this->importErrors[] = [
+                    'row' => 'Database',
+                    'errors' => ['NIK sudah terdaftar di sistem. Periksa data duplikat di file Excel Anda.'],
+                ];
+            } elseif (str_contains($errorMessage, 'UNIQUE constraint failed: student_profiles.nis')) {
+                $this->importErrors[] = [
+                    'row' => 'Database',
+                    'errors' => ['NIS sudah terdaftar di sistem. Periksa data duplikat di file Excel Anda.'],
+                ];
+            } elseif (str_contains($errorMessage, 'UNIQUE constraint failed: users.email')) {
+                $this->importErrors[] = [
+                    'row' => 'Database',
+                    'errors' => ['Email sudah terdaftar di sistem. Periksa data duplikat di file Excel Anda.'],
+                ];
+            } else {
+                $this->importErrors[] = [
+                    'row' => 'Database',
+                    'errors' => ['Terjadi kesalahan database: Data duplikat atau tidak valid.'],
+                ];
+            }
+        } catch (\Exception $e) {
+            $this->importErrors[] = [
+                'row' => 'Sistem',
+                'errors' => [$e->getMessage()],
+            ];
+        }
+    }
+
+    public function clearImport(): void
+    {
+        $this->reset(['importFile', 'importErrors']);
+    }
+
     public function with(): array
     {
         return [
@@ -388,6 +464,16 @@ new #[Layout('components.admin.layouts.app')] class extends Component {
         </div>
     @endif
 
+    @if (session('error'))
+        <div x-data="{ show: true }" x-show="show"
+            class="mb-6 p-4 bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded-lg">
+            <div class="flex items-center gap-3">
+                <flux:icon icon="exclamation-circle" class="w-5 h-5 text-red-600 dark:text-red-400" />
+                <span class="text-red-800 dark:text-red-200">{{ session('error') }}</span>
+            </div>
+        </div>
+    @endif
+
     <div class="flex items-center justify-between mb-6">
         <div>
             <flux:heading size="xl" level="1">Manajemen Siswa</flux:heading>
@@ -397,6 +483,10 @@ new #[Layout('components.admin.layouts.app')] class extends Component {
         <div class="flex gap-2">
             <flux:input wire:model.live.debounce.300ms="search" placeholder="Cari siswa..." icon="magnifying-glass"
                 class="w-64" />
+
+            <flux:modal.trigger name="import-modal">
+                <flux:button variant="outline" icon="arrow-up-tray">Import</flux:button>
+            </flux:modal.trigger>
 
             <flux:modal.trigger name="student-modal">
                 <flux:button variant="primary" icon="plus" wire:click="createNew">Tambah Siswa</flux:button>
@@ -459,8 +549,13 @@ new #[Layout('components.admin.layouts.app')] class extends Component {
                             <button type="button" class="flex items-center gap-3 cursor-pointer text-left focus:outline-none"
                                 wire:click="viewDetails({{ $student->id }})"
                                 x-on:click="$flux.modal('detail-modal').show()">
-                                <flux:avatar :src="$profile?->photo ? asset('storage/' . $profile->photo) : null"
-                                    :name="$student->name" :initials="$student->initials()" size="sm" class="group-hover:ring-2 ring-primary-500/20 transition-all" />
+                                @if($profile?->photo && Storage::disk('public')->exists($profile->photo))
+                                    <flux:avatar src="/storage/{{ $profile->photo }}" size="sm" class="group-hover:ring-1 ring-primary-500/20 transition-all" />
+                                @else
+                                    <div class="group-hover:ring-1 flex aspect-square size-8 items-center justify-center rounded-lg bg-zinc-100 text-zinc-400 group-hover:bg-primary-50 group-hover:text-primary-600 transition-all dark:bg-zinc-800 dark:text-zinc-500 dark:group-hover:bg-primary-900/20 dark:group-hover:text-primary-400">
+                                        <flux:icon icon="user" variant="mini" class="size-5" />
+                                    </div>
+                                @endif
                                 <div class="flex flex-col">
                                     <span
                                         class="font-semibold text-zinc-900 dark:text-white group-hover:text-primary-600 dark:group-hover:text-primary-400 transition-colors">{{ $student->name }}</span>
@@ -530,7 +625,7 @@ new #[Layout('components.admin.layouts.app')] class extends Component {
                             <img src="{{ $photo->temporaryUrl() }}"
                                 class="w-24 h-24 rounded-lg object-cover border-2 border-primary-500" />
                         @elseif ($existingPhoto)
-                            <img src="{{ asset('storage/' . $existingPhoto) }}" class="w-24 h-24 rounded-lg object-cover" />
+                            <img src="/storage/{{ $existingPhoto }}" class="w-24 h-24 rounded-lg object-cover" />
                         @else
                             <div
                                 class="w-24 h-24 rounded-lg bg-zinc-100 dark:bg-zinc-800 flex items-center justify-center text-zinc-400">
@@ -630,251 +725,8 @@ new #[Layout('components.admin.layouts.app')] class extends Component {
         </form>
     </flux:modal>
 
-    <flux:modal name="periodic-modal" class="max-w-md"
-        x-on:periodic-saved.window="$flux.modal('periodic-modal').close()">
-        <form wire:submit.prevent="savePeriodic({{ $editing?->latestProfile?->profileable_id ?? 0 }})"
-            class="space-y-6">
-            <div>
-                <flux:heading size="lg">Data Periodik Siswa</flux:heading>
-                <flux:subheading>Input data berat badan, tinggi, dan lingkar kepala.</flux:subheading>
-
-                @if($hasExistingPeriodicData)
-                    <div
-                        class="mt-3 p-3 bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-800 rounded-lg">
-                        <div class="flex items-center gap-2">
-                            <flux:icon icon="information-circle" class="w-5 h-5 text-blue-600 dark:text-blue-400" />
-                            <div>
-                                <span class="text-sm font-medium text-blue-800 dark:text-blue-200">Data sudah ada</span>
-                                <span class="text-xs text-blue-600 dark:text-blue-400 block">Terakhir diupdate
-                                    {{ $periodicDataLastUpdated }}</span>
-                            </div>
-                        </div>
-                    </div>
-                @else
-                    <div
-                        class="mt-3 p-3 bg-amber-50 dark:bg-amber-900/20 border border-amber-200 dark:border-amber-800 rounded-lg">
-                        <div class="flex items-center gap-2">
-                            <flux:icon icon="exclamation-triangle" class="w-5 h-5 text-amber-600 dark:text-amber-400" />
-                            <span class="text-sm font-medium text-amber-800 dark:text-amber-200">Belum ada data untuk
-                                semester ini</span>
-                        </div>
-                    </div>
-                @endif
-            </div>
-
-            <div class="space-y-4">
-                <flux:select wire:model.live="semester" label="Semester">
-                    <option value="1">Ganjil (1)</option>
-                    <option value="2">Genap (2)</option>
-                </flux:select>
-
-                <flux:input type="number" step="0.5" wire:model="weight" label="Berat Badan (kg)" suffix="kg" />
-                <flux:input type="number" step="1" wire:model="height" label="Tinggi Badan (cm)" suffix="cm" />
-                <flux:input type="number" step="0.1" wire:model="head_circumference" label="Lingkar Kepala (cm)"
-                    suffix="cm" />
-            </div>
-
-            <div class="flex justify-end gap-2">
-                <flux:modal.close>
-                    <flux:button variant="ghost">Batal</flux:button>
-                </flux:modal.close>
-                <flux:button type="submit" variant="primary">Simpan Data</flux:button>
-            </div>
-        </form>
-    </flux:modal>
-
-    <flux:modal name="detail-modal" class="max-w-4xl">
-        @if($viewing)
-            @php $viewProfile = $viewing->latestProfile?->profileable; @endphp
-            <div class="space-y-6">
-                <div class="flex items-start justify-between">
-                    <div>
-                        <flux:heading size="lg">Detail Siswa</flux:heading>
-                        <flux:subheading>Informasi lengkap data siswa</flux:subheading>
-                    </div>
-                </div>
-
-                <div class="flex items-start gap-6 pb-6 border-b border-zinc-200 dark:border-zinc-700">
-                    <div class="flex-shrink-0">
-                        @if($viewProfile?->photo)
-                            <img src="{{ asset('storage/' . $viewProfile->photo) }}"
-                                class="w-32 h-32 rounded-lg object-cover border-2 border-zinc-200 dark:border-zinc-700"
-                                alt="{{ $viewing->name }}" />
-                        @else
-                            <div class="w-32 h-32 rounded-lg bg-zinc-100 dark:bg-zinc-800 flex items-center justify-center">
-                                <flux:icon icon="user" class="w-16 h-16 text-zinc-400" />
-                            </div>
-                        @endif
-                    </div>
-
-                    <div class="flex-1 space-y-2">
-                        <div>
-                            <flux:heading size="xl">{{ $viewing->name }}</flux:heading>
-                            <flux:text class="text-zinc-600 dark:text-zinc-400">{{ $viewing->email }}</flux:text>
-                        </div>
-
-                        <div class="flex gap-2 items-center">
-                            @if($viewProfile?->classroom)
-                                <flux:badge variant="primary">{{ $viewProfile->classroom->name }}</flux:badge>
-                            @else
-                                <flux:badge variant="danger">Belum ada kelas</flux:badge>
-                            @endif
-
-                            <flux:badge variant="neutral">
-                                {{ ucfirst(str_replace('_', ' ', $viewProfile?->status ?? 'baru')) }}
-                            </flux:badge>
-                        </div>
-                    </div>
-                </div>
-
-                <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
-                    <div class="space-y-4">
-                        <flux:heading size="md" class="border-b pb-2">Identitas Siswa</flux:heading>
-
-                        <div class="space-y-3">
-                            <div>
-                                <flux:text size="xs" class="text-zinc-500 dark:text-zinc-400">NIS</flux:text>
-                                <flux:text>{{ $viewProfile?->nis ?? '-' }}</flux:text>
-                            </div>
-
-                            <div>
-                                <flux:text size="xs" class="text-zinc-500 dark:text-zinc-400">NISN</flux:text>
-                                <flux:text>{{ $viewProfile?->nisn ?? '-' }}</flux:text>
-                            </div>
-
-                            <div>
-                                <flux:text size="xs" class="text-zinc-500 dark:text-zinc-400">NIK Siswa</flux:text>
-                                <flux:text>{{ $viewProfile?->nik ?? '-' }}</flux:text>
-                            </div>
-
-                            <div class="grid grid-cols-2 gap-3">
-                                <div>
-                                    <flux:text size="xs" class="text-zinc-500 dark:text-zinc-400">No. KK</flux:text>
-                                    <flux:text>{{ $viewProfile?->no_kk ?? '-' }}</flux:text>
-                                </div>
-                                <div>
-                                    <flux:text size="xs" class="text-zinc-500 dark:text-zinc-400">No. Akta</flux:text>
-                                    <flux:text>{{ $viewProfile?->no_akta ?? '-' }}</flux:text>
-                                </div>
-                            </div>
-
-                            <div>
-                                <flux:text size="xs" class="text-zinc-500 dark:text-zinc-400">Tempat, Tanggal Lahir
-                                </flux:text>
-                                <flux:text>
-                                    {{ $viewProfile?->pob ?? '-' }}{{ $viewProfile?->dob ? ', ' . $viewProfile->dob->format('d F Y') : '' }}
-                                </flux:text>
-                            </div>
-
-                            <div>
-                                <flux:text size="xs" class="text-zinc-500 dark:text-zinc-400">No. Telepon</flux:text>
-                                <flux:text>{{ $viewProfile?->phone ?? '-' }}</flux:text>
-                            </div>
-
-                            <div>
-                                <flux:text size="xs" class="text-zinc-500 dark:text-zinc-400">Alamat</flux:text>
-                                <flux:text>{{ $viewProfile?->address ?? '-' }}</flux:text>
-                            </div>
-
-                            <div class="grid grid-cols-2 gap-3">
-                                <div>
-                                    <flux:text size="xs" class="text-zinc-500 dark:text-zinc-400">Anak Ke-</flux:text>
-                                    <flux:text>{{ $viewProfile?->birth_order ?? '-' }}</flux:text>
-                                </div>
-                                <div>
-                                    <flux:text size="xs" class="text-zinc-500 dark:text-zinc-400">Dari ... Bersaudara
-                                    </flux:text>
-                                    <flux:text>{{ $viewProfile?->total_siblings ?? '-' }}</flux:text>
-                                </div>
-                            </div>
-
-                            <div>
-                                <flux:text size="xs" class="text-zinc-500 dark:text-zinc-400">Asal Sekolah</flux:text>
-                                <flux:text>{{ $viewProfile?->previous_school ?? '-' }}</flux:text>
-                            </div>
-                        </div>
-                    </div>
-
-                    <div class="space-y-4">
-                        <flux:heading size="md" class="border-b pb-2">Data Orang Tua / Wali</flux:heading>
-
-                        <div class="space-y-3">
-                            <div>
-                                <flux:text size="xs" class="text-zinc-500 dark:text-zinc-400">Nama Ayah</flux:text>
-                                <flux:text>{{ $viewProfile?->father_name ?? '-' }} (NIK: {{ $viewProfile?->nik_ayah ?? '-' }})</flux:text>
-                            </div>
-                            
-                            <div>
-                                <flux:text size="xs" class="text-zinc-500 dark:text-zinc-400">Nama Ibu</flux:text>
-                                <flux:text>{{ $viewProfile?->mother_name ?? '-' }} (NIK: {{ $viewProfile?->nik_ibu ?? '-' }})</flux:text>
-                            </div>
-
-                            <div class="pt-4 space-y-3">
-                                <flux:heading size="sm">Kontak Wali</flux:heading>
-
-                                <div>
-                                    <flux:text size="xs" class="text-zinc-500 dark:text-zinc-400">Nama Wali</flux:text>
-                                    <flux:text>{{ $viewProfile?->guardian_name ?? '-' }}</flux:text>
-                                </div>
-
-                                <div>
-                                    <flux:text size="xs" class="text-zinc-500 dark:text-zinc-400">No. Telp Wali</flux:text>
-                                    <flux:text>{{ $viewProfile?->guardian_phone ?? '-' }}</flux:text>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-
-                @php
-                    $periodicRecords = $viewProfile?->periodicRecords()
-                        ->with('academicYear')
-                        ->orderBy('academic_year_id', 'desc')
-                        ->orderBy('semester', 'desc')
-                        ->limit(3)
-                        ->get();
-                @endphp
-
-                @if($periodicRecords && $periodicRecords->count() > 0)
-                    <div class="pt-6 border-t border-zinc-200 dark:border-zinc-700">
-                        <flux:heading size="md" class="mb-4">Data Periodik Terbaru</flux:heading>
-
-                        <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
-                            @foreach($periodicRecords as $record)
-                                <div class="p-4 bg-zinc-50 dark:bg-zinc-800 rounded-lg">
-                                    <div class="text-xs text-zinc-500 dark:text-zinc-400 mb-2">
-                                        {{ $record->academicYear->name }} - Semester {{ $record->semester }}
-                                    </div>
-                                    <div class="space-y-2">
-                                        <div class="flex justify-between">
-                                            <span class="text-sm text-zinc-600 dark:text-zinc-400">Berat:</span>
-                                            <span class="font-medium">{{ $record->weight }} kg</span>
-                                        </div>
-                                        <div class="flex justify-between">
-                                            <span class="text-sm text-zinc-600 dark:text-zinc-400">Tinggi:</span>
-                                            <span class="font-medium">{{ $record->height }} cm</span>
-                                        </div>
-                                        <div class="flex justify-between">
-                                            <span class="text-sm text-zinc-600 dark:text-zinc-400">Ling. Kepala:</span>
-                                            <span class="font-medium">{{ $record->head_circumference }} cm</span>
-                                        </div>
-                                    </div>
-                                </div>
-                            @endforeach
-                        </div>
-                    </div>
-                @endif
-
-                <div class="flex justify-end gap-2 pt-4 border-t border-zinc-200 dark:border-zinc-700">
-                    <flux:modal.close>
-                        <flux:button variant="ghost">Tutup</flux:button>
-                    </flux:modal.close>
-                    <flux:button variant="primary" icon="pencil-square" wire:click="edit({{ $viewing->id }})"
-                        x-on:click="$flux.modal('detail-modal').close(); $flux.modal('student-modal').show()">
-                        Edit Data
-                    </flux:button>
-                </div>
-            </div>
-        @endif
-    </flux:modal>
+    {{-- Modals --}}
+    @include('livewire.admin.students.partials.import-modal')
+    @include('livewire.admin.students.partials.periodic-modal')
+    @include('livewire.admin.students.partials.detail-modal')
 </div>
