@@ -52,6 +52,17 @@ class User extends Authenticatable
         return $this->hasOne(Profile::class)->latestOfMany();
     }
 
+    public function reportCards()
+    {
+        return $this->hasMany(ReportCard::class, 'student_id');
+    }
+
+    public function studentProfile()
+    {
+        return $this->hasOneThrough(StudentProfile::class, Profile::class, 'user_id', 'id', 'id', 'profileable_id')
+            ->where('profiles.profileable_type', StudentProfile::class);
+    }
+
     /**
      * The attributes that should be hidden for serialization.
      *
