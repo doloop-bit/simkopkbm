@@ -1,17 +1,21 @@
-<flux:sidebar sticky collapsible="mobile" class="border-e border-zinc-200 bg-zinc-50 dark:border-zinc-700 dark:bg-zinc-900">
+<flux:sidebar sticky collapsible class="border-e border-zinc-200 bg-zinc-50 dark:border-zinc-700 dark:bg-zinc-900">
     <flux:sidebar.header>
-        <x-global.app-logo :sidebar="true" href="{{ route('dashboard') }}" wire:navigate.hover />
-        <flux:sidebar.collapse class="lg:hidden" />
+        <flux:sidebar.brand :name="config('app.name')" href="{{ route('dashboard') }}" wire:navigate.hover>
+            <x-slot name="logo" class="flex aspect-square size-10 items-center justify-center rounded-lg bg-accent-content text-accent-foreground">
+                <x-global.app-logo-icon class="size-7 fill-current text-white dark:text-black" />
+            </x-slot>
+        </flux:sidebar.brand>
+        <flux:sidebar.collapse class="in-data-flux-sidebar-on-desktop:not-in-data-flux-sidebar-collapsed-desktop:-mr-2" />
     </flux:sidebar.header>
 
     <flux:sidebar.nav>
         <!-- Dashboard -->
-        <flux:sidebar.item icon="home" :href="route('dashboard')" :current="request()->routeIs('dashboard')" wire:navigate.hover class="mb-6">
+        <flux:sidebar.item icon="home" :href="route('dashboard')" :current="request()->routeIs('dashboard')" wire:navigate.hover class="mb-3">
             {{ __('Dashboard') }}
         </flux:sidebar.item>
 
         <!-- Data Master -->
-        <flux:sidebar.group :heading="__('Data Master')" class="grid">
+        <flux:sidebar.group expandable icon="book-open" :heading="__('Data Master')" class="grid">
             <flux:sidebar.item icon="users" :href="route('students.index')" :current="request()->routeIs('students.index')" wire:navigate.hover>
                 {{ __('Siswa') }}
             </flux:sidebar.item>
@@ -21,7 +25,7 @@
         </flux:sidebar.group>
 
         <!-- Akademik -->
-        <flux:sidebar.group :heading="__('Akademik')" class="grid">
+        <flux:sidebar.group expandable icon="academic-cap" :heading="__('Akademik')" class="grid">
             <flux:sidebar.item icon="calendar" :href="route('academic.years')" :current="request()->routeIs('academic.years')" wire:navigate.hover>
                 {{ __('Tahun Ajaran') }}
             </flux:sidebar.item>
@@ -43,7 +47,7 @@
         </flux:sidebar.group>
 
         <!-- Penilaian & Raport -->
-        <flux:sidebar.group :heading="__('Penilaian & Raport')" class="grid">
+        <flux:sidebar.group expandable icon="pencil-square" :heading="__('Penilaian & Raport')" class="grid">
             <flux:sidebar.item icon="pencil-square" :href="route('academic.grades')" :current="request()->routeIs('academic.grades')" wire:navigate.hover>
                 {{ __('Penilaian') }}
             </flux:sidebar.item>
@@ -53,7 +57,7 @@
         </flux:sidebar.group>
 
         <!-- Keuangan -->
-        <flux:sidebar.group :heading="__('Keuangan')" class="grid">
+        <flux:sidebar.group expandable icon="banknotes" :heading="__('Keuangan')" class="grid">
             <flux:sidebar.item icon="wallet" :href="route('financial.payments')" :current="request()->routeIs('financial.payments')" wire:navigate.hover>
                 {{ __('Transaksi') }}
             </flux:sidebar.item>
@@ -65,8 +69,8 @@
             </flux:sidebar.item>
         </flux:sidebar.group>
 
-        <!-- Manajemen Konten Web -->
-        <flux:sidebar.group :heading="__('Manajemen Konten Web')" class="grid">
+        <!-- Konten Web -->
+        <flux:sidebar.group expandable icon="globe-alt" :heading="__('Konten Web')" class="grid">
             <flux:sidebar.item icon="building-office-2" :href="route('admin.school-profile.edit')" :current="request()->routeIs('admin.school-profile.*')" wire:navigate.hover>
                 {{ __('Profil Sekolah') }}
             </flux:sidebar.item>
@@ -85,7 +89,7 @@
         </flux:sidebar.group>
 
         <!-- Laporan -->
-        <flux:sidebar.item icon="chart-bar" :href="route('reports')" :current="request()->routeIs('reports')" wire:navigate.hover class="mt-6">
+        <flux:sidebar.item icon="chart-bar" :href="route('reports')" :current="request()->routeIs('reports')" wire:navigate.hover class="mt-3">
             {{ __('Laporan') }}
         </flux:sidebar.item>
     </flux:sidebar.nav>
