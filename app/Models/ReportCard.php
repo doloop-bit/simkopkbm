@@ -19,6 +19,8 @@ class ReportCard extends Model
         'teacher_notes',
         'principal_notes',
         'status',
+        'curriculum_type',
+        'character_notes',
     ];
 
     protected function casts(): array

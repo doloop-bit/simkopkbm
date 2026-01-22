@@ -20,3 +20,4 @@ require __DIR__.'/gallery.php';
 require __DIR__.'/programs.php';
 require __DIR__.'/contact-inquiries.php';
 require __DIR__.'/report-card.php';
+require __DIR__.'/assessments.php';
