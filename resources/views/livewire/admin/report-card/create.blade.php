@@ -12,9 +12,9 @@ use App\Models\ReportAttendance;
 use App\Models\DevelopmentalAssessment;
 use Barryvdh\DomPDF\Facade\Pdf;
 use Illuminate\Foundation\Auth\Access\AuthorizesRequests;
+use Illuminate\Support\Facades\DB;
 use Livewire\Attributes\Layout;
 use Livewire\Volt\Component;
-use function Livewire\Volt\{state, computed};
 
 new #[Layout('components.admin.layouts.app')] class extends Component {
     use AuthorizesRequests;
@@ -34,6 +34,7 @@ new #[Layout('components.admin.layouts.app')] class extends Component {
     public $academicYears = [];
     public $classrooms = [];
     public $students = [];
+    public $existingReports = [];
 
     public function mount(): void
     {
@@ -41,6 +42,7 @@ new #[Layout('components.admin.layouts.app')] class extends Component {
         $this->loadAcademicYears();
         $this->loadClassrooms();
         $this->loadStudents();
+        $this->loadExistingReports();
     }
 
     public function loadAcademicYears(): void
@@ -74,18 +76,33 @@ new #[Layout('components.admin.layouts.app')] class extends Component {
         }
     }
 
+    public function loadExistingReports(): void
+    {
+        if ($this->classroomId && $this->academicYearId) {
+            $this->existingReports = ReportCard::where([
+                'classroom_id' => $this->classroomId,
+                'academic_year_id' => $this->academicYearId,
+                'semester' => $this->semester,
+            ])->with('student')->get();
+        } else {
+            $this->existingReports = collect();
+        }
+    }
+
     public function updatedAcademicYearId(): void
     {
         $this->classroomId = null;
         $this->selectedStudents = [];
         $this->loadClassrooms();
         $this->loadStudents();
+        $this->loadExistingReports();
     }
 
     public function updatedClassroomId(): void
     {
         $this->selectedStudents = [];
         $this->loadStudents();
+        $this->loadExistingReports();
 
         // Auto detect curriculum type based on classroom level
         if ($this->classroomId) {
@@ -98,187 +115,172 @@ new #[Layout('components.admin.layouts.app')] class extends Component {
         }
     }
 
-    public function generateReportCards(): void
+    public function updatedSemester(): void
     {
-        $this->validate([
-            'academicYearId' => 'required|exists:academic_years,id',
-            'classroomId' => 'required|exists:classrooms,id',
-            'semester' => 'required|in:1,2',
-            'selectedStudents' => 'required|array|min:1',
-            'selectedStudents.*' => 'exists:student_profiles,id',
-        ]);
-
-        foreach ($this->selectedStudents as $studentProfileId) {
-            $studentProfile = StudentProfile::find($studentProfileId);
-            $student = $studentProfile->profile?->user;
-
-            if (!$student) {
-                continue;
-            }
-
-            $aggregatedData = [];
-            $gpa = 0;
-
-            if ($this->curriculumType === 'merdeka') {
-                // Fetch Competency Assessments
-                $competencies = CompetencyAssessment::where([
-                    'student_id' => $student->id,
-                    'classroom_id' => $this->classroomId,
-                    'academic_year_id' => $this->academic_year_id,
-                    'semester' => $this->semester,
-                ])->with('subject')->get();
-
-                $aggregatedData['competencies'] = $competencies->map(fn($c) => [
-                    'subject_name' => $c->subject->name,
-                    'level' => $c->competency_level,
-                    'description' => $c->achievement_description,
-                ])->toArray();
-
-                // Fetch P5 Assessments
-                $p5s = P5Assessment::where([
-                    'student_id' => $student->id,
-                    'classroom_id' => $this->classroomId,
-                    'academic_year_id' => $this->academic_year_id,
-                    'semester' => $this->semester,
-                ])->with('p5Project')->get();
-
-                $aggregatedData['p5'] = $p5s->map(fn($p) => [
-                    'project_name' => $p->p5Project->name,
-                    'dimension' => $p->p5Project->dimension,
-                    'level' => $p->achievement_level,
-                    'description' => $p->description,
-                ])->toArray();
-
-                // Fetch Extracurricular Assessments
-                $ekskuls = ExtracurricularAssessment::where([
-                    'student_id' => $student->id,
-                    'academic_year_id' => $this->academic_year_id,
-                    'semester' => $this->semester,
-                ])->with('extracurricularActivity')->get();
-
-                $aggregatedData['extracurricular'] = $ekskuls->map(fn($e) => [
-                    'name' => $e->extracurricularActivity->name,
-                    'level' => $e->achievement_level,
-                    'description' => $e->description,
-                ])->toArray();
-
-                // Fetch Attendance Summary
-                $attendance = ReportAttendance::where([
-                    'student_id' => $student->id,
-                    'classroom_id' => $this->classroomId,
-                    'academic_year_id' => $this->academic_year_id,
-                    'semester' => $this->semester,
-                ])->first();
-
-                $aggregatedData['attendance'] = [
-                    'sick' => $attendance->sick ?? 0,
-                    'permission' => $attendance->permission ?? 0,
-                    'absent' => $attendance->absent ?? 0,
-                ];
-
-                // Fetch PAUD Developmental if relevant
-                $paud = DevelopmentalAssessment::where([
-                    'student_id' => $student->id,
-                    'classroom_id' => $this->classroomId,
-                    'academic_year_id' => $this->academic_year_id,
-                    'semester' => $this->semester,
-                ])->with('developmentalAspect')->get();
-
-                if ($paud->isNotEmpty()) {
-                    $aggregatedData['paud'] = $paud->map(fn($p) => [
-                        'aspect_name' => $p->developmentalAspect->name,
-                        'aspect_type' => $p->developmentalAspect->aspect_type,
-                        'description' => $p->description,
-                    ])->toArray();
-                }
-            } else {
-                // Conventional numeric scores logic
-                $scores = Score::where('student_id', $student->id)
-                    ->where('classroom_id', $this->classroomId)
-                    ->where('academic_year_id', $this->academicYearId)
-                    ->with(['subject', 'category'])
-                    ->get();
-
-                $scoreItems = [];
-                $totalScore = 0;
-                $scoreCount = 0;
-
-                foreach ($scores->groupBy('subject_id') as $subjectScores) {
-                    $subject = $subjectScores->first()->subject;
-                    $subjectTotal = 0;
-                    $categoryCount = 0;
-
-                    foreach ($subjectScores as $score) {
-                        $subjectTotal += $score->score;
-                        $categoryCount++;
-                    }
-
-                    $avgScore = $categoryCount > 0 ? $subjectTotal / $categoryCount : 0;
-                    $scoreItems[$subject->id] = [
-                        'subject_name' => $subject->name,
-                        'score' => round($avgScore, 2),
-                    ];
-
-                    $totalScore += $avgScore;
-                    $scoreCount++;
-                }
-
-                $aggregatedData = $scoreItems;
-                $gpa = $scoreCount > 0 ? round($totalScore / $scoreCount, 2) : 0;
-            }
-
-            ReportCard::updateOrCreate(
-                [
-                    'student_id' => $student->id,
-                    'classroom_id' => $this->classroomId,
-                    'academic_year_id' => $this->academicYearId,
-                    'semester' => $this->semester,
-                ],
-                [
-                    'scores' => $aggregatedData,
-                    'gpa' => $gpa,
-                    'curriculum_type' => $this->curriculumType,
-                    'teacher_notes' => $this->teacherNotes,
-                    'principal_notes' => $this->principalNotes,
-                    'character_notes' => $this->characterNotes,
-                    'status' => 'draft',
-                ]
-            );
-        }
-
-        $this->dispatch('notify', message: 'Rapor berhasil dibuat untuk ' . count($this->selectedStudents) . ' siswa');
-        $this->reset(['selectedStudents', 'teacherNotes', 'principalNotes']);
+        $this->loadExistingReports();
     }
 
-    public function previewReportCard($studentProfileId): void
+    public function generateReportCards(): void
     {
-        $studentProfile = StudentProfile::find($studentProfileId);
-        $student = $studentProfile->profile?->user;
+        try {
+            $this->validate([
+                'academicYearId' => 'required|exists:academic_years,id',
+                'classroomId' => 'required|exists:classrooms,id',
+                'semester' => 'required|in:1,2',
+                'selectedStudents' => 'required|array|min:1',
+                'selectedStudents.*' => 'exists:student_profiles,id',
+            ]);
 
-        if (!$student) {
-            return;
+            DB::transaction(function () {
+                foreach ($this->selectedStudents as $studentProfileId) {
+                    $studentProfile = StudentProfile::with('profile.user')->find($studentProfileId);
+                    $student = $studentProfile->profile?->user;
+
+                    if (!$student) continue;
+
+                    $aggregatedData = [];
+                    $gpa = 0;
+
+                    if ($this->curriculumType === 'merdeka') {
+                        // Fetch Competency Assessments
+                        $aggregatedData['competencies'] = CompetencyAssessment::where([
+                            'student_id' => $student->id,
+                            'classroom_id' => $this->classroomId,
+                            'academic_year_id' => $this->academicYearId,
+                            'semester' => $this->semester,
+                        ])->with('subject')->get()->map(fn($c) => [
+                            'subject_name' => $c->subject->name,
+                            'level' => $c->competency_level,
+                            'description' => $c->achievement_description,
+                        ])->toArray();
+
+                        // Fetch P5
+                        $aggregatedData['p5'] = P5Assessment::where([
+                            'student_id' => $student->id,
+                            'classroom_id' => $this->classroomId,
+                            'academic_year_id' => $this->academicYearId,
+                            'semester' => $this->semester,
+                        ])->with('p5Project')->get()->map(fn($p) => [
+                            'project_name' => $p->p5Project->name,
+                            'dimension' => $p->p5Project->dimension,
+                            'level' => $p->achievement_level,
+                            'description' => $p->description,
+                        ])->toArray();
+
+                        // Fetch Extracurricular
+                        $aggregatedData['extracurricular'] = ExtracurricularAssessment::where([
+                            'student_id' => $student->id,
+                            'academic_year_id' => $this->academicYearId,
+                            'semester' => $this->semester,
+                        ])->with('extracurricularActivity')->get()->map(fn($e) => [
+                            'name' => $e->extracurricularActivity->name,
+                            'level' => $e->achievement_level,
+                            'description' => $e->description,
+                        ])->toArray();
+
+                        // Fetch Attendance
+                        $attendance = ReportAttendance::where([
+                            'student_id' => $student->id,
+                            'classroom_id' => $this->classroomId,
+                            'academic_year_id' => $this->academicYearId,
+                            'semester' => $this->semester,
+                        ])->first();
+
+                        $aggregatedData['attendance'] = [
+                            'sick' => $attendance->sick ?? 0,
+                            'permission' => $attendance->permission ?? 0,
+                            'absent' => $attendance->absent ?? 0,
+                        ];
+
+                        // Fetch PAUD
+                        $paud = DevelopmentalAssessment::where([
+                            'student_id' => $student->id,
+                            'classroom_id' => $this->classroomId,
+                            'academic_year_id' => $this->academicYearId,
+                            'semester' => $this->semester,
+                        ])->with('developmentalAspect')->get();
+
+                        if ($paud->isNotEmpty()) {
+                            $aggregatedData['paud'] = $paud->map(fn($p) => [
+                                'aspect_name' => $p->developmentalAspect->name,
+                                'description' => $p->description,
+                            ])->toArray();
+                        }
+                    } else {
+                        // Conventional
+                        $scores = Score::where('student_id', $student->id)
+                            ->where('classroom_id', $this->classroomId)
+                            ->where('academic_year_id', $this->academicYearId)
+                            ->with(['subject'])
+                            ->get();
+
+                        $scoreItems = [];
+                        $totalScore = 0;
+                        $scoreCount = 0;
+
+                        foreach ($scores->groupBy('subject_id') as $subjectScores) {
+                            $subject = $subjectScores->first()->subject;
+                            $subjectTotal = $subjectScores->sum('score');
+                            $avgScore = $subjectTotal / $subjectScores->count();
+                            
+                            $scoreItems[] = [
+                                'subject_name' => $subject->name,
+                                'score' => round($avgScore, 2),
+                            ];
+
+                            $totalScore += $avgScore;
+                            $scoreCount++;
+                        }
+
+                        $aggregatedData = $scoreItems;
+                        $gpa = $scoreCount > 0 ? round($totalScore / $scoreCount, 2) : 0;
+                    }
+
+                    ReportCard::updateOrCreate(
+                        [
+                            'student_id' => $student->id,
+                            'classroom_id' => $this->classroomId,
+                            'academic_year_id' => $this->academicYearId,
+                            'semester' => $this->semester,
+                        ],
+                        [
+                            'scores' => $aggregatedData,
+                            'gpa' => $gpa,
+                            'curriculum_type' => $this->curriculumType,
+                            'teacher_notes' => $this->teacherNotes,
+                            'principal_notes' => $this->principalNotes,
+                            'character_notes' => $this->characterNotes,
+                            'status' => 'draft',
+                        ]
+                    );
+                }
+            });
+
+            \Flux::toast('Rapor berhasil dibuat untuk ' . count($this->selectedStudents) . ' siswa.');
+            $this->reset(['selectedStudents', 'teacherNotes', 'principalNotes', 'characterNotes']);
+            $this->loadExistingReports();
+        } catch (\Exception $e) {
+            \Flux::toast(variant: 'danger', heading: 'Gagal membuat rapor', text: $e->getMessage());
         }
+    }
 
-        $reportCard = ReportCard::where('student_id', $student->id)
-            ->where('classroom_id', $this->classroomId)
-            ->where('academic_year_id', $this->academicYearId)
-            ->where('semester', $this->semester)
-            ->first();
+    public function previewReportCard($reportCardId): void
+    {
+        $reportCard = ReportCard::with(['student', 'classroom', 'academicYear'])->find($reportCardId);
 
         if (!$reportCard) {
-            $this->dispatch('notify', message: 'Rapor belum dibuat untuk siswa ini');
+            \Flux::toast(variant: 'danger', text: 'Rapor tidak ditemukan');
             return;
         }
 
-        $classroom = Classroom::find($this->classroomId);
-        $academicYear = AcademicYear::find($this->academicYearId);
+        $studentProfile = StudentProfile::where('user_id', $reportCard->student_id)->first();
 
         $this->previewData = [
-            'student' => $student,
+            'student' => $reportCard->student,
             'studentProfile' => $studentProfile,
             'reportCard' => $reportCard,
-            'classroom' => $classroom,
-            'academicYear' => $academicYear,
+            'classroom' => $reportCard->classroom,
+            'academicYear' => $reportCard->academicYear,
         ];
 
         $this->showPreview = true;
@@ -292,314 +294,338 @@ new #[Layout('components.admin.layouts.app')] class extends Component {
 
     public function exportPdf($reportCardId)
     {
-        $reportCard = ReportCard::find($reportCardId);
+        $reportCard = ReportCard::with(['student', 'classroom.level', 'academicYear'])->find($reportCardId);
 
         if (!$reportCard) {
-            $this->dispatch('notify', message: 'Rapor tidak ditemukan');
+            \Flux::toast(variant: 'danger', text: 'Rapor tidak ditemukan');
             return;
         }
 
-        $this->authorize('view', $reportCard);
+        $studentProfile = StudentProfile::where('user_id', $reportCard->student_id)->first();
 
         $data = [
             'reportCard' => $reportCard,
             'student' => $reportCard->student,
-            'studentProfile' => $reportCard->student->studentProfile ?? null,
+            'studentProfile' => $studentProfile,
             'classroom' => $reportCard->classroom,
             'academicYear' => $reportCard->academicYear,
         ];
 
-        $view = 'pdf.report-card';
-        if ($reportCard->curriculum_type === 'merdeka') {
-            $view = 'pdf.report-card-merdeka';
+        $view = $reportCard->curriculum_type === 'merdeka' ? 'pdf.report-card-merdeka' : 'pdf.report-card';
+
+        try {
+            $pdf = Pdf::loadView($view, $data);
+            return response()->streamDownload(
+                fn () => print($pdf->output()),
+                'rapor-' . str($reportCard->student->name)->slug() . '-' . $reportCard->semester . '.pdf',
+                ['Content-Type' => 'application/pdf']
+            );
+        } catch (\Exception $e) {
+            \Flux::toast(variant: 'danger', heading: 'PDF Error', text: $e->getMessage());
         }
+    }
 
-        $pdf = Pdf::loadView($view, $data);
-
-        return response()->streamDownload(
-            fn () => print($pdf->output()),
-            'rapor-' . $reportCard->student->name . '-' . $reportCard->semester . '.pdf',
-            ['Content-Type' => 'application/pdf']
-        );
+    public function deleteReportCard($id): void
+    {
+        ReportCard::find($id)?->delete();
+        $this->loadExistingReports();
+        \Flux::toast('Rapor berhasil dihapus.');
     }
 }; ?>
 
-<div class="space-y-6 p-6">
+<div class="p-6 space-y-6">
     <!-- Header -->
     <div class="flex items-center justify-between">
         <div>
-            <h1 class="text-3xl font-bold text-gray-900 dark:text-white">{{ __('Buat Rapor') }}</h1>
-            <p class="mt-1 text-sm text-gray-600 dark:text-gray-400">{{ __('Buat dan kelola rapor siswa') }}</p>
+            <flux:heading size="xl" level="1">{{ __('Generator Rapor') }}</flux:heading>
+            <flux:subheading>{{ __('Buat dan kelola rapor siswa berdasarkan data penilaian.') }}</flux:subheading>
         </div>
+        <flux:button :href="route('admin.report-card.test')" variant="ghost" icon="beaker">Buka Lab Pengujian</flux:button>
     </div>
 
     <div class="grid gap-6 lg:grid-cols-3">
-        <!-- Form Section -->
+        <!-- Left Column: Generator Form -->
         <div class="lg:col-span-2 space-y-6">
-            <div class="rounded-lg border border-gray-200 bg-white p-6 shadow-sm dark:border-gray-700 dark:bg-gray-800">
+            <div class="p-6 bg-white dark:bg-zinc-800 rounded-xl border border-zinc-200 dark:border-zinc-700 shadow-sm">
                 <form wire:submit="generateReportCards" class="space-y-6">
-                    <!-- Academic Year -->
-                    <div>
-                        <label class="block text-sm font-medium text-gray-900 dark:text-white mb-2">{{ __('Tahun Ajaran') }}</label>
-                        <select wire:model.live="academicYearId" class="w-full rounded-lg border border-gray-300 bg-white px-4 py-2 text-gray-900 placeholder-gray-400 focus:border-blue-500 focus:ring-blue-500 dark:border-gray-600 dark:bg-gray-700 dark:text-white dark:placeholder-gray-400">
-                            <option value="">{{ __('Pilih Tahun Ajaran') }}</option>
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                        <flux:select wire:model.live="academicYearId" label="Tahun Ajaran" required>
+                            <option value="">Pilih Tahun Ajaran</option>
                             @foreach ($academicYears as $year)
                                 <option value="{{ $year['id'] }}">{{ $year['name'] }}</option>
                             @endforeach
-                        </select>
-                        @error('academicYearId')
-                            <span class="text-sm text-red-600 dark:text-red-400">{{ $message }}</span>
-                        @enderror
-                    </div>
+                        </flux:select>
 
-                    <!-- Classroom -->
-                    <div>
-                        <label class="block text-sm font-medium text-gray-900 dark:text-white mb-2">{{ __('Kelas') }}</label>
-                        <select wire:model.live="classroomId" class="w-full rounded-lg border border-gray-300 bg-white px-4 py-2 text-gray-900 placeholder-gray-400 focus:border-blue-500 focus:ring-blue-500 dark:border-gray-600 dark:bg-gray-700 dark:text-white dark:placeholder-gray-400">
-                            <option value="">{{ __('Pilih Kelas') }}</option>
+                        <flux:select wire:model.live="classroomId" label="Kelas" required>
+                            <option value="">Pilih Kelas</option>
                             @foreach ($classrooms as $classroom)
                                 <option value="{{ $classroom['id'] }}">{{ $classroom['name'] }}</option>
                             @endforeach
-                        </select>
-                        @error('classroomId')
-                            <span class="text-sm text-red-600 dark:text-red-400">{{ $message }}</span>
-                        @enderror
+                        </flux:select>
+
+                        <flux:select wire:model.live="semester" label="Semester" required>
+                            <option value="1">Semester 1 (Ganjil)</option>
+                            <option value="2">Semester 2 (Genap)</option>
+                        </flux:select>
+
+                        <flux:select wire:model.live="curriculumType" label="Jenis Kurikulum" required>
+                            <option value="conventional">Kurikulum 2013 (Konvensional)</option>
+                            <option value="merdeka">Kurikulum Merdeka</option>
+                        </flux:select>
                     </div>
 
-                    <!-- Semester -->
-                    <div>
-                        <label class="block text-sm font-medium text-gray-900 dark:text-white mb-2">{{ __('Semester') }}</label>
-                        <select wire:model="semester" class="w-full rounded-lg border border-gray-300 bg-white px-4 py-2 text-gray-900 placeholder-gray-400 focus:border-blue-500 focus:ring-blue-500 dark:border-gray-600 dark:bg-gray-700 dark:text-white dark:placeholder-gray-400">
-                            <option value="1">{{ __('Semester 1') }}</option>
-                            <option value="2">{{ __('Semester 2') }}</option>
-                        </select>
-                    </div>
-
-                    <!-- Curriculum Type -->
-                    <div>
-                        <label class="block text-sm font-medium text-gray-900 dark:text-white mb-2">{{ __('Kurikulum') }}</label>
-                        <select wire:model.live="curriculumType" class="w-full rounded-lg border border-gray-300 bg-white px-4 py-2 text-gray-900 placeholder-gray-400 focus:border-blue-500 focus:ring-blue-500 dark:border-gray-600 dark:bg-gray-700 dark:text-white dark:placeholder-gray-400">
-                            <option value="conventional">{{ __('Kurikulum 2013 (Konvensional)') }}</option>
-                            <option value="merdeka">{{ __('Kurikulum Merdeka') }}</option>
-                        </select>
-                    </div>
-
-                    <!-- Students Selection -->
                     @if (count($students) > 0)
-                        <div>
-                            <label class="block text-sm font-medium text-gray-900 dark:text-white mb-2">{{ __('Pilih Siswa') }}</label>
-                            <div class="space-y-2 max-h-64 overflow-y-auto border border-gray-300 rounded-lg p-3 bg-gray-50 dark:bg-gray-700 dark:border-gray-600">
+                        <div class="space-y-2">
+                            <div class="flex items-center justify-between">
+                                <label class="block text-sm font-medium">{{ __('Pilih Siswa') }}</label>
+                                <div class="flex gap-2">
+                                    <button type="button" wire:click="$set('selectedStudents', {{ collect($students)->pluck('id') }})" class="text-xs text-blue-600 hover:underline">Pilih Semua</button>
+                                    <span class="text-zinc-300">|</span>
+                                    <button type="button" wire:click="$set('selectedStudents', [])" class="text-xs text-zinc-500 hover:underline">Batal</button>
+                                </div>
+                            </div>
+                            <div class="grid grid-cols-1 md:grid-cols-2 gap-2 max-h-48 overflow-y-auto border border-zinc-200 dark:border-zinc-700 rounded-lg p-3 bg-zinc-50 dark:bg-zinc-900/50">
                                 @foreach ($students as $student)
-                                    <label class="flex items-center gap-3 cursor-pointer hover:bg-gray-100 dark:hover:bg-gray-600 p-2 rounded">
-                                        <input type="checkbox" wire:model="selectedStudents" value="{{ $student['id'] }}" class="rounded border-gray-300 text-blue-600 focus:ring-blue-500">
-                                        <span class="text-sm text-gray-900 dark:text-white">{{ $student['profile']['user']['name'] ?? 'N/A' }}</span>
+                                    <label class="flex items-center gap-3 cursor-pointer hover:bg-white dark:hover:bg-zinc-800 p-2 rounded transition-colors border border-transparent hover:border-zinc-200 dark:hover:border-zinc-700">
+                                        <input type="checkbox" wire:model="selectedStudents" value="{{ $student['id'] }}" class="rounded text-blue-600">
+                                        <span class="text-sm">{{ $student['profile']['user']['name'] ?? 'N\/A' }}</span>
                                     </label>
                                 @endforeach
                             </div>
-                            @error('selectedStudents')
-                                <span class="text-sm text-red-600 dark:text-red-400">{{ $message }}</span>
-                            @enderror
+                            @error('selectedStudents') <p class="text-xs text-red-500">{{ $message }}</p> @enderror
                         </div>
                     @endif
 
-                    @if($curriculumType === 'merdeka')
-                    <!-- Character Notes (P5/Character Building) -->
-                    <div>
-                        <label class="block text-sm font-medium text-gray-900 dark:text-white mb-2">{{ __('Catatan Karakter / Deskripsi P5 (Opsional)') }}</label>
-                        <textarea wire:model="characterNotes" placeholder="{{ __('Masukkan deskripsi perkembangan karakter siswa') }}" class="w-full rounded-lg border border-gray-300 bg-white px-4 py-2 text-gray-900 placeholder-gray-400 focus:border-blue-500 focus:ring-blue-500 dark:border-gray-600 dark:bg-gray-700 dark:text-white dark:placeholder-gray-400" rows="3"></textarea>
-                    </div>
-                    @endif
-
-                    <!-- Teacher Notes -->
-                    <div>
-                        <label class="block text-sm font-medium text-gray-900 dark:text-white mb-2">{{ __('Catatan Guru') }}</label>
-                        <textarea wire:model="teacherNotes" placeholder="{{ __('Masukkan catatan dari guru') }}" class="w-full rounded-lg border border-gray-300 bg-white px-4 py-2 text-gray-900 placeholder-gray-400 focus:border-blue-500 focus:ring-blue-500 dark:border-gray-600 dark:bg-gray-700 dark:text-white dark:placeholder-gray-400" rows="3"></textarea>
+                    <div class="grid grid-cols-1 gap-4">
+                        @if($curriculumType === 'merdeka')
+                            <flux:textarea wire:model="characterNotes" label="Catatan Karakter / Deskripsi P5" rows="2" />
+                        @endif
+                        <flux:textarea wire:model="teacherNotes" label="Catatan Guru" rows="2" />
+                        <flux:textarea wire:model="principalNotes" label="Catatan Kepala Sekolah" rows="2" />
                     </div>
 
-                    <!-- Principal Notes -->
-                    <div>
-                        <label class="block text-sm font-medium text-gray-900 dark:text-white mb-2">{{ __('Catatan Kepala Sekolah') }}</label>
-                        <textarea wire:model="principalNotes" placeholder="{{ __('Masukkan catatan dari kepala sekolah') }}" class="w-full rounded-lg border border-gray-300 bg-white px-4 py-2 text-gray-900 placeholder-gray-400 focus:border-blue-500 focus:ring-blue-500 dark:border-gray-600 dark:bg-gray-700 dark:text-white dark:placeholder-gray-400" rows="3"></textarea>
-                    </div>
-
-                    <!-- Submit Button -->
-                    <div class="flex gap-3">
-                        <button type="submit" wire:loading.attr="disabled" class="inline-flex items-center justify-center rounded-lg bg-blue-600 px-6 py-2 text-sm font-medium text-white hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 dark:focus:ring-offset-gray-800 disabled:opacity-50">
-                            <span wire:loading.remove>{{ __('Buat Rapor') }}</span>
+                    <div class="flex items-center gap-3 pt-2">
+                        <flux:button type="submit" variant="primary" icon="sparkles" wire:loading.attr="disabled">
+                            <span wire:loading.remove>{{ __('Proses & Buat Rapor') }}</span>
                             <span wire:loading>{{ __('Memproses...') }}</span>
-                        </button>
+                        </flux:button>
+                        <flux:button type="button" variant="ghost" wire:click="$refresh" icon="arrow-path">Reset</flux:button>
                     </div>
                 </form>
             </div>
+
+            <!-- List of Generated Reports -->
+            <div class="p-6 bg-white dark:bg-zinc-800 rounded-xl border border-zinc-200 dark:border-zinc-700 shadow-sm">
+                <div class="flex items-center justify-between mb-4">
+                    <flux:heading level="2" size="lg">{{ __('Daftar Rapor Teregenerasi') }}</flux:heading>
+                    <flux:badge color="zinc">{{ $existingReports->count() }} Terdata</flux:badge>
+                </div>
+
+                @if($existingReports->isNotEmpty())
+                    <div class="overflow-x-auto">
+                        <table class="w-full text-sm text-left border-collapse">
+                            <thead>
+                                <tr class="text-zinc-500 border-b border-zinc-100 dark:border-zinc-700">
+                                    <th class="py-3 px-2 font-medium">Siswa</th>
+                                    <th class="py-3 px-2 font-medium">IPK/Avg</th>
+                                    <th class="py-3 px-2 font-medium">Status</th>
+                                    <th class="py-3 px-2 font-medium text-right">Aksi</th>
+                                </tr>
+                            </thead>
+                            <tbody class="divide-y divide-zinc-100 dark:divide-zinc-700">
+                                @foreach($existingReports as $report)
+                                    <tr class="hover:bg-zinc-50 dark:hover:bg-zinc-900/50 transition-colors">
+                                        <td class="py-3 px-2 font-medium">{{ $report->student->name }}</td>
+                                        <td class="py-3 px-2">
+                                            <span class="font-bold text-blue-600">{{ $report->gpa }}</span>
+                                        </td>
+                                        <td class="py-3 px-2">
+                                            <flux:badge size="sm" :color="$report->status === 'final' ? 'green' : 'zinc'">
+                                                {{ strtoupper($report->status) }}
+                                            </flux:badge>
+                                        </td>
+                                        <td class="py-3 px-2 text-right space-x-1">
+                                            <flux:button variant="ghost" size="sm" icon="eye" wire:click="previewReportCard({{ $report->id }})" />
+                                            <flux:button variant="ghost" size="sm" icon="arrow-down-tray" wire:click="exportPdf({{ $report->id }})" />
+                                            <button type="button" wire:confirm="Hapus rapor ini?" wire:click="deleteReportCard({{ $report->id }})" class="p-1 text-zinc-400 hover:text-red-500">
+                                                <flux:icon icon="trash" class="w-4 h-4" />
+                                            </button>
+                                        </td>
+                                    </tr>
+                                @endforeach
+                            </tbody>
+                        </table>
+                    </div>
+                @else
+                    <div class="py-12 flex flex-col items-center justify-center text-zinc-400 border-2 border-dashed border-zinc-100 dark:border-zinc-800 rounded-xl">
+                        <flux:icon icon="document-text" class="w-12 h-12 mb-2 opacity-20" />
+                        <p>Belum ada rapor yang dibuat untuk kriteria ini.</p>
+                    </div>
+                @endif
+            </div>
         </div>
 
-        <!-- Info Section -->
-        <div>
-            <div class="rounded-lg border border-gray-200 bg-white p-6 shadow-sm dark:border-gray-700 dark:bg-gray-800">
+        <!-- Right Column: Info & Legend -->
+        <div class="space-y-6">
+            <div class="p-6 bg-blue-50 dark:bg-blue-900/20 border border-blue-100 dark:border-blue-900 rounded-xl">
+                <flux:heading size="lg" class="text-blue-900 dark:text-blue-200 mb-2">Panduan Penggunaan</flux:heading>
+                <ul class="text-sm text-blue-800 dark:text-blue-300 space-y-2 list-disc pl-4">
+                    <li>Pilih parameter akademik (Tahun, Kelas, Semester).</li>
+                    <li>Sistem akan menyaring siswa di kelas tersebut.</li>
+                    <li>Centang siswa yang ingin dibuatkan rapornya.</li>
+                    <li>Klik <strong>Proses & Buat Rapor</strong> untuk menghitung nilai otomatis.</li>
+                    <li>Gunakan tombol <flux:icon icon="eye" class="w-3 h-3 inline" /> untuk pratinjau hasil sebelum cetak.</li>
+                </ul>
+            </div>
+
+            <div class="p-6 bg-white dark:bg-zinc-800 rounded-xl border border-zinc-200 dark:border-zinc-700 shadow-sm">
+                <flux:heading size="md" class="mb-4">Informasi Kurikulum</flux:heading>
                 <div class="space-y-4">
                     <div>
-                        <h3 class="font-semibold text-gray-900 dark:text-white">{{ __('Informasi') }}</h3>
-                        <p class="mt-2 text-sm text-gray-600 dark:text-gray-400">
-                            {{ __('Pilih tahun ajaran, kelas, dan semester untuk membuat rapor siswa. Nilai akan dihitung otomatis dari data penilaian yang sudah diinput.') }}
-                        </p>
+                        <p class="text-xs font-bold text-zinc-500 uppercase tracking-wider mb-1">Kurikulum Merdeka</p>
+                        <p class="text-xs text-zinc-600 dark:text-zinc-400">Menggunakan Deskripsi Capaian Kompetensi (BB, MB, BSH, SB) dan Projek P5.</p>
                     </div>
-
-                    @if (count($students) > 0)
-                        <div class="pt-4 border-t border-gray-200 dark:border-gray-700">
-                            <p class="text-sm font-medium text-gray-900 dark:text-white">
-                                {{ __('Total Siswa: ') }} <span class="font-bold">{{ count($students) }}</span>
-                            </p>
-                            <p class="text-sm text-gray-600 dark:text-gray-400 mt-1">
-                                {{ __('Dipilih: ') }} <span class="font-bold">{{ count($selectedStudents) }}</span>
-                            </p>
-                        </div>
-                    @endif
+                    <div>
+                        <p class="text-xs font-bold text-zinc-500 uppercase tracking-wider mb-1">Konvensional (K13)</p>
+                        <p class="text-xs text-zinc-600 dark:text-zinc-400">Menggunakan nilai angka (0-100) dan perhitungan rata-rata otomatis.</p>
+                    </div>
                 </div>
             </div>
         </div>
     </div>
 
-    <!-- Preview Modal -->
+    <!-- Preview Modal (Same as Test Generator but refined) -->
     @if ($showPreview && $previewData)
-        <div class="fixed inset-0 z-50 overflow-y-auto">
-            <div class="flex items-end justify-center min-h-screen pt-4 px-4 pb-20 text-center sm:block sm:p-0">
-                <!-- Background overlay -->
-                <div class="fixed inset-0 bg-gray-500 bg-opacity-75 transition-opacity" wire:click="closePreview"></div>
-
-                <!-- Modal panel -->
-                <div class="inline-block align-bottom bg-white dark:bg-gray-800 rounded-lg text-left overflow-hidden shadow-xl transform transition-all sm:my-8 sm:align-middle sm:max-w-2xl sm:w-full">
-                    <div class="bg-white dark:bg-gray-800 px-4 pt-5 pb-4 sm:p-6 sm:pb-4">
-                        <div class="flex items-center justify-between mb-4">
-                            <h2 class="text-xl font-bold text-gray-900 dark:text-white">{{ __('Preview Rapor') }}</h2>
-                            <button wire:click="closePreview" class="text-gray-500 hover:text-gray-700 dark:hover:text-gray-300">
-                                <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
-                                </svg>
-                            </button>
+        <flux:modal wire:model="showPreview" class="max-w-4xl">
+            <div class="space-y-6">
+                <div class="flex items-center justify-between">
+                    <flux:heading size="xl">Pratinjau Rapor</flux:heading>
+                    <flux:button variant="ghost" icon="x-mark" wire:click="closePreview" />
+                </div>
+                
+                <div class="p-8 bg-zinc-50 dark:bg-zinc-900 text-black rounded-lg shadow-inner overflow-y-auto max-h-[70vh]">
+                    <!-- SIMULATED PAPER -->
+                    <div class="max-w-3xl mx-auto bg-white p-12 shadow-sm min-h-screen">
+                        <div class="text-center border-b-2 border-black pb-4 mb-8">
+                            <h1 class="text-2xl font-bold uppercase">RAPOR HASIL BELAJAR</h1>
+                            <p class="text-lg font-semibold">{{ $previewData['classroom']->name }}</p>
+                            <p>Tahun Ajaran {{ $previewData['academicYear']->name }} - Semester {{ $previewData['reportCard']->semester }}</p>
                         </div>
 
-                        @if ($previewData)
-                            <div class="bg-white dark:bg-gray-900 p-6 rounded-lg space-y-4 max-h-96 overflow-y-auto">
-                                <!-- Header -->
-                                <div class="text-center border-b border-gray-200 dark:border-gray-700 pb-4">
-                                    <h3 class="text-lg font-bold text-gray-900 dark:text-white">{{ __('RAPOR SISWA') }}</h3>
-                                    <p class="text-sm text-gray-600 dark:text-gray-400">{{ $previewData['academicYear']->year }} - {{ __('Semester') }} {{ $semester }}</p>
-                                </div>
+                        <div class="grid grid-cols-2 gap-x-12 gap-y-2 text-sm mb-8">
+                            <div class="flex justify-between"><span>Nama Siswa</span> <span>:</span></div>
+                            <div class="font-bold">{{ $previewData['student']->name }}</div>
+                            <div class="flex justify-between"><span>Nomor Induk / NISN</span> <span>:</span></div>
+                            <div>{{ $previewData['studentProfile']->nis ?? '-' }} / {{ $previewData['studentProfile']->nisn ?? '-' }}</div>
+                            <div class="flex justify-between"><span>Kelas</span> <span>:</span></div>
+                            <div>{{ $previewData['classroom']->name }}</div>
+                            <div class="flex justify-between"><span>Tahun Ajaran</span> <span>:</span></div>
+                            <div>{{ $previewData['academicYear']->name }}</div>
+                        </div>
 
-                                <!-- Student Info -->
-                                <div class="grid grid-cols-2 gap-4 text-sm">
-                                    <div>
-                                        <p class="text-gray-600 dark:text-gray-400">{{ __('Nama Siswa') }}</p>
-                                        <p class="font-semibold text-gray-900 dark:text-white">{{ $previewData['student']->name }}</p>
-                                    </div>
-                                    <div>
-                                        <p class="text-gray-600 dark:text-gray-400">{{ __('NIS') }}</p>
-                                        <p class="font-semibold text-gray-900 dark:text-white">{{ $previewData['studentProfile']->nis ?? '-' }}</p>
-                                    </div>
-                                    <div>
-                                        <p class="text-gray-600 dark:text-gray-400">{{ __('Kelas') }}</p>
-                                        <p class="font-semibold text-gray-900 dark:text-white">{{ $previewData['classroom']->name }}</p>
-                                    </div>
-                                    <div>
-                                        <p class="text-gray-600 dark:text-gray-400">{{ __('IPK') }}</p>
-                                        <p class="font-semibold text-gray-900 dark:text-white">{{ $previewData['reportCard']->gpa }}</p>
-                                    </div>
-                                </div>
-
-                                <!-- Content based on Curriculum Type -->
-                                @if($previewData['reportCard']->curriculum_type === 'merdeka')
-                                    @if(isset($previewData['reportCard']->scores['competencies']))
-                                        <div class="space-y-4">
-                                            <h4 class="font-bold border-b border-gray-200 dark:border-gray-700 pb-1">{{ __('Capaian Kompetensi') }}</h4>
-                                            @foreach($previewData['reportCard']->scores['competencies'] as $comp)
-                                                <div class="text-xs">
-                                                    <div class="flex justify-between font-semibold">
-                                                        <span>{{ $comp['subject_name'] }}</span>
-                                                        <span class="px-2 bg-blue-100 text-blue-800 rounded">{{ $comp['level'] }}</span>
-                                                    </div>
-                                                    <p class="text-gray-600 dark:text-gray-400 mt-1 italic">{{ $comp['description'] }}</p>
-                                                </div>
-                                            @endforeach
-                                        </div>
-                                    @endif
-
-                                    @if(isset($previewData['reportCard']->scores['paud']))
-                                        <div class="space-y-4">
-                                            <h4 class="font-bold border-b border-gray-200 dark:border-gray-700 pb-1">{{ __('Laporan Perkembangan PAUD') }}</h4>
-                                            @foreach($previewData['reportCard']->scores['paud'] as $p)
-                                                <div class="text-xs">
-                                                    <div class="font-semibold">{{ $p['aspect_name'] }}</div>
-                                                    <p class="text-gray-600 dark:text-gray-400 mt-1 italic">{{ $p['description'] }}</p>
-                                                </div>
-                                            @endforeach
-                                        </div>
-                                    @endif
-
-                                    @if(isset($previewData['reportCard']->scores['p5']))
-                                        <div class="space-y-4 pt-4">
-                                            <h4 class="font-bold border-b border-gray-200 dark:border-gray-700 pb-1">{{ __('Projek P5') }}</h4>
-                                            @foreach($previewData['reportCard']->scores['p5'] as $p5)
-                                                <div class="text-xs">
-                                                    <div class="flex justify-between font-semibold">
-                                                        <span>{{ $p5['project_name'] }}</span>
-                                                        <span class="px-2 bg-green-100 text-green-800 rounded">{{ $p5['level'] }}</span>
-                                                    </div>
-                                                    <p class="text-gray-600 dark:text-gray-400 mt-1">{{ $p5['description'] }}</p>
-                                                </div>
-                                            @endforeach
-                                        </div>
-                                    @endif
-                                @else
-                                    <!-- Scores Table (Conventional) -->
-                                    <div class="overflow-x-auto">
-                                        <table class="w-full text-sm">
-                                            <thead class="bg-gray-100 dark:bg-gray-700">
+                        @if($previewData['reportCard']->curriculum_type === 'merdeka')
+                            <div class="space-y-6">
+                                <!-- Competencies -->
+                                <div>
+                                    <h3 class="font-bold border-b border-zinc-300 mb-3">A. Capaian Pembelajaran</h3>
+                                    <table class="w-full border-collapse border border-black text-sm">
+                                        <thead>
+                                            <tr class="bg-zinc-100">
+                                                <th class="border border-black p-2 text-left">Mata Pelajaran</th>
+                                                <th class="border border-black p-2 text-center w-24">Capaian</th>
+                                                <th class="border border-black p-2 text-left">Deskripsi</th>
+                                            </tr>
+                                        </thead>
+                                        <tbody>
+                                            @forelse($previewData['reportCard']->scores['competencies'] ?? [] as $comp)
                                                 <tr>
-                                                    <th class="px-4 py-2 text-left text-gray-900 dark:text-white">{{ __('Mata Pelajaran') }}</th>
-                                                    <th class="px-4 py-2 text-right text-gray-900 dark:text-white">{{ __('Nilai') }}</th>
+                                                    <td class="border border-black p-2 font-medium">{{ $comp['subject_name'] }}</td>
+                                                    <td class="border border-black p-2 text-center">{{ $comp['level'] }}</td>
+                                                    <td class="border border-black p-2 text-xs italic">{{ $comp['description'] }}</td>
                                                 </tr>
-                                            </thead>
-                                            <tbody class="divide-y divide-gray-200 dark:divide-gray-700">
-                                                @foreach ($previewData['reportCard']->scores as $score)
-                                                    <tr>
-                                                        <td class="px-4 py-2 text-gray-900 dark:text-white">{{ $score['subject_name'] ?? 'N/A' }}</td>
-                                                        <td class="px-4 py-2 text-right font-semibold text-gray-900 dark:text-white">{{ $score['score'] ?? '0' }}</td>
-                                                    </tr>
-                                                @endforeach
-                                            </tbody>
-                                        </table>
-                                    </div>
-                                @endif
-
-                                <!-- Notes -->
-                                @if ($previewData['reportCard']->teacher_notes)
-                                    <div class="bg-blue-50 dark:bg-blue-900/20 p-3 rounded border border-blue-200 dark:border-blue-800">
-                                        <p class="text-sm font-semibold text-blue-900 dark:text-blue-200">{{ __('Catatan Guru') }}</p>
-                                        <p class="text-sm text-blue-800 dark:text-blue-300">{{ $previewData['reportCard']->teacher_notes }}</p>
-                                    </div>
-                                @endif
-
-                                @if ($previewData['reportCard']->principal_notes)
-                                    <div class="bg-green-50 dark:bg-green-900/20 p-3 rounded border border-green-200 dark:border-green-800">
-                                        <p class="text-sm font-semibold text-green-900 dark:text-green-200">{{ __('Catatan Kepala Sekolah') }}</p>
-                                        <p class="text-sm text-green-800 dark:text-green-300">{{ $previewData['reportCard']->principal_notes }}</p>
-                                    </div>
-                                @endif
+                                            @empty
+                                                <tr><td colspan="3" class="border border-black p-4 text-center text-zinc-400 italic">Data kompetensi tidak ditemukan</td></tr>
+                                            @endforelse
+                                        </tbody>
+                                    </table>
+                                </div>
+                                
+                                <!-- Attendance -->
+                                <div class="w-64">
+                                    <h3 class="font-bold border-b border-zinc-300 mb-3">B. Ketidakhadiran</h3>
+                                    <table class="w-full border-collapse border border-black text-sm">
+                                        <tbody>
+                                            <tr><td class="border border-black p-2">Sakit</td><td class="border border-black p-2 text-center">{{ $previewData['reportCard']->scores['attendance']['sick'] ?? 0 }} hari</td></tr>
+                                            <tr><td class="border border-black p-2">Izin</td><td class="border border-black p-2 text-center">{{ $previewData['reportCard']->scores['attendance']['permission'] ?? 0 }} hari</td></tr>
+                                            <tr><td class="border border-black p-2">Alpa</td><td class="border border-black p-2 text-center">{{ $previewData['reportCard']->scores['attendance']['absent'] ?? 0 }} hari</td></tr>
+                                        </tbody>
+                                    </table>
+                                </div>
                             </div>
-
-                            <!-- Action Buttons -->
-                            <div class="flex gap-3 pt-4 border-t border-gray-200 dark:border-gray-700 mt-4">
-                                <button type="button" wire:click="exportPdf({{ $previewData['reportCard']->id }})" class="inline-flex items-center justify-center rounded-lg bg-blue-600 px-6 py-2 text-sm font-medium text-white hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 dark:focus:ring-offset-gray-800">
-                                    {{ __('Export PDF') }}
-                                </button>
-                                <button type="button" wire:click="closePreview" class="inline-flex items-center justify-center rounded-lg bg-gray-300 px-6 py-2 text-sm font-medium text-gray-900 hover:bg-gray-400 focus:outline-none focus:ring-2 focus:ring-gray-500 focus:ring-offset-2 dark:bg-gray-600 dark:text-white dark:hover:bg-gray-700 dark:focus:ring-offset-gray-800">
-                                    {{ __('Tutup') }}
-                                </button>
+                        @else
+                            <div class="space-y-6">
+                                <div>
+                                    <h3 class="font-bold border-b border-zinc-300 mb-3">Nilai Mata Pelajaran</h3>
+                                    <table class="w-full border-collapse border border-black text-sm">
+                                        <thead>
+                                            <tr class="bg-zinc-100 text-center">
+                                                <th class="border border-black p-2 text-left">Mata Pelajaran</th>
+                                                <th class="border border-black p-2 w-32">Nilai Akhir</th>
+                                                <th class="border border-black p-2 w-24">Predikat</th>
+                                            </tr>
+                                        </thead>
+                                        <tbody>
+                                            @forelse($previewData['reportCard']->scores as $score)
+                                                @php
+                                                    $grade = $score['score'] >= 85 ? 'A' : ($score['score'] >= 75 ? 'B' : ($score['score'] >= 65 ? 'C' : 'D'));
+                                                @endphp
+                                                <tr>
+                                                    <td class="border border-black p-2 font-medium">{{ $score['subject_name'] }}</td>
+                                                    <td class="border border-black p-2 text-center font-bold">{{ $score['score'] }}</td>
+                                                    <td class="border border-black p-2 text-center">{{ $grade }}</td>
+                                                </tr>
+                                            @empty
+                                                <tr><td colspan="3" class="border border-black p-4 text-center text-zinc-400 italic">Data nilai tidak ditemukan</td></tr>
+                                            @endforelse
+                                            <tr class="bg-zinc-50 font-bold">
+                                                <td class="border border-black p-2 text-right uppercase">Rata-rata (IPK)</td>
+                                                <td colspan="2" class="border border-black p-2 text-center text-blue-700 text-lg">{{ $previewData['reportCard']->gpa }}</td>
+                                            </tr>
+                                        </tbody>
+                                    </table>
+                                </div>
                             </div>
                         @endif
+
+                        <!-- Notes Section in Preview -->
+                        <div class="mt-8 space-y-4">
+                            @if($previewData['reportCard']->teacher_notes)
+                                <div class="p-3 border border-black italic text-sm">
+                                    <strong>Catatan Guru:</strong> {{ $previewData['reportCard']->teacher_notes }}
+                                </div>
+                            @endif
+                        </div>
+
+                        <div class="grid grid-cols-2 gap-12 pt-16 text-sm text-center">
+                            <div>
+                                <p>Orang Tua/Wali</p>
+                                <div class="h-24"></div>
+                                <p class="border-b border-black w-48 mx-auto"></p>
+                            </div>
+                            <div>
+                                <p>Guru Kelas</p>
+                                <div class="h-24"></div>
+                                <p class="font-bold underline">{{ auth()->user()->name }}</p>
+                            </div>
+                        </div>
                     </div>
                 </div>
+                
+                <div class="flex justify-end gap-3">
+                    <flux:button variant="ghost" wire:click="closePreview">Tutup</flux:button>
+                    <flux:button variant="primary" icon="arrow-down-tray" wire:click="exportPdf({{ $previewData['reportCard']->id }})">Download PDF</flux:button>
+                </div>
             </div>
-        </div>
+        </flux:modal>
     @endif
 </div>

@@ -221,7 +221,7 @@ new #[Layout('components.admin.layouts.app')] class extends Component {
             @endforeach
 
             <div class="flex justify-end">
-                <flux:button variant="primary" icon="check" wire:click="save" size="lg">
+                <flux:button variant="primary" icon="check" wire:click="save">
                     Simpan Penilaian Perkembangan
                 </flux:button>
             </div>

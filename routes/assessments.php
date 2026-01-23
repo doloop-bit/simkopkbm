@@ -23,4 +23,8 @@ Route::middleware(['auth'])->prefix('admin')->name('admin.')->group(function () 
     // Report Attendance Summary (Sick, Permit, Alpha)
     Volt::route('/assessments/attendance', 'admin.assessments.attendance-input')
         ->name('assessments.attendance');
+
+    // DOMPDF Test Route
+    Volt::route('/pdf-test', 'admin.pdf-test')
+        ->name('pdf.test');
 });

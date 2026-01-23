@@ -5,7 +5,7 @@ use Illuminate\Support\Facades\Route;
 // Public website routes
 require __DIR__.'/public.php';
 
-Route::view('admin/dashboard', 'admin.dashboard')
+Route::view('admin/dashboard', 'dashboard')
     ->middleware(['auth', 'verified'])
     ->name('dashboard');
 
@@ -21,3 +21,10 @@ require __DIR__.'/programs.php';
 require __DIR__.'/contact-inquiries.php';
 require __DIR__.'/report-card.php';
 require __DIR__.'/assessments.php';
+
+\Livewire\Volt\Volt::route('/test-modal', 'test-modal')
+    ->middleware(['auth', 'verified']);
+
+Route::get('/test-at', function() {
+    return view('test-at');
+})->middleware(['auth', 'verified']);
