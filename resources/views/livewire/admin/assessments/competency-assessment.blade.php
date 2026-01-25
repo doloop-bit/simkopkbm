@@ -21,6 +21,10 @@ new #[Layout('components.admin.layouts.app')] class extends Component {
 
     public function mount(): void
     {
+        if (!auth()->user()->isAdmin() && !auth()->user()->teachesPaudLevel()) {
+            abort(403);
+        }
+
         $activeYear = AcademicYear::where('is_active', true)->first();
         if ($activeYear) {
             $this->academic_year_id = $activeYear->id;
@@ -125,8 +129,10 @@ new #[Layout('components.admin.layouts.app')] class extends Component {
 
         return [
             'years' => AcademicYear::orderBy('name', 'desc')->get(),
-            'classrooms' => Classroom::when($this->academic_year_id, fn($q) => $q->where('academic_year_id', $this->academic_year_id))->orderBy('name')->get(),
-            'subjects' => Subject::orderBy('name')->get(),
+            'classrooms' => Classroom::whereHas('level', fn($q) => $q->where('education_level', 'PAUD'))
+                ->when($this->academic_year_id, fn($q) => $q->where('academic_year_id', $this->academic_year_id))
+                ->orderBy('name')->get(),
+            'subjects' => Subject::whereHas('level', fn($q) => $q->where('education_level', 'PAUD'))->orderBy('name')->get(),
             'students' => $students,
         ];
     }
@@ -135,8 +141,8 @@ new #[Layout('components.admin.layouts.app')] class extends Component {
 <div class="p-6">
     <div class="flex items-center justify-between mb-6">
         <div>
-            <flux:heading size="xl" level="1">Penilaian Kompetensi</flux:heading>
-            <flux:subheading>Input penilaian kompetensi siswa berbasis Kurikulum Merdeka (BB/MB/BSH/SB).</flux:subheading>
+            <flux:heading size="xl" level="1">Penilaian Capaian Pembelajaran (PAUD)</flux:heading>
+            <flux:subheading>Input penilaian perkembangan anak berbasis Kurikulum Merdeka (BB/MB/BSH/SB).</flux:subheading>
         </div>
     </div>
 

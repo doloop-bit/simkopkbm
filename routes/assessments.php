@@ -16,10 +16,6 @@ Route::middleware(['auth'])->prefix('admin')->name('admin.')->group(function () 
     Volt::route('/assessments/extracurricular', 'admin.assessments.extracurricular-assessment')
         ->name('assessments.extracurricular');
     
-    // PAUD Developmental Assessment
-    Volt::route('/assessments/paud', 'admin.assessments.paud-assessment')
-        ->name('assessments.paud');
-
     // Report Attendance Summary (Sick, Permit, Alpha)
     Volt::route('/assessments/attendance', 'admin.assessments.attendance-input')
         ->name('assessments.attendance');
