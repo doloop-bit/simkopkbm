@@ -42,6 +42,8 @@ new #[Layout('components.admin.layouts.app')] class extends Component {
 
     public function rules(): array
     {
+        $profileableId = $this->editingUser?->profile?->profileable_id;
+        
         return [
             'name' => 'required|string|max:255',
             'email' => [
@@ -51,7 +53,14 @@ new #[Layout('components.admin.layouts.app')] class extends Component {
             ],
             'password' => $this->editingUser ? 'nullable|min:8' : 'required|min:8',
             'role' => 'required|in:guru,staf',
-            'nip' => 'nullable|string|max:20',
+            'nip' => [
+                'nullable',
+                'string',
+                'max:20',
+                $this->role === 'guru' 
+                    ? Rule::unique('teacher_profiles', 'nip')->ignore($profileableId)
+                    : Rule::unique('staff_profiles', 'nip')->ignore($profileableId)
+            ],
             'phone' => 'nullable|string|max:20',
             'address' => 'nullable|string',
             'education_level' => 'required_if:role,guru|nullable|string',
@@ -66,6 +75,12 @@ new #[Layout('components.admin.layouts.app')] class extends Component {
         $this->validate();
 
         DB::transaction(function () {
+            $profileData = [
+                'nip' => $this->nip ?: null,
+                'phone' => $this->phone ?: null,
+                'address' => $this->address ?: null,
+            ];
+
             if ($this->editingUser) {
                 // Update User
                 $this->editingUser->update([
@@ -90,21 +105,15 @@ new #[Layout('components.admin.layouts.app')] class extends Component {
 
                     // Create new profileable
                     if ($this->role === 'guru') {
-                        $newProfileable = TeacherProfile::create([
-                            'nip' => $this->nip,
-                            'phone' => $this->phone,
-                            'address' => $this->address,
+                        $newProfileable = TeacherProfile::create(array_merge($profileData, [
                             'education_level' => $this->education_level,
-                        ]);
+                        ]));
                     } else {
-                        $newProfileable = StaffProfile::create([
-                            'nip' => $this->nip,
-                            'phone' => $this->phone,
-                            'address' => $this->address,
+                        $newProfileable = StaffProfile::create(array_merge($profileData, [
                             'position' => $this->position,
                             'level_id' => $this->level_id,
                             'department' => $this->department,
-                        ]);
+                        ]));
                     }
 
                     $profile->update([
@@ -114,21 +123,15 @@ new #[Layout('components.admin.layouts.app')] class extends Component {
                 } else {
                     // Update existing
                     if ($this->role === 'guru') {
-                        $profileable->update([
-                            'nip' => $this->nip,
-                            'phone' => $this->phone,
-                            'address' => $this->address,
+                        $profileable->update(array_merge($profileData, [
                             'education_level' => $this->education_level,
-                        ]);
+                        ]));
                     } else {
-                        $profileable->update([
-                            'nip' => $this->nip,
-                            'phone' => $this->phone,
-                            'address' => $this->address,
+                        $profileable->update(array_merge($profileData, [
                             'position' => $this->position,
                             'level_id' => $this->level_id,
                             'department' => $this->department,
-                        ]);
+                        ]));
                     }
                 }
                 \Flux::toast('Data PTK berhasil diperbarui.');
@@ -143,21 +146,15 @@ new #[Layout('components.admin.layouts.app')] class extends Component {
 
                 // Create Profileable
                 if ($this->role === 'guru') {
-                    $profileable = TeacherProfile::create([
-                        'nip' => $this->nip,
-                        'phone' => $this->phone,
-                        'address' => $this->address,
+                    $profileable = TeacherProfile::create(array_merge($profileData, [
                         'education_level' => $this->education_level,
-                    ]);
+                    ]));
                 } else {
-                    $profileable = StaffProfile::create([
-                        'nip' => $this->nip,
-                        'phone' => $this->phone,
-                        'address' => $this->address,
+                    $profileable = StaffProfile::create(array_merge($profileData, [
                         'position' => $this->position,
                         'level_id' => $this->level_id,
                         'department' => $this->department,
-                    ]);
+                    ]));
                 }
 
                 // Create Profile
@@ -172,16 +169,23 @@ new #[Layout('components.admin.layouts.app')] class extends Component {
         });
 
         $this->reset(['name', 'email', 'password', 'role', 'nip', 'phone', 'address', 'education_level', 'position', 'level_id', 'department', 'editingUser']);
-        $this->dispatch('close-modal');
+        $this->dispatch('ptk-saved');
+    }
+
+    public function create(): void
+    {
+        $this->reset(['name', 'email', 'password', 'role', 'nip', 'phone', 'address', 'education_level', 'position', 'level_id', 'department', 'editingUser']);
+        $this->resetValidation();
     }
 
     public function edit(User $user): void
     {
+        $this->create();
+        
         $this->editingUser = $user;
         $this->name = $user->name;
         $this->email = $user->email;
         $this->role = $user->role;
-        $this->password = '';
 
         $profile = $user->profile;
         $profileable = $profile?->profileable;
@@ -239,7 +243,7 @@ new #[Layout('components.admin.layouts.app')] class extends Component {
             <flux:subheading>Pendidik dan Tenaga Kependidikan (Guru & Staf).</flux:subheading>
         </div>
         <flux:modal.trigger name="add-ptk">
-            <flux:button variant="primary" icon="plus">Tambah PTK</flux:button>
+            <flux:button variant="primary" icon="plus" wire:click="create">Tambah PTK</flux:button>
         </flux:modal.trigger>
     </div>
 
@@ -300,7 +304,7 @@ new #[Layout('components.admin.layouts.app')] class extends Component {
         </div>
     </div>
 
-    <flux:modal name="add-ptk" class="md:w-[600px]">
+    <flux:modal name="add-ptk" class="md:w-[600px]" x-on:ptk-saved.window="$flux.modal('add-ptk').close()">
         <div class="space-y-6">
             <div>
                 <flux:heading size="lg">{{ $editingUser ? 'Edit PTK' : 'Tambah PTK' }}</flux:heading>

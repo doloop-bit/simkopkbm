@@ -21,25 +21,6 @@ class DatabaseSeeder extends Seeder
             'role' => 'admin',
         ]);
 
-        $year = \App\Models\AcademicYear::create([
-            'name' => '2024/2025',
-            'start_date' => now(),
-            'end_date' => now()->addYear(),
-            'is_active' => true,
-            'status' => 'open',
-        ]);
-
-        $level = \App\Models\Level::create([
-            'name' => 'Paket C',
-            'type' => 'subject_teacher',
-        ]);
-
-        \App\Models\Classroom::create([
-            'name' => 'Kelas 10-A',
-            'academic_year_id' => $year->id,
-            'level_id' => $level->id,
-        ]);
-
         $categories = [
             ['name' => 'Tugas', 'weight' => 20],
             ['name' => 'Kuis', 'weight' => 10],
@@ -50,12 +31,6 @@ class DatabaseSeeder extends Seeder
         foreach ($categories as $cat) {
             \App\Models\ScoreCategory::create($cat);
         }
-
-        $students = [
-            ['name' => 'Budi Santoso', 'email' => 'budi@pkbm.com'],
-            ['name' => 'Siti Aminah', 'email' => 'siti@pkbm.com'],
-            ['name' => 'Agus Wahyudi', 'email' => 'agus@pkbm.com'],
-        ];
 
         foreach ($students as $s) {
             $user = User::factory()->create([

@@ -49,12 +49,29 @@
         <!-- Penilaian & Raport -->
         <flux:sidebar.group expandable icon="pencil-square" :heading="__('Penilaian & Raport')" class="grid">
             <flux:sidebar.item icon="pencil-square" :href="route('academic.grades')" :current="request()->routeIs('academic.grades')" wire:navigate.hover>
-                {{ __('Penilaian') }}
+                {{ __('Penilaian (Nilai)') }}
+            </flux:sidebar.item>
+            
+            @if(auth()->user()->isAdmin() || auth()->user()->teachesPaudLevel())
+                <flux:sidebar.item icon="clipboard-document-check" :href="route('admin.assessments.competency')" :current="request()->routeIs('admin.assessments.competency')" wire:navigate.hover>
+                    {{ __('Penilaian Kompetensi') }}
+                </flux:sidebar.item>
+            @endif
+
+            <flux:sidebar.item icon="clipboard-document-list" :href="route('admin.assessments.p5')" :current="request()->routeIs('admin.assessments.p5')" wire:navigate.hover>
+                {{ __('Penilaian P5') }}
+            </flux:sidebar.item>
+            <flux:sidebar.item icon="trophy" :href="route('admin.assessments.extracurricular')" :current="request()->routeIs('admin.assessments.extracurricular')" wire:navigate.hover>
+                {{ __('Penilaian Ekskul') }}
+            </flux:sidebar.item>
+            <flux:sidebar.item icon="calendar-days" :href="route('admin.assessments.attendance')" :current="request()->routeIs('admin.assessments.attendance')" wire:navigate.hover>
+                {{ __('Presensi Rapor') }}
             </flux:sidebar.item>
             <flux:sidebar.item icon="document-text" :href="route('admin.report-card.create')" :current="request()->routeIs('admin.report-card.*')" wire:navigate.hover>
                 {{ __('Buat Rapor') }}
             </flux:sidebar.item>
         </flux:sidebar.group>
+
 
         <!-- Keuangan -->
         <flux:sidebar.group expandable icon="banknotes" :heading="__('Keuangan')" class="grid">

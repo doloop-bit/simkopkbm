@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 use App\Models\AcademicYear;
 use App\Models\Classroom;
 use App\Models\ReportCard;
@@ -10,98 +12,45 @@ use App\Models\P5Assessment;
 use App\Models\ExtracurricularAssessment;
 use App\Models\ReportAttendance;
 use App\Models\DevelopmentalAssessment;
+use App\Models\User;
 use Barryvdh\DomPDF\Facade\Pdf;
-use Illuminate\Foundation\Auth\Access\AuthorizesRequests;
 use Illuminate\Support\Facades\DB;
 use Livewire\Attributes\Layout;
 use Livewire\Volt\Component;
 
-new #[Layout('components.admin.layouts.app')] class extends Component {
-    use AuthorizesRequests;
-
+new #[Layout('components.teacher.layouts.app')] class extends Component {
+    // Selection and Form Props
     public $academicYearId = null;
     public $classroomId = null;
     public $semester = '1';
     public $curriculumType = 'conventional';
     public $teacherNotes = '';
-    public $principalNotes = '';
     public $characterNotes = '';
     public $selectedStudents = [];
+
+    // UI Props
     public $showPreview = false;
     public $previewData = null;
 
-    // Data properties
-    public $academicYears = [];
-    public $classrooms = [];
-    public $students = [];
-    public $existingReports = [];
-
     public function mount(): void
     {
-        $this->academicYearId = AcademicYear::latest()->first()?->id;
-        $this->loadAcademicYears();
-        $this->loadClassrooms();
-        $this->loadStudents();
+        $activeYear = AcademicYear::where('is_active', true)->first();
+        if ($activeYear) {
+            $this->academicYearId = $activeYear->id;
+        }
         $this->loadExistingReports();
-    }
-
-    public function loadAcademicYears(): void
-    {
-        $this->academicYears = AcademicYear::orderBy('name', 'desc')->get()->toArray();
-    }
-
-    public function loadClassrooms(): void
-    {
-        if ($this->academicYearId) {
-            $this->classrooms = Classroom::where('academic_year_id', $this->academicYearId)
-                ->with('level')
-                ->orderBy('name')
-                ->get()
-                ->toArray();
-        } else {
-            $this->classrooms = [];
-        }
-    }
-
-    public function loadStudents(): void
-    {
-        if ($this->classroomId) {
-            $this->students = StudentProfile::where('classroom_id', $this->classroomId)
-                ->with(['profile.user'])
-                ->orderBy('created_at')
-                ->get()
-                ->toArray();
-        } else {
-            $this->students = [];
-        }
-    }
-
-    public function loadExistingReports(): void
-    {
-        if ($this->classroomId && $this->academicYearId) {
-            $this->existingReports = ReportCard::where([
-                'classroom_id' => $this->classroomId,
-                'academic_year_id' => $this->academicYearId,
-                'semester' => $this->semester,
-            ])->with('student')->get();
-        } else {
-            $this->existingReports = collect();
-        }
     }
 
     public function updatedAcademicYearId(): void
     {
         $this->classroomId = null;
         $this->selectedStudents = [];
-        $this->loadClassrooms();
-        $this->loadStudents();
         $this->loadExistingReports();
     }
 
     public function updatedClassroomId(): void
     {
         $this->selectedStudents = [];
-        $this->loadStudents();
         $this->loadExistingReports();
 
         // Auto detect curriculum type based on classroom level
@@ -122,20 +71,31 @@ new #[Layout('components.admin.layouts.app')] class extends Component {
 
     public function generateReportCards(): void
     {
+        $teacher = auth()->user();
+
         try {
             $this->validate([
                 'academicYearId' => 'required|exists:academic_years,id',
                 'classroomId' => 'required|exists:classrooms,id',
                 'semester' => 'required|in:1,2',
                 'selectedStudents' => 'required|array|min:1',
-                'selectedStudents.*' => 'exists:student_profiles,id',
             ]);
 
-            DB::transaction(function () {
+            // Security check: Verify teacher has access to the classroom
+            if (!$teacher->hasAccessToClassroom((int)$this->classroomId)) {
+                abort(403, 'Anda tidak memiliki akses ke kelas ini.');
+            }
+
+            DB::transaction(function () use ($teacher) {
                 foreach ($this->selectedStudents as $studentProfileId) {
                     $studentProfile = StudentProfile::with('profile.user')->find($studentProfileId);
-                    $student = $studentProfile->profile?->user;
+                    
+                    // Verify the student belongs to the selected classroom (security)
+                    if (!$studentProfile || $studentProfile->classroom_id != $this->classroomId) {
+                        continue;
+                    }
 
+                    $student = $studentProfile->profile?->user;
                     if (!$student) continue;
 
                     $aggregatedData = [];
@@ -149,7 +109,7 @@ new #[Layout('components.admin.layouts.app')] class extends Component {
                             'academic_year_id' => $this->academicYearId,
                             'semester' => $this->semester,
                         ])->with('subject')->get()->map(fn($c) => [
-                            'subject_name' => $c->subject->name,
+                            'subject_name' => $c->subject?->name ?? 'N/A',
                             'level' => $c->competency_level,
                             'description' => $c->achievement_description,
                         ])->toArray();
@@ -161,8 +121,8 @@ new #[Layout('components.admin.layouts.app')] class extends Component {
                             'academic_year_id' => $this->academicYearId,
                             'semester' => $this->semester,
                         ])->with('p5Project')->get()->map(fn($p) => [
-                            'project_name' => $p->p5Project->name,
-                            'dimension' => $p->p5Project->dimension,
+                            'project_name' => $p->p5Project?->name ?? 'N/A',
+                            'dimension' => $p->p5Project?->dimension ?? 'N/A',
                             'level' => $p->achievement_level,
                             'description' => $p->description,
                         ])->toArray();
@@ -173,7 +133,7 @@ new #[Layout('components.admin.layouts.app')] class extends Component {
                             'academic_year_id' => $this->academicYearId,
                             'semester' => $this->semester,
                         ])->with('extracurricularActivity')->get()->map(fn($e) => [
-                            'name' => $e->extracurricularActivity->name,
+                            'name' => $e->extracurricularActivity?->name ?? 'N/A',
                             'level' => $e->achievement_level,
                             'description' => $e->description,
                         ])->toArray();
@@ -202,14 +162,14 @@ new #[Layout('components.admin.layouts.app')] class extends Component {
 
                         if ($paud->isNotEmpty()) {
                             $aggregatedData['paud'] = $paud->map(fn($p) => [
-                                'aspect_name' => $p->developmentalAspect->name,
+                                'aspect_name' => $p->developmentalAspect?->name ?? 'N/A',
                                 'description' => $p->description,
                             ])->toArray();
                         }
                     } else {
                         // Conventional
                         $scores = Score::where('student_id', $student->id)
-                            ->where('classroom_id', $this->classroomId)
+                            ->where('classroom_id', (int)$this->classroomId)
                             ->where('academic_year_id', $this->academicYearId)
                             ->with(['subject'])
                             ->get();
@@ -224,7 +184,7 @@ new #[Layout('components.admin.layouts.app')] class extends Component {
                             $avgScore = $subjectTotal / $subjectScores->count();
                             
                             $scoreItems[] = [
-                                'subject_name' => $subject->name,
+                                'subject_name' => $subject?->name ?? 'N/A',
                                 'score' => round($avgScore, 2),
                             ];
 
@@ -248,7 +208,6 @@ new #[Layout('components.admin.layouts.app')] class extends Component {
                             'gpa' => $gpa,
                             'curriculum_type' => $this->curriculumType,
                             'teacher_notes' => $this->teacherNotes,
-                            'principal_notes' => $this->principalNotes,
                             'character_notes' => $this->characterNotes,
                             'status' => 'draft',
                         ]
@@ -257,7 +216,7 @@ new #[Layout('components.admin.layouts.app')] class extends Component {
             });
 
             \Flux::toast('Rapor berhasil dibuat untuk ' . count($this->selectedStudents) . ' siswa.');
-            $this->reset(['selectedStudents', 'teacherNotes', 'principalNotes', 'characterNotes']);
+            $this->reset(['selectedStudents', 'teacherNotes', 'characterNotes']);
             $this->loadExistingReports();
         } catch (\Exception $e) {
             \Flux::toast(variant: 'danger', heading: 'Gagal membuat rapor', text: $e->getMessage());
@@ -266,10 +225,11 @@ new #[Layout('components.admin.layouts.app')] class extends Component {
 
     public function previewReportCard($reportCardId): void
     {
-        $reportCard = ReportCard::with(['student', 'classroom', 'academicYear'])->find($reportCardId);
+        $teacher = auth()->user();
+        $reportCard = ReportCard::with(['student', 'classroom.level', 'academicYear'])->find($reportCardId);
 
-        if (!$reportCard) {
-            \Flux::toast(variant: 'danger', text: 'Rapor tidak ditemukan');
+        if (!$reportCard || !$teacher->hasAccessToClassroom((int)$reportCard->classroom_id)) {
+            \Flux::toast(variant: 'danger', text: 'Anda tidak memiliki akses ke rapor ini.');
             return;
         }
 
@@ -294,10 +254,11 @@ new #[Layout('components.admin.layouts.app')] class extends Component {
 
     public function exportPdf($reportCardId)
     {
+        $teacher = auth()->user();
         $reportCard = ReportCard::with(['student', 'classroom.level', 'academicYear'])->find($reportCardId);
 
-        if (!$reportCard) {
-            \Flux::toast(variant: 'danger', text: 'Rapor tidak ditemukan');
+        if (!$reportCard || !$teacher->hasAccessToClassroom((int)$reportCard->classroom_id)) {
+            \Flux::toast(variant: 'danger', text: 'Anda tidak memiliki akses ke rapor ini.');
             return;
         }
 
@@ -327,9 +288,53 @@ new #[Layout('components.admin.layouts.app')] class extends Component {
 
     public function deleteReportCard($id): void
     {
-        ReportCard::find($id)?->delete();
-        $this->loadExistingReports();
-        \Flux::toast('Rapor berhasil dihapus.');
+        $teacher = auth()->user();
+        $reportCard = ReportCard::find($id);
+
+        if ($reportCard && $teacher->hasAccessToClassroom((int)$reportCard->classroom_id)) {
+            $reportCard->delete();
+            $this->loadExistingReports();
+            \Flux::toast('Rapor berhasil dihapus.');
+        } else {
+            \Flux::toast(variant: 'danger', text: 'Anda tidak memiliki izin untuk menghapus rapor ini.');
+        }
+    }
+
+    public function loadExistingReports(): void
+    {
+        // Handled in with() to keep it reactive easily
+    }
+
+    public function with(): array
+    {
+        $teacher = auth()->user();
+        $assignedClassroomIds = $teacher->getAssignedClassroomIds();
+
+        $existingReports = collect();
+        $students = [];
+
+        if ($this->classroomId && $this->academicYearId) {
+            $existingReports = ReportCard::where([
+                'classroom_id' => $this->classroomId,
+                'academic_year_id' => $this->academicYearId,
+                'semester' => $this->semester,
+            ])->with('student')->get();
+
+            $students = StudentProfile::where('classroom_id', $this->classroomId)
+                ->with(['profile.user'])
+                ->orderBy('created_at')
+                ->get();
+        }
+
+        return [
+            'academicYears' => AcademicYear::orderBy('name', 'desc')->get(),
+            'classrooms' => Classroom::whereIn('id', $assignedClassroomIds)
+                ->when($this->academicYearId, fn($q) => $q->where('academic_year_id', $this->academicYearId))
+                ->orderBy('name')
+                ->get(),
+            'students' => $students,
+            'existingReports' => $existingReports,
+        ];
     }
 }; ?>
 
@@ -351,14 +356,14 @@ new #[Layout('components.admin.layouts.app')] class extends Component {
                         <flux:select wire:model.live="academicYearId" label="Tahun Ajaran" required>
                             <option value="">Pilih Tahun Ajaran</option>
                             @foreach ($academicYears as $year)
-                                <option value="{{ $year['id'] }}">{{ $year['name'] }}</option>
+                                <option value="{{ $year->id }}">{{ $year->name }}</option>
                             @endforeach
                         </flux:select>
 
                         <flux:select wire:model.live="classroomId" label="Kelas" required>
                             <option value="">Pilih Kelas</option>
                             @foreach ($classrooms as $classroom)
-                                <option value="{{ $classroom['id'] }}">{{ $classroom['name'] }}</option>
+                                <option value="{{ $classroom->id }}">{{ $classroom->name }}</option>
                             @endforeach
                         </flux:select>
 
@@ -377,17 +382,17 @@ new #[Layout('components.admin.layouts.app')] class extends Component {
                         <div class="space-y-2">
                             <div class="flex items-center justify-between">
                                 <label class="block text-sm font-medium">{{ __('Pilih Siswa') }}</label>
-                                <div class="flex gap-2">
-                                    <button type="button" wire:click="$set('selectedStudents', {{ collect($students)->pluck('id') }})" class="text-xs text-blue-600 hover:underline">Pilih Semua</button>
+                                <div class="flex gap-2 text-xs">
+                                    <button type="button" wire:click="$set('selectedStudents', {{ $students->pluck('id') }})" class="text-blue-600 hover:underline">Pilih Semua</button>
                                     <span class="text-zinc-300">|</span>
-                                    <button type="button" wire:click="$set('selectedStudents', [])" class="text-xs text-zinc-500 hover:underline">Batal</button>
+                                    <button type="button" wire:click="$set('selectedStudents', [])" class="text-zinc-500 hover:underline">Batal</button>
                                 </div>
                             </div>
                             <div class="grid grid-cols-1 md:grid-cols-2 gap-2 max-h-48 overflow-y-auto border border-zinc-200 dark:border-zinc-700 rounded-lg p-3 bg-zinc-50 dark:bg-zinc-900/50">
                                 @foreach ($students as $student)
                                     <label class="flex items-center gap-3 cursor-pointer hover:bg-white dark:hover:bg-zinc-800 p-2 rounded transition-colors border border-transparent hover:border-zinc-200 dark:hover:border-zinc-700">
-                                        <input type="checkbox" wire:model="selectedStudents" value="{{ $student['id'] }}" class="rounded text-blue-600">
-                                        <span class="text-sm">{{ $student['profile']['user']['name'] ?? 'N\/A' }}</span>
+                                        <input type="checkbox" wire:model="selectedStudents" value="{{ $student->id }}" class="rounded text-blue-600">
+                                        <span class="text-sm">{{ $student->profile->user->name ?? 'N/A' }}</span>
                                     </label>
                                 @endforeach
                             </div>
@@ -400,7 +405,6 @@ new #[Layout('components.admin.layouts.app')] class extends Component {
                             <flux:textarea wire:model="characterNotes" label="Catatan Karakter / Deskripsi P5" rows="2" />
                         @endif
                         <flux:textarea wire:model="teacherNotes" label="Catatan Guru" rows="2" />
-                        <flux:textarea wire:model="principalNotes" label="Catatan Kepala Sekolah" rows="2" />
                     </div>
 
                     <div class="flex items-center gap-3 pt-2">
@@ -416,7 +420,7 @@ new #[Layout('components.admin.layouts.app')] class extends Component {
             <!-- List of Generated Reports -->
             <div class="p-6 bg-white dark:bg-zinc-800 rounded-xl border border-zinc-200 dark:border-zinc-700 shadow-sm">
                 <div class="flex items-center justify-between mb-4">
-                    <flux:heading level="2" size="lg">{{ __('Daftar Rapor Teregenerasi') }}</flux:heading>
+                    <flux:heading level="2" size="lg">{{ __('Daftar Rapor Siswa') }}</flux:heading>
                     <flux:badge color="zinc">{{ $existingReports->count() }} Terdata</flux:badge>
                 </div>
 
@@ -467,13 +471,13 @@ new #[Layout('components.admin.layouts.app')] class extends Component {
         <!-- Right Column: Info & Legend -->
         <div class="space-y-6">
             <div class="p-6 bg-blue-50 dark:bg-blue-900/20 border border-blue-100 dark:border-blue-900 rounded-xl">
-                <flux:heading size="lg" class="text-blue-900 dark:text-blue-200 mb-2">Panduan Penggunaan</flux:heading>
+                <flux:heading size="lg" class="text-blue-900 dark:text-blue-200 mb-2">Panduan Guru</flux:heading>
                 <ul class="text-sm text-blue-800 dark:text-blue-300 space-y-2 list-disc pl-4">
                     <li>Pilih parameter akademik (Tahun, Kelas, Semester).</li>
-                    <li>Sistem akan menyaring siswa di kelas tersebut.</li>
+                    <li>Sistem akan menyaring siswa di kelas yang Anda ampu.</li>
                     <li>Centang siswa yang ingin dibuatkan rapornya.</li>
                     <li>Klik <strong>Proses & Buat Rapor</strong> untuk menghitung nilai otomatis.</li>
-                    <li>Gunakan tombol <flux:icon icon="eye" class="w-3 h-3 inline" /> untuk pratinjau hasil sebelum cetak.</li>
+                    <li>Data diambil dari Penilaian (Nilai), Kompetensi, P5, Ekskul, dan Presensi.</li>
                 </ul>
             </div>
 
@@ -493,7 +497,7 @@ new #[Layout('components.admin.layouts.app')] class extends Component {
         </div>
     </div>
 
-    <!-- Preview Modal (Same as Test Generator but refined) -->
+    <!-- Preview Modal -->
     @if ($showPreview && $previewData)
         <flux:modal wire:model="showPreview" class="max-w-4xl">
             <div class="space-y-6">
@@ -503,7 +507,6 @@ new #[Layout('components.admin.layouts.app')] class extends Component {
                 </div>
                 
                 <div class="p-8 bg-zinc-50 dark:bg-zinc-900 text-black rounded-lg shadow-inner overflow-y-auto max-h-[70vh]">
-                    <!-- SIMULATED PAPER -->
                     <div class="max-w-3xl mx-auto bg-white p-12 shadow-sm min-h-screen">
                         <div class="text-center border-b-2 border-black pb-4 mb-8">
                             <h1 class="text-2xl font-bold uppercase">RAPOR HASIL BELAJAR</h1>
@@ -536,27 +539,13 @@ new #[Layout('components.admin.layouts.app')] class extends Component {
                                             </tr>
                                         </thead>
                                         <tbody>
-                                            @forelse($previewData['reportCard']->scores['competencies'] ?? [] as $comp)
+                                            @foreach($previewData['reportCard']->scores['competencies'] ?? [] as $comp)
                                                 <tr>
                                                     <td class="border border-black p-2 font-medium">{{ $comp['subject_name'] }}</td>
                                                     <td class="border border-black p-2 text-center">{{ $comp['level'] }}</td>
                                                     <td class="border border-black p-2 text-xs italic">{{ $comp['description'] }}</td>
                                                 </tr>
-                                            @empty
-                                                <tr><td colspan="3" class="border border-black p-4 text-center text-zinc-400 italic">Data kompetensi tidak ditemukan</td></tr>
-                                            @endforelse
-                                        </tbody>
-                                    </table>
-                                </div>
-                                
-                                <!-- Attendance -->
-                                <div class="w-64">
-                                    <h3 class="font-bold border-b border-zinc-300 mb-3">B. Ketidakhadiran</h3>
-                                    <table class="w-full border-collapse border border-black text-sm">
-                                        <tbody>
-                                            <tr><td class="border border-black p-2">Sakit</td><td class="border border-black p-2 text-center">{{ $previewData['reportCard']->scores['attendance']['sick'] ?? 0 }} hari</td></tr>
-                                            <tr><td class="border border-black p-2">Izin</td><td class="border border-black p-2 text-center">{{ $previewData['reportCard']->scores['attendance']['permission'] ?? 0 }} hari</td></tr>
-                                            <tr><td class="border border-black p-2">Alpa</td><td class="border border-black p-2 text-center">{{ $previewData['reportCard']->scores['attendance']['absent'] ?? 0 }} hari</td></tr>
+                                            @endforeach
                                         </tbody>
                                     </table>
                                 </div>
@@ -570,25 +559,18 @@ new #[Layout('components.admin.layouts.app')] class extends Component {
                                             <tr class="bg-zinc-100 text-center">
                                                 <th class="border border-black p-2 text-left">Mata Pelajaran</th>
                                                 <th class="border border-black p-2 w-32">Nilai Akhir</th>
-                                                <th class="border border-black p-2 w-24">Predikat</th>
                                             </tr>
                                         </thead>
                                         <tbody>
-                                            @forelse($previewData['reportCard']->scores as $score)
-                                                @php
-                                                    $grade = $score['score'] >= 85 ? 'A' : ($score['score'] >= 75 ? 'B' : ($score['score'] >= 65 ? 'C' : 'D'));
-                                                @endphp
+                                            @foreach($previewData['reportCard']->scores as $score)
                                                 <tr>
                                                     <td class="border border-black p-2 font-medium">{{ $score['subject_name'] }}</td>
                                                     <td class="border border-black p-2 text-center font-bold">{{ $score['score'] }}</td>
-                                                    <td class="border border-black p-2 text-center">{{ $grade }}</td>
                                                 </tr>
-                                            @empty
-                                                <tr><td colspan="3" class="border border-black p-4 text-center text-zinc-400 italic">Data nilai tidak ditemukan</td></tr>
-                                            @endforelse
+                                            @endforeach
                                             <tr class="bg-zinc-50 font-bold">
                                                 <td class="border border-black p-2 text-right uppercase">Rata-rata (IPK)</td>
-                                                <td colspan="2" class="border border-black p-2 text-center text-blue-700 text-lg">{{ $previewData['reportCard']->gpa }}</td>
+                                                <td class="border border-black p-2 text-center text-blue-700 text-lg">{{ $previewData['reportCard']->gpa }}</td>
                                             </tr>
                                         </tbody>
                                     </table>
@@ -596,7 +578,6 @@ new #[Layout('components.admin.layouts.app')] class extends Component {
                             </div>
                         @endif
 
-                        <!-- Notes Section in Preview -->
                         <div class="mt-8 space-y-4">
                             @if($previewData['reportCard']->teacher_notes)
                                 <div class="p-3 border border-black italic text-sm">
