@@ -27,13 +27,27 @@ new #[Layout('components.public.layouts.public')] class extends Component
 
 <div>
     {{-- Hero Section --}}
-    <div class="bg-gradient-to-r from-red-600 to-red-800 py-12 sm:py-16 text-white">
-        <div class="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
+    {{-- Hero Section --}}
+    <div class="relative bg-slate-900 text-white overflow-hidden py-12 sm:py-16">
+        <!-- Background Pattern -->
+        <div class="absolute inset-0 opacity-10">
+            <svg class="w-full h-full" viewBox="0 0 100 100" fill="none">
+                <defs>
+                    <pattern id="news-grid" width="20" height="20" patternUnits="userSpaceOnUse">
+                        <path d="M 20 0 L 0 0 0 20" fill="none" stroke="currentColor" stroke-width="0.5"/>
+                    </pattern>
+                </defs>
+                <rect width="100" height="100" fill="url(#news-grid)" />
+            </svg>
+        </div>
+        
+        <div class="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 relative">
             <div class="text-center">
-                <h1 class="mb-4 text-3xl sm:text-4xl md:text-5xl font-bold">Berita & Artikel</h1>
-                <p class="text-lg sm:text-xl text-red-100">
+                <h1 class="mb-4 text-3xl sm:text-4xl md:text-5xl font-bold font-heading">Berita & Artikel</h1>
+                <p class="text-lg sm:text-xl text-slate-300">
                     Informasi terkini seputar kegiatan dan perkembangan sekolah
                 </p>
+                <div class="w-24 h-1 bg-amber-500 mx-auto mt-6 rounded-full"></div>
             </div>
         </div>
     </div>
@@ -46,7 +60,7 @@ new #[Layout('components.public.layouts.public')] class extends Component
                     @foreach ($articles as $article)
                         <article class="group overflow-hidden rounded-lg bg-white shadow-lg transition-transform duration-300 hover:scale-105">
                             {{-- Featured Image --}}
-                            <div class="aspect-video overflow-hidden bg-gray-200">
+                            <div class="aspect-video overflow-hidden bg-slate-100">
                                 @if ($article->featured_image_path)
                                     <img 
                                         src="{{ Storage::url($article->featured_image_path) }}" 
@@ -54,8 +68,8 @@ new #[Layout('components.public.layouts.public')] class extends Component
                                         class="h-full w-full object-cover transition-transform duration-300 group-hover:scale-110"
                                     >
                                 @else
-                                    <div class="flex h-full items-center justify-center bg-gray-100">
-                                        <svg class="h-12 sm:h-16 w-12 sm:w-16 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <div class="flex h-full items-center justify-center bg-slate-100">
+                                        <svg class="h-12 sm:h-16 w-12 sm:w-16 text-slate-300" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 20H5a2 2 0 01-2-2V6a2 2 0 012-2h10a2 2 0 012 2v1m2 13a2 2 0 01-2-2V7m2 13a2 2 0 002-2V9a2 2 0 00-2-2h-2m-4-3H9M7 16h6M7 8h6v4H7V8z"/>
                                         </svg>
                                     </div>
@@ -65,7 +79,7 @@ new #[Layout('components.public.layouts.public')] class extends Component
                             {{-- Content --}}
                             <div class="p-4 sm:p-6">
                                 {{-- Meta Info --}}
-                                <div class="mb-3 flex flex-col sm:flex-row sm:items-center gap-2 sm:gap-4 text-sm text-gray-500">
+                                <div class="mb-3 flex flex-col sm:flex-row sm:items-center gap-2 sm:gap-4 text-sm text-slate-500">
                                     <time datetime="{{ $article->published_at->format('Y-m-d') }}">
                                         {{ $article->published_at->format('d M Y') }}
                                     </time>
@@ -76,21 +90,21 @@ new #[Layout('components.public.layouts.public')] class extends Component
                                 </div>
 
                                 {{-- Title --}}
-                                <h2 class="mb-3 text-lg sm:text-xl font-bold text-gray-900 group-hover:text-red-600">
+                                <h2 class="mb-3 text-lg sm:text-xl font-bold font-heading text-slate-900 group-hover:text-amber-600">
                                     <a href="{{ route('public.news.show', $article->slug) }}">
                                         {{ $article->title }}
                                     </a>
                                 </h2>
 
                                 {{-- Excerpt --}}
-                                <p class="mb-4 text-gray-600 leading-relaxed text-sm sm:text-base">
+                                <p class="mb-4 text-slate-600 leading-relaxed text-sm sm:text-base">
                                     {{ $article->excerpt ?: Str::limit(strip_tags($article->content), 120) }}
                                 </p>
 
                                 {{-- Read More --}}
                                 <a 
                                     href="{{ route('public.news.show', $article->slug) }}" 
-                                    class="inline-flex items-center gap-2 text-sm font-medium text-red-600 hover:text-red-800"
+                                    class="inline-flex items-center gap-2 text-sm font-medium text-amber-600 hover:text-amber-700"
                                 >
                                     Baca Selengkapnya
                                     <svg class="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -111,11 +125,11 @@ new #[Layout('components.public.layouts.public')] class extends Component
             @else
                 {{-- Empty State --}}
                 <div class="py-12 sm:py-16 text-center">
-                    <svg class="mx-auto h-20 sm:h-24 w-20 sm:w-24 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <svg class="mx-auto h-20 sm:h-24 w-20 sm:w-24 text-slate-300" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 20H5a2 2 0 01-2-2V6a2 2 0 012-2h10a2 2 0 012 2v1m2 13a2 2 0 01-2-2V7m2 13a2 2 0 002-2V9a2 2 0 00-2-2h-2m-4-3H9M7 16h6M7 8h6v4H7V8z"/>
                     </svg>
-                    <h3 class="mt-4 text-lg sm:text-xl font-medium text-gray-900">Belum Ada Berita</h3>
-                    <p class="mt-2 text-gray-600">Berita dan artikel akan segera hadir.</p>
+                    <h3 class="mt-4 text-lg sm:text-xl font-medium font-heading text-slate-900">Belum Ada Berita</h3>
+                    <p class="mt-2 text-slate-600">Berita dan artikel akan segera hadir.</p>
                 </div>
             @endif
         </div>

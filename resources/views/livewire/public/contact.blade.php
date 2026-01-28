@@ -86,7 +86,7 @@ new #[Layout('components.public.layouts.public')] class extends Component {
 
 <div>
     <!-- Page Header -->
-    <div class="relative bg-gradient-to-br from-green-600 via-green-700 to-emerald-800 text-white overflow-hidden">
+    <div class="relative bg-slate-900 text-white overflow-hidden">
         <!-- Background Pattern -->
         <div class="absolute inset-0 opacity-20">
             <svg class="w-full h-full" viewBox="0 0 100 100" fill="none">
@@ -101,11 +101,11 @@ new #[Layout('components.public.layouts.public')] class extends Component {
         
         <div class="relative max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-16 sm:py-20">
             <div class="text-center">
-                <h1 class="text-3xl sm:text-4xl md:text-5xl font-bold mb-4">Hubungi Kami</h1>
-                <p class="text-lg sm:text-xl md:text-2xl text-green-100">
+                <h1 class="text-3xl sm:text-4xl md:text-5xl font-bold font-heading mb-4">Hubungi Kami</h1>
+                <p class="text-lg sm:text-xl md:text-2xl text-slate-300">
                     Kami siap membantu dan menjawab pertanyaan Anda
                 </p>
-                <div class="w-24 h-1 bg-white/30 mx-auto mt-6 rounded-full"></div>
+                <div class="w-24 h-1 bg-amber-500 mx-auto mt-6 rounded-full"></div>
             </div>
         </div>
     </div>
@@ -122,7 +122,7 @@ new #[Layout('components.public.layouts.public')] class extends Component {
                         <!-- Address -->
                         <div class="flex items-start">
                             <div class="flex-shrink-0">
-                                <svg class="w-5 sm:w-6 h-5 sm:h-6 text-blue-600 mt-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <svg class="w-5 sm:w-6 h-5 sm:h-6 text-amber-500 mt-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z" />
                                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 11a3 3 0 11-6 0 3 3 0 016 0z" />
                                 </svg>
@@ -242,7 +242,7 @@ new #[Layout('components.public.layouts.public')] class extends Component {
                             type="text" 
                             id="name" 
                             wire:model="name"
-                            class="w-full px-3 sm:px-4 py-2 sm:py-3 border border-gray-300 rounded-xl shadow-sm focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-green-500 transition-colors duration-200 text-sm sm:text-base"
+                            class="w-full px-3 sm:px-4 py-2 sm:py-3 border border-slate-300 rounded-xl shadow-sm focus:outline-none focus:ring-2 focus:ring-amber-500 focus:border-amber-500 transition-colors duration-200 text-sm sm:text-base"
                             placeholder="Masukkan nama lengkap Anda"
                         >
                         @error('name')
@@ -259,7 +259,7 @@ new #[Layout('components.public.layouts.public')] class extends Component {
                             type="email" 
                             id="email" 
                             wire:model="email"
-                            class="w-full px-3 sm:px-4 py-2 sm:py-3 border border-gray-300 rounded-xl shadow-sm focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-green-500 transition-colors duration-200 text-sm sm:text-base"
+                            class="w-full px-3 sm:px-4 py-2 sm:py-3 border border-slate-300 rounded-xl shadow-sm focus:outline-none focus:ring-2 focus:ring-amber-500 focus:border-amber-500 transition-colors duration-200 text-sm sm:text-base"
                             placeholder="nama@email.com"
                         >
                         @error('email')
@@ -276,7 +276,7 @@ new #[Layout('components.public.layouts.public')] class extends Component {
                             type="tel" 
                             id="phone" 
                             wire:model="phone"
-                            class="w-full px-3 sm:px-4 py-2 sm:py-3 border border-gray-300 rounded-xl shadow-sm focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-green-500 transition-colors duration-200 text-sm sm:text-base"
+                            class="w-full px-3 sm:px-4 py-2 sm:py-3 border border-slate-300 rounded-xl shadow-sm focus:outline-none focus:ring-2 focus:ring-amber-500 focus:border-amber-500 transition-colors duration-200 text-sm sm:text-base"
                             placeholder="08xxxxxxxxxx"
                         >
                         @error('phone')
@@ -293,7 +293,7 @@ new #[Layout('components.public.layouts.public')] class extends Component {
                             type="text" 
                             id="subject" 
                             wire:model="subject"
-                            class="w-full px-3 sm:px-4 py-2 sm:py-3 border border-gray-300 rounded-xl shadow-sm focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-green-500 transition-colors duration-200 text-sm sm:text-base"
+                            class="w-full px-3 sm:px-4 py-2 sm:py-3 border border-slate-300 rounded-xl shadow-sm focus:outline-none focus:ring-2 focus:ring-amber-500 focus:border-amber-500 transition-colors duration-200 text-sm sm:text-base"
                             placeholder="Subjek pesan Anda"
                         >
                         @error('subject')
@@ -310,7 +310,7 @@ new #[Layout('components.public.layouts.public')] class extends Component {
                             id="message" 
                             wire:model="message"
                             rows="5"
-                            class="w-full px-3 sm:px-4 py-2 sm:py-3 border border-gray-300 rounded-xl shadow-sm focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-green-500 transition-colors duration-200 text-sm sm:text-base"
+                            class="w-full px-3 sm:px-4 py-2 sm:py-3 border border-slate-300 rounded-xl shadow-sm focus:outline-none focus:ring-2 focus:ring-amber-500 focus:border-amber-500 transition-colors duration-200 text-sm sm:text-base"
                             placeholder="Tulis pesan Anda di sini..."
                         ></textarea>
                         @error('message')
@@ -323,7 +323,7 @@ new #[Layout('components.public.layouts.public')] class extends Component {
                         <button 
                             type="submit"
                             wire:loading.attr="disabled"
-                            class="w-full flex justify-center py-3 sm:py-4 px-4 sm:px-6 border border-transparent rounded-xl shadow-lg text-sm sm:text-base font-semibold text-white bg-gradient-to-r from-green-600 to-emerald-600 hover:from-green-700 hover:to-emerald-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-green-500 disabled:opacity-50 disabled:cursor-not-allowed transition-all duration-200 transform hover:scale-105"
+                            class="w-full flex justify-center py-3 sm:py-4 px-4 sm:px-6 border border-transparent rounded-xl shadow-lg text-sm sm:text-base font-semibold text-white bg-amber-500 hover:bg-amber-600 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-amber-500 disabled:opacity-50 disabled:cursor-not-allowed transition-all duration-200 transform hover:scale-105"
                         >
                             <span wire:loading.remove>Kirim Pesan</span>
                             <span wire:loading class="flex items-center">

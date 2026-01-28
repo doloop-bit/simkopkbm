@@ -24,13 +24,27 @@ new #[Layout('components.public.layouts.public')] class extends Component
 
 <div>
     {{-- Hero Section --}}
-    <div class="bg-gradient-to-r from-indigo-600 to-indigo-800 py-16 text-white">
-        <div class="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
+    {{-- Hero Section --}}
+    <div class="relative bg-slate-900 text-white overflow-hidden py-16">
+        <!-- Background Pattern -->
+        <div class="absolute inset-0 opacity-10">
+            <svg class="w-full h-full" viewBox="0 0 100 100" fill="none">
+                <defs>
+                    <pattern id="programs-grid" width="20" height="20" patternUnits="userSpaceOnUse">
+                        <path d="M 20 0 L 0 0 0 20" fill="none" stroke="currentColor" stroke-width="0.5"/>
+                    </pattern>
+                </defs>
+                <rect width="100" height="100" fill="url(#programs-grid)" />
+            </svg>
+        </div>
+        
+        <div class="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 relative z-10">
             <div class="text-center">
-                <h1 class="mb-4 text-4xl font-bold md:text-5xl">Program Pendidikan</h1>
-                <p class="text-xl text-indigo-100">
+                <h1 class="mb-4 text-4xl font-bold md:text-5xl font-heading">Program Pendidikan</h1>
+                <p class="text-xl text-slate-300">
                     Berbagai program pendidikan kesetaraan untuk semua kalangan
                 </p>
+                <div class="w-24 h-1 bg-amber-500 mx-auto mt-6 rounded-full"></div>
             </div>
         </div>
     </div>
@@ -46,7 +60,7 @@ new #[Layout('components.public.layouts.public')] class extends Component
                                 {{-- Image --}}
                                 @if ($program->image_path)
                                     <div class="md:w-1/3">
-                                        <div class="aspect-video overflow-hidden bg-gray-200 md:aspect-square">
+                                        <div class="aspect-video overflow-hidden bg-slate-100 md:aspect-square">
                                             <img 
                                                 src="{{ Storage::url($program->image_path) }}" 
                                                 alt="{{ $program->name }}"
@@ -59,29 +73,29 @@ new #[Layout('components.public.layouts.public')] class extends Component
                                 {{-- Content --}}
                                 <div class="p-6 {{ $program->image_path ? 'md:w-2/3' : 'w-full' }}">
                                     <div class="mb-3 flex items-center gap-3">
-                                        <h3 class="text-2xl font-bold text-gray-900">{{ $program->name }}</h3>
-                                        <span class="rounded-full bg-indigo-100 px-3 py-1 text-sm font-medium text-indigo-800">
+                                        <h3 class="text-2xl font-bold font-heading text-slate-900">{{ $program->name }}</h3>
+                                        <span class="rounded-full bg-amber-100 px-3 py-1 text-sm font-medium text-amber-800">
                                             {{ $program->level }}
                                         </span>
                                     </div>
 
-                                    <div class="mb-4 flex items-center gap-4 text-sm text-gray-600">
+                                    <div class="mb-4 flex items-center gap-4 text-sm text-slate-600">
                                         <div class="flex items-center gap-1">
-                                            <svg class="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                            <svg class="h-4 w-4 text-slate-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"/>
                                             </svg>
                                             <span>{{ $program->duration }}</span>
                                         </div>
                                     </div>
 
-                                    <p class="mb-6 text-gray-600 leading-relaxed">
+                                    <p class="mb-6 text-slate-600 leading-relaxed">
                                         {{ Str::limit($program->description, 200) }}
                                     </p>
 
                                     <div class="flex items-center justify-between">
                                         <a 
                                             href="{{ route('public.programs.show', $program->slug) }}" 
-                                            class="inline-flex items-center gap-2 rounded-lg bg-indigo-600 px-4 py-2 text-sm font-medium text-white transition-colors hover:bg-indigo-700"
+                                            class="inline-flex items-center gap-2 rounded-lg bg-amber-500 px-4 py-2 text-sm font-medium text-white transition-colors hover:bg-amber-600"
                                         >
                                             Selengkapnya
                                             <svg class="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -97,11 +111,11 @@ new #[Layout('components.public.layouts.public')] class extends Component
             @else
                 {{-- Empty State --}}
                 <div class="py-16 text-center">
-                    <svg class="mx-auto h-24 w-24 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <svg class="mx-auto h-24 w-24 text-slate-300" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.746 0 3.332.477 4.5 1.253v13C19.832 18.477 18.246 18 16.5 18c-1.746 0-3.332.477-4.5 1.253"/>
                     </svg>
-                    <h3 class="mt-4 text-xl font-medium text-gray-900">Belum Ada Program</h3>
-                    <p class="mt-2 text-gray-600">Program pendidikan sedang dalam proses persiapan.</p>
+                    <h3 class="mt-4 text-xl font-medium font-heading text-slate-900">Belum Ada Program</h3>
+                    <p class="mt-2 text-slate-600">Program pendidikan sedang dalam proses persiapan.</p>
                 </div>
             @endif
         </div>

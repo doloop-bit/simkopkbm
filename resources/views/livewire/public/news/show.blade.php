@@ -44,12 +44,12 @@ new #[Layout('components.public.layouts.public')] class extends Component
 
 <div>
     {{-- Hero Section --}}
-    <div class="bg-gradient-to-r from-red-600 to-red-800 py-16 text-white">
-        <div class="mx-auto max-w-4xl px-4 sm:px-6 lg:px-8">
+    <div class="bg-slate-900 py-16 text-white relative">
+        <div class="mx-auto max-w-4xl px-4 sm:px-6 lg:px-8 relative z-10">
             <nav class="mb-6 flex justify-center" aria-label="Breadcrumb">
-                <ol class="flex items-center space-x-2 text-red-200">
+                <ol class="flex items-center space-x-2 text-slate-400">
                     <li>
-                        <a href="{{ route('public.news.index') }}" class="hover:text-white">
+                        <a href="{{ route('public.news.index') }}" class="hover:text-amber-400 transition-colors">
                             Berita
                         </a>
                     </li>
@@ -63,8 +63,8 @@ new #[Layout('components.public.layouts.public')] class extends Component
             </nav>
             
             <div class="text-center">
-                <h1 class="mb-4 text-3xl font-bold md:text-4xl">{{ $article->title }}</h1>
-                <div class="flex items-center justify-center gap-4 text-red-100">
+                <h1 class="mb-4 text-3xl font-bold md:text-4xl font-heading">{{ $article->title }}</h1>
+                <div class="flex items-center justify-center gap-4 text-slate-300">
                     <time datetime="{{ $article->published_at->format('Y-m-d') }}">
                         {{ $article->published_at->format('d F Y') }}
                     </time>
@@ -94,25 +94,25 @@ new #[Layout('components.public.layouts.public')] class extends Component
 
                 {{-- Excerpt --}}
                 @if ($article->excerpt)
-                    <div class="mb-8 rounded-lg bg-gray-50 p-6">
-                        <p class="text-lg font-medium text-gray-800 leading-relaxed">
+                    <div class="mb-8 rounded-lg bg-slate-50 p-6 border-l-4 border-amber-500">
+                        <p class="text-lg font-medium text-slate-800 leading-relaxed">
                             {{ $article->excerpt }}
                         </p>
                     </div>
                 @endif
 
                 {{-- Content --}}
-                <div class="text-gray-700">
+                <div class="text-slate-700">
                     {!! nl2br(e($article->content)) !!}
                 </div>
             </article>
 
             {{-- Share Buttons --}}
-            <div class="mt-12 border-t border-gray-200 pt-8">
+            <div class="mt-12 border-t border-slate-200 pt-8">
                 <div class="flex items-center justify-between">
                     <div>
-                        <h3 class="text-lg font-medium text-gray-900">Bagikan Artikel</h3>
-                        <p class="text-sm text-gray-600">Sebarkan informasi ini kepada yang lain</p>
+                        <h3 class="text-lg font-medium text-slate-900 font-heading">Bagikan Artikel</h3>
+                        <p class="text-sm text-slate-600">Sebarkan informasi ini kepada yang lain</p>
                     </div>
                     <div class="flex gap-3">
                         {{-- Facebook --}}
@@ -155,14 +155,14 @@ new #[Layout('components.public.layouts.public')] class extends Component
 
     {{-- Related Articles --}}
     @if ($relatedArticles->isNotEmpty())
-        <div class="border-t border-gray-200 bg-gray-50 py-16">
+        <div class="border-t border-slate-200 bg-slate-50 py-16">
             <div class="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
-                <h2 class="mb-8 text-center text-2xl font-bold text-gray-900">Berita Lainnya</h2>
+                <h2 class="mb-8 text-center text-2xl font-bold font-heading text-slate-900">Berita Lainnya</h2>
                 <div class="grid grid-cols-1 gap-6 md:grid-cols-3">
                     @foreach ($relatedArticles as $relatedArticle)
                         <article class="group overflow-hidden rounded-lg bg-white shadow-md transition-transform duration-300 hover:scale-105">
                             {{-- Featured Image --}}
-                            <div class="aspect-video overflow-hidden bg-gray-200">
+                            <div class="aspect-video overflow-hidden bg-slate-200">
                                 @if ($relatedArticle->featured_image_path)
                                     <img 
                                         src="{{ Storage::url($relatedArticle->featured_image_path) }}" 
@@ -170,8 +170,8 @@ new #[Layout('components.public.layouts.public')] class extends Component
                                         class="h-full w-full object-cover transition-transform duration-300 group-hover:scale-110"
                                     >
                                 @else
-                                    <div class="flex h-full items-center justify-center bg-gray-100">
-                                        <svg class="h-12 w-12 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <div class="flex h-full items-center justify-center bg-slate-100">
+                                        <svg class="h-12 w-12 text-slate-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 20H5a2 2 0 01-2-2V6a2 2 0 012-2h10a2 2 0 012 2v1m2 13a2 2 0 01-2-2V7m2 13a2 2 0 002-2V9a2 2 0 00-2-2h-2m-4-3H9M7 16h6M7 8h6v4H7V8z"/>
                                         </svg>
                                     </div>
@@ -180,10 +180,10 @@ new #[Layout('components.public.layouts.public')] class extends Component
 
                             {{-- Content --}}
                             <div class="p-4">
-                                <time class="text-sm text-gray-500">
+                                <time class="text-sm text-slate-500">
                                     {{ $relatedArticle->published_at->format('d M Y') }}
                                 </time>
-                                <h3 class="mt-2 text-lg font-semibold text-gray-900 group-hover:text-red-600">
+                                <h3 class="mt-2 text-lg font-semibold text-slate-900 group-hover:text-amber-600">
                                     <a href="{{ route('public.news.show', $relatedArticle->slug) }}">
                                         {{ Str::limit($relatedArticle->title, 60) }}
                                     </a>

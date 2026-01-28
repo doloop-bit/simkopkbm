@@ -42,9 +42,9 @@ new #[Layout('components.public.layouts.public')] class extends Component {
 
 <div>
     <!-- Page Header -->
-    <div class="relative bg-gradient-to-br from-green-600 via-green-700 to-emerald-800 text-white overflow-hidden">
+    <div class="relative bg-slate-900 text-white overflow-hidden">
         <!-- Background Pattern -->
-        <div class="absolute inset-0 opacity-20">
+        <div class="absolute inset-0 opacity-10">
             <svg class="w-full h-full" viewBox="0 0 100 100" fill="none">
                 <defs>
                     <pattern id="gallery-grid" width="20" height="20" patternUnits="userSpaceOnUse">
@@ -57,11 +57,11 @@ new #[Layout('components.public.layouts.public')] class extends Component {
         
         <div class="relative max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-16 sm:py-20">
             <div class="text-center">
-                <h1 class="text-3xl sm:text-4xl md:text-5xl font-bold mb-4">Galeri Foto</h1>
-                <p class="text-lg sm:text-xl md:text-2xl text-green-100">
+                <h1 class="text-3xl sm:text-4xl md:text-5xl font-bold font-heading mb-4">Galeri Foto</h1>
+                <p class="text-lg sm:text-xl md:text-2xl text-slate-300">
                     Dokumentasi kegiatan dan fasilitas PKBM
                 </p>
-                <div class="w-24 h-1 bg-white/30 mx-auto mt-6 rounded-full"></div>
+                <div class="w-24 h-1 bg-amber-500 mx-auto mt-6 rounded-full"></div>
             </div>
         </div>
     </div>
@@ -74,14 +74,14 @@ new #[Layout('components.public.layouts.public')] class extends Component {
                 <div class="flex flex-wrap gap-2 justify-center">
                     <button 
                         wire:click="filterByCategory('')"
-                        class="px-4 sm:px-6 py-2 sm:py-3 rounded-full text-sm font-semibold transition-all duration-200 {{ $selectedCategory === '' ? 'bg-gradient-to-r from-green-600 to-emerald-600 text-white shadow-lg' : 'bg-white text-gray-700 hover:bg-green-50 hover:text-green-700 shadow-md' }}"
+                        class="px-4 sm:px-6 py-2 sm:py-3 rounded-full text-sm font-semibold transition-all duration-200 {{ $selectedCategory === '' ? 'bg-amber-500 text-white shadow-lg' : 'bg-white text-slate-600 hover:bg-slate-50 hover:text-amber-600 shadow-md border border-slate-100' }}"
                     >
                         Semua
                     </button>
                     @foreach($categories as $category)
                         <button 
                             wire:click="filterByCategory('{{ $category }}')"
-                            class="px-4 sm:px-6 py-2 sm:py-3 rounded-full text-sm font-semibold transition-all duration-200 {{ $selectedCategory === $category ? 'bg-gradient-to-r from-green-600 to-emerald-600 text-white shadow-lg' : 'bg-white text-gray-700 hover:bg-green-50 hover:text-green-700 shadow-md' }}"
+                            class="px-4 sm:px-6 py-2 sm:py-3 rounded-full text-sm font-semibold transition-all duration-200 {{ $selectedCategory === $category ? 'bg-amber-500 text-white shadow-lg' : 'bg-white text-slate-600 hover:bg-slate-50 hover:text-amber-600 shadow-md border border-slate-100' }}"
                         >
                             {{ $category }}
                         </button>
@@ -94,20 +94,20 @@ new #[Layout('components.public.layouts.public')] class extends Component {
         @if($photos->count() > 0)
             <div class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 gap-3 sm:gap-4 lg:gap-6">
                 @foreach($photos as $photo)
-                    <div class="group relative overflow-hidden rounded-lg bg-gray-200 aspect-square">
+                    <div class="group relative overflow-hidden rounded-lg bg-gray-200 aspect-square shadow-sm hover:shadow-xl transition-all duration-300">
                         <x-global.optimized-image
                             :src="Storage::url($photo->thumbnail_path)"
                             :webp-src="$photo->thumbnail_webp_path ? Storage::url($photo->thumbnail_webp_path) : null"
                             :alt="$photo->title"
-                            class="w-full h-full object-cover group-hover:scale-110 transition duration-300 cursor-pointer"
+                            class="w-full h-full object-cover group-hover:scale-110 transition duration-500 cursor-pointer"
                             onclick="openLightbox('{{ $photo->web_path ? Storage::url($photo->web_path) : Storage::url($photo->original_path) }}', '{{ addslashes($photo->title) }}', '{{ addslashes($photo->caption ?? '') }}')"
                             :lazy="true"
                         />
-                        <div class="absolute inset-0 bg-black bg-opacity-0 group-hover:bg-opacity-40 transition duration-300 flex items-center justify-center">
-                            <div class="text-white opacity-0 group-hover:opacity-100 transition duration-300 text-center p-2 sm:p-4">
-                                <h3 class="font-semibold text-xs sm:text-sm mb-1">{{ $photo->title }}</h3>
+                        <div class="absolute inset-0 bg-gradient-to-t from-black/80 via-black/20 to-transparent opacity-0 group-hover:opacity-100 transition duration-300 flex items-end justify-center">
+                            <div class="text-white p-2 sm:p-4 text-center w-full transform translate-y-4 group-hover:translate-y-0 transition duration-300">
+                                <h3 class="font-semibold text-xs sm:text-sm mb-1 font-heading">{{ $photo->title }}</h3>
                                 @if($photo->caption)
-                                    <p class="text-xs text-gray-200 hidden sm:block">{{ Str::limit($photo->caption, 50) }}</p>
+                                    <p class="text-[10px] text-gray-200 hidden sm:block line-clamp-2">{{ Str::limit($photo->caption, 50) }}</p>
                                 @endif
                             </div>
                         </div>
@@ -116,12 +116,14 @@ new #[Layout('components.public.layouts.public')] class extends Component {
             </div>
         @else
             <!-- Empty State -->
-            <div class="text-center py-12 sm:py-16">
-                <svg class="mx-auto h-20 sm:h-24 w-20 sm:w-24 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
-                </svg>
-                <h3 class="mt-4 text-lg font-medium text-gray-900">Belum Ada Foto</h3>
-                <p class="mt-2 text-gray-500">
+            <div class="text-center py-12 sm:py-16 bg-white rounded-2xl shadow-sm border border-slate-100">
+                <div class="bg-slate-50 w-24 h-24 rounded-full flex items-center justify-center mx-auto mb-4">
+                    <svg class="h-12 w-12 text-slate-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
+                    </svg>
+                </div>
+                <h3 class="mt-4 text-lg font-bold text-slate-900 font-heading">Belum Ada Foto</h3>
+                <p class="mt-2 text-slate-500">
                     @if($selectedCategory)
                         Tidak ada foto dalam kategori "{{ $selectedCategory }}".
                     @else
@@ -131,7 +133,7 @@ new #[Layout('components.public.layouts.public')] class extends Component {
                 @if($selectedCategory)
                     <button 
                         wire:click="filterByCategory('')"
-                        class="mt-4 inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md text-blue-600 bg-blue-100 hover:bg-blue-200 transition"
+                        class="mt-6 inline-flex items-center px-6 py-2.5 border border-transparent text-sm font-bold rounded-full text-white bg-amber-500 hover:bg-amber-600 transition shadow-lg hover:shadow-amber-500/30"
                     >
                         Lihat Semua Foto
                     </button>

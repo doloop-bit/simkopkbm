@@ -28,7 +28,7 @@ new #[Layout('components.public.layouts.public')] class extends Component {
 
 <div>
     <!-- Hero Section -->
-    <div class="relative bg-gradient-to-br from-green-600 via-green-700 to-emerald-800 text-white overflow-hidden">
+    <div class="relative bg-slate-900 text-white overflow-hidden">
         <!-- Background Pattern -->
         <div class="absolute inset-0 opacity-20">
             <svg class="w-full h-full" viewBox="0 0 100 100" fill="none">
@@ -41,11 +41,7 @@ new #[Layout('components.public.layouts.public')] class extends Component {
             </svg>
         </div>
         
-        <!-- Floating Elements -->
-        <div class="absolute top-20 left-10 w-20 h-20 bg-green-400 rounded-full opacity-20 animate-pulse"></div>
-        <div class="absolute top-40 right-20 w-16 h-16 bg-emerald-400 rounded-full opacity-30 animate-bounce"></div>
-        <div class="absolute bottom-20 left-1/4 w-12 h-12 bg-green-300 rounded-full opacity-25 animate-pulse"></div>
-        
+
         <div class="relative max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-16 sm:py-20 lg:py-24">
             <div class="text-center">
                 @if($schoolProfile && $schoolProfile->logo_path)
@@ -53,27 +49,27 @@ new #[Layout('components.public.layouts.public')] class extends Component {
                         <img src="{{ Storage::url($schoolProfile->logo_path) }}" alt="{{ $schoolProfile->name }}" class="h-24 sm:h-28 lg:h-32 mx-auto drop-shadow-2xl">
                     </div>
                 @endif
-                <h1 class="text-3xl sm:text-4xl md:text-5xl lg:text-6xl xl:text-7xl font-bold mb-4 sm:mb-6 leading-tight">
-                    <span class="bg-gradient-to-r from-white to-green-100 bg-clip-text text-transparent">
+                <h1 class="text-3xl sm:text-4xl md:text-5xl lg:text-6xl xl:text-7xl font-bold font-heading mb-4 sm:mb-6 leading-tight">
+                    <span class="bg-gradient-to-r from-white to-slate-300 bg-clip-text text-transparent">
                         {{ $schoolProfile?->name ?? config('app.name') }}
                     </span>
                 </h1>
-                <p class="text-lg sm:text-xl md:text-2xl lg:text-3xl mb-6 sm:mb-8 text-green-100 font-light">
+                <p class="text-lg sm:text-xl md:text-2xl lg:text-3xl mb-6 sm:mb-8 text-slate-400 font-light">
                     Pusat Kegiatan Belajar Masyarakat
                 </p>
                 @if($schoolProfile && $schoolProfile->vision)
-                    <p class="text-base sm:text-lg md:text-xl max-w-2xl lg:max-w-4xl mx-auto text-green-50 leading-relaxed mb-8 sm:mb-10 lg:mb-12 px-4">
+                    <p class="text-base sm:text-lg md:text-xl max-w-2xl lg:max-w-4xl mx-auto text-slate-300 leading-relaxed mb-8 sm:mb-10 lg:mb-12 px-4">
                         {{ Str::limit($schoolProfile->vision, 200) }}
                     </p>
                 @endif
                 <div class="flex flex-col sm:flex-row gap-4 sm:gap-6 justify-center items-center px-4">
-                    <a href="{{ route('public.programs.index') }}" class="group inline-flex items-center justify-center px-6 sm:px-8 py-3 sm:py-4 bg-white text-green-700 font-semibold rounded-xl shadow-xl hover:shadow-2xl transition-all duration-300 transform hover:scale-105 hover:bg-green-50 w-full sm:w-auto">
+                    <a href="{{ route('public.programs.index') }}" class="group inline-flex items-center justify-center px-6 sm:px-8 py-3 sm:py-4 bg-amber-500 text-white font-bold rounded-xl shadow-xl hover:shadow-2xl hover:shadow-amber-500/20 transition-all duration-300 transform hover:scale-105 hover:bg-amber-600 w-full sm:w-auto">
                         <svg class="w-5 h-5 mr-2 group-hover:translate-x-1 transition-transform duration-200" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477 4.5 1.253v13C19.832 18.477 18.246 18 16.5 18c-1.746 0-3.332.477-4.5 1.253" />
                         </svg>
                         Lihat Program
                     </a>
-                    <a href="{{ route('public.contact') }}" class="group inline-flex items-center justify-center px-6 sm:px-8 py-3 sm:py-4 border-2 border-white text-white font-semibold rounded-xl hover:bg-white hover:text-green-700 transition-all duration-300 transform hover:scale-105 w-full sm:w-auto">
+                    <a href="{{ route('public.contact') }}" class="group inline-flex items-center justify-center px-6 sm:px-8 py-3 sm:py-4 border-2 border-white/20 text-white font-semibold rounded-xl hover:bg-white/10 transition-all duration-300 transform hover:scale-105 w-full sm:w-auto">
                         <svg class="w-5 h-5 mr-2 group-hover:translate-x-1 transition-transform duration-200" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 8l7.89 4.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" />
                         </svg>
@@ -95,11 +91,11 @@ new #[Layout('components.public.layouts.public')] class extends Component {
     @if($latestNews->count() > 0)
         <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-20">
             <div class="text-center mb-16">
-                <h2 class="text-4xl font-bold text-gray-900 mb-4">Berita Terbaru</h2>
-                <p class="text-lg text-gray-600 max-w-2xl mx-auto">
+                <h2 class="text-4xl font-bold font-heading text-slate-900 mb-4">Berita Terbaru</h2>
+                <p class="text-lg text-slate-600 max-w-2xl mx-auto">
                     Ikuti perkembangan terbaru dan kegiatan menarik di PKBM kami
                 </p>
-                <div class="w-24 h-1 bg-gradient-to-r from-green-500 to-emerald-500 mx-auto mt-6 rounded-full"></div>
+                <div class="w-24 h-1 bg-amber-500 mx-auto mt-6 rounded-full"></div>
             </div>
 
             <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6 sm:gap-8">
@@ -109,26 +105,26 @@ new #[Layout('components.public.layouts.public')] class extends Component {
                             @if($article->featured_image_path)
                                 <img src="{{ Storage::url($article->featured_image_path) }}" alt="{{ $article->title }}" class="w-full h-48 sm:h-56 object-cover group-hover:scale-110 transition-transform duration-500">
                             @else
-                                <div class="w-full h-48 sm:h-56 bg-gradient-to-br from-green-100 to-emerald-100 flex items-center justify-center">
-                                    <svg class="w-12 sm:w-16 h-12 sm:h-16 text-green-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <div class="w-full h-48 sm:h-56 bg-slate-100 flex items-center justify-center">
+                                    <svg class="w-12 sm:w-16 h-12 sm:h-16 text-slate-300" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
                                     </svg>
                                 </div>
                             @endif
                             <div class="absolute top-4 left-4">
-                                <span class="bg-green-600 text-white px-3 py-1 rounded-full text-sm font-medium">
+                                <span class="bg-amber-500 text-white px-3 py-1 rounded-full text-sm font-medium">
                                     {{ $article->published_at->format('d M Y') }}
                                 </span>
                             </div>
                         </div>
                         <div class="p-4 sm:p-6">
-                            <h3 class="text-lg sm:text-xl font-bold text-gray-900 mb-3 line-clamp-2 group-hover:text-green-700 transition-colors duration-200">
+                            <h3 class="text-lg sm:text-xl font-bold font-heading text-slate-900 mb-3 line-clamp-2 group-hover:text-amber-600 transition-colors duration-200">
                                 {{ $article->title }}
                             </h3>
-                            <p class="text-gray-600 mb-4 line-clamp-3 leading-relaxed text-sm sm:text-base">
+                            <p class="text-slate-600 mb-4 line-clamp-3 leading-relaxed text-sm sm:text-base">
                                 {{ $article->excerpt ?? Str::limit(strip_tags($article->content), 120) }}
                             </p>
-                            <a href="{{ route('public.news.show', $article->slug) }}" class="inline-flex items-center text-green-600 hover:text-green-700 font-semibold group text-sm sm:text-base">
+                            <a href="{{ route('public.news.show', $article->slug) }}" class="inline-flex items-center text-amber-600 hover:text-amber-700 font-semibold group text-sm sm:text-base">
                                 Baca Selengkapnya
                                 <svg class="w-4 h-4 ml-2 group-hover:translate-x-1 transition-transform duration-200" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"/>
@@ -140,7 +136,7 @@ new #[Layout('components.public.layouts.public')] class extends Component {
             </div>
 
             <div class="text-center mt-12">
-                <a href="{{ route('public.news.index') }}" class="inline-flex items-center justify-center px-8 py-4 bg-gradient-to-r from-green-600 to-emerald-600 text-white font-semibold rounded-xl shadow-lg hover:shadow-xl hover:from-green-700 hover:to-emerald-700 transition-all duration-300 transform hover:scale-105">
+                <a href="{{ route('public.news.index') }}" class="inline-flex items-center justify-center px-8 py-4 bg-slate-800 text-white font-semibold rounded-xl shadow-lg hover:shadow-xl hover:bg-slate-700 transition-all duration-300 transform hover:scale-105">
                     <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 20H5a2 2 0 01-2-2V6a2 2 0 012-2h10a2 2 0 012 2v1m2 13a2 2 0 01-2-2V7m2 13a2 2 0 002-2V9a2 2 0 00-2-2h-2m-4-3H9M7 16h6M7 8h6v4H7V8z" />
                     </svg>
@@ -152,14 +148,14 @@ new #[Layout('components.public.layouts.public')] class extends Component {
 
     <!-- Programs Section -->
     @if($programs->count() > 0)
-        <div class="bg-gradient-to-br from-green-50 via-white to-emerald-50 py-20">
+        <div class="bg-white py-20 border-t border-slate-100">
             <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
                 <div class="text-center mb-16">
-                    <h2 class="text-4xl font-bold text-gray-900 mb-4">Program Pendidikan</h2>
-                    <p class="text-lg text-gray-600 max-w-3xl mx-auto">
+                    <h2 class="text-4xl font-bold font-heading text-slate-900 mb-4">Program Pendidikan</h2>
+                    <p class="text-lg text-slate-600 max-w-3xl mx-auto">
                         Kami menawarkan berbagai program pendidikan berkualitas yang disesuaikan dengan kebutuhan dan perkembangan masyarakat
                     </p>
-                    <div class="w-24 h-1 bg-gradient-to-r from-green-500 to-emerald-500 mx-auto mt-6 rounded-full"></div>
+                    <div class="w-24 h-1 bg-amber-500 mx-auto mt-6 rounded-full"></div>
                 </div>
 
                 <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6 sm:gap-8">
@@ -169,28 +165,28 @@ new #[Layout('components.public.layouts.public')] class extends Component {
                                 @if($program->image_path)
                                     <img src="{{ Storage::url($program->image_path) }}" alt="{{ $program->name }}" class="w-full h-40 sm:h-48 object-cover group-hover:scale-110 transition-transform duration-500">
                                 @else
-                                    <div class="w-full h-40 sm:h-48 bg-gradient-to-br from-green-400 via-green-500 to-emerald-600 flex items-center justify-center relative overflow-hidden">
+                                    <div class="w-full h-40 sm:h-48 bg-slate-800 flex items-center justify-center relative overflow-hidden">
                                         <div class="absolute inset-0 bg-black opacity-10"></div>
-                                        <span class="relative text-white text-2xl sm:text-3xl font-bold drop-shadow-lg">{{ Str::upper(Str::substr($program->name, 0, 1)) }}</span>
+                                        <span class="relative text-white text-2xl sm:text-3xl font-bold drop-shadow-lg font-heading">{{ Str::upper(Str::substr($program->name, 0, 1)) }}</span>
                                         <!-- Decorative circles -->
-                                        <div class="absolute top-4 right-4 w-6 sm:w-8 h-6 sm:h-8 bg-white opacity-20 rounded-full"></div>
-                                        <div class="absolute bottom-4 left-4 w-4 sm:w-6 h-4 sm:h-6 bg-white opacity-30 rounded-full"></div>
+                                        <div class="absolute top-4 right-4 w-6 sm:w-8 h-6 sm:h-8 bg-white opacity-10 rounded-full"></div>
+                                        <div class="absolute bottom-4 left-4 w-4 sm:w-6 h-4 sm:h-6 bg-white opacity-10 rounded-full"></div>
                                     </div>
                                 @endif
                                 <div class="absolute top-4 left-4">
-                                    <span class="bg-white/90 backdrop-blur-sm text-green-700 px-2 sm:px-3 py-1 rounded-full text-xs sm:text-sm font-semibold">
+                                    <span class="bg-white/90 backdrop-blur-sm text-slate-900 px-2 sm:px-3 py-1 rounded-full text-xs sm:text-sm font-semibold border border-slate-200">
                                         {{ Str::upper($program->level) }}
                                     </span>
                                 </div>
                             </div>
                             <div class="p-4 sm:p-6">
-                                <h3 class="text-lg sm:text-xl font-bold text-gray-900 mb-3 group-hover:text-green-700 transition-colors duration-200">
+                                <h3 class="text-lg sm:text-xl font-bold text-slate-900 mb-3 group-hover:text-amber-600 transition-colors duration-200">
                                     {{ $program->name }}
                                 </h3>
-                                <p class="text-gray-600 text-sm mb-4 sm:mb-6 line-clamp-3 leading-relaxed">
+                                <p class="text-slate-600 text-sm mb-4 sm:mb-6 line-clamp-3 leading-relaxed">
                                     {{ Str::limit($program->description, 100) }}
                                 </p>
-                                <a href="{{ route('public.programs.show', $program->slug) }}" class="inline-flex items-center text-green-600 hover:text-green-700 font-semibold group text-sm sm:text-base">
+                                <a href="{{ route('public.programs.show', $program->slug) }}" class="inline-flex items-center text-amber-600 hover:text-amber-700 font-semibold group text-sm sm:text-base">
                                     Selengkapnya
                                     <svg class="w-4 h-4 ml-2 group-hover:translate-x-1 transition-transform duration-200" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"/>
@@ -202,7 +198,7 @@ new #[Layout('components.public.layouts.public')] class extends Component {
                 </div>
 
                 <div class="text-center mt-12">
-                    <a href="{{ route('public.programs.index') }}" class="inline-flex items-center justify-center px-8 py-4 bg-gradient-to-r from-green-600 to-emerald-600 text-white font-semibold rounded-xl shadow-lg hover:shadow-xl hover:from-green-700 hover:to-emerald-700 transition-all duration-300 transform hover:scale-105">
+                    <a href="{{ route('public.programs.index') }}" class="inline-flex items-center justify-center px-8 py-4 bg-slate-800 text-white font-semibold rounded-xl shadow-lg hover:shadow-xl hover:bg-slate-700 transition-all duration-300 transform hover:scale-105">
                         <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477 4.5 1.253v13C19.832 18.477 18.246 18 16.5 18c-1.746 0-3.332.477-4.5 1.253" />
                         </svg>
@@ -217,11 +213,11 @@ new #[Layout('components.public.layouts.public')] class extends Component {
     @if($featuredPhotos->count() > 0)
         <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-20">
             <div class="text-center mb-16">
-                <h2 class="text-4xl font-bold text-gray-900 mb-4">Galeri Foto</h2>
-                <p class="text-lg text-gray-600 max-w-2xl mx-auto">
+                <h2 class="text-4xl font-bold font-heading text-slate-900 mb-4">Galeri Foto</h2>
+                <p class="text-lg text-slate-600 max-w-2xl mx-auto">
                     Dokumentasi kegiatan dan momen berharga dalam perjalanan pendidikan di PKBM kami
                 </p>
-                <div class="w-24 h-1 bg-gradient-to-r from-green-500 to-emerald-500 mx-auto mt-6 rounded-full"></div>
+                <div class="w-24 h-1 bg-amber-500 mx-auto mt-6 rounded-full"></div>
             </div>
 
             <div class="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-3 sm:gap-4">
@@ -253,7 +249,7 @@ new #[Layout('components.public.layouts.public')] class extends Component {
             </div>
 
             <div class="text-center mt-12">
-                <a href="{{ route('public.gallery') }}" class="inline-flex items-center justify-center px-8 py-4 bg-gradient-to-r from-green-600 to-emerald-600 text-white font-semibold rounded-xl shadow-lg hover:shadow-xl hover:from-green-700 hover:to-emerald-700 transition-all duration-300 transform hover:scale-105">
+                <a href="{{ route('public.gallery') }}" class="inline-flex items-center justify-center px-8 py-4 bg-white border border-slate-200 text-slate-700 font-semibold rounded-xl shadow-sm hover:shadow-lg hover:text-amber-600 transition-all duration-300 transform hover:scale-105">
                     <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
                     </svg>
@@ -264,9 +260,9 @@ new #[Layout('components.public.layouts.public')] class extends Component {
     @endif
 
     <!-- Call to Action Section -->
-    <div class="relative bg-gradient-to-br from-green-600 via-green-700 to-emerald-800 text-white overflow-hidden">
+    <div class="relative bg-white text-slate-900 overflow-hidden border-t border-slate-100">
         <!-- Background Pattern -->
-        <div class="absolute inset-0 opacity-20">
+        <div class="absolute inset-0 opacity-5">
             <svg class="w-full h-full" viewBox="0 0 100 100" fill="none">
                 <defs>
                     <pattern id="cta-grid" width="20" height="20" patternUnits="userSpaceOnUse">
@@ -277,33 +273,30 @@ new #[Layout('components.public.layouts.public')] class extends Component {
             </svg>
         </div>
         
-        <!-- Floating Elements -->
-        <div class="absolute top-10 left-10 w-16 h-16 bg-green-400 rounded-full opacity-20 animate-pulse"></div>
-        <div class="absolute top-20 right-20 w-12 h-12 bg-emerald-400 rounded-full opacity-30 animate-bounce"></div>
-        <div class="absolute bottom-10 left-1/3 w-10 h-10 bg-green-300 rounded-full opacity-25 animate-pulse"></div>
-        
+
         <div class="relative max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-16 sm:py-20 text-center">
             <div class="max-w-2xl sm:max-w-3xl lg:max-w-4xl mx-auto">
-                <h2 class="text-3xl sm:text-4xl md:text-5xl font-bold mb-4 sm:mb-6">Bergabunglah Bersama Kami</h2>
-                <p class="text-lg sm:text-xl md:text-2xl text-green-100 mb-8 sm:mb-10 lg:mb-12 leading-relaxed px-4">
+                <h2 class="text-3xl sm:text-4xl md:text-5xl font-bold font-heading mb-4 sm:mb-6 text-slate-900">Bergabunglah Bersama Kami</h2>
+                <p class="text-lg sm:text-xl md:text-2xl text-slate-600 mb-8 sm:mb-10 lg:mb-12 leading-relaxed px-4">
                     Daftarkan diri Anda atau keluarga untuk mendapatkan pendidikan berkualitas dan terjangkau di PKBM kami. 
                     Mari wujudkan impian pendidikan yang lebih baik bersama-sama.
                 </p>
                 <div class="flex flex-col sm:flex-row gap-4 sm:gap-6 justify-center items-center px-4">
-                    <a href="{{ route('public.contact') }}" class="group inline-flex items-center justify-center px-8 sm:px-10 py-4 sm:py-5 bg-white text-green-700 font-bold rounded-xl shadow-2xl hover:shadow-3xl transition-all duration-300 transform hover:scale-105 hover:bg-green-50 w-full sm:w-auto">
+                    <a href="{{ route('public.contact') }}" class="group inline-flex items-center justify-center px-8 sm:px-10 py-4 sm:py-5 bg-amber-500 text-white font-bold rounded-xl shadow-xl hover:shadow-2xl hover:shadow-amber-500/30 transition-all duration-300 transform hover:scale-105 hover:bg-amber-600 w-full sm:w-auto">
                         <svg class="w-5 sm:w-6 h-5 sm:h-6 mr-2 sm:mr-3 group-hover:translate-x-1 transition-transform duration-200" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 8l7.89 4.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" />
                         </svg>
                         Hubungi Kami Sekarang
                     </a>
-                    <a href="{{ route('public.about') }}" class="group inline-flex items-center justify-center px-8 sm:px-10 py-4 sm:py-5 border-2 border-white text-white font-bold rounded-xl hover:bg-white hover:text-green-700 transition-all duration-300 transform hover:scale-105 w-full sm:w-auto">
+                    <a href="{{ route('public.about') }}" class="group inline-flex items-center justify-center px-8 sm:px-10 py-4 sm:py-5 border-2 border-slate-200 text-slate-600 font-bold rounded-xl hover:bg-slate-50 hover:text-slate-900 hover:border-slate-300 transition-all duration-300 transform hover:scale-105 w-full sm:w-auto">
                         <svg class="w-5 sm:w-6 h-5 sm:h-6 mr-2 sm:mr-3 group-hover:translate-x-1 transition-transform duration-200" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
                         </svg>
-                        Pelajari Lebih Lanjut
+                        Tentang Kami
                     </a>
                 </div>
             </div>
         </div>
     </div>
+
 </div>
