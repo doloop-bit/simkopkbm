@@ -12,6 +12,12 @@ new #[Layout('components.admin.layouts.app')] class extends Component {
 
     public ?Level $editing = null;
 
+    public function createNew(): void
+    {
+        $this->reset(['name', 'type', 'editing']);
+        $this->resetValidation();
+    }
+
     public function rules(): array
     {
         return [
@@ -31,7 +37,7 @@ new #[Layout('components.admin.layouts.app')] class extends Component {
         }
 
         $this->reset(['name', 'type', 'editing']);
-        $this->dispatch('close-modal', 'level-modal');
+        $this->dispatch('level-saved');
     }
 
     public function edit(Level $level): void
@@ -39,8 +45,6 @@ new #[Layout('components.admin.layouts.app')] class extends Component {
         $this->editing = $level;
         $this->name = $level->name;
         $this->type = $level->type;
-
-        $this->dispatch('open-modal', 'level-modal');
     }
 
     public function delete(Level $level): void
@@ -64,7 +68,7 @@ new #[Layout('components.admin.layouts.app')] class extends Component {
         </div>
 
         <flux:modal.trigger name="level-modal">
-            <flux:button variant="primary" icon="plus" wire:click="$set('editing', null)">Tambah Jenjang</flux:button>
+            <flux:button variant="primary" icon="plus" wire:click="createNew">Tambah Jenjang</flux:button>
         </flux:modal.trigger>
     </div>
 
@@ -84,14 +88,14 @@ new #[Layout('components.admin.layouts.app')] class extends Component {
                 </div>
 
                 <div class="mt-6 flex justify-end gap-2">
-                    <flux:button size="sm" variant="ghost" icon="pencil-square" wire:click="edit({{ $level->id }})" />
+                    <flux:button size="sm" variant="ghost" icon="pencil-square" wire:click="edit({{ $level->id }})" x-on:click="$flux.modal('level-modal').show()" />
                     <flux:button size="sm" variant="ghost" icon="trash" class="text-red-500" wire:confirm="Yakin ingin menghapus jenjang ini?" wire:click="delete({{ $level->id }})" />
                 </div>
             </div>
         @endforeach
     </div>
 
-    <flux:modal name="level-modal" class="max-w-md">
+    <flux:modal name="level-modal" class="max-w-md" x-on:level-saved.window="$flux.modal('level-modal').close()">
         <form wire:submit="save" class="space-y-6">
             <div>
                 <flux:heading size="lg">{{ $editing ? 'Edit Jenjang' : 'Tambah Jenjang Baru' }}</flux:heading>
