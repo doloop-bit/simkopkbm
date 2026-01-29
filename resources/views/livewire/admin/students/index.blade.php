@@ -296,6 +296,22 @@ new #[Layout('components.admin.layouts.app')] class extends Component {
         }
     }
 
+    public function updatedFilterLevelId(): void
+    {
+        $this->filter_classroom_id = null;
+        $this->resetPage();
+    }
+
+    public function updatedFilterClassroomId(): void
+    {
+        $this->resetPage();
+    }
+
+    public function updatedSearch(): void
+    {
+        $this->resetPage();
+    }
+
     public function createNew(): void
     {
         $this->reset(['name', 'email', 'nis', 'nisn', 'phone', 'address', 'dob', 'pob', 'classroom_id', 'photo', 'father_name', 'mother_name', 'guardian_name', 'guardian_phone', 'birth_order', 'total_siblings', 'previous_school', 'status', 'nik', 'nik_ayah', 'nik_ibu', 'no_kk', 'no_akta', 'editing', 'existingPhoto']);
@@ -448,6 +464,7 @@ new #[Layout('components.admin.layouts.app')] class extends Component {
                 ->orderBy($this->sortField === 'name' ? 'name' : ($this->sortField === 'email' ? 'email' : 'created_at'), $this->sortDirection)
                 ->paginate(15),
             'classrooms' => Classroom::with('academicYear')->get(),
+            'filter_classrooms' => Classroom::when($this->filter_level_id, fn($q) => $q->where('level_id', $this->filter_level_id))->get(),
             'levels' => \App\Models\Level::all(),
         ];
     }
@@ -505,7 +522,7 @@ new #[Layout('components.admin.layouts.app')] class extends Component {
                 </flux:select>
                 <flux:select wire:model.live="filter_classroom_id" placeholder="Semua Kelas" class="max-w-[200px]">
                     <option value="">Semua Kelas</option>
-                    @foreach($classrooms as $room)
+                    @foreach($filter_classrooms as $room)
                         <option value="{{ $room->id }}">{{ $room->name }}</option>
                     @endforeach
                 </flux:select>
