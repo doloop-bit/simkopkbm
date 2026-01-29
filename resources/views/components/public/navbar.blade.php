@@ -3,8 +3,8 @@
     $schoolProfile = app(\App\Services\CacheService::class)->getSchoolProfile();
     $phone = $schoolProfile?->phone ?? '6281234567890';
     $email = $schoolProfile?->email ?? 'info@simkopkbm.com';
-    $facebook = $schoolProfile?->facebook ?? '#';
-    $instagram = $schoolProfile?->instagram ?? '#';
+    $facebook = $schoolProfile?->facebook_url ?? '#';
+    $instagram = $schoolProfile?->instagram_url ?? '#';
 @endphp
 <div class="bg-slate-900 text-white py-2 hidden lg:block border-b border-white/10">
     <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 flex justify-between items-center text-xs font-medium">
