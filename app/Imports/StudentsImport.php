@@ -15,10 +15,22 @@ use Maatwebsite\Excel\Concerns\WithValidation;
 class StudentsImport implements ToModel, WithHeadingRow, WithValidation
 {
 
+    protected static ?string $passwordHash = null;
+    protected static array $classroomsCache = [];
+
     public function model(array $row)
     {
         return DB::transaction(function () use ($row) {
-            $classroom = Classroom::where('name', $row['nama_kelas'])->first();
+            $className = trim($row['nama_kelas'] ?? '');
+            
+            if (!empty($className)) {
+                if (!isset(static::$classroomsCache[$className])) {
+                    static::$classroomsCache[$className] = Classroom::where('name', $className)->first();
+                }
+                $classroom = static::$classroomsCache[$className];
+            } else {
+                $classroom = null;
+            }
 
             // Handle empty email: if empty, generate a unique one based on NIS or unique ID
             $email = $row['email'];
@@ -27,12 +39,17 @@ class StudentsImport implements ToModel, WithHeadingRow, WithValidation
                 $email = 'student_' . $uniqueId . '@baitusyukur.id';
             }
 
+            // Pre-hash password to save execution time
+            if (!static::$passwordHash) {
+                static::$passwordHash = Hash::make('password');
+            }
+
             $user = User::create([
                 'name'      => $row['nama_lengkap'],
                 'email'     => $email,
-                'password'  => Hash::make('password'),
+                'password'  => static::$passwordHash,
                 'role'      => 'siswa',
-                'is_active' => true,
+                'is_active' => false,
             ]);
 
             $dob = $row['tanggal_lahir'];
@@ -77,6 +94,11 @@ class StudentsImport implements ToModel, WithHeadingRow, WithValidation
         $data['nik_ayah'] = $data['nik_ayah'] !== null ? (string)$data['nik_ayah'] : null;
         $data['nik_ibu'] = $data['nik_ibu'] !== null ? (string)$data['nik_ibu'] : null;
         $data['no_kk'] = $data['no_kk'] !== null ? (string)$data['no_kk'] : null;
+
+        // Ensure optional fields are null if empty to trigger 'nullable' correctly
+        $data['nama_kelas'] = !empty(trim($data['nama_kelas'] ?? '')) ? trim($data['nama_kelas']) : null;
+        $data['nisn'] = !empty(trim($data['nisn'] ?? '')) ? trim($data['nisn']) : null;
+        $data['nis'] = !empty(trim($data['nis'] ?? '')) ? trim($data['nis']) : null;
 
         return $data;
     }
