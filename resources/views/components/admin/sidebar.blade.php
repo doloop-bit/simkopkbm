@@ -15,7 +15,7 @@
         </flux:sidebar.item>
 
         <!-- Data Master -->
-        <flux:sidebar.group expandable :expanded="request()->routeIs('students.*', 'ptk.*') || request()->is('admin/students*', 'admin/ptk*')" icon="book-open" :heading="__('Data Master')" class="grid">
+        <flux:sidebar.group expandable icon="book-open" :heading="__('Data Master')" class="grid">
             <flux:sidebar.item icon="users" :href="route('students.index')" :current="request()->routeIs('students.index')" wire:navigate.hover>
                 {{ __('Siswa') }}
             </flux:sidebar.item>
@@ -25,7 +25,7 @@
         </flux:sidebar.group>
 
         <!-- Akademik -->
-        <flux:sidebar.group expandable :expanded="request()->routeIs('academic.*') || request()->is('admin/academic*')" icon="academic-cap" :heading="__('Akademik')" class="grid">
+        <flux:sidebar.group expandable icon="academic-cap" :heading="__('Akademik')" class="grid">
             <flux:sidebar.item icon="calendar" :href="route('academic.years')" :current="request()->routeIs('academic.years')" wire:navigate.hover>
                 {{ __('Tahun Ajaran') }}
             </flux:sidebar.item>
@@ -47,7 +47,7 @@
         </flux:sidebar.group>
 
         <!-- Penilaian & Raport -->
-        <flux:sidebar.group expandable :expanded="request()->routeIs('admin.assessments.*', 'admin.report-card.*', 'academic.grades') || request()->is('admin/assessments*', 'admin/report-card*', 'admin/grades*')" icon="pencil-square" :heading="__('Penilaian & Raport')" class="grid">
+        <flux:sidebar.group expandable icon="pencil-square" :heading="__('Penilaian & Raport')" class="grid">
             <flux:sidebar.item icon="pencil-square" :href="route('academic.grades')" :current="request()->routeIs('academic.grades')" wire:navigate.hover>
                 {{ __('Penilaian (Nilai)') }}
             </flux:sidebar.item>
@@ -74,7 +74,7 @@
 
 
         <!-- Keuangan -->
-        <flux:sidebar.group expandable :expanded="request()->routeIs('financial.*') || request()->is('admin/financial*')" icon="banknotes" :heading="__('Keuangan')" class="grid">
+        <flux:sidebar.group expandable icon="banknotes" :heading="__('Keuangan')" class="grid">
             <flux:sidebar.item icon="wallet" :href="route('financial.payments')" :current="request()->routeIs('financial.payments')" wire:navigate.hover>
                 {{ __('Transaksi') }}
             </flux:sidebar.item>
@@ -87,7 +87,7 @@
         </flux:sidebar.group>
 
         <!-- Konten Web -->
-        <flux:sidebar.group expandable :expanded="request()->routeIs('admin.school-profile.*', 'admin.news.*', 'admin.gallery.*', 'admin.programs.*', 'admin.contact-inquiries.*') || request()->is('admin/profil-sekolah*', 'admin/news*', 'admin/galeri*', 'admin/programs*', 'admin/pesan-kontak*')" icon="globe-alt" :heading="__('Konten Web')" class="grid">
+        <flux:sidebar.group expandable icon="globe-alt" :heading="__('Konten Web')" class="grid">
             <flux:sidebar.item icon="building-office-2" :href="route('admin.school-profile.edit')" :current="request()->routeIs('admin.school-profile.*')" wire:navigate.hover>
                 {{ __('Profil Sekolah') }}
             </flux:sidebar.item>
