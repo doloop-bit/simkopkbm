@@ -174,8 +174,17 @@ new #[Layout('components.admin.layouts.app')] class extends Component {
                     'email' => $this->email,
                 ]);
 
-                $profile = $this->editing->latestProfile->profileable;
-                $profile->update($profileData);
+                $profile = $this->editing->latestProfile?->profileable;
+                
+                if ($profile) {
+                    $profile->update($profileData);
+                } else {
+                    $studentProfile = StudentProfile::create($profileData);
+                    $this->editing->profiles()->create([
+                        'profileable_id' => $studentProfile->id,
+                        'profileable_type' => StudentProfile::class,
+                    ]);
+                }
             } else {
                 $user = User::create([
                     'name' => $this->name,
@@ -206,28 +215,28 @@ new #[Layout('components.admin.layouts.app')] class extends Component {
         $this->name = $user->name;
         $this->email = $user->email;
 
-        $profile = $user->latestProfile->profileable;
-        $this->nis = $profile->nis ?? '';
-        $this->nisn = $profile->nisn ?? '';
-        $this->phone = $profile->phone ?? '';
-        $this->address = $profile->address ?? '';
-        $this->dob = $profile->dob ? $profile->dob->format('Y-m-d') : '';
-        $this->pob = $profile->pob ?? '';
-        $this->existingPhoto = $profile->photo;
-        $this->father_name = $profile->father_name ?? '';
-        $this->mother_name = $profile->mother_name ?? '';
-        $this->guardian_name = $profile->guardian_name ?? '';
-        $this->guardian_phone = $profile->guardian_phone ?? '';
-        $this->classroom_id = $profile->classroom_id;
-        $this->birth_order = $profile->birth_order;
-        $this->total_siblings = $profile->total_siblings;
-        $this->previous_school = $profile->previous_school ?? '';
-        $this->status = $profile->status ?? 'baru';
-        $this->nik = $profile->nik ?? '';
-        $this->nik_ayah = $profile->nik_ayah ?? '';
-        $this->nik_ibu = $profile->nik_ibu ?? '';
-        $this->no_kk = $profile->no_kk ?? '';
-        $this->no_akta = $profile->no_akta ?? '';
+        $profile = $user->latestProfile?->profileable;
+        $this->nis = $profile?->nis ?? '';
+        $this->nisn = $profile?->nisn ?? '';
+        $this->phone = $profile?->phone ?? '';
+        $this->address = $profile?->address ?? '';
+        $this->dob = $profile?->dob ? $profile->dob->format('Y-m-d') : '';
+        $this->pob = $profile?->pob ?? '';
+        $this->existingPhoto = $profile?->photo;
+        $this->father_name = $profile?->father_name ?? '';
+        $this->mother_name = $profile?->mother_name ?? '';
+        $this->guardian_name = $profile?->guardian_name ?? '';
+        $this->guardian_phone = $profile?->guardian_phone ?? '';
+        $this->classroom_id = $profile?->classroom_id;
+        $this->birth_order = $profile?->birth_order;
+        $this->total_siblings = $profile?->total_siblings;
+        $this->previous_school = $profile?->previous_school ?? '';
+        $this->status = $profile?->status ?? 'baru';
+        $this->nik = $profile?->nik ?? '';
+        $this->nik_ayah = $profile?->nik_ayah ?? '';
+        $this->nik_ibu = $profile?->nik_ibu ?? '';
+        $this->no_kk = $profile?->no_kk ?? '';
+        $this->no_akta = $profile?->no_akta ?? '';
 
         $this->dispatch('open-modal', 'student-modal');
     }
@@ -320,6 +329,11 @@ new #[Layout('components.admin.layouts.app')] class extends Component {
 
     public function savePeriodic(int $studentProfileId): void
     {
+        if (!$studentProfileId) {
+            session()->flash('error', 'Data profil siswa tidak ditemukan. Silakan edit siswa terlebih dahulu untuk membuat profil.');
+            return;
+        }
+
         $this->validate([
             'weight' => 'required|numeric|min:0',
             'height' => 'required|numeric|min:0',
@@ -582,8 +596,8 @@ new #[Layout('components.admin.layouts.app')] class extends Component {
                         </td>
                         <td class="px-4 py-4 text-zinc-600 dark:text-zinc-400">
                             <div class="flex flex-col">
-                                <span class="text-sm font-medium">{{ $profile->nis ?? '-' }}</span>
-                                <span class="text-[10px] uppercase tracking-wider opacity-60">NISN: {{ $profile->nisn ?? '-' }}</span>
+                                <span class="text-sm font-medium">{{ $profile?->nis ?? '-' }}</span>
+                                <span class="text-[10px] uppercase tracking-wider opacity-60">NISN: {{ $profile?->nisn ?? '-' }}</span>
                             </div>
                         </td>
                         <td class="px-4 py-4">
@@ -597,8 +611,8 @@ new #[Layout('components.admin.layouts.app')] class extends Component {
                         </td>
                         <td class="px-4 py-4 text-zinc-600 dark:text-zinc-400">
                             <div class="flex flex-col">
-                                <span class="text-sm font-medium">{{ $profile->father_name ?: ($profile->mother_name ?: ($profile->guardian_name ?: '-')) }}</span>
-                                <span class="text-xs opacity-75">{{ $profile->guardian_phone ?: ($profile->phone ?: '-') }}</span>
+                                <span class="text-sm font-medium">{{ ($profile?->father_name ?: ($profile?->mother_name ?: ($profile?->guardian_name ?: '-'))) }}</span>
+                                <span class="text-xs opacity-75">{{ ($profile?->guardian_phone ?: ($profile?->phone ?: '-')) }}</span>
                             </div>
                         </td>
                         <td class="px-4 py-4 text-right space-x-1">
