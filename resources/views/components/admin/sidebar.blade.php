@@ -67,7 +67,10 @@
             <flux:sidebar.item icon="calendar-days" :href="route('admin.assessments.attendance')" :current="request()->routeIs('admin.assessments.attendance')" wire:navigate.hover>
                 {{ __('Presensi Rapor') }}
             </flux:sidebar.item>
-            <flux:sidebar.item icon="document-text" :href="route('admin.report-card.create')" :current="request()->routeIs('admin.report-card.*')" wire:navigate.hover>
+            <flux:sidebar.item icon="clipboard-document-list" :href="route('admin.report-card.grading')" :current="request()->routeIs('admin.report-card.grading')" wire:navigate.hover>
+                {{ __('Input Nilai & TP') }}
+            </flux:sidebar.item>
+            <flux:sidebar.item icon="document-text" :href="route('admin.report-card.create')" :current="request()->routeIs('admin.report-card.create') || request()->routeIs('admin.report-card.preview')" wire:navigate.hover>
                 {{ __('Buat Rapor') }}
             </flux:sidebar.item>
         </flux:sidebar.group>
