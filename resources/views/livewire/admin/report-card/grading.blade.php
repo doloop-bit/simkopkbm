@@ -8,6 +8,7 @@ use App\Models\SubjectTp;
 use App\Models\Classroom;
 use App\Models\Subject;
 use App\Models\AcademicYear;
+use App\Models\LearningAchievement;
 use Livewire\Attributes\Layout;
 use Livewire\Volt\Component;
 use Illuminate\Support\Facades\DB;
@@ -20,6 +21,9 @@ new #[Layout('components.admin.layouts.app')] class extends Component {
 
     // Data containers
     public array $grades_data = []; // [student_id => ['grade' => float, 'best_tp_id' => int, 'improvement_tp_id' => int]]
+
+    // Phase info for display
+    public ?string $currentPhase = null;
     
     public function mount(): void
     {
@@ -31,12 +35,27 @@ new #[Layout('components.admin.layouts.app')] class extends Component {
 
     public function updatedClassroomId(): void
     {
+        $this->resolvePhase();
         $this->loadGrades();
     }
 
     public function updatedSubjectId(): void
     {
         $this->loadGrades();
+    }
+
+    /**
+     * Resolve the Kurikulum Merdeka phase for the selected classroom.
+     */
+    public function resolvePhase(): void
+    {
+        if (!$this->classroom_id) {
+            $this->currentPhase = null;
+            return;
+        }
+
+        $classroom = Classroom::with('level')->find($this->classroom_id);
+        $this->currentPhase = $classroom?->getPhase();
     }
 
     public function loadGrades(): void
@@ -99,9 +118,6 @@ new #[Layout('components.admin.layouts.app')] class extends Component {
 
         DB::transaction(function () {
             foreach ($this->grades_data as $studentId => $data) {
-                // Skip if entirely empty (no grade, no TPs) to avoid cluttering DB with empty rows
-                // However, if user explicitly inputs 0 or selects a TP, we should save.
-                // Grade 0 is a valid grade, so check strictly for null/empty string if not numeric.
                 $hasGrade = isset($data['grade']) && $data['grade'] !== '';
                 $hasBestTp = !empty($data['best_tp_id']);
                 $hasImpTp = !empty($data['improvement_tp_id']);
@@ -127,10 +143,38 @@ new #[Layout('components.admin.layouts.app')] class extends Component {
         \Flux::toast('Data penilaian rapor berhasil disimpan.');
     }
 
+    /**
+     * Get TPs filtered by the classroom's phase.
+     * This ensures only TPs relevant to the current fase are shown.
+     */
+    public function getFilteredTps()
+    {
+        if (!$this->subject_id) {
+            return collect();
+        }
+
+        // If we have a phase, filter TPs by that phase via learning_achievements
+        if ($this->currentPhase) {
+            $cp = LearningAchievement::where('subject_id', $this->subject_id)
+                ->where('phase', $this->currentPhase)
+                ->first();
+
+            if ($cp) {
+                return $cp->tps()->orderBy('code')->get();
+            }
+
+            return collect();
+        }
+
+        // Fallback: if no phase resolved, show all TPs for the subject
+        return SubjectTp::whereHas('learningAchievement', function ($q) {
+            $q->where('subject_id', $this->subject_id);
+        })->orderBy('code')->get();
+    }
+
     public function with(): array
     {
         $students = [];
-        $tps = [];
 
         if ($this->classroom_id) {
             $students = User::where('role', 'siswa')
@@ -141,13 +185,13 @@ new #[Layout('components.admin.layouts.app')] class extends Component {
                 ->get();
         }
 
-        if ($this->subject_id) {
-            $tps = SubjectTp::where('subject_id', $this->subject_id)->orderBy('code')->get();
-        }
+        $tps = $this->getFilteredTps();
 
         return [
             'years' => AcademicYear::all(),
-            'classrooms' => Classroom::when($this->academic_year_id, fn($q) => $q->where('academic_year_id', $this->academic_year_id))->get(),
+            'classrooms' => Classroom::with('level')
+                ->when($this->academic_year_id, fn($q) => $q->where('academic_year_id', $this->academic_year_id))
+                ->get(),
             'subjects' => Subject::orderBy('name')->get(),
             'students' => $students,
             'tps' => $tps,
@@ -173,7 +217,12 @@ new #[Layout('components.admin.layouts.app')] class extends Component {
         <flux:select wire:model.live="classroom_id" label="Kelas">
             <option value="">Pilih Kelas</option>
             @foreach($classrooms as $room)
-                <option value="{{ $room->id }}">{{ $room->name }}</option>
+                <option value="{{ $room->id }}">
+                    {{ $room->name }}
+                    @if($room->class_level && $room->getPhase())
+                        (Fase {{ $room->getPhase() }})
+                    @endif
+                </option>
             @endforeach
         </flux:select>
 
@@ -185,7 +234,32 @@ new #[Layout('components.admin.layouts.app')] class extends Component {
         </flux:select>
     </div>
 
+    {{-- Phase indicator --}}
+    @if($currentPhase)
+        <div class="mb-4 flex items-center gap-2">
+            <flux:badge color="indigo">Fase {{ $currentPhase }}</flux:badge>
+            <span class="text-sm text-zinc-500 dark:text-zinc-400">
+                TP yang ditampilkan sesuai dengan fase kelas yang dipilih.
+            </span>
+        </div>
+    @endif
+
     @if($classroom_id && $subject_id)
+        @if($tps->isEmpty())
+            <div class="mb-4 p-4 rounded-lg border border-amber-200 bg-amber-50 dark:bg-amber-950/30 dark:border-amber-900">
+                <div class="flex items-center gap-2">
+                    <flux:icon icon="exclamation-triangle" class="w-5 h-5 text-amber-600" />
+                    <p class="text-sm text-amber-700 dark:text-amber-400">
+                        Belum ada TP untuk mata pelajaran ini
+                        @if($currentPhase)
+                            pada Fase {{ $currentPhase }}
+                        @endif
+                        . Silakan tambahkan TP melalui menu <strong>Mata Pelajaran → Kelola CP & TP</strong>.
+                    </p>
+                </div>
+            </div>
+        @endif
+
         <div class="border rounded-lg bg-white dark:bg-zinc-900 overflow-hidden">
             <div class="overflow-x-auto">
                 <table class="w-full text-sm text-left border-collapse min-w-[800px]">
