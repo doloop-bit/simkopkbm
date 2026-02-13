@@ -54,9 +54,7 @@
                 </flux:sidebar.item>
             @endif
 
-            <flux:sidebar.item icon="clipboard-document-list" :href="route('admin.assessments.p5')" :current="request()->routeIs('admin.assessments.p5')" wire:navigate.hover>
-                {{ __('Penilaian P5') }}
-            </flux:sidebar.item>
+
             <flux:sidebar.item icon="trophy" :href="route('admin.assessments.extracurricular')" :current="request()->routeIs('admin.assessments.extracurricular')" wire:navigate.hover>
                 {{ __('Penilaian Ekskul') }}
             </flux:sidebar.item>
@@ -76,9 +74,6 @@
         <flux:sidebar.group expandable icon="banknotes" :heading="__('Keuangan')" class="grid">
             <flux:sidebar.item icon="wallet" :href="route('financial.payments')" :current="request()->routeIs('financial.payments')" wire:navigate.hover>
                 {{ __('Transaksi') }}
-            </flux:sidebar.item>
-            <flux:sidebar.item icon="document-text" :href="route('financial.billings')" :current="request()->routeIs('financial.billings')" wire:navigate.hover>
-                {{ __('Tagihan') }}
             </flux:sidebar.item>
             <flux:sidebar.item icon="swatch" :href="route('financial.categories')" :current="request()->routeIs('financial.categories')" wire:navigate.hover>
                 {{ __('Kategori Biaya') }}

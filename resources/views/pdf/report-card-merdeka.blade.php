@@ -109,28 +109,6 @@
             </tbody>
         </table>
 
-        <!-- P5 SECTION -->
-        <div class="section-title">B. Projek Penguatan Profil Pelajar Pancasila (P5)</div>
-        <table class="data-table">
-            <thead>
-                <tr>
-                    <th style="width: 30%;">Nama Projek</th>
-                    <th style="width: 20%;">Dimensi</th>
-                    <th style="width: 10%;">Capaian</th>
-                    <th style="width: 40%;">Catatan Projek</th>
-                </tr>
-            </thead>
-            <tbody>
-                @foreach($reportCard->scores['p5'] ?? [] as $p5)
-                <tr>
-                    <td>{{ $p5['project_name'] }}</td>
-                    <td>{{ str_replace('_', ' ', $p5['dimension']) }}</td>
-                    <td class="text-center">{{ $p5['level'] }}</td>
-                    <td>{{ $p5['description'] }}</td>
-                </tr>
-                @endforeach
-            </tbody>
-        </table>
     @endif
 
     <!-- EXTRA/ATTENDANCE SECTION -->

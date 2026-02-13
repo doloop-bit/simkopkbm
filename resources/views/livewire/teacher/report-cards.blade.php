@@ -123,18 +123,7 @@ new #[Layout('components.teacher.layouts.app')] class extends Component {
                         'description' => $c->achievement_description,
                     ])->toArray();
 
-                    // Fetch P5
-                    $aggregatedData['p5'] = P5Assessment::where([
-                        'student_id' => $student->id,
-                        'classroom_id' => $this->classroomId,
-                        'academic_year_id' => $this->academicYearId,
-                        'semester' => $this->semester,
-                    ])->with('p5Project')->get()->map(fn($p) => [
-                        'project_name' => $p->p5Project?->name ?? 'N/A',
-                        'dimension' => $p->p5Project?->dimension ?? 'N/A',
-                        'level' => $p->achievement_level,
-                        'description' => $p->description,
-                    ])->toArray();
+
 
                     // Fetch Extracurricular
                     $aggregatedData['extracurricular'] = ExtracurricularAssessment::where([
@@ -378,7 +367,7 @@ new #[Layout('components.teacher.layouts.app')] class extends Component {
                     @endif
 
                     <div class="grid grid-cols-1 gap-4">
-                        <flux:textarea wire:model="characterNotes" label="Catatan Karakter / Deskripsi P5" rows="2" />
+                        <flux:textarea wire:model="characterNotes" label="Catatan Karakter" rows="2" />
                         <flux:textarea wire:model="teacherNotes" label="Catatan Guru" rows="2" />
                     </div>
 
@@ -405,7 +394,6 @@ new #[Layout('components.teacher.layouts.app')] class extends Component {
                             <thead>
                                 <tr class="text-zinc-500 border-b border-zinc-100 dark:border-zinc-700">
                                     <th class="py-3 px-2 font-medium">Siswa</th>
-                                    <th class="py-3 px-2 font-medium">IPK/Avg</th>
                                     <th class="py-3 px-2 font-medium">Status</th>
                                     <th class="py-3 px-2 font-medium text-right">Aksi</th>
                                 </tr>
@@ -414,9 +402,6 @@ new #[Layout('components.teacher.layouts.app')] class extends Component {
                                 @foreach($existingReports as $report)
                                     <tr class="hover:bg-zinc-50 dark:hover:bg-zinc-900/50 transition-colors">
                                         <td class="py-3 px-2 font-medium">{{ $report->student->name }}</td>
-                                        <td class="py-3 px-2">
-                                            <span class="font-bold text-blue-600">{{ $report->gpa }}</span>
-                                        </td>
                                         <td class="py-3 px-2">
                                             <flux:badge size="sm" :color="$report->status === 'final' ? 'green' : 'zinc'">
                                                 {{ strtoupper($report->status) }}

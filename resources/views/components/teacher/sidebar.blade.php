@@ -40,9 +40,6 @@
             <flux:sidebar.item icon="clipboard-document-check" :href="route('teacher.assessments.competency')" :current="request()->routeIs('teacher.assessments.competency')" wire:navigate.hover>
                 {{ __('Kompetensi') }}
             </flux:sidebar.item>
-            <flux:sidebar.item icon="clipboard-document-list" :href="route('teacher.assessments.p5')" :current="request()->routeIs('teacher.assessments.p5')" wire:navigate.hover>
-                {{ __('P5') }}
-            </flux:sidebar.item>
             <flux:sidebar.item icon="trophy" :href="route('teacher.assessments.extracurricular')" :current="request()->routeIs('teacher.assessments.extracurricular')" wire:navigate.hover>
                 {{ __('Ekskul') }}
             </flux:sidebar.item>
