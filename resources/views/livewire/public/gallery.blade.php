@@ -29,8 +29,19 @@ new #[Layout('components.public.layouts.public')] class extends Component {
             $query->where('category', $this->selectedCategory);
         }
 
+        $photos = $query->get();
+
+        // Prepare data for lightbox
+        $lightboxImages = $photos->map(fn($photo) => [
+            'src' => $photo->web_path ? Storage::url($photo->web_path) : Storage::url($photo->thumbnail_path),
+            'title' => $photo->title,
+            'caption' => $photo->caption,
+            'category' => $photo->category,
+        ])->values()->all();
+
         return [
-            'photos' => $query->get(),
+            'photos' => $photos,
+            'lightboxImages' => $lightboxImages,
             'title' => 'Galeri - ' . config('app.name'),
             'description' => 'Lihat koleksi foto kegiatan dan momen berharga di ' . config('app.name') . ' - Pusat Kegiatan Belajar Masyarakat.',
             'keywords' => 'Galeri, Foto, Kegiatan, Dokumentasi, PKBM, Galeri Foto',
@@ -40,10 +51,40 @@ new #[Layout('components.public.layouts.public')] class extends Component {
     }
 }; ?>
 
-<div>
+<div x-data="{
+    lightboxOpen: false,
+    activeImageIndex: 0,
+    images: @js($lightboxImages),
+    
+    openLightbox(index) {
+        this.activeImageIndex = index;
+        this.lightboxOpen = true;
+        document.body.style.overflow = 'hidden';
+    },
+    
+    closeLightbox() {
+        this.lightboxOpen = false;
+        document.body.style.overflow = 'auto';
+    },
+    
+    next() {
+        this.activeImageIndex = (this.activeImageIndex + 1) % this.images.length;
+    },
+    
+    prev() {
+        this.activeImageIndex = (this.activeImageIndex - 1 + this.images.length) % this.images.length;
+    },
+
+    getActiveImage() {
+        return this.images[this.activeImageIndex] || {};
+    }
+}"
+@keydown.escape.window="closeLightbox()"
+@keydown.arrow-right.window="next()"
+@keydown.arrow-left.window="prev()">
+    
     <!-- Page Header -->
     <div class="relative bg-slate-900 text-white overflow-hidden">
-        <!-- Background Pattern -->
         <div class="absolute inset-0 opacity-10">
             <svg class="w-full h-full" viewBox="0 0 100 100" fill="none">
                 <defs>
@@ -93,17 +134,17 @@ new #[Layout('components.public.layouts.public')] class extends Component {
         <!-- Photo Grid -->
         @if($photos->count() > 0)
             <div class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 gap-3 sm:gap-4 lg:gap-6">
-                @foreach($photos as $photo)
+                @foreach($photos as $index => $photo)
                     <div class="group relative overflow-hidden rounded-lg bg-gray-200 aspect-square shadow-sm hover:shadow-xl transition-all duration-300">
                         <x-global.optimized-image
                             :src="Storage::url($photo->thumbnail_path)"
                             :webp-src="$photo->thumbnail_webp_path ? Storage::url($photo->thumbnail_webp_path) : null"
                             :alt="$photo->title"
                             class="w-full h-full object-cover group-hover:scale-110 transition duration-500 cursor-pointer"
-                            onclick="openLightbox('{{ $photo->web_path ? Storage::url($photo->web_path) : Storage::url($photo->original_path) }}', '{{ addslashes($photo->title) }}', '{{ addslashes($photo->caption ?? '') }}')"
+                            @click="openLightbox({{ $index }})"
                             :lazy="true"
                         />
-                        <div class="absolute inset-0 bg-gradient-to-t from-black/80 via-black/20 to-transparent opacity-0 group-hover:opacity-100 transition duration-300 flex items-end justify-center">
+                        <div class="absolute inset-0 bg-gradient-to-t from-black/80 via-black/20 to-transparent opacity-0 group-hover:opacity-100 transition duration-300 flex items-end justify-center pointer-events-none">
                             <div class="text-white p-2 sm:p-4 text-center w-full transform translate-y-4 group-hover:translate-y-0 transition duration-300">
                                 <h3 class="font-semibold text-xs sm:text-sm mb-1 font-heading">{{ $photo->title }}</h3>
                                 @if($photo->caption)
@@ -142,65 +183,71 @@ new #[Layout('components.public.layouts.public')] class extends Component {
         @endif
     </div>
 
-    <!-- Lightbox Modal -->
-    <div id="lightbox" class="fixed inset-0 bg-black bg-opacity-90 z-50 hidden flex items-center justify-center p-4">
-        <div class="relative max-w-4xl max-h-full">
-            <!-- Close Button -->
-            <button 
-                onclick="closeLightbox()"
-                class="absolute top-4 right-4 text-white hover:text-gray-300 z-10"
-            >
-                <svg class="w-8 h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
-                </svg>
-            </button>
+    <!-- Alpine Lightbox Modal -->
+    <div 
+        x-show="lightboxOpen" 
+        x-transition:enter="transition ease-out duration-300"
+        x-transition:enter-start="opacity-0"
+        x-transition:enter-end="opacity-100"
+        x-transition:leave="transition ease-in duration-200"
+        x-transition:leave-start="opacity-100"
+        x-transition:leave-end="opacity-0"
+        class="fixed inset-0 bg-black/95 z-50 flex items-center justify-center backdrop-blur-sm"
+        style="display: none;"
+    >
+        <!-- Close Button -->
+        <button 
+            @click="closeLightbox()"
+            class="absolute top-4 right-4 text-white/70 hover:text-white z-50 p-2 rounded-full hover:bg-white/10 transition"
+        >
+            <svg class="w-8 h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
+            </svg>
+            <span class="sr-only">Close</span>
+        </button>
 
-            <!-- Image -->
-            <img id="lightbox-image" src="" alt="" class="max-w-full max-h-full object-contain">
-            
-            <!-- Caption -->
-            <div id="lightbox-caption" class="absolute bottom-0 left-0 right-0 bg-black bg-opacity-75 text-white p-4">
-                <h3 id="lightbox-title" class="font-semibold text-lg"></h3>
-                <p id="lightbox-description" class="text-sm text-gray-300 mt-1"></p>
+        <!-- Navigation Buttons -->
+        <!-- Prev -->
+        <button 
+            @click.stop="prev()"
+            class="absolute left-4 top-1/2 -translate-y-1/2 text-white/70 hover:text-white z-50 p-3 rounded-full hover:bg-white/10 transition hidden md:block"
+        >
+            <svg class="w-10 h-10" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7" />
+            </svg>
+        </button>
+        <!-- Next -->
+        <button 
+            @click.stop="next()"
+            class="absolute right-4 top-1/2 -translate-y-1/2 text-white/70 hover:text-white z-50 p-3 rounded-full hover:bg-white/10 transition hidden md:block"
+        >
+            <svg class="w-10 h-10" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7" />
+            </svg>
+        </button>
+
+        <!-- Image Container -->
+        <div class="relative w-full h-full flex items-center justify-center p-4 md:p-12" @click.outside="closeLightbox()">
+            <div class="relative max-h-full max-w-7xl flex flex-col items-center">
+                <img 
+                    :src="getActiveImage().src" 
+                    :alt="getActiveImage().title"
+                    class="max-w-full max-h-[85vh] object-contain shadow-2xl rounded-sm"
+                    draggable="false"
+                >
+                
+                <!-- Caption/Info -->
+                <div class="mt-4 text-center text-white max-w-2xl px-4">
+                    <h3 class="text-xl font-bold font-heading" x-text="getActiveImage().title"></h3>
+                    <p class="text-white/80 mt-2 text-sm" x-text="getActiveImage().caption"></p>
+                    <p class="text-white/40 mt-1 text-xs" x-show="getActiveImage().category">
+                        Kategori: <span x-text="getActiveImage().category"></span>
+                    </p>
+                </div>
+
+                <!-- Counter -->
+                <div class="absolute top-0 left-0 bg-black/50 text-white text-xs px-2 py-1 rounded" x-text="(activeImageIndex + 1) + ' / ' + images.length"></div>
             </div>
         </div>
     </div>
-
-    <!-- JavaScript for Lightbox -->
-    <script>
-        function openLightbox(imageSrc, title, description) {
-            const lightbox = document.getElementById('lightbox');
-            const image = document.getElementById('lightbox-image');
-            const titleEl = document.getElementById('lightbox-title');
-            const descriptionEl = document.getElementById('lightbox-description');
-            
-            image.src = imageSrc;
-            image.alt = title;
-            titleEl.textContent = title;
-            descriptionEl.textContent = description;
-            
-            lightbox.classList.remove('hidden');
-            document.body.style.overflow = 'hidden';
-        }
-
-        function closeLightbox() {
-            const lightbox = document.getElementById('lightbox');
-            lightbox.classList.add('hidden');
-            document.body.style.overflow = 'auto';
-        }
-
-        // Close lightbox on escape key
-        document.addEventListener('keydown', function(e) {
-            if (e.key === 'Escape') {
-                closeLightbox();
-            }
-        });
-
-        // Close lightbox on background click
-        document.getElementById('lightbox').addEventListener('click', function(e) {
-            if (e.target === this) {
-                closeLightbox();
-            }
-        });
-    </script>
 </div>

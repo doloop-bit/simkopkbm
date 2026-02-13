@@ -143,7 +143,7 @@ class CacheService
      */
     public function clearNewsCache(): void
     {
-        Cache::tags(['news'])->flush();
+        // Cache::tags(['news'])->flush(); // Not supported by database driver
         
         // Clear specific keys
         for ($i = 1; $i <= 10; $i++) {

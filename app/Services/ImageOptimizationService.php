@@ -2,6 +2,7 @@
 
 namespace App\Services;
 
+use Intervention\Image\Encoders\WebpEncoder;
 use Illuminate\Http\UploadedFile;
 use Illuminate\Support\Facades\Storage;
 use Intervention\Image\Laravel\Facades\Image;
@@ -59,7 +60,7 @@ class ImageOptimizationService
             }
             
             $webpPath = "{$directory}/{$sizeName}/{$webpFilename}";
-            Storage::disk('public')->put($webpPath, $webpImage->encode('webp', 85));
+            Storage::disk('public')->put($webpPath, $webpImage->encode(new WebpEncoder(quality: 85)));
             $paths["{$sizeName}_webp"] = $webpPath;
         }
         
