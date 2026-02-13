@@ -15,10 +15,10 @@
         </flux:sidebar.item>
 
         {{-- Students Group --}}
-        <flux:sidebar.group 
-            expandable 
-            icon="users" 
-            :heading="__('Siswa Saya')" 
+        <flux:sidebar.group
+            expandable
+            icon="users"
+            :heading="__('Siswa Saya')"
             class="grid"
         >
             <flux:sidebar.item icon="users" :href="route('teacher.students.index')" :current="request()->routeIs('teacher.students.*')" wire:navigate.hover>
@@ -27,14 +27,15 @@
         </flux:sidebar.group>
 
         {{-- Assessment & Report Cards Group --}}
-        <flux:sidebar.group 
-            expandable 
-            icon="pencil-square" 
-            :heading="__('Penilaian & Raport')" 
+        <flux:sidebar.group
+            expandable
+            icon="pencil-square"
+            :heading="__('Penilaian & Raport')"
             class="grid"
         >
-            <flux:sidebar.item icon="pencil-square" :href="route('teacher.grades')" :current="request()->routeIs('teacher.grades')" wire:navigate.hover>
-                {{ __('Nilai') }}
+
+            <flux:sidebar.item icon="clipboard-document-list" :href="route('admin.report-card.grading')" :current="request()->routeIs('admin.report-card.grading')" wire:navigate.hover>
+                {{ __('Nilai & TP') }}
             </flux:sidebar.item>
             <flux:sidebar.item icon="clipboard-document-check" :href="route('teacher.assessments.competency')" :current="request()->routeIs('teacher.assessments.competency')" wire:navigate.hover>
                 {{ __('Kompetensi') }}

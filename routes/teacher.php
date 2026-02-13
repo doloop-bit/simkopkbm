@@ -21,8 +21,7 @@ Route::middleware(['auth', 'verified', 'role:guru'])->prefix('teacher')->name('t
     // Students - filtered by assigned classrooms
     Volt::route('/students', 'teacher.students.index')->name('students.index');
 
-    // Grades - filtered by assigned subjects and classrooms
-    Volt::route('/grades', 'teacher.grades')->name('grades');
+
 
     // Assessments - filtered by assigned classrooms
     Volt::route('/assessments/competency', 'teacher.assessments.competency')->name('assessments.competency');

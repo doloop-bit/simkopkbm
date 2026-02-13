@@ -1,5 +1,6 @@
 <?php
 
+use App\Models\SubjectGrade;
 use App\Models\AcademicYear;
 use App\Models\Classroom;
 use App\Models\ReportCard;
@@ -22,7 +23,7 @@ new #[Layout('components.admin.layouts.app')] class extends Component {
     public $academicYearId = null;
     public $classroomId = null;
     public $semester = '1';
-    public $curriculumType = 'conventional';
+    public $curriculumType = 'merdeka';
     public $teacherNotes = '';
     public $principalNotes = '';
     public $characterNotes = '';
@@ -104,14 +105,9 @@ new #[Layout('components.admin.layouts.app')] class extends Component {
         $this->loadStudents();
         $this->loadExistingReports();
 
-        // Auto detect curriculum type based on classroom level
+        // Auto detect curriculum type (defaulting to merdeka)
         if ($this->classroomId) {
-            $classroom = Classroom::with('level')->find($this->classroomId);
-            if ($classroom && $classroom->level?->education_level === 'paud') {
-                $this->curriculumType = 'merdeka';
-            } else {
-                $this->curriculumType = 'conventional';
-            }
+            $this->curriculumType = 'merdeka';
         }
     }
 
@@ -141,99 +137,83 @@ new #[Layout('components.admin.layouts.app')] class extends Component {
                     $aggregatedData = [];
                     $gpa = 0;
 
-                    if ($this->curriculumType === 'merdeka') {
-                        // Fetch Competency Assessments
-                        $aggregatedData['competencies'] = CompetencyAssessment::where([
-                            'student_id' => $student->id,
-                            'classroom_id' => $this->classroomId,
-                            'academic_year_id' => $this->academicYearId,
-                            'semester' => $this->semester,
-                        ])->with('subject')->get()->map(fn($c) => [
-                            'subject_name' => $c->subject->name,
-                            'level' => $c->competency_level,
-                            'description' => $c->achievement_description,
-                        ])->toArray();
+                    // Kurikulum Merdeka logic only
+                    // Fetch Subject Grades (New Grading System)
+                    $aggregatedData['subject_grades'] = SubjectGrade::where([
+                        'student_id' => $student->id,
+                        'classroom_id' => $this->classroomId,
+                        'academic_year_id' => $this->academicYearId,
+                        'semester' => $this->semester,
+                    ])->with(['subject', 'bestTp', 'improvementTp'])->get()->map(fn($g) => [
+                        'subject_name' => $g->subject?->name ?? 'N/A',
+                        'grade' => $g->grade,
+                        'best_tp' => $g->bestTp?->description ?? null,
+                        'improvement_tp' => $g->improvementTp?->description ?? null,
+                    ])->toArray();
 
-                        // Fetch P5
-                        $aggregatedData['p5'] = P5Assessment::where([
-                            'student_id' => $student->id,
-                            'classroom_id' => $this->classroomId,
-                            'academic_year_id' => $this->academicYearId,
-                            'semester' => $this->semester,
-                        ])->with('p5Project')->get()->map(fn($p) => [
-                            'project_name' => $p->p5Project->name,
-                            'dimension' => $p->p5Project->dimension,
-                            'level' => $p->achievement_level,
+                    // Keep competency assessments for PAUD or legacy (optional)
+                    $aggregatedData['competencies'] = CompetencyAssessment::where([
+                        'student_id' => $student->id,
+                        'classroom_id' => $this->classroomId,
+                        'academic_year_id' => $this->academicYearId,
+                        'semester' => $this->semester,
+                    ])->with('subject')->get()->map(fn($c) => [
+                        'subject_name' => $c->subject->name,
+                        'level' => $c->competency_level,
+                        'description' => $c->achievement_description,
+                    ])->toArray();
+
+                    // Fetch P5
+                    $aggregatedData['p5'] = P5Assessment::where([
+                        'student_id' => $student->id,
+                        'classroom_id' => $this->classroomId,
+                        'academic_year_id' => $this->academicYearId,
+                        'semester' => $this->semester,
+                    ])->with('p5Project')->get()->map(fn($p) => [
+                        'project_name' => $p->p5Project->name,
+                        'dimension' => $p->p5Project->dimension,
+                        'level' => $p->achievement_level,
+                        'description' => $p->description,
+                    ])->toArray();
+
+                    // Fetch Extracurricular
+                    $aggregatedData['extracurricular'] = ExtracurricularAssessment::where([
+                        'student_id' => $student->id,
+                        'academic_year_id' => $this->academicYearId,
+                        'semester' => $this->semester,
+                    ])->with('extracurricularActivity')->get()->map(fn($e) => [
+                        'name' => $e->extracurricularActivity->name,
+                        'level' => $e->achievement_level,
+                        'description' => $e->description,
+                    ])->toArray();
+
+                    // Fetch Attendance
+                    $attendance = ReportAttendance::where([
+                        'student_id' => $student->id,
+                        'classroom_id' => $this->classroomId,
+                        'academic_year_id' => $this->academicYearId,
+                        'semester' => $this->semester,
+                    ])->first();
+
+                    $aggregatedData['attendance'] = [
+                        'sick' => $attendance->sick ?? 0,
+                        'permission' => $attendance->permission ?? 0,
+                        'absent' => $attendance->absent ?? 0,
+                    ];
+
+                    // Fetch PAUD
+                    $paud = DevelopmentalAssessment::where([
+                        'student_id' => $student->id,
+                        'classroom_id' => $this->classroomId,
+                        'academic_year_id' => $this->academicYearId,
+                        'semester' => $this->semester,
+                    ])->with('developmentalAspect')->get();
+
+                    if ($paud->isNotEmpty()) {
+                        $aggregatedData['paud'] = $paud->map(fn($p) => [
+                            'aspect_name' => $p->developmentalAspect->name,
                             'description' => $p->description,
                         ])->toArray();
-
-                        // Fetch Extracurricular
-                        $aggregatedData['extracurricular'] = ExtracurricularAssessment::where([
-                            'student_id' => $student->id,
-                            'academic_year_id' => $this->academicYearId,
-                            'semester' => $this->semester,
-                        ])->with('extracurricularActivity')->get()->map(fn($e) => [
-                            'name' => $e->extracurricularActivity->name,
-                            'level' => $e->achievement_level,
-                            'description' => $e->description,
-                        ])->toArray();
-
-                        // Fetch Attendance
-                        $attendance = ReportAttendance::where([
-                            'student_id' => $student->id,
-                            'classroom_id' => $this->classroomId,
-                            'academic_year_id' => $this->academicYearId,
-                            'semester' => $this->semester,
-                        ])->first();
-
-                        $aggregatedData['attendance'] = [
-                            'sick' => $attendance->sick ?? 0,
-                            'permission' => $attendance->permission ?? 0,
-                            'absent' => $attendance->absent ?? 0,
-                        ];
-
-                        // Fetch PAUD
-                        $paud = DevelopmentalAssessment::where([
-                            'student_id' => $student->id,
-                            'classroom_id' => $this->classroomId,
-                            'academic_year_id' => $this->academicYearId,
-                            'semester' => $this->semester,
-                        ])->with('developmentalAspect')->get();
-
-                        if ($paud->isNotEmpty()) {
-                            $aggregatedData['paud'] = $paud->map(fn($p) => [
-                                'aspect_name' => $p->developmentalAspect->name,
-                                'description' => $p->description,
-                            ])->toArray();
-                        }
-                    } else {
-                        // Conventional
-                        $scores = Score::where('student_id', $student->id)
-                            ->where('classroom_id', $this->classroomId)
-                            ->where('academic_year_id', $this->academicYearId)
-                            ->with(['subject'])
-                            ->get();
-
-                        $scoreItems = [];
-                        $totalScore = 0;
-                        $scoreCount = 0;
-
-                        foreach ($scores->groupBy('subject_id') as $subjectScores) {
-                            $subject = $subjectScores->first()->subject;
-                            $subjectTotal = $subjectScores->sum('score');
-                            $avgScore = $subjectTotal / $subjectScores->count();
-                            
-                            $scoreItems[] = [
-                                'subject_name' => $subject->name,
-                                'score' => round($avgScore, 2),
-                            ];
-
-                            $totalScore += $avgScore;
-                            $scoreCount++;
-                        }
-
-                        $aggregatedData = $scoreItems;
-                        $gpa = $scoreCount > 0 ? round($totalScore / $scoreCount, 2) : 0;
                     }
 
                     ReportCard::updateOrCreate(
@@ -311,7 +291,7 @@ new #[Layout('components.admin.layouts.app')] class extends Component {
             'academicYear' => $reportCard->academicYear,
         ];
 
-        $view = $reportCard->curriculum_type === 'merdeka' ? 'pdf.report-card-merdeka' : 'pdf.report-card';
+        $view = 'pdf.report-card-merdeka';
 
         try {
             $pdf = Pdf::loadView($view, $data);
@@ -367,10 +347,7 @@ new #[Layout('components.admin.layouts.app')] class extends Component {
                             <option value="2">Semester 2 (Genap)</option>
                         </flux:select>
 
-                        <flux:select wire:model.live="curriculumType" label="Jenis Kurikulum" required>
-                            <option value="conventional">Kurikulum 2013 (Konvensional)</option>
-                            <option value="merdeka">Kurikulum Merdeka</option>
-                        </flux:select>
+                        <flux:input label="Jenis Kurikulum" value="Kurikulum Merdeka" readonly disabled />
                     </div>
 
                     @if (count($students) > 0)
@@ -396,9 +373,7 @@ new #[Layout('components.admin.layouts.app')] class extends Component {
                     @endif
 
                     <div class="grid grid-cols-1 gap-4">
-                        @if($curriculumType === 'merdeka')
-                            <flux:textarea wire:model="characterNotes" label="Catatan Karakter / Deskripsi P5" rows="2" />
-                        @endif
+                        <flux:textarea wire:model="characterNotes" label="Catatan Karakter / Deskripsi P5" rows="2" />
                         <flux:textarea wire:model="teacherNotes" label="Catatan Guru" rows="2" />
                         <flux:textarea wire:model="principalNotes" label="Catatan Kepala Sekolah" rows="2" />
                     </div>
@@ -482,11 +457,7 @@ new #[Layout('components.admin.layouts.app')] class extends Component {
                 <div class="space-y-4">
                     <div>
                         <p class="text-xs font-bold text-zinc-500 uppercase tracking-wider mb-1">Kurikulum Merdeka</p>
-                        <p class="text-xs text-zinc-600 dark:text-zinc-400">Menggunakan Deskripsi Capaian Kompetensi (BB, MB, BSH, SB) dan Projek P5.</p>
-                    </div>
-                    <div>
-                        <p class="text-xs font-bold text-zinc-500 uppercase tracking-wider mb-1">Konvensional (K13)</p>
-                        <p class="text-xs text-zinc-600 dark:text-zinc-400">Menggunakan nilai angka (0-100) dan perhitungan rata-rata otomatis.</p>
+                        <p class="text-xs text-zinc-600 dark:text-zinc-400">Satu-satunya kurikulum yang aktif. Menggunakan Deskripsi Capaian Kompetensi (BB, MB, BSH, SB) dan Projek P5.</p>
                     </div>
                 </div>
             </div>
@@ -522,28 +493,36 @@ new #[Layout('components.admin.layouts.app')] class extends Component {
                             <div>{{ $previewData['academicYear']->name }}</div>
                         </div>
 
-                        @if($previewData['reportCard']->curriculum_type === 'merdeka')
                             <div class="space-y-6">
                                 <!-- Competencies -->
                                 <div>
-                                    <h3 class="font-bold border-b border-zinc-300 mb-3">A. Capaian Pembelajaran</h3>
+                                    <h3 class="font-bold border-b border-zinc-300 mb-3">A. Nilai Capaian Kompetensi</h3>
                                     <table class="w-full border-collapse border border-black text-sm">
                                         <thead>
-                                            <tr class="bg-zinc-100">
+                                            <tr class="bg-zinc-100 italic">
+                                                <th class="border border-black p-2 text-left w-6">No</th>
                                                 <th class="border border-black p-2 text-left">Mata Pelajaran</th>
-                                                <th class="border border-black p-2 text-center w-24">Capaian</th>
-                                                <th class="border border-black p-2 text-left">Deskripsi</th>
+                                                <th class="border border-black p-2 text-center w-20">Nilai Akhir</th>
+                                                <th class="border border-black p-2 text-left">Capaian Kompetensi</th>
                                             </tr>
                                         </thead>
                                         <tbody>
-                                            @forelse($previewData['reportCard']->scores['competencies'] ?? [] as $comp)
+                                            @forelse($previewData['reportCard']->scores['subject_grades'] ?? [] as $idx => $grade)
                                                 <tr>
-                                                    <td class="border border-black p-2 font-medium">{{ $comp['subject_name'] }}</td>
-                                                    <td class="border border-black p-2 text-center">{{ $comp['level'] }}</td>
-                                                    <td class="border border-black p-2 text-xs italic">{{ $comp['description'] }}</td>
+                                                    <td class="border border-black p-2 text-center">{{ $idx + 1 }}</td>
+                                                    <td class="border border-black p-2 font-medium">{{ $grade['subject_name'] }}</td>
+                                                    <td class="border border-black p-2 text-center font-bold">{{ round($grade['grade']) }}</td>
+                                                    <td class="border border-black p-2 text-xs">
+                                                        @if($grade['best_tp'])
+                                                            <div class="mb-1"><strong>Menunjukkan penguasaan dalam:</strong> {{ $grade['best_tp'] }}</div>
+                                                        @endif
+                                                        @if($grade['improvement_tp'])
+                                                            <div><strong>Perlu bantuan dalam:</strong> {{ $grade['improvement_tp'] }}</div>
+                                                        @endif
+                                                    </td>
                                                 </tr>
                                             @empty
-                                                <tr><td colspan="3" class="border border-black p-4 text-center text-zinc-400 italic">Data kompetensi tidak ditemukan</td></tr>
+                                                <tr><td colspan="4" class="border border-black p-4 text-center text-zinc-400 italic">Data nilai & TP tidak ditemukan</td></tr>
                                             @endforelse
                                         </tbody>
                                     </table>
@@ -561,40 +540,6 @@ new #[Layout('components.admin.layouts.app')] class extends Component {
                                     </table>
                                 </div>
                             </div>
-                        @else
-                            <div class="space-y-6">
-                                <div>
-                                    <h3 class="font-bold border-b border-zinc-300 mb-3">Nilai Mata Pelajaran</h3>
-                                    <table class="w-full border-collapse border border-black text-sm">
-                                        <thead>
-                                            <tr class="bg-zinc-100 text-center">
-                                                <th class="border border-black p-2 text-left">Mata Pelajaran</th>
-                                                <th class="border border-black p-2 w-32">Nilai Akhir</th>
-                                                <th class="border border-black p-2 w-24">Predikat</th>
-                                            </tr>
-                                        </thead>
-                                        <tbody>
-                                            @forelse($previewData['reportCard']->scores as $score)
-                                                @php
-                                                    $grade = $score['score'] >= 85 ? 'A' : ($score['score'] >= 75 ? 'B' : ($score['score'] >= 65 ? 'C' : 'D'));
-                                                @endphp
-                                                <tr>
-                                                    <td class="border border-black p-2 font-medium">{{ $score['subject_name'] }}</td>
-                                                    <td class="border border-black p-2 text-center font-bold">{{ $score['score'] }}</td>
-                                                    <td class="border border-black p-2 text-center">{{ $grade }}</td>
-                                                </tr>
-                                            @empty
-                                                <tr><td colspan="3" class="border border-black p-4 text-center text-zinc-400 italic">Data nilai tidak ditemukan</td></tr>
-                                            @endforelse
-                                            <tr class="bg-zinc-50 font-bold">
-                                                <td class="border border-black p-2 text-right uppercase">Rata-rata (IPK)</td>
-                                                <td colspan="2" class="border border-black p-2 text-center text-blue-700 text-lg">{{ $previewData['reportCard']->gpa }}</td>
-                                            </tr>
-                                        </tbody>
-                                    </table>
-                                </div>
-                            </div>
-                        @endif
 
                         <!-- Notes Section in Preview -->
                         <div class="mt-8 space-y-4">

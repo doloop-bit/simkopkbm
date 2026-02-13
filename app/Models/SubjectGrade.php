@@ -11,6 +11,7 @@ class SubjectGrade extends Model
         'subject_id',
         'classroom_id',
         'academic_year_id',
+        'semester',
         'grade',
         'best_tp_id',
         'improvement_tp_id',

@@ -18,6 +18,7 @@ new #[Layout('components.admin.layouts.app')] class extends Component {
     public ?int $academic_year_id = null;
     public ?int $classroom_id = null;
     public ?int $subject_id = null;
+    public string $semester = '1';
 
     // Data containers
     public array $grades_data = []; // [student_id => ['grade' => float, 'best_tp_id' => int, 'improvement_tp_id' => int]]
@@ -58,6 +59,11 @@ new #[Layout('components.admin.layouts.app')] class extends Component {
         $this->loadGrades();
     }
 
+    public function updatedSemester(): void
+    {
+        $this->loadGrades();
+    }
+
     /**
      * Resolve the Kurikulum Merdeka phase for the selected classroom.
      */
@@ -83,6 +89,7 @@ new #[Layout('components.admin.layouts.app')] class extends Component {
             'classroom_id' => $this->classroom_id,
             'subject_id' => $this->subject_id,
             'academic_year_id' => $this->academic_year_id,
+            'semester' => $this->semester,
         ])->get();
 
         $scores = [];
@@ -144,6 +151,7 @@ new #[Layout('components.admin.layouts.app')] class extends Component {
                         'subject_id' => $this->subject_id,
                         'classroom_id' => $this->classroom_id,
                         'academic_year_id' => $this->academic_year_id,
+                        'semester' => $this->semester,
                     ],
                     [
                         'grade' => $hasGrade ? (float) $data['grade'] : 0,
@@ -200,6 +208,7 @@ new #[Layout('components.admin.layouts.app')] class extends Component {
         }
 
         $tps = $this->getFilteredTps();
+        $user = auth()->user();
         
         $subjects = Subject::orderBy('name')
             ->when($this->classroom_id, function ($query) {
@@ -210,13 +219,24 @@ new #[Layout('components.admin.layouts.app')] class extends Component {
                           ->orWhere('level_id', $classroom->level_id);
                     });
                 }
-            })->get();
+            })
+            ->when(!$user->isAdmin(), function ($query) use ($user) {
+                $query->whereIn('id', $user->getAssignedSubjectIds());
+            })
+            ->get();
+            
+        $classroomsQuery = Classroom::with('level')
+            ->when($this->academic_year_id, fn($q) => $q->where('academic_year_id', $this->academic_year_id));
+
+        if (!$user->isAdmin()) {
+            $classroomsQuery->whereIn('id', $user->getAssignedClassroomIds());
+        }
+
+        $classrooms = $classroomsQuery->get();
             
         return [
             'years' => AcademicYear::all(),
-            'classrooms' => Classroom::with('level')
-                ->when($this->academic_year_id, fn($q) => $q->where('academic_year_id', $this->academic_year_id))
-                ->get(),
+            'classrooms' => $classrooms,
             'subjects' => $subjects,
             'students' => $students,
             'tps' => $tps,
@@ -232,11 +252,16 @@ new #[Layout('components.admin.layouts.app')] class extends Component {
         </div>
     </div>
 
-    <div class="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
+    <div class="grid grid-cols-1 md:grid-cols-4 gap-4 mb-6">
         <flux:select wire:model.live="academic_year_id" label="Tahun Ajaran">
             @foreach($years as $year)
                 <option value="{{ $year->id }}">{{ $year->name }}</option>
             @endforeach
+        </flux:select>
+
+        <flux:select wire:model.live="semester" label="Semester">
+            <option value="1">1 (Ganjil)</option>
+            <option value="2">2 (Genap)</option>
         </flux:select>
 
         <flux:select wire:model.live="classroom_id" label="Kelas">
