@@ -16,6 +16,7 @@
 <body class="min-h-screen bg-white font-sans antialiased dark:bg-zinc-900">
     <x-admin.sidebar />
     <x-admin.header />
+    <x-admin.konten-web-nav />
 
     <flux:main>
         {{ $slot }}

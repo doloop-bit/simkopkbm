@@ -86,24 +86,12 @@
             </flux:sidebar.item>
         </flux:sidebar.group>
 
-        <!-- Konten Web -->
-        <flux:sidebar.group expandable icon="globe-alt" :heading="__('Konten Web')" class="grid">
-            <flux:sidebar.item icon="building-office-2" :href="route('admin.school-profile.edit')" :current="request()->routeIs('admin.school-profile.*')" wire:navigate.hover>
-                {{ __('Profil Sekolah') }}
-            </flux:sidebar.item>
-            <flux:sidebar.item icon="newspaper" :href="route('admin.news.index')" :current="request()->routeIs('admin.news.*')" wire:navigate.hover>
-                {{ __('Berita & Artikel') }}
-            </flux:sidebar.item>
-            <flux:sidebar.item icon="photo" :href="route('admin.gallery.index')" :current="request()->routeIs('admin.gallery.*')" wire:navigate.hover>
-                {{ __('Galeri') }}
-            </flux:sidebar.item>
-            <flux:sidebar.item icon="academic-cap" :href="route('admin.programs.index')" :current="request()->routeIs('admin.programs.*')" wire:navigate.hover>
-                {{ __('Program Pendidikan') }}
-            </flux:sidebar.item>
-            <flux:sidebar.item icon="envelope" :href="route('admin.contact-inquiries.index')" :current="request()->routeIs('admin.contact-inquiries.*')" wire:navigate.hover>
-                {{ __('Pesan Kontak') }}
-            </flux:sidebar.item>
-        </flux:sidebar.group>
+
+        <!-- Konten Web - Moved to horizontal header navigation -->
+        <flux:sidebar.item icon="globe-alt" :href="route('admin.school-profile.edit')" :current="request()->routeIs('admin.school-profile.*') || request()->routeIs('admin.news.*') || request()->routeIs('admin.gallery.*') || request()->routeIs('admin.programs.*') || request()->routeIs('admin.contact-inquiries.*')" wire:navigate.hover>
+            {{ __('Konten Web') }}
+        </flux:sidebar.item>
+
 
         <!-- Laporan -->
         <flux:sidebar.item icon="chart-bar" :href="route('reports')" :current="request()->routeIs('reports')" wire:navigate.hover class="mt-3">
