@@ -85,7 +85,8 @@ new #[Layout('components.admin.layouts.app')] class extends Component {
         }
 
         $this->reset(['name', 'class_level', 'homeroom_teacher_id', 'editing', 'classLevelOptions']);
-        $this->dispatch('close-modal', 'classroom-modal');
+        $this->dispatch('classroom-saved');
+        $this->modal('classroom-modal')->close();
     }
 
     public function edit(Classroom $classroom): void
@@ -98,7 +99,7 @@ new #[Layout('components.admin.layouts.app')] class extends Component {
         $this->homeroom_teacher_id = $classroom->homeroom_teacher_id;
 
         $this->loadClassLevelOptions();
-        $this->dispatch('open-modal', 'classroom-modal');
+        $this->modal('classroom-modal')->show();
     }
 
     public function delete(Classroom $classroom): void
@@ -180,7 +181,7 @@ new #[Layout('components.admin.layouts.app')] class extends Component {
                             {{ $classroom->homeroomTeacher?->name ?? 'Belum Ditentukan' }}
                         </td>
                         <td class="px-4 py-3 text-right space-x-2">
-                            <flux:button size="sm" variant="ghost" icon="pencil-square" wire:click="edit({{ $classroom->id }})" />
+                            <flux:button size="sm" variant="ghost" icon="pencil-square" wire:click="edit({{ $classroom->id }})" x-on:click="$flux.modal('classroom-modal').show()" />
                             <flux:button size="sm" variant="ghost" icon="trash" class="text-red-500" wire:confirm="Yakin ingin menghapus kelas ini?" wire:click="delete({{ $classroom->id }})" />
                         </td>
                     </tr>
@@ -193,7 +194,7 @@ new #[Layout('components.admin.layouts.app')] class extends Component {
         {{ $classrooms->links() }}
     </div>
 
-    <flux:modal name="classroom-modal" class="max-w-md">
+    <flux:modal name="classroom-modal" class="max-w-md" x-on:classroom-saved.window="$flux.modal('classroom-modal').close()">
         <form wire:submit="save" class="space-y-6">
             <div>
                 <flux:heading size="lg">{{ $editing ? 'Edit Kelas' : 'Tambah Kelas Baru' }}</flux:heading>

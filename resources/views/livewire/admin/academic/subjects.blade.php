@@ -17,6 +17,10 @@ new #[Layout('components.admin.layouts.app')] class extends Component {
     public string $code = '';
     public ?int $level_id = null;
     
+    // Filters
+    public string $search = '';
+    public ?int $filterLevelId = null;
+    
     // TP Management
     public ?Subject $managingSubject = null;
     public $subjectTps = [];
@@ -31,6 +35,16 @@ new #[Layout('components.admin.layouts.app')] class extends Component {
     public ?string $selectedCpDescription = null;
 
     public ?Subject $editing = null;
+
+    public function updatingSearch(): void
+    {
+        $this->resetPage();
+    }
+
+    public function updatingFilterLevelId(): void
+    {
+        $this->resetPage();
+    }
 
     public function rules(): array
     {
@@ -52,7 +66,8 @@ new #[Layout('components.admin.layouts.app')] class extends Component {
         }
 
         $this->reset(['name', 'code', 'level_id', 'editing']);
-        $this->dispatch('close-modal', 'subject-modal');
+        $this->dispatch('subject-saved');
+        $this->modal('subject-modal')->close();
     }
 
     public function edit(Subject $subject): void
@@ -62,7 +77,7 @@ new #[Layout('components.admin.layouts.app')] class extends Component {
         $this->code = $subject->code;
         $this->level_id = $subject->level_id;
 
-        $this->dispatch('open-modal', 'subject-modal');
+        $this->modal('subject-modal')->show();
     }
 
     public function delete(Subject $subject): void
@@ -87,7 +102,7 @@ new #[Layout('components.admin.layouts.app')] class extends Component {
             $this->loadTps();
         }
 
-        $this->dispatch('open-modal', 'tp-modal');
+        $this->modal('tp-modal')->show();
     }
 
     public function loadAvailablePhases(): void
@@ -198,7 +213,16 @@ new #[Layout('components.admin.layouts.app')] class extends Component {
     public function with(): array
     {
         return [
-            'subjects' => Subject::with('level')->latest()->paginate(15),
+            'subjects' => Subject::with('level')
+                ->when($this->search, function ($query) {
+                    $query->where(function ($q) {
+                        $q->where('name', 'like', '%' . $this->search . '%')
+                          ->orWhere('code', 'like', '%' . $this->search . '%');
+                    });
+                })
+                ->when($this->filterLevelId, fn($q) => $q->where('level_id', $this->filterLevelId))
+                ->latest()
+                ->paginate(15),
             'levels' => Level::all(),
         ];
     }
@@ -214,6 +238,19 @@ new #[Layout('components.admin.layouts.app')] class extends Component {
         <flux:modal.trigger name="subject-modal">
             <flux:button variant="primary" icon="plus" wire:click="$set('editing', null)">Tambah Mapel</flux:button>
         </flux:modal.trigger>
+    </div>
+
+    <div class="flex flex-col md:flex-row gap-4 mb-6 items-center justify-between">
+        <div class="flex flex-col md:flex-row flex-1 gap-4 w-full">
+            <flux:input wire:model.live.debounce.300ms="search" placeholder="Cari kode atau nama mapel..." icon="magnifying-glass" class="w-full md:w-80" />
+            
+            <flux:select wire:model.live="filterLevelId" placeholder="Semua Jenjang" class="w-full md:w-64">
+                <option value="">Semua Jenjang</option>
+                @foreach($levels as $level)
+                    <option value="{{ $level->id }}">{{ $level->name }}</option>
+                @endforeach
+            </flux:select>
+        </div>
     </div>
 
     <div class="overflow-hidden border rounded-lg border-zinc-200 dark:border-zinc-700">
@@ -261,9 +298,9 @@ new #[Layout('components.admin.layouts.app')] class extends Component {
                             @endif
                         </td>
                         <td class="px-4 py-3 text-right space-x-2">
-                            <flux:button size="sm" variant="ghost" icon="pencil-square" wire:click="edit({{ $subject->id }})" />
+                            <flux:button size="sm" variant="ghost" icon="pencil-square" wire:click="edit({{ $subject->id }})" x-on:click="$flux.modal('subject-modal').show()" />
                             @if($subject->level && $subject->level->phase_map)
-                                <flux:button size="sm" variant="ghost" icon="list-bullet" wire:click="manageTps({{ $subject->id }})" tooltip="Kelola CP & TP" />
+                                <flux:button size="sm" variant="ghost" icon="list-bullet" wire:click="manageTps({{ $subject->id }})" x-on:click="$flux.modal('tp-modal').show()" tooltip="Kelola CP & TP" />
                             @endif
                             <flux:button size="sm" variant="ghost" icon="trash" class="text-red-500" wire:confirm="Yakin ingin menghapus mapel ini?" wire:click="delete({{ $subject->id }})" />
                         </td>
@@ -278,7 +315,7 @@ new #[Layout('components.admin.layouts.app')] class extends Component {
     </div>
 
     {{-- Subject Create/Edit Modal --}}
-    <flux:modal name="subject-modal" class="max-w-md">
+    <flux:modal name="subject-modal" class="max-w-md" x-on:subject-saved.window="$flux.modal('subject-modal').close()">
         <form wire:submit="save" class="space-y-6">
             <div>
                 <flux:heading size="lg">{{ $editing ? 'Edit Mata Pelajaran' : 'Tambah Mata Pelajaran' }}</flux:heading>

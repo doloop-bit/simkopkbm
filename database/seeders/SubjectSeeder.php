@@ -15,120 +15,91 @@ class SubjectSeeder extends Seeder
     {
         $levels = Level::all()->keyBy('name');
 
-        // Mata pelajaran untuk PAUD/TK (class_teacher)
+        // Mata pelajaran untuk PAUD
         $paudSubjects = [
-            ['name' => 'Pendidikan Agama', 'code' => 'PAI-PAUD'],
-            ['name' => 'Bahasa Indonesia', 'code' => 'BIN-PAUD'],
-            ['name' => 'Motorik Halus', 'code' => 'MH-PAUD'],
-            ['name' => 'Motorik Kasar', 'code' => 'MK-PAUD'],
-            ['name' => 'Kognitif', 'code' => 'KOG-PAUD'],
-            ['name' => 'Seni & Kreativitas', 'code' => 'SNI-PAUD'],
+            ['name' => 'Nilai Agama & Budi Pekerti', 'code' => 'NABP'],
+            ['name' => 'Fisik-Motorik', 'code' => 'FM'],
+            ['name' => 'Kognitif', 'code' => 'KOG'],
+            ['name' => 'Bahasa', 'code' => 'BHS'],
+            ['name' => 'Sosial-Emosional', 'code' => 'SE'],
+            ['name' => 'Seni & Kreativitas', 'code' => 'SNI'],
         ];
 
-        // Mata pelajaran untuk Paket A (SD)
+        // Mata pelajaran untuk Paket A (SD) — Kurikulum Merdeka
         $paketASubjects = [
+            ['name' => 'Pendidikan Agama Islam', 'code' => 'PAI'],
+            ['name' => 'Pendidikan Pancasila', 'code' => 'PPKN'],
+            ['name' => 'Bahasa Indonesia', 'code' => 'BIND'],
+            ['name' => 'Matematika', 'code' => 'MTK'],
+            ['name' => 'IPAS', 'code' => 'IPAS'],
+            ['name' => 'Seni Budaya', 'code' => 'SBD'],
+            ['name' => 'PJOK', 'code' => 'PJOK'],
+            ['name' => 'Bahasa Inggris', 'code' => 'BING'],
+            ['name' => 'Informatika', 'code' => 'INF'],
+            ['name' => 'Bahasa Jawa', 'code' => 'BJAW'],
+        ];
+
+        // Mata pelajaran untuk Paket B (SMP) — Kurikulum Merdeka
+        $paketBSubjects = [
             ['name' => 'Pendidikan Agama Islam', 'code' => 'PAI'],
             ['name' => 'Pendidikan Pancasila', 'code' => 'PPKN'],
             ['name' => 'Bahasa Indonesia', 'code' => 'BIND'],
             ['name' => 'Matematika', 'code' => 'MTK'],
             ['name' => 'IPA', 'code' => 'IPA'],
             ['name' => 'IPS', 'code' => 'IPS'],
+            ['name' => 'Bahasa Inggris', 'code' => 'BING'],
             ['name' => 'Seni Budaya', 'code' => 'SBD'],
             ['name' => 'PJOK', 'code' => 'PJOK'],
-            ['name' => 'Bahasa Inggris', 'code' => 'BING'],
+            ['name' => 'Informatika', 'code' => 'INF'],
+            ['name' => 'Prakarya', 'code' => 'PRK'],
+            ['name' => 'Bahasa Jawa', 'code' => 'BJAW'],
         ];
 
-        // Mata pelajaran untuk Paket B (SMP)
-        $paketBSubjects = [
-            ['name' => 'Pendidikan Agama Islam', 'code' => 'PAI-B'],
-            ['name' => 'Pendidikan Pancasila', 'code' => 'PPKN-B'],
-            ['name' => 'Bahasa Indonesia', 'code' => 'BIND-B'],
-            ['name' => 'Matematika', 'code' => 'MTK-B'],
-            ['name' => 'IPA Terpadu', 'code' => 'IPA-B'],
-            ['name' => 'IPS Terpadu', 'code' => 'IPS-B'],
-            ['name' => 'Bahasa Inggris', 'code' => 'BING-B'],
-            ['name' => 'Seni Budaya', 'code' => 'SBD-B'],
-            ['name' => 'PJOK', 'code' => 'PJOK-B'],
-            ['name' => 'Prakarya', 'code' => 'PRK-B'],
-        ];
-
-        // Mata pelajaran untuk Paket C (SMA)
+        // Mata pelajaran untuk Paket C (SMA) — Kurikulum Merdeka
         $paketCSubjects = [
-            ['name' => 'Pendidikan Agama Islam', 'code' => 'PAI-C'],
-            ['name' => 'Pendidikan Pancasila', 'code' => 'PPKN-C'],
-            ['name' => 'Bahasa Indonesia', 'code' => 'BIND-C'],
-            ['name' => 'Matematika', 'code' => 'MTK-C'],
-            ['name' => 'Bahasa Inggris', 'code' => 'BING-C'],
-            ['name' => 'Fisika', 'code' => 'FIS-C'],
-            ['name' => 'Kimia', 'code' => 'KIM-C'],
-            ['name' => 'Biologi', 'code' => 'BIO-C'],
-            ['name' => 'Sejarah', 'code' => 'SEJ-C'],
-            ['name' => 'Ekonomi', 'code' => 'EKO-C'],
-            ['name' => 'Sosiologi', 'code' => 'SOS-C'],
-            ['name' => 'Geografi', 'code' => 'GEO-C'],
+            ['name' => 'Pendidikan Agama Islam', 'code' => 'PAI'],
+            ['name' => 'Pendidikan Pancasila', 'code' => 'PPKN'],
+            ['name' => 'Bahasa Indonesia', 'code' => 'BIND'],
+            ['name' => 'Matematika', 'code' => 'MTK'],
+            ['name' => 'Bahasa Inggris', 'code' => 'BING'],
+            ['name' => 'Fisika', 'code' => 'FIS'],
+            ['name' => 'Kimia', 'code' => 'KIM'],
+            ['name' => 'Biologi', 'code' => 'BIO'],
+            ['name' => 'Sejarah', 'code' => 'SEJ'],
+            ['name' => 'Ekonomi', 'code' => 'EKO'],
+            ['name' => 'Sosiologi', 'code' => 'SOS'],
+            ['name' => 'Geografi', 'code' => 'GEO'],
+            ['name' => 'Informatika', 'code' => 'INF'],
+            ['name' => 'Bahasa Jawa', 'code' => 'BJAW'],
         ];
 
-        // Create subjects for PAUD & TK levels
-        foreach (['PAUD', 'TK A', 'TK B'] as $levelName) {
-            if (isset($levels[$levelName])) {
-                foreach ($paudSubjects as $subject) {
-                    Subject::firstOrCreate(
-                        ['code' => $subject['code'] . '-' . $levels[$levelName]->id],
-                        [
-                            'name' => $subject['name'],
-                            'level_id' => $levels[$levelName]->id,
-                        ]
-                    );
-                }
-            }
-        }
+        // Map level name => subjects array & suffix
+        $mapping = [
+            'PAUD' => ['subjects' => $paudSubjects, 'suffix' => 'PD'],
+            'Paket A' => ['subjects' => $paketASubjects, 'suffix' => 'PA'],
+            'Paket B' => ['subjects' => $paketBSubjects, 'suffix' => 'PB'],
+            'Paket C (Kelas 12)' => ['subjects' => $paketCSubjects, 'suffix' => 'PC'],
+        ];
 
-        // Create subjects for Paket A levels
-        $paketALevels = ['Paket A (Kelas 1)', 'Paket A (Kelas 2)', 'Paket A (Kelas 3)', 'Paket A (Kelas 4)', 'Paket A (Kelas 5)', 'Paket A (Kelas 6)'];
-        foreach ($paketALevels as $levelName) {
-            if (isset($levels[$levelName])) {
-                foreach ($paketASubjects as $subject) {
-                    Subject::firstOrCreate(
-                        ['code' => $subject['code'] . '-' . $levels[$levelName]->id],
-                        [
-                            'name' => $subject['name'],
-                            'level_id' => $levels[$levelName]->id,
-                        ]
-                    );
-                }
+        foreach ($mapping as $levelName => $config) {
+            if (!isset($levels[$levelName])) {
+                $this->command->warn("Level '{$levelName}' not found, skipping...");
+                continue;
             }
-        }
 
-        // Create subjects for Paket B levels
-        $paketBLevels = ['Paket B (Kelas 7)', 'Paket B (Kelas 8)', 'Paket B (Kelas 9)'];
-        foreach ($paketBLevels as $levelName) {
-            if (isset($levels[$levelName])) {
-                foreach ($paketBSubjects as $subject) {
-                    Subject::firstOrCreate(
-                        ['code' => $subject['code'] . '-' . $levels[$levelName]->id],
-                        [
-                            'name' => $subject['name'],
-                            'level_id' => $levels[$levelName]->id,
-                        ]
-                    );
-                }
-            }
-        }
+            $level = $levels[$levelName];
 
-        // Create subjects for Paket C levels
-        $paketCLevels = ['Paket C (Kelas 10)', 'Paket C (Kelas 11)', 'Paket C (Kelas 12)'];
-        foreach ($paketCLevels as $levelName) {
-            if (isset($levels[$levelName])) {
-                foreach ($paketCSubjects as $subject) {
-                    Subject::firstOrCreate(
-                        ['code' => $subject['code'] . '-' . $levels[$levelName]->id],
-                        [
-                            'name' => $subject['name'],
-                            'level_id' => $levels[$levelName]->id,
-                        ]
-                    );
-                }
+            foreach ($config['subjects'] as $subject) {
+                Subject::firstOrCreate(
+                    ['code' => $subject['code'] . '-' . $config['suffix']],
+                    [
+                        'name' => $subject['name'],
+                        'level_id' => $level->id,
+                    ]
+                );
             }
+
+            $this->command->info("✓ Created subjects for: {$levelName}");
         }
     }
 }

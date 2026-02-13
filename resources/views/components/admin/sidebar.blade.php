@@ -47,14 +47,10 @@
         </flux:sidebar.group>
 
         <!-- Penilaian & Raport -->
-        <flux:sidebar.group expandable icon="pencil-square" :heading="__('Penilaian & Raport')" class="grid">
-            <flux:sidebar.item icon="pencil-square" :href="route('academic.grades')" :current="request()->routeIs('academic.grades')" wire:navigate.hover>
-                {{ __('Penilaian (Nilai)') }}
-            </flux:sidebar.item>
-            
+        <flux:sidebar.group expandable icon="pencil-square" :heading="__('Penilaian & Raport')" class="grid">            
             @if(auth()->user()->isAdmin() || auth()->user()->teachesPaudLevel())
                 <flux:sidebar.item icon="clipboard-document-check" :href="route('admin.assessments.competency')" :current="request()->routeIs('admin.assessments.competency')" wire:navigate.hover>
-                    {{ __('Penilaian Kompetensi') }}
+                    {{ __('Penilaian Kompetensi PAUD') }}
                 </flux:sidebar.item>
             @endif
 

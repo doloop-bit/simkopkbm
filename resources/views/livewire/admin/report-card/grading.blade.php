@@ -37,6 +37,20 @@ new #[Layout('components.admin.layouts.app')] class extends Component {
     {
         $this->resolvePhase();
         $this->loadGrades();
+        
+        // Reset subject if it's not valid for the new classroom
+        if ($this->subject_id && $this->classroom_id) {
+            $classroom = Classroom::find($this->classroom_id);
+            $isValid = Subject::where('id', $this->subject_id)
+                ->where(function ($q) use ($classroom) {
+                    $q->whereNull('level_id')
+                      ->orWhere('level_id', $classroom->level_id);
+                })->exists();
+                
+            if (!$isValid) {
+                $this->subject_id = null;
+            }
+        }
     }
 
     public function updatedSubjectId(): void
@@ -186,13 +200,24 @@ new #[Layout('components.admin.layouts.app')] class extends Component {
         }
 
         $tps = $this->getFilteredTps();
-
+        
+        $subjects = Subject::orderBy('name')
+            ->when($this->classroom_id, function ($query) {
+                $classroom = Classroom::find($this->classroom_id);
+                if ($classroom) {
+                    $query->where(function ($q) use ($classroom) {
+                        $q->whereNull('level_id')
+                          ->orWhere('level_id', $classroom->level_id);
+                    });
+                }
+            })->get();
+            
         return [
             'years' => AcademicYear::all(),
             'classrooms' => Classroom::with('level')
                 ->when($this->academic_year_id, fn($q) => $q->where('academic_year_id', $this->academic_year_id))
                 ->get(),
-            'subjects' => Subject::orderBy('name')->get(),
+            'subjects' => $subjects,
             'students' => $students,
             'tps' => $tps,
         ];
@@ -283,7 +308,7 @@ new #[Layout('components.admin.layouts.app')] class extends Component {
                                         type="number" 
                                         min="0" 
                                         max="100" 
-                                        step="0.01" 
+                                        step="1" 
                                         class="text-center" 
                                     />
                                 </td>
