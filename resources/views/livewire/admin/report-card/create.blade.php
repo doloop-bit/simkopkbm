@@ -39,8 +39,7 @@ new #[Layout('components.admin.layouts.app')] class extends Component {
     // Let's better fetch the class teacher.
     protected function getTeacherForPreview($reportCard) {
         // Try to find the main teacher for the class
-        $classTeacher = $reportCard->classroom->teachers()->first();
-        return $classTeacher ?? auth()->user();
+        return $reportCard->classroom->homeroomTeacher ?? auth()->user();
     }
 }; ?>
 

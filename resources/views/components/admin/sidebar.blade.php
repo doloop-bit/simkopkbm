@@ -75,8 +75,8 @@
             @endif
 
 
-            <flux:sidebar.item icon="document-chart-bar" :href="route('admin.report-card.index')"
-                :current="request()->routeIs('admin.report-card.*')" wire:navigate.hover>
+            <flux:sidebar.item icon="document-chart-bar" :href="route('admin.report-card.grading')"
+                :current="request()->routeIs('admin.report-card.*') || request()->routeIs('admin.assessments.grading')" wire:navigate.hover>
                 {{ __('Raport Kesetaraan') }}
             </flux:sidebar.item>
         </flux:sidebar.group>

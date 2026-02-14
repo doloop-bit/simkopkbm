@@ -134,7 +134,7 @@ new #[Layout('components.teacher.layouts.app')] class extends Component {
             <p class="text-xs text-zinc-500">{{ __('Lihat siswa yang Anda ampu') }}</p>
         </a>
 
-        <a href="{{ route('teacher.academic.grades') }}" wire:navigate class="p-4 bg-white dark:bg-zinc-800 rounded-lg border border-zinc-200 dark:border-zinc-700 hover:border-green-500 dark:hover:border-green-500 transition-colors">
+        <a href="{{ route('teacher.assessments.grading') }}" wire:navigate class="p-4 bg-white dark:bg-zinc-800 rounded-lg border border-zinc-200 dark:border-zinc-700 hover:border-green-500 dark:hover:border-green-500 transition-colors">
             <flux:icon icon="pencil-square" class="w-8 h-8 text-green-600 mb-2" />
             <p class="font-medium text-zinc-900 dark:text-white">{{ __('Input Nilai & TP') }}</p>
             <p class="text-xs text-zinc-500">{{ __('Input penilaian rapor dan TP kompetensi') }}</p>

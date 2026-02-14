@@ -1,6 +1,6 @@
 @if(
         request()->routeIs('teacher.report-cards') ||
-        request()->routeIs('teacher.academic.grades') ||
+        request()->routeIs('teacher.assessments.grading') ||
         request()->routeIs('teacher.assessments.attendance') ||
         request()->routeIs('teacher.assessments.extracurricular')
     )
@@ -13,7 +13,7 @@
                 'label' => 'Input Nilai & TP',
                 'label_short' => 'Nilai',
                 'icon' => 'clipboard-document-list',
-                'route' => 'teacher.academic.grades',
+                'route' => 'teacher.assessments.grading',
             ],
             'attendance' => [
                 'label' => 'Input Kehadiran',

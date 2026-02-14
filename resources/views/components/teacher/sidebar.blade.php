@@ -20,8 +20,8 @@
 
         {{-- Penilaian & Raport --}}
         <flux:sidebar.group expandable icon="pencil-square" :heading="__('Penilaian & Raport')" class="grid">
-            <flux:sidebar.item icon="document-chart-bar" :href="route('teacher.report-cards')"
-                :current="request()->routeIs('teacher.academic.grades') || request()->routeIs('teacher.assessments.attendance') || request()->routeIs('teacher.assessments.extracurricular') || request()->routeIs('teacher.report-cards')"
+            <flux:sidebar.item icon="document-chart-bar" :href="route('teacher.assessments.grading')"
+                :current="request()->routeIs('teacher.assessments.grading') || request()->routeIs('teacher.assessments.attendance') || request()->routeIs('teacher.assessments.extracurricular') || request()->routeIs('teacher.report-cards')"
                 wire:navigate.hover>
                 {{ __('Raport Kesetaraan') }}
             </flux:sidebar.item>
