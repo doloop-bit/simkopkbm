@@ -123,10 +123,7 @@ new #[Layout('components.admin.layouts.app')] class extends Component {
     }
 }; ?>
 
-<div class="pb-24 md:pb-0">
-    {{-- Navigation Component --}}
-    <x-admin.report-card-nav />
-
+<div>
     <div class="flex items-center justify-between mb-6">
         <div>
             <flux:heading size="xl" level="1">Presensi Rapor</flux:heading>

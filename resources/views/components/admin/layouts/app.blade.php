@@ -17,6 +17,7 @@
     <x-admin.sidebar />
     <x-admin.header />
     <x-admin.konten-web-nav />
+    <x-admin.report-card-nav />
 
     <flux:main>
         {{ $slot }}

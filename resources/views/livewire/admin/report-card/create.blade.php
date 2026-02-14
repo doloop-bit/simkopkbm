@@ -302,10 +302,7 @@ new #[Layout('components.admin.layouts.app')] class extends Component {
     }
 }; ?>
 
-<div class="pb-24 md:pb-0 space-y-6">
-    {{-- Navigation Component --}}
-    <x-admin.report-card-nav />
-
+<div>
     <!-- Header -->
     <div class="flex items-center justify-between">
         <div>

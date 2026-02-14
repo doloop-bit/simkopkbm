@@ -245,26 +245,24 @@ new #[Layout('components.admin.layouts.app')] class extends Component {
     }
 }; ?>
 
-<div class="pb-24 md:pb-0">
-    {{-- Navigation Component --}}
-    <x-admin.report-card-nav />
-
-    <div class="flex items-center justify-between mb-4">
+<div>
+    <div class="flex items-center justify-between mb-6">
         <div>
-            <flux:heading size="xl" level="1">Nilai Rapor Subjek & TP</flux:heading>
+            <flux:heading size="xl">Nilai Rapor Subjek & TP</flux:heading>
             <flux:subheading>Input nilai akhir dan deskripsi TP untuk rapor.</flux:subheading>
         </div>
     </div>
 
     {{-- Compact Usage Guide --}}
-    <div class="mb-4 p-3 bg-blue-50 dark:bg-blue-950/30 rounded-lg border border-blue-200 dark:border-blue-800">
+    <div class="mb-6 p-3 bg-blue-50 dark:bg-blue-950/30 rounded-lg border border-blue-200 dark:border-blue-800">
         <div class="flex items-start gap-2">
             <flux:icon icon="information-circle"
                 class="w-4 h-4 text-blue-600 dark:text-blue-400 flex-shrink-0 mt-0.5" />
             <div class="flex-1 min-w-0">
                 <p class="text-xs font-medium text-blue-900 dark:text-blue-200 mb-1.5">
                     Panduan: <span class="hidden md:inline">Gunakan navigasi di atas</span><span
-                        class="md:hidden">Gunakan navigasi di bawah</span> untuk beralih menu
+                        class="md:hidden">Gunakan
+                        navigasi di bawah</span> untuk beralih menu
                 </p>
                 <div class="flex flex-wrap items-center gap-1.5 text-[11px]">
                     <div
@@ -355,12 +353,14 @@ new #[Layout('components.admin.layouts.app')] class extends Component {
                 <table class="w-full text-sm text-left border-collapse min-w-[800px]">
                     <thead class="bg-zinc-50 dark:bg-zinc-800">
                         <tr>
-                            <th class="px-4 py-3 font-medium text-zinc-700 dark:text-zinc-300 border-b w-64">Nama Siswa</th>
+                            <th class="px-4 py-3 font-medium text-zinc-700 dark:text-zinc-300 border-b w-64">Nama Siswa
+                            </th>
                             <th class="px-4 py-3 font-medium text-zinc-700 dark:text-zinc-300 border-b w-32 text-center">
                                 Nilai Final (0-100)</th>
                             <th class="px-4 py-3 font-medium text-zinc-700 dark:text-zinc-300 border-b">TP Tertinggi
                                 (Kompeten)</th>
-                            <th class="px-4 py-3 font-medium text-zinc-700 dark:text-zinc-300 border-b">TP Terendah (Perlu
+                            <th class="px-4 py-3 font-medium text-zinc-700 dark:text-zinc-300 border-b">TP Terendah
+                                (Perlu
                                 Bimbingan)</th>
                         </tr>
                     </thead>
