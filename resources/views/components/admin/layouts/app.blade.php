@@ -19,7 +19,7 @@
     @if(request()->routeIs('admin.school-profile.*') || request()->routeIs('admin.news.*') || request()->routeIs('admin.gallery.*') || request()->routeIs('admin.programs.*') || request()->routeIs('admin.contact-inquiries.*'))
         <x-admin.konten-web-nav />
     @endif
-    @if(request()->routeIs('admin.report-card.*') || request()->routeIs('admin.assessments.attendance'))
+    @if(request()->routeIs('admin.report-card.*') || request()->routeIs('admin.assessments.attendance') || request()->routeIs('admin.assessments.extracurricular'))
         <x-admin.report-card-nav />
     @endif
 

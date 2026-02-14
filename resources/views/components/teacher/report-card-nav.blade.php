@@ -1,36 +1,37 @@
 @if(
-        request()->routeIs('admin.report-card.*') ||
-        request()->routeIs('admin.assessments.attendance') ||
-        request()->routeIs('admin.assessments.extracurricular')
+        request()->routeIs('teacher.report-cards') ||
+        request()->routeIs('teacher.academic.grades') ||
+        request()->routeIs('teacher.assessments.attendance') ||
+        request()->routeIs('teacher.assessments.extracurricular')
     )
 
     @props(['current' => null])
 
     @php
         $tabs = [
-            'grading' => [
-                'label' => 'Input Nilai & TP',
+            'grades' => [
+                'label' => 'Input Nilai',
                 'label_short' => 'Nilai',
                 'icon' => 'clipboard-document-list',
-                'route' => 'admin.report-card.grading',
+                'route' => 'teacher.academic.grades',
             ],
             'attendance' => [
                 'label' => 'Input Kehadiran',
                 'label_short' => 'Hadir',
                 'icon' => 'calendar-days',
-                'route' => 'admin.assessments.attendance',
+                'route' => 'teacher.assessments.attendance',
             ],
             'extracurricular' => [
                 'label' => 'Input Ekskul',
                 'label_short' => 'Ekskul',
                 'icon' => 'trophy',
-                'route' => 'admin.assessments.extracurricular',
+                'route' => 'teacher.assessments.extracurricular',
             ],
-            'create' => [
-                'label' => 'Buat Rapor',
+            'report_cards' => [
+                'label' => 'Generator Rapor',
                 'label_short' => 'Rapor',
                 'icon' => 'document-text',
-                'route' => 'admin.report-card.create',
+                'route' => 'teacher.report-cards',
             ],
         ];
     @endphp

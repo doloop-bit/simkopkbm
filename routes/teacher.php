@@ -14,22 +14,23 @@ use Livewire\Volt\Volt;
 */
 
 Route::middleware(['auth', 'verified', 'role:guru'])->prefix('teacher')->name('teacher.')->group(function () {
-    
+
     // Dashboard
     Volt::route('/dashboard', 'teacher.dashboard')->name('dashboard');
 
     // Students - filtered by assigned classrooms
-    Volt::route('/students', 'teacher.students.index')->name('students.index');
+    Volt::route('/students', 'teacher.data-master.students.index')->name('students.index');
 
+    // Academic
+    Volt::route('/grades', 'teacher.academic.grades')->name('academic.grades');
 
+    // Report Card & Assessments
+    Volt::route('/report-cards', 'teacher.report-card.index')->name('report-cards');
 
     // Assessments - filtered by assigned classrooms
-    Volt::route('/assessments/competency', 'teacher.assessments.competency')->name('assessments.competency');
-    Volt::route('/assessments/p5', 'teacher.assessments.p5')->name('assessments.p5');
-    Volt::route('/assessments/extracurricular', 'teacher.assessments.extracurricular')->name('assessments.extracurricular');
-    Volt::route('/assessments/paud', 'teacher.assessments.paud')->name('assessments.paud');
-    Volt::route('/assessments/attendance', 'teacher.assessments.attendance')->name('assessments.attendance');
-
-    // Report Cards - read-only, filtered by assigned classrooms
-    Volt::route('/report-cards', 'teacher.report-cards')->name('report-cards');
+    Volt::route('/assessments/competency', 'teacher.report-card.paud.competency')->name('assessments.competency');
+    Volt::route('/assessments/p5', 'teacher.report-card.p5')->name('assessments.p5');
+    Volt::route('/assessments/extracurricular', 'teacher.report-card.extracurricular')->name('assessments.extracurricular');
+    Volt::route('/assessments/paud', 'teacher.report-card.paud.developmental')->name('assessments.paud');
+    Volt::route('/assessments/attendance', 'teacher.report-card.attendance')->name('assessments.attendance');
 });

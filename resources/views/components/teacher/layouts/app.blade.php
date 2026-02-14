@@ -17,6 +17,10 @@
     <x-teacher.sidebar />
     <x-admin.header />
 
+    @if(request()->routeIs('teacher.report-cards') || request()->routeIs('teacher.academic.grades') || request()->routeIs('teacher.assessments.attendance') || request()->routeIs('teacher.assessments.extracurricular'))
+        <x-teacher.report-card-nav />
+    @endif
+
     <flux:main>
         {{ $slot }}
     </flux:main>
