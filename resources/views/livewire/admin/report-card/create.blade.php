@@ -455,7 +455,6 @@ new #[Layout('components.admin.layouts.app')] class extends Component {
             <div class="space-y-6">
                 <div class="flex items-center justify-between">
                     <flux:heading size="xl">Pratinjau Rapor</flux:heading>
-                    <flux:button variant="ghost" icon="x-mark" wire:click="closePreview" />
                 </div>
                 
                 <div class="p-8 bg-zinc-50 dark:bg-zinc-900 text-black rounded-lg shadow-inner overflow-y-auto max-h-[70vh]">

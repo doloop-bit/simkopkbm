@@ -9,13 +9,27 @@ use Livewire\Volt\Component;
 new #[Layout('components.admin.layouts.app')] class extends Component {
     public string $name = '';
     public string $type = 'class_teacher';
+    public string $education_level = 'sd';
+    public array $phase_map = [];
 
     public ?Level $editing = null;
 
     public function createNew(): void
     {
-        $this->reset(['name', 'type', 'editing']);
+        $this->reset(['name', 'type', 'education_level', 'phase_map', 'editing']);
+        $this->updatedEducationLevel();
         $this->resetValidation();
+    }
+
+    public function updatedEducationLevel(): void
+    {
+        $this->phase_map = match($this->education_level) {
+            'paud' => ['1' => 'A', '2' => 'B'],
+            'sd' => ['1' => 'A', '2' => 'A', '3' => 'B', '4' => 'B', '5' => 'C', '6' => 'C'],
+            'smp' => ['7' => 'D', '8' => 'D', '9' => 'D'],
+            'sma' => ['10' => 'E', '11' => 'F', '12' => 'F'],
+            default => [],
+        };
     }
 
     public function rules(): array
@@ -23,6 +37,8 @@ new #[Layout('components.admin.layouts.app')] class extends Component {
         return [
             'name' => ['required', 'string', 'max:255'],
             'type' => ['required', 'in:class_teacher,subject_teacher'],
+            'education_level' => ['required', 'in:paud,sd,smp,sma'],
+            'phase_map' => ['nullable', 'array'],
         ];
     }
 
@@ -36,7 +52,7 @@ new #[Layout('components.admin.layouts.app')] class extends Component {
             Level::create($validated);
         }
 
-        $this->reset(['name', 'type', 'editing']);
+        $this->reset(['name', 'type', 'education_level', 'phase_map', 'editing']);
         $this->dispatch('level-saved');
     }
 
@@ -45,6 +61,8 @@ new #[Layout('components.admin.layouts.app')] class extends Component {
         $this->editing = $level;
         $this->name = $level->name;
         $this->type = $level->type;
+        $this->education_level = $level->education_level ?? 'sd';
+        $this->phase_map = $level->phase_map ?? [];
     }
 
     public function delete(Level $level): void
@@ -77,7 +95,10 @@ new #[Layout('components.admin.layouts.app')] class extends Component {
             <div wire:key="{{ $level->id }}" class="p-6 border rounded-xl border-zinc-200 dark:border-zinc-700 bg-white dark:bg-zinc-900 shadow-sm flex flex-col justify-between">
                 <div>
                     <div class="flex items-start justify-between">
-                        <flux:heading size="lg">{{ $level->name }}</flux:heading>
+                        <div>
+                            <flux:heading size="lg">{{ $level->name }}</flux:heading>
+                            <flux:text class="text-xs font-bold text-blue-600 uppercase">{{ $level->education_level === 'paud' ? 'PAUD' : 'Paket ' . strtoupper(substr($level->education_level, 0, 1)) }}</flux:text>
+                        </div>
                         <flux:badge variant="{{ $level->type === 'class_teacher' ? 'success' : 'info' }}" size="sm">
                             {{ $level->type === 'class_teacher' ? 'Guru Kelas' : 'Guru Mapel' }}
                         </flux:badge>
@@ -85,6 +106,14 @@ new #[Layout('components.admin.layouts.app')] class extends Component {
                     <flux:text class="mt-2 text-sm">
                         {{ $level->type === 'class_teacher' ? 'Satu guru mengampu semua mata pelajaran.' : 'Satu mata pelajaran diampu oleh satu guru spesialis.' }}
                     </flux:text>
+                    
+                    @if($level->phase_map)
+                        <div class="mt-4 flex flex-wrap gap-1">
+                            @foreach($level->phase_map as $grade => $phase)
+                                <flux:badge size="sm" inset color="zinc">Kelas {{ $grade }} ({{ $phase }})</flux:badge>
+                            @endforeach
+                        </div>
+                    @endif
                 </div>
 
                 <div class="mt-6 flex justify-end gap-2">
@@ -99,15 +128,36 @@ new #[Layout('components.admin.layouts.app')] class extends Component {
         <form wire:submit="save" class="space-y-6">
             <div>
                 <flux:heading size="lg">{{ $editing ? 'Edit Jenjang' : 'Tambah Jenjang Baru' }}</flux:heading>
-                <flux:subheading>Pilih skema pengajaran yang sesuai untuk jenjang ini.</flux:subheading>
+                <flux:subheading>Lengkapi detail jenjang pendidikan di bawah ini.</flux:subheading>
             </div>
 
-            <flux:input wire:model="name" label="Nama Jenjang (Contoh: PAUD, Paket B)" required />
+            <flux:input wire:model="name" label="Nama Jenjang (Contoh: PAUD Al-Ishlah, Paket B Utama)" required />
+
+            <flux:select wire:model.live="education_level" label="Tingkat Pendidikan" required>
+                <option value="paud">PAUD / TK</option>
+                <option value="sd">SD / Paket A</option>
+                <option value="smp">SMP / Paket B</option>
+                <option value="sma">SMA / Paket C</option>
+            </flux:select>
 
             <flux:radio.group wire:model="type" label="Skema Pengajaran" class="flex flex-col gap-2">
                 <flux:radio value="class_teacher" label="Sistem Guru Kelas" />
                 <flux:radio value="subject_teacher" label="Sistem Guru Mata Pelajaran" />
             </flux:radio.group>
+
+            @if(!empty($phase_map))
+                <div class="p-4 rounded-lg bg-zinc-50 dark:bg-zinc-800 border border-zinc-200 dark:border-zinc-700">
+                    <flux:heading size="sm" class="mb-2">Preview Tingkat Kelas (Kurikulum Merdeka)</flux:heading>
+                    <div class="grid grid-cols-2 gap-2">
+                        @foreach($phase_map as $grade => $phase)
+                            <div class="text-xs flex justify-between">
+                                <span class="text-zinc-500">Tingkat {{ $grade }}</span>
+                                <span class="font-bold">Fase {{ $phase }}</span>
+                            </div>
+                        @endforeach
+                    </div>
+                </div>
+            @endif
 
             <div class="flex justify-end gap-2">
                 <flux:modal.close>
