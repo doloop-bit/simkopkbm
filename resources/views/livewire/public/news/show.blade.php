@@ -43,6 +43,7 @@ new #[Layout('components.public.layouts.public')] class extends Component
 }; ?>
 
 <div>
+    <div x-data="{ lightboxOpen: false }">
     {{-- Hero Section --}}
     <div class="bg-slate-900 py-16 text-white relative">
         <div class="mx-auto max-w-4xl px-4 sm:px-6 lg:px-8 relative z-10">
@@ -83,12 +84,13 @@ new #[Layout('components.public.layouts.public')] class extends Component
             <article class="prose prose-lg max-w-none">
                 {{-- Featured Image --}}
                 @if ($article->featured_image_path)
-                    <div class="mb-8 overflow-hidden rounded-lg">
+                    <div class="mb-8 overflow-hidden rounded-lg cursor-pointer group" @click="lightboxOpen = true">
                         <img 
                             src="{{ Storage::url($article->featured_image_path) }}" 
                             alt="{{ $article->title }}"
-                            class="h-64 w-full object-cover md:h-80"
+                            class="h-64 w-full object-cover md:h-80 transition hover:opacity-95"
                         >
+                        <div class="mt-2 text-center text-sm text-slate-500 italic opacity-0 group-hover:opacity-100 transition">Klik untuk memperbesar</div>
                     </div>
                 @endif
 
@@ -192,6 +194,39 @@ new #[Layout('components.public.layouts.public')] class extends Component
                         </article>
                     @endforeach
                 </div>
+            </div>
+        </div>
+    @endif
+
+    {{-- Lightbox for Featured Image --}}
+    @if ($article->featured_image_path)
+        <div 
+            x-show="lightboxOpen" 
+            x-transition:enter="transition ease-out duration-300"
+            x-transition:enter-start="opacity-0"
+            x-transition:enter-end="opacity-100"
+            x-transition:leave="transition ease-in duration-200"
+            x-transition:leave-start="opacity-100"
+            x-transition:leave-end="opacity-0"
+            class="fixed inset-0 bg-black/95 z-50 flex items-center justify-center backdrop-blur-sm"
+            style="display: none;"
+            @keydown.escape.window="lightboxOpen = false"
+        >
+            <button 
+                @click="lightboxOpen = false"
+                class="absolute top-4 right-4 text-white/70 hover:text-white z-50 p-2 rounded-full hover:bg-white/10 transition"
+            >
+                <svg class="w-8 h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
+                </svg>
+            </button>
+
+            <div class="relative w-full h-full flex items-center justify-center p-4 md:p-12" @click.outside="lightboxOpen = false">
+                <img 
+                    src="{{ Storage::url($article->featured_image_path) }}" 
+                    alt="{{ $article->title }}"
+                    class="max-w-full max-h-[90vh] object-contain shadow-2xl rounded-sm"
+                >
             </div>
         </div>
     @endif

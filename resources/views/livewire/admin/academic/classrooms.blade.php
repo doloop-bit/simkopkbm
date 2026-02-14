@@ -16,9 +16,13 @@ new #[Layout('components.admin.layouts.app')] class extends Component {
     public string $name = '';
     public ?int $academic_year_id = null;
     public ?int $level_id = null;
+    public ?int $class_level = null;
     public ?int $homeroom_teacher_id = null;
 
     public ?Classroom $editing = null;
+
+    // Dynamic: max class_level options based on selected level
+    public array $classLevelOptions = [];
 
     public function mount(): void
     {
@@ -28,12 +32,44 @@ new #[Layout('components.admin.layouts.app')] class extends Component {
         }
     }
 
+    public function updatedLevelId(): void
+    {
+        $this->loadClassLevelOptions();
+        $this->class_level = null;
+    }
+
+    public function loadClassLevelOptions(): void
+    {
+        if (!$this->level_id) {
+            $this->classLevelOptions = [];
+            return;
+        }
+
+        $level = Level::find($this->level_id);
+        if (!$level || !$level->phase_map) {
+            $this->classLevelOptions = [];
+            return;
+        }
+
+        // Build options from phase_map keys
+        // e.g. {"1": "A", "2": "A", "3": "B"} → [1 => "Kelas 1 (Fase A)", 2 => "Kelas 2 (Fase A)", 3 => "Kelas 3 (Fase B)"]
+        $options = [];
+        foreach ($level->phase_map as $classLevel => $phase) {
+            $options[] = [
+                'value' => (int) $classLevel,
+                'label' => "Kelas {$classLevel} (Fase {$phase})",
+            ];
+        }
+        $this->classLevelOptions = $options;
+    }
+
     public function rules(): array
     {
         return [
             'name' => ['required', 'string', 'max:255'],
             'academic_year_id' => ['required', 'exists:academic_years,id'],
             'level_id' => ['required', 'exists:levels,id'],
+            'class_level' => ['nullable', 'integer', 'min:1', 'max:13'],
             'homeroom_teacher_id' => ['nullable', 'exists:users,id'],
         ];
     }
@@ -48,8 +84,9 @@ new #[Layout('components.admin.layouts.app')] class extends Component {
             Classroom::create($validated);
         }
 
-        $this->reset(['name', 'homeroom_teacher_id', 'editing']);
-        $this->dispatch('close-modal', 'classroom-modal');
+        $this->reset(['name', 'class_level', 'homeroom_teacher_id', 'editing', 'classLevelOptions']);
+        $this->dispatch('classroom-saved');
+        $this->modal('classroom-modal')->close();
     }
 
     public function edit(Classroom $classroom): void
@@ -58,9 +95,11 @@ new #[Layout('components.admin.layouts.app')] class extends Component {
         $this->name = $classroom->name;
         $this->academic_year_id = $classroom->academic_year_id;
         $this->level_id = $classroom->level_id;
+        $this->class_level = $classroom->class_level;
         $this->homeroom_teacher_id = $classroom->homeroom_teacher_id;
 
-        $this->dispatch('open-modal', 'classroom-modal');
+        $this->loadClassLevelOptions();
+        $this->modal('classroom-modal')->show();
     }
 
     public function delete(Classroom $classroom): void
@@ -109,6 +148,8 @@ new #[Layout('components.admin.layouts.app')] class extends Component {
                 <tr>
                     <th class="px-4 py-3 font-medium text-zinc-700 dark:text-zinc-300 border-b border-zinc-200 dark:border-zinc-700">Nama Kelas</th>
                     <th class="px-4 py-3 font-medium text-zinc-700 dark:text-zinc-300 border-b border-zinc-200 dark:border-zinc-700">Jenjang</th>
+                    <th class="px-4 py-3 font-medium text-zinc-700 dark:text-zinc-300 border-b border-zinc-200 dark:border-zinc-700">Tingkat</th>
+                    <th class="px-4 py-3 font-medium text-zinc-700 dark:text-zinc-300 border-b border-zinc-200 dark:border-zinc-700">Fase</th>
                     <th class="px-4 py-3 font-medium text-zinc-700 dark:text-zinc-300 border-b border-zinc-200 dark:border-zinc-700">Tahun Ajaran</th>
                     <th class="px-4 py-3 font-medium text-zinc-700 dark:text-zinc-300 border-b border-zinc-200 dark:border-zinc-700">Wali Kelas</th>
                     <th class="px-4 py-3 font-medium text-zinc-700 dark:text-zinc-300 border-b border-zinc-200 dark:border-zinc-700 text-right">Aksi</th>
@@ -124,13 +165,23 @@ new #[Layout('components.admin.layouts.app')] class extends Component {
                             <flux:badge size="sm" variant="outline">{{ $classroom->level->name }}</flux:badge>
                         </td>
                         <td class="px-4 py-3 text-zinc-600 dark:text-zinc-400">
+                            {{ $classroom->class_level ? 'Kelas ' . $classroom->class_level : '-' }}
+                        </td>
+                        <td class="px-4 py-3">
+                            @if($classroom->getPhase())
+                                <flux:badge size="sm" color="indigo">{{ $classroom->phase_label }}</flux:badge>
+                            @else
+                                <span class="text-zinc-400">-</span>
+                            @endif
+                        </td>
+                        <td class="px-4 py-3 text-zinc-600 dark:text-zinc-400">
                             {{ $classroom->academicYear->name }}
                         </td>
                         <td class="px-4 py-3 text-zinc-600 dark:text-zinc-400">
                             {{ $classroom->homeroomTeacher?->name ?? 'Belum Ditentukan' }}
                         </td>
                         <td class="px-4 py-3 text-right space-x-2">
-                            <flux:button size="sm" variant="ghost" icon="pencil-square" wire:click="edit({{ $classroom->id }})" />
+                            <flux:button size="sm" variant="ghost" icon="pencil-square" wire:click="edit({{ $classroom->id }})" x-on:click="$flux.modal('classroom-modal').show()" />
                             <flux:button size="sm" variant="ghost" icon="trash" class="text-red-500" wire:confirm="Yakin ingin menghapus kelas ini?" wire:click="delete({{ $classroom->id }})" />
                         </td>
                     </tr>
@@ -143,7 +194,7 @@ new #[Layout('components.admin.layouts.app')] class extends Component {
         {{ $classrooms->links() }}
     </div>
 
-    <flux:modal name="classroom-modal" class="max-w-md">
+    <flux:modal name="classroom-modal" class="max-w-md" x-on:classroom-saved.window="$flux.modal('classroom-modal').close()">
         <form wire:submit="save" class="space-y-6">
             <div>
                 <flux:heading size="lg">{{ $editing ? 'Edit Kelas' : 'Tambah Kelas Baru' }}</flux:heading>
@@ -153,19 +204,26 @@ new #[Layout('components.admin.layouts.app')] class extends Component {
             <flux:input wire:model="name" label="Nama Kelas (Contoh: Kelas 1 A, Paket B Smt 1)" required />
 
             <div class="grid grid-cols-2 gap-4">
-                <flux:select wire:model="level_id" label="Jenjang" required>
+                <flux:select wire:model.live="level_id" label="Jenjang" required>
                     <option value="">Pilih Jenjang</option>
                     @foreach($levels as $level)
                         <option value="{{ $level->id }}">{{ $level->name }}</option>
                     @endforeach
                 </flux:select>
 
-                <flux:select wire:model="academic_year_id" label="Tahun Ajaran" required>
-                    @foreach($years as $year)
-                        <option value="{{ $year->id }}">{{ $year->name }}</option>
+                <flux:select wire:model="class_level" label="Tingkat Kelas">
+                    <option value="">Pilih Tingkat</option>
+                    @foreach($classLevelOptions as $opt)
+                        <option value="{{ $opt['value'] }}">{{ $opt['label'] }}</option>
                     @endforeach
                 </flux:select>
             </div>
+
+            <flux:select wire:model="academic_year_id" label="Tahun Ajaran" required>
+                @foreach($years as $year)
+                    <option value="{{ $year->id }}">{{ $year->name }}</option>
+                @endforeach
+            </flux:select>
 
             <flux:select wire:model="homeroom_teacher_id" label="Wali Kelas (Opsional)">
                 <option value="">Pilih Wali Kelas</option>

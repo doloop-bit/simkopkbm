@@ -72,47 +72,43 @@
             <thead>
                 <tr>
                     <th style="width: 5%;">No</th>
-                    <th style="width: 25%;">Mata Pelajaran</th>
-                    <th style="width: 15%;">Predikat</th>
-                    <th style="width: 55%;">Deskripsi Capaian</th>
+                    <th style="width: 30%;">Mata Pelajaran</th>
+                    <th style="width: 10%;">Nilai Akhir</th>
+                    <th style="width: 55%;">Capaian Kompetensi</th>
                 </tr>
             </thead>
             <tbody>
-                @foreach($reportCard->scores['competencies'] ?? [] as $index => $comp)
+                @forelse($reportCard->scores['subject_grades'] ?? [] as $index => $grade)
                 <tr>
                     <td class="text-center">{{ $index + 1 }}</td>
-                    <td>{{ $comp['subject_name'] }}</td>
-                    <td class="text-center">
-                        <span class="level-badge {{ strtolower($comp['level']) }}">{{ $comp['level'] }}</span>
+                    <td>{{ $grade['subject_name'] }}</td>
+                    <td class="text-center" style="font-weight: bold; font-size: 13px;">{{ round($grade['grade']) }}</td>
+                    <td style="text-align: justify; font-size: 10px;">
+                        @if($grade['best_tp'])
+                            <div style="margin-bottom: 5px;">
+                                <strong>Menunjukkan penguasaan dalam:</strong> {{ $grade['best_tp'] }}
+                            </div>
+                        @endif
+                        
+                        @if($grade['improvement_tp'])
+                            <div>
+                                <strong>Perlu bantuan dalam:</strong> {{ $grade['improvement_tp'] }}
+                            </div>
+                        @endif
+
+                        @if(!$grade['best_tp'] && !$grade['improvement_tp'])
+                            <span class="text-zinc-400 italic">Belum ada deskripsi capaian</span>
+                        @endif
                     </td>
-                    <td style="text-align: justify;">{{ $comp['description'] }}</td>
                 </tr>
-                @endforeach
+                @empty
+                <tr>
+                    <td colspan="4" class="text-center font-italic">Tidak ada data nilai</td>
+                </tr>
+                @endforelse
             </tbody>
         </table>
 
-        <!-- P5 SECTION -->
-        <div class="section-title">B. Projek Penguatan Profil Pelajar Pancasila (P5)</div>
-        <table class="data-table">
-            <thead>
-                <tr>
-                    <th style="width: 30%;">Nama Projek</th>
-                    <th style="width: 20%;">Dimensi</th>
-                    <th style="width: 10%;">Capaian</th>
-                    <th style="width: 40%;">Catatan Projek</th>
-                </tr>
-            </thead>
-            <tbody>
-                @foreach($reportCard->scores['p5'] ?? [] as $p5)
-                <tr>
-                    <td>{{ $p5['project_name'] }}</td>
-                    <td>{{ str_replace('_', ' ', $p5['dimension']) }}</td>
-                    <td class="text-center">{{ $p5['level'] }}</td>
-                    <td>{{ $p5['description'] }}</td>
-                </tr>
-                @endforeach
-            </tbody>
-        </table>
     @endif
 
     <!-- EXTRA/ATTENDANCE SECTION -->

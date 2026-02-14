@@ -55,8 +55,8 @@ class StudentsExport implements FromQuery, WithHeadings, WithMapping
         return [
             $user->name,
             $user->email,
-            $profile->nis ?? '-',
-            $profile->nisn ?? '-',
+            $profile?->nis ?? '-',
+            $profile?->nisn ?? '-',
             $profile?->classroom?->level?->name ?? '-',
             $profile?->classroom?->name ?? '-',
             ucfirst($profile?->status ?? '-'),

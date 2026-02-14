@@ -47,27 +47,24 @@
         </flux:sidebar.group>
 
         <!-- Penilaian & Raport -->
-        <flux:sidebar.group expandable icon="pencil-square" :heading="__('Penilaian & Raport')" class="grid">
-            <flux:sidebar.item icon="pencil-square" :href="route('academic.grades')" :current="request()->routeIs('academic.grades')" wire:navigate.hover>
-                {{ __('Penilaian (Nilai)') }}
-            </flux:sidebar.item>
-            
+        <flux:sidebar.group expandable icon="pencil-square" :heading="__('Penilaian & Raport')" class="grid">            
             @if(auth()->user()->isAdmin() || auth()->user()->teachesPaudLevel())
                 <flux:sidebar.item icon="clipboard-document-check" :href="route('admin.assessments.competency')" :current="request()->routeIs('admin.assessments.competency')" wire:navigate.hover>
-                    {{ __('Penilaian Kompetensi') }}
+                    {{ __('Penilaian Kompetensi PAUD') }}
                 </flux:sidebar.item>
             @endif
 
-            <flux:sidebar.item icon="clipboard-document-list" :href="route('admin.assessments.p5')" :current="request()->routeIs('admin.assessments.p5')" wire:navigate.hover>
-                {{ __('Penilaian P5') }}
-            </flux:sidebar.item>
+
             <flux:sidebar.item icon="trophy" :href="route('admin.assessments.extracurricular')" :current="request()->routeIs('admin.assessments.extracurricular')" wire:navigate.hover>
                 {{ __('Penilaian Ekskul') }}
             </flux:sidebar.item>
             <flux:sidebar.item icon="calendar-days" :href="route('admin.assessments.attendance')" :current="request()->routeIs('admin.assessments.attendance')" wire:navigate.hover>
                 {{ __('Presensi Rapor') }}
             </flux:sidebar.item>
-            <flux:sidebar.item icon="document-text" :href="route('admin.report-card.create')" :current="request()->routeIs('admin.report-card.*')" wire:navigate.hover>
+            <flux:sidebar.item icon="clipboard-document-list" :href="route('admin.report-card.grading')" :current="request()->routeIs('admin.report-card.grading')" wire:navigate.hover>
+                {{ __('Input Nilai & TP') }}
+            </flux:sidebar.item>
+            <flux:sidebar.item icon="document-text" :href="route('admin.report-card.create')" :current="request()->routeIs('admin.report-card.create') || request()->routeIs('admin.report-card.preview')" wire:navigate.hover>
                 {{ __('Buat Rapor') }}
             </flux:sidebar.item>
         </flux:sidebar.group>
@@ -78,32 +75,17 @@
             <flux:sidebar.item icon="wallet" :href="route('financial.payments')" :current="request()->routeIs('financial.payments')" wire:navigate.hover>
                 {{ __('Transaksi') }}
             </flux:sidebar.item>
-            <flux:sidebar.item icon="document-text" :href="route('financial.billings')" :current="request()->routeIs('financial.billings')" wire:navigate.hover>
-                {{ __('Tagihan') }}
-            </flux:sidebar.item>
             <flux:sidebar.item icon="swatch" :href="route('financial.categories')" :current="request()->routeIs('financial.categories')" wire:navigate.hover>
                 {{ __('Kategori Biaya') }}
             </flux:sidebar.item>
         </flux:sidebar.group>
 
-        <!-- Konten Web -->
-        <flux:sidebar.group expandable icon="globe-alt" :heading="__('Konten Web')" class="grid">
-            <flux:sidebar.item icon="building-office-2" :href="route('admin.school-profile.edit')" :current="request()->routeIs('admin.school-profile.*')" wire:navigate.hover>
-                {{ __('Profil Sekolah') }}
-            </flux:sidebar.item>
-            <flux:sidebar.item icon="newspaper" :href="route('admin.news.index')" :current="request()->routeIs('admin.news.*')" wire:navigate.hover>
-                {{ __('Berita & Artikel') }}
-            </flux:sidebar.item>
-            <flux:sidebar.item icon="photo" :href="route('admin.gallery.index')" :current="request()->routeIs('admin.gallery.*')" wire:navigate.hover>
-                {{ __('Galeri') }}
-            </flux:sidebar.item>
-            <flux:sidebar.item icon="academic-cap" :href="route('admin.programs.index')" :current="request()->routeIs('admin.programs.*')" wire:navigate.hover>
-                {{ __('Program Pendidikan') }}
-            </flux:sidebar.item>
-            <flux:sidebar.item icon="envelope" :href="route('admin.contact-inquiries.index')" :current="request()->routeIs('admin.contact-inquiries.*')" wire:navigate.hover>
-                {{ __('Pesan Kontak') }}
-            </flux:sidebar.item>
-        </flux:sidebar.group>
+
+        <!-- Konten Web - Moved to horizontal header navigation -->
+        <flux:sidebar.item icon="globe-alt" :href="route('admin.school-profile.edit')" :current="request()->routeIs('admin.school-profile.*') || request()->routeIs('admin.news.*') || request()->routeIs('admin.gallery.*') || request()->routeIs('admin.programs.*') || request()->routeIs('admin.contact-inquiries.*')" wire:navigate.hover>
+            {{ __('Konten Web') }}
+        </flux:sidebar.item>
+
 
         <!-- Laporan -->
         <flux:sidebar.item icon="chart-bar" :href="route('reports')" :current="request()->routeIs('reports')" wire:navigate.hover class="mt-3">

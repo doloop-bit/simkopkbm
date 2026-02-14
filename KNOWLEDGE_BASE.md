@@ -278,15 +278,36 @@ database/
 
 ### **Learning Phases (Fase Pembelajaran)**
 
-| Phase | Education Level | Grade |
-|-------|-----------------|-------|
-| **-** | PAUD | TK A, TK B |
-| **A** | SD | Kelas 1-2 |
-| **B** | SD | Kelas 3-4 |
-| **C** | SD | Kelas 5-6 |
-| **D** | SMP | Kelas 7-9 |
-| **E** | SMA/SMK | Kelas 10 |
-| **F** | SMA/SMK | Kelas 11-12 |
+| Phase | Paket | Class Level (Tingkat Kelas) |
+|-------|-------|-----------------------------|
+| **-** | PAUD | - |
+| **A** | Paket A (SD) | Kelas 1-2 |
+| **B** | Paket A (SD) | Kelas 3-4 |
+| **C** | Paket A (SD) | Kelas 5-6 |
+| **D** | Paket B (SMP) | Kelas 1-3 |
+| **E** | Paket C (SMA) | Kelas 1 |
+| **F** | Paket C (SMA) | Kelas 2-3 |
+
+### **CP → TP Hierarchy (Implemented)**
+
+```
+Level (Paket A/B/C) → has phase_map JSON
+  └── Classroom → has class_level (tingkat kelas)
+        └── resolves to Phase (Fase A-F) via level.phase_map
+              └── CP (learning_achievements) per Fase per Subject
+                    └── TP (subject_tps) per CP
+```
+
+**Key tables:**
+- `levels.phase_map` — JSON mapping class_level → phase, e.g. `{"1": "A", "2": "A", "3": "B"}`
+- `classrooms.class_level` — Integer representing "tingkat kelas" within the paket
+- `learning_achievements` — CP per subject per phase (`subject_id` + `phase`)
+- `subject_tps` — TP under a CP (`learning_achievement_id`)
+
+**Phase resolution flow (for grading form):**
+1. Teacher selects Classroom → `Classroom->getPhase()` resolves the phase
+2. Based on phase + subject → find CP (learning_achievement)
+3. Load TPs from that CP → show in dropdown
 
 ### **Profil Pelajar Pancasila (P5) - 6 Dimensions**
 
