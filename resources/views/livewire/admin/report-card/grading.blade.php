@@ -253,7 +253,7 @@ new #[Layout('components.admin.layouts.app')] class extends Component {
         </div>
     </div>
 
-    {{-- Compact Usage Guide --}}
+    <!-- Compact Usage Guide 
     <div class="mb-6 p-3 bg-blue-50 dark:bg-blue-950/30 rounded-lg border border-blue-200 dark:border-blue-800">
         <div class="flex items-start gap-2">
             <flux:icon icon="information-circle"
@@ -288,7 +288,7 @@ new #[Layout('components.admin.layouts.app')] class extends Component {
                 </div>
             </div>
         </div>
-    </div>
+    </div> -->
 
     <div class="grid grid-cols-1 md:grid-cols-4 gap-4 mb-6">
         <flux:select wire:model.live="academic_year_id" label="Tahun Ajaran">

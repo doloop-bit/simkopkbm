@@ -3,6 +3,7 @@
 namespace Database\Seeders;
 
 use App\Models\ExtracurricularActivity;
+use App\Models\Level;
 use Illuminate\Database\Seeder;
 
 class ExtracurricularActivitiesSeeder extends Seeder
@@ -75,7 +76,10 @@ class ExtracurricularActivitiesSeeder extends Seeder
             ],
         ];
 
+        $levelId = Level::where('education_level', '!=', 'PAUD')->first()?->id;
+
         foreach ($activities as $activity) {
+            $activity['level_id'] = $levelId;
             ExtracurricularActivity::create($activity);
         }
     }

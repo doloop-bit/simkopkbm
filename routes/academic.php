@@ -11,4 +11,5 @@ Route::middleware(['auth', 'verified', 'role:admin'])->prefix('admin')->group(fu
     Volt::route('/academic/assignments', 'admin.academic.teacher-assignments')->name('academic.assignments');
     Volt::route('/academic/attendance', 'admin.academic.attendance')->name('academic.attendance');
     Volt::route('/academic/grades', 'admin.academic.grades')->name('academic.grades');
+    Volt::route('/academic/extracurriculars', 'admin.academic.extracurriculars')->name('academic.extracurriculars');
 });

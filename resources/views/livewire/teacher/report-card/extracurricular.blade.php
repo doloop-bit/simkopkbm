@@ -82,7 +82,7 @@ new #[Layout('components.teacher.layouts.app')] class extends Component {
         foreach ($students as $student) {
             if (!isset($this->assessments_data[$student->id])) {
                 $this->assessments_data[$student->id] = [
-                    'level' => 'BSH',
+                    'level' => 'Baik',
                     'description' => '',
                 ];
             }
@@ -130,6 +130,8 @@ new #[Layout('components.teacher.layouts.app')] class extends Component {
         $assignedClassroomIds = $teacher->getAssignedClassroomIds();
 
         $students = [];
+        $activities = collect();
+
         if ($this->classroom_id) {
             $students = User::where('role', 'siswa')
                 ->whereHas('profiles.profileable', function ($q) {
@@ -137,6 +139,14 @@ new #[Layout('components.teacher.layouts.app')] class extends Component {
                 })
                 ->orderBy('name')
                 ->get();
+
+            $classroom = Classroom::find($this->classroom_id);
+            if ($classroom) {
+                $activities = ExtracurricularActivity::where('is_active', true)
+                    ->where('level_id', $classroom->level_id)
+                    ->orderBy('name')
+                    ->get();
+            }
         }
 
         return [
@@ -145,7 +155,7 @@ new #[Layout('components.teacher.layouts.app')] class extends Component {
                 ->when($this->academic_year_id, fn($q) => $q->where('academic_year_id', $this->academic_year_id))
                 ->orderBy('name')
                 ->get(),
-            'activities' => ExtracurricularActivity::where('is_active', true)->orderBy('name')->get(),
+            'activities' => $activities,
             'students' => $students,
             'selectedActivity' => $this->activity_id ? ExtracurricularActivity::find($this->activity_id) : null,
         ];
@@ -210,20 +220,20 @@ new #[Layout('components.teacher.layouts.app')] class extends Component {
     <!-- Competency Level Legend -->
     <div class="flex flex-wrap gap-4 mb-4 text-sm">
         <div class="flex items-center gap-2">
-            <span class="w-3 h-3 rounded-full bg-red-500"></span>
-            <span class="text-zinc-600 dark:text-zinc-400">BB - Belum Berkembang</span>
-        </div>
-        <div class="flex items-center gap-2">
-            <span class="w-3 h-3 rounded-full bg-yellow-500"></span>
-            <span class="text-zinc-600 dark:text-zinc-400">MB - Mulai Berkembang</span>
+            <span class="w-3 h-3 rounded-full bg-green-500"></span>
+            <span class="text-zinc-600 dark:text-zinc-400">Sangat Baik</span>
         </div>
         <div class="flex items-center gap-2">
             <span class="w-3 h-3 rounded-full bg-blue-500"></span>
-            <span class="text-zinc-600 dark:text-zinc-400">BSH - Berkembang Sesuai Harapan</span>
+            <span class="text-zinc-600 dark:text-zinc-400">Baik</span>
         </div>
         <div class="flex items-center gap-2">
-            <span class="w-3 h-3 rounded-full bg-green-500"></span>
-            <span class="text-zinc-600 dark:text-zinc-400">SB - Sangat Berkembang</span>
+            <span class="w-3 h-3 rounded-full bg-yellow-500"></span>
+            <span class="text-zinc-600 dark:text-zinc-400">Cukup</span>
+        </div>
+        <div class="flex items-center gap-2">
+            <span class="w-3 h-3 rounded-full bg-red-500"></span>
+            <span class="text-zinc-600 dark:text-zinc-400">Perlu Ditingkatkan</span>
         </div>
     </div>
 
@@ -244,11 +254,11 @@ new #[Layout('components.teacher.layouts.app')] class extends Component {
                                 {{ $student->name }}
                             </td>
                             <td class="px-4 py-3">
-                                <flux:select wire:model="assessments_data.{{ $student->id }}.level" class="text-center">
-                                    <option value="BB">BB</option>
-                                    <option value="MB">MB</option>
-                                    <option value="BSH">BSH</option>
-                                    <option value="SB">SB</option>
+                                <flux:select wire:model="assessments_data.{{ $student->id }}.level">
+                                    <option value="Sangat Baik">Sangat Baik</option>
+                                    <option value="Baik">Baik</option>
+                                    <option value="Cukup">Cukup</option>
+                                    <option value="Perlu Ditingkatkan">Perlu Ditingkatkan</option>
                                 </flux:select>
                             </td>
                             <td class="px-4 py-3">

@@ -58,6 +58,10 @@
                     :current="request()->routeIs('academic.attendance')" wire:navigate.hover>
                     {{ __('Presensi') }}
                 </flux:sidebar.item>
+                <flux:sidebar.item icon="trophy" :href="route('academic.extracurriculars')"
+                    :current="request()->routeIs('academic.extracurriculars')" wire:navigate.hover>
+                    {{ __('Ekstrakurikuler') }}
+                </flux:sidebar.item>
             </flux:sidebar.group>
         @endif
 

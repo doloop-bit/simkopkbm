@@ -24,19 +24,21 @@
 ## 📌 Application Overview
 
 ### **What is SIMKOPKBM?**
+
 **Sistem Informasi Manajemen Koperasi Pendidikan KB/TK Baitusyukur Malang** - A comprehensive school management system for KB/TK (Kelompok Bermain/Taman Kanak-kanak) Baitusyukur Malang.
 
 ### **Core Features**
-| Feature | Description |
-|---------|-------------|
-| **Student Management** | Student data, enrollment, profiles |
-| **Academic Management** | Years, levels, classrooms, subjects |
-| **Assessment System** | Grades (numeric) & Competency (Kurikulum Merdeka) |
-| **Report Card Generation** | PDF report cards |
-| **Financial Management** | Billing, payments, transactions |
-| **PTK Management** | Teacher and staff data |
-| **Public Website** | School profile, news, gallery, programs, contact form |
-| **SEO Optimization** | Sitemap.xml, meta tags, slug-based URLs |
+
+| Feature                    | Description                                           |
+| -------------------------- | ----------------------------------------------------- |
+| **Student Management**     | Student data, enrollment, profiles                    |
+| **Academic Management**    | Years, levels, classrooms, subjects                   |
+| **Assessment System**      | Grades (numeric) & Competency (Kurikulum Merdeka)     |
+| **Report Card Generation** | PDF report cards                                      |
+| **Financial Management**   | Billing, payments, transactions                       |
+| **PTK Management**         | Teacher and staff data                                |
+| **Public Website**         | School profile, news, gallery, programs, contact form |
+| **SEO Optimization**       | Sitemap.xml, meta tags, slug-based URLs               |
 
 ---
 
@@ -46,23 +48,25 @@
 
 ### **Backend**
 
-| Technology | Version | Purpose | Notes |
-|------------|---------|---------|-------|
-| PHP | **8.4.11** | Runtime | - |
-| Laravel | **12.48.1** | Framework | - |
-| Livewire | **4.0.0** | Reactive Components | ⚠️ Major upgrade from v3 |
-| Livewire Volt | **1.10.1** | Single-file components | Optional with Livewire 4 (see notes below) |
-| Livewire Blaze | **1.0.0-beta.1** | Performance optimization | New addition |
-| Laravel Fortify | **1.33.0** | Authentication | - |
+| Technology      | Version          | Purpose                  | Notes                                      |
+| --------------- | ---------------- | ------------------------ | ------------------------------------------ |
+| PHP             | **8.4.11**       | Runtime                  | -                                          |
+| Laravel         | **12.48.1**      | Framework                | -                                          |
+| Livewire        | **4.0.0**        | Reactive Components      | ⚠️ Major upgrade from v3                   |
+| Livewire Volt   | **1.10.1**       | Single-file components   | Optional with Livewire 4 (see notes below) |
+| Livewire Blaze  | **1.0.0-beta.1** | Performance optimization | New addition                               |
+| Laravel Fortify | **1.33.0**       | Authentication           | -                                          |
 
 #### 📝 Notes on Livewire 4 vs Volt
 
 **Livewire 4 Native Single-File Components:**
+
 - Livewire 4 now natively supports combining logic and HTML in single files
 - Volt is **optional** but still useful for its syntactic sugar and functional API
 - Current codebase uses **Volt pattern** for consistency
 
 **Recommended approach:**
+
 ```blade
 {{-- Continue using Volt pattern for new components --}}
 <?php
@@ -77,22 +81,23 @@ new #[Layout('components.admin.layouts.app')] class extends Component {
 
 ### **Frontend**
 
-| Technology | Version | Purpose | Notes |
-|------------|---------|---------|-------|
-| Tailwind CSS | **4.1.11** | Styling | v4 with new config syntax |
-| Flux UI | **2.10.2** | Primary UI Library | **FREE version** (limited components) |
-| TallStack UI | **2.15.1** | Secondary UI Library | Supplements Flux limitations |
-| Alpine.js | **3.x** | JavaScript | Included via Livewire |
-| Vite | **7.x** | Asset Bundling | - |
+| Technology   | Version    | Purpose              | Notes                                 |
+| ------------ | ---------- | -------------------- | ------------------------------------- |
+| Tailwind CSS | **4.1.11** | Styling              | v4 with new config syntax             |
+| Flux UI      | **2.10.2** | Primary UI Library   | **FREE version** (limited components) |
+| TallStack UI | **2.15.1** | Secondary UI Library | Supplements Flux limitations          |
+| Alpine.js    | **3.x**    | JavaScript           | Included via Livewire                 |
+| Vite         | **7.x**    | Asset Bundling       | -                                     |
 
 ### **Database**
 
-| Environment | Engine | Notes |
-|-------------|--------|-------|
+| Environment           | Engine       | Notes                         |
+| --------------------- | ------------ | ----------------------------- |
 | **Local/Development** | SQLite 3.49+ | URL: `http://simkopkbm.test1` |
-| **Production** | MySQL 8.x | Full RDBMS features |
+| **Production**        | MySQL 8.x    | Full RDBMS features           |
 
 ⚠️ **Cross-Database Compatibility Notes:**
+
 - Avoid SQLite-specific or MySQL-specific SQL syntax
 - Use Laravel Query Builder or Eloquent instead of raw SQL
 - Test migrations work on both engines before pushing
@@ -100,11 +105,11 @@ new #[Layout('components.admin.layouts.app')] class extends Component {
 
 ### **Additional Packages**
 
-| Package | Version | Purpose |
-|---------|---------|---------|
-| `maatwebsite/excel` | 3.1.x | Excel import/export |
-| `intervention/image-laravel` | 1.5.x | Image processing |
-| `barryvdh/laravel-dompdf` | - | PDF generation |
+| Package                      | Version | Purpose             |
+| ---------------------------- | ------- | ------------------- |
+| `maatwebsite/excel`          | 3.1.x   | Excel import/export |
+| `intervention/image-laravel` | 1.5.x   | Image processing    |
+| `barryvdh/laravel-dompdf`    | -       | PDF generation      |
 
 ---
 
@@ -160,6 +165,7 @@ This project uses **TWO UI libraries**. Follow this priority:
 > 📖 **Full documentation:** https://tallstackui.com/docs
 
 **Available Components Include:**
+
 - **Form:** Date Picker, Time Picker, Color Picker, PIN Input, Range, Upload, Select (searchable)
 - **UI:** Table, Card, Avatar, Badge, Alert, Banner, Dropdown, Tooltip, Stats
 - **Navigation:** Tabs, Steps/Wizard, Slide, Drawer
@@ -167,6 +173,7 @@ This project uses **TWO UI libraries**. Follow this priority:
 - **Utility:** Clipboard, Floating, Errors
 
 **Usage Pattern:**
+
 ```blade
 {{-- TallStack components use x-ts- prefix --}}
 <x-ts-date-picker wire:model="date" label="Date" />
@@ -177,13 +184,13 @@ This project uses **TWO UI libraries**. Follow this priority:
 
 ### **When to Use Which**
 
-| Need | First Choice | Fallback |
-|------|--------------|----------|
-| Button, Input, Select, Modal, Textarea | **Flux** | - |
-| Date/Time Picker, Searchable Select | **TallStack** | - |
-| Table, Card, Badge, Avatar, Stats | **TallStack** | Custom Tailwind |
-| Toast/Notification | **Flux** | TallStack |
-| Tabs, Steps, Wizard | **TallStack** | - |
+| Need                                   | First Choice  | Fallback        |
+| -------------------------------------- | ------------- | --------------- |
+| Button, Input, Select, Modal, Textarea | **Flux**      | -               |
+| Date/Time Picker, Searchable Select    | **TallStack** | -               |
+| Table, Card, Badge, Avatar, Stats      | **TallStack** | Custom Tailwind |
+| Toast/Notification                     | **Flux**      | TallStack       |
+| Tabs, Steps, Wizard                    | **TallStack** | -               |
 
 ### **Page Structure Template**
 
@@ -212,13 +219,13 @@ This project uses **TWO UI libraries**. Follow this priority:
 
 ### **Color Conventions**
 
-| Purpose | Light Mode | Dark Mode |
-|---------|------------|-----------|
-| Background | `bg-white` | `dark:bg-zinc-900` |
-| Card/Panel | `bg-zinc-50` | `dark:bg-zinc-800` |
-| Text Primary | `text-zinc-900` | `dark:text-white` |
-| Text Secondary | `text-zinc-600` | `dark:text-zinc-400` |
-| Border | `border-zinc-200` | `dark:border-zinc-700` |
+| Purpose        | Light Mode        | Dark Mode              |
+| -------------- | ----------------- | ---------------------- |
+| Background     | `bg-white`        | `dark:bg-zinc-900`     |
+| Card/Panel     | `bg-zinc-50`      | `dark:bg-zinc-800`     |
+| Text Primary   | `text-zinc-900`   | `dark:text-white`      |
+| Text Secondary | `text-zinc-600`   | `dark:text-zinc-400`   |
+| Border         | `border-zinc-200` | `dark:border-zinc-700` |
 
 ---
 
@@ -269,24 +276,24 @@ database/
 
 ### **Competency Levels (Capaian Kompetensi)**
 
-| Code | Name | Description |
-|------|------|-------------|
-| **BB** | Belum Berkembang | Student has not shown expected achievement |
-| **MB** | Mulai Berkembang | Student is starting to show expected achievement |
-| **BSH** | Berkembang Sesuai Harapan | Student shows achievement as expected |
-| **SB** | Sangat Berkembang | Student exceeds expected achievement |
+| Code    | Name                      | Description                                      |
+| ------- | ------------------------- | ------------------------------------------------ |
+| **BB**  | Belum Berkembang          | Student has not shown expected achievement       |
+| **MB**  | Mulai Berkembang          | Student is starting to show expected achievement |
+| **BSH** | Berkembang Sesuai Harapan | Student shows achievement as expected            |
+| **SB**  | Sangat Berkembang         | Student exceeds expected achievement             |
 
 ### **Learning Phases (Fase Pembelajaran)**
 
-| Phase | Paket | Class Level (Tingkat Kelas) |
-|-------|-------|-----------------------------|
-| **-** | PAUD | - |
-| **A** | Paket A (SD) | Kelas 1-2 |
-| **B** | Paket A (SD) | Kelas 3-4 |
-| **C** | Paket A (SD) | Kelas 5-6 |
-| **D** | Paket B (SMP) | Kelas 1-3 |
-| **E** | Paket C (SMA) | Kelas 1 |
-| **F** | Paket C (SMA) | Kelas 2-3 |
+| Phase | Paket         | Class Level (Tingkat Kelas) |
+| ----- | ------------- | --------------------------- |
+| **-** | PAUD          | -                           |
+| **A** | Paket A (SD)  | Kelas 1-2                   |
+| **B** | Paket A (SD)  | Kelas 3-4                   |
+| **C** | Paket A (SD)  | Kelas 5-6                   |
+| **D** | Paket B (SMP) | Kelas 1-3                   |
+| **E** | Paket C (SMA) | Kelas 1                     |
+| **F** | Paket C (SMA) | Kelas 2-3                   |
 
 ### **CP → TP Hierarchy (Implemented)**
 
@@ -299,12 +306,14 @@ Level (Paket A/B/C) → has phase_map JSON
 ```
 
 **Key tables:**
+
 - `levels.phase_map` — JSON mapping class_level → phase, e.g. `{"1": "A", "2": "A", "3": "B"}`
 - `classrooms.class_level` — Integer representing "tingkat kelas" within the paket
 - `learning_achievements` — CP per subject per phase (`subject_id` + `phase`)
 - `subject_tps` — TP under a CP (`learning_achievement_id`)
 
 **Phase resolution flow (for grading form):**
+
 1. Teacher selects Classroom → `Classroom->getPhase()` resolves the phase
 2. Based on phase + subject → find CP (learning_achievement)
 3. Load TPs from that CP → show in dropdown
@@ -329,15 +338,17 @@ Level (Paket A/B/C) → has phase_map JSON
 
 ### **Assessment Types by Level**
 
-| Level | Competency Assessment | P5 Assessment | Extracurricular | Notes |
-|-------|----------------------|---------------|-----------------|-------|
-| **PAUD** | BB/MB/BSH/SB | BB/MB/BSH/SB | BB/MB/BSH/SB | Uses 4-level scale for all assessments |
-| **SD/SMP/SMA** | Numeric grades (0-100) | BB/MB/BSH/SB | BB/MB/BSH/SB | Competency uses numbers, P5 & Ekskul use 4-level scale |
+| Level          | Competency Assessment  | P5 Assessment | Extracurricular | Notes                                                  |
+| -------------- | ---------------------- | ------------- | --------------- | ------------------------------------------------------ |
+| **PAUD**       | BB/MB/BSH/SB           | BB/MB/BSH/SB  | -               | PAUD has no extracurricular                            |
+| **SD/SMP/SMA** | Numeric grades (0-100) | BB/MB/BSH/SB  | Descriptive     | P5 uses BB/MB/BSH/SB, Ekskul uses Baik/Sangat Baik/etc |
 
 **Additional Notes:**
+
 - **PAUD Developmental Assessment**: Uses narrative descriptions (6 aspects: Agama, Fisik-Motorik, Kognitif, Bahasa, Sosial-Emosional, Seni)
 - **Competency Assessment**: PAUD-only feature (filtered by `education_level = 'PAUD'`)
-- **P5 Assessment**: Available for all education levels (SD/SMP/SMA/PAUD)
+- **P5 Assessment**: Available for all education levels (SD/SMP/SMA/PAUD), uses BB/MB/BSH/SB scale.
+- **Extracurricular Assessment**: Uses descriptive scale (Sangat Baik, Baik, Cukup, Perlu Ditingkatkan).
 
 ---
 
@@ -407,9 +418,9 @@ public function loadStudents(): void
         $this->students = [];
         return;
     }
-    
+
     $this->students = User::where('role', 'siswa')
-        ->whereHas('profiles.profileable', fn($q) => 
+        ->whereHas('profiles.profileable', fn($q) =>
             $q->where('classroom_id', $this->classroom_id)
         )
         ->get();
@@ -429,7 +440,7 @@ public function save(): void
             );
         }
     });
-    
+
     \Flux::toast('Data saved successfully.');
 }
 ```
@@ -446,33 +457,33 @@ public function save(): void
 
 **Examples:**
 
-| Route Name | URL | Purpose |
-|------------|-----|---------|
-| `dashboard` | `/admin/dashboard` | Dashboard |
-| `students.index` | `/admin/students` | Student list |
-| `academic.grades` | `/admin/academic/grades` | Numeric grades |
+| Route Name                     | URL                             | Purpose               |
+| ------------------------------ | ------------------------------- | --------------------- |
+| `dashboard`                    | `/admin/dashboard`              | Dashboard             |
+| `students.index`               | `/admin/students`               | Student list          |
+| `academic.grades`              | `/admin/academic/grades`        | Numeric grades        |
 | `admin.assessments.competency` | `/admin/assessments/competency` | Competency assessment |
-| `admin.report-card.create` | `/admin/report-card/create` | Create report card |
+| `admin.report-card.create`     | `/admin/report-card/create`     | Create report card    |
 
 ### **Route File Mapping**
 
-| File | Routes |
-|------|--------|
-| `routes/web.php` | Main routes (imports all other route files) |
-| `routes/public.php` | Public website routes (homepage, about, news, programs, gallery, contact, sitemap) |
-| `routes/academic.php` | Academic module routes |
-| `routes/students.php` | Student module routes |
-| `routes/assessments.php` | Assessment module routes (4 assessment forms) |
-| `routes/report-card.php` | Report card routes |
-| `routes/financial.php` | Financial module routes |
-| `routes/news.php` | Admin news management |
-| `routes/programs.php` | Admin programs management |
-| `routes/gallery.php` | Admin gallery management |
-| `routes/school-profile.php` | Admin school profile management |
-| `routes/contact-inquiries.php` | Admin contact inquiries |
-| `routes/ptk.php` | PTK (Teacher & Staff) management |
-| `routes/settings.php` | System settings |
-| `routes/teacher.php` | Teacher-specific routes |
+| File                           | Routes                                                                             |
+| ------------------------------ | ---------------------------------------------------------------------------------- |
+| `routes/web.php`               | Main routes (imports all other route files)                                        |
+| `routes/public.php`            | Public website routes (homepage, about, news, programs, gallery, contact, sitemap) |
+| `routes/academic.php`          | Academic module routes                                                             |
+| `routes/students.php`          | Student module routes                                                              |
+| `routes/assessments.php`       | Assessment module routes (4 assessment forms)                                      |
+| `routes/report-card.php`       | Report card routes                                                                 |
+| `routes/financial.php`         | Financial module routes                                                            |
+| `routes/news.php`              | Admin news management                                                              |
+| `routes/programs.php`          | Admin programs management                                                          |
+| `routes/gallery.php`           | Admin gallery management                                                           |
+| `routes/school-profile.php`    | Admin school profile management                                                    |
+| `routes/contact-inquiries.php` | Admin contact inquiries                                                            |
+| `routes/ptk.php`               | PTK (Teacher & Staff) management                                                   |
+| `routes/settings.php`          | System settings                                                                    |
+| `routes/teacher.php`           | Teacher-specific routes                                                            |
 
 ### **Sidebar Navigation Groups**
 
@@ -489,10 +500,10 @@ public function save(): void
 Edit: `resources/views/components/admin/sidebar.blade.php`
 
 ```blade
-<flux:sidebar.item 
-    icon="icon-name" 
-    :href="route('route.name')" 
-    :current="request()->routeIs('route.*')" 
+<flux:sidebar.item
+    icon="icon-name"
+    :href="route('route.name')"
+    :current="request()->routeIs('route.*')"
     wire:navigate.hover
 >
     {{ __('Menu Label') }}
@@ -518,6 +529,7 @@ Edit: `resources/views/components/admin/sidebar.blade.php`
 ### **Standard Columns**
 
 Every table should have:
+
 - `id` - Primary key (auto-increment)
 - `created_at` - Timestamp
 - `updated_at` - Timestamp
@@ -538,17 +550,17 @@ $table->enum('education_level', ['PAUD', 'SD', 'SMP', 'SMA']);
 
 ### **Kurikulum Merdeka Tables**
 
-| Table | Purpose |
-|-------|----------|
-| `competency_assessments` | Student competency assessments (BB/MB/BSH/SB) |
-| `p5_projects` | P5 project definitions |
-| `p5_assessments` | P5 student assessments |
-| `extracurricular_activities` | Extracurricular activity definitions |
-| `extracurricular_assessments` | Student extracurricular assessments |
-| `developmental_aspects` | PAUD developmental aspect definitions |
-| `developmental_assessments` | PAUD student developmental assessments |
-| `report_attendances` | Attendance summary for report cards |
-| `learning_achievements` | Learning achievement records |
+| Table                         | Purpose                                       |
+| ----------------------------- | --------------------------------------------- |
+| `competency_assessments`      | Student competency assessments (BB/MB/BSH/SB) |
+| `p5_projects`                 | P5 project definitions                        |
+| `p5_assessments`              | P5 student assessments                        |
+| `extracurricular_activities`  | Extracurricular activity definitions          |
+| `extracurricular_assessments` | Student extracurricular assessments           |
+| `developmental_aspects`       | PAUD developmental aspect definitions         |
+| `developmental_assessments`   | PAUD student developmental assessments        |
+| `report_attendances`          | Attendance summary for report cards           |
+| `learning_achievements`       | Learning achievement records                  |
 
 ### **Cross-Database Compatibility**
 
@@ -645,6 +657,7 @@ php artisan make:volt path/component-name --class
 - [x] Seeders (developmental aspects, P5 projects, extracurricular activities)
 - [x] **Competency assessment form** (`competency-assessment.blade.php`)
 - [x] **P5 assessment form** (`p5-assessment.blade.php`)
+- [x] **Extracurricular management** (`extracurriculars.blade.php`) - Admin only
 - [x] **Extracurricular assessment form** (`extracurricular-assessment.blade.php`)
 - [x] **Attendance input form** for report cards (`attendance-input.blade.php`)
 - [x] Sidebar navigation (all 4 assessment links)
@@ -677,19 +690,19 @@ php artisan make:volt path/component-name --class
 
 ### **Public Pages**
 
-| Route | File | Description |
-|-------|------|-------------|
-| `/` | `public.homepage` | Homepage with hero, stats, programs preview |
-| `/tentang-kami` | `public.about.index` | About school page |
-| `/struktur-organisasi` | `public.about.staff` | Staff and organizational structure |
-| `/fasilitas` | `public.about.facilities` | School facilities |
-| `/program-pendidikan` | `public.programs.index` | Programs listing |
-| `/program-pendidikan/{slug}` | `public.programs.show` | Program detail page |
-| `/berita` | `public.news.index` | News/articles listing |
-| `/berita/{slug}` | `public.news.show` | News article detail |
-| `/galeri` | `public.gallery` | Photo gallery |
-| `/kontak` | `public.contact` | Contact form |
-| `/sitemap.xml` | `sitemap` | SEO sitemap (XML) |
+| Route                        | File                      | Description                                 |
+| ---------------------------- | ------------------------- | ------------------------------------------- |
+| `/`                          | `public.homepage`         | Homepage with hero, stats, programs preview |
+| `/tentang-kami`              | `public.about.index`      | About school page                           |
+| `/struktur-organisasi`       | `public.about.staff`      | Staff and organizational structure          |
+| `/fasilitas`                 | `public.about.facilities` | School facilities                           |
+| `/program-pendidikan`        | `public.programs.index`   | Programs listing                            |
+| `/program-pendidikan/{slug}` | `public.programs.show`    | Program detail page                         |
+| `/berita`                    | `public.news.index`       | News/articles listing                       |
+| `/berita/{slug}`             | `public.news.show`        | News article detail                         |
+| `/galeri`                    | `public.gallery`          | Photo gallery                               |
+| `/kontak`                    | `public.contact`          | Contact form                                |
+| `/sitemap.xml`               | `sitemap`                 | SEO sitemap (XML)                           |
 
 ### **SEO Implementation**
 
@@ -701,6 +714,7 @@ php artisan make:volt path/component-name --class
 ### **Admin CMS**
 
 All public content is manageable via admin panel:
+
 - School Profile editor
 - News/Articles CRUD
 - Gallery photo management with WebP optimization
@@ -713,21 +727,22 @@ All public content is manageable via admin panel:
 
 ### **Fitur Surat (Letter Feature)**
 
-> *Planned: Official letter generation for school administration*
+> _Planned: Official letter generation for school administration_
 
 **Requirements:**
+
 - Create, edit, and print official letters
 - Pre-defined templates for common letter types
 - WYSIWYG editor for rich text editing
 
 **WYSIWYG Editor Options (To Be Decided):**
 
-| Option | Notes |
-|--------|-------|
-| **Tiptap** | Modern, Livewire-friendly, good customization |
-| **TinyMCE** | Feature-rich, widely used |
-| **Quill** | Lightweight, open-source |
-| **CKEditor** | Enterprise features, collaborative editing |
+| Option       | Notes                                         |
+| ------------ | --------------------------------------------- |
+| **Tiptap**   | Modern, Livewire-friendly, good customization |
+| **TinyMCE**  | Feature-rich, widely used                     |
+| **Quill**    | Lightweight, open-source                      |
+| **CKEditor** | Enterprise features, collaborative editing    |
 
 **Recommended: Tiptap** - Best integration with Laravel Livewire ecosystem.
 
@@ -746,14 +761,15 @@ All public content is manageable via admin panel:
 - **Web Server**: Laragon (Windows)
 - **Database Engine**: SQLite (Local)
 - **Test Credentials**:
-  - **Username**: `admin@pkbm.com`
-  - **Password**: `password`
+    - **Username**: `admin@pkbm.com`
+    - **Password**: `password`
 
 ---
 
 ## 📚 Reference Files
 
 ### **For UI Patterns:**
+
 - `resources/views/livewire/admin/academic/grades.blade.php` - Table with inputs
 - `resources/views/livewire/admin/students/index.blade.php` - CRUD with modals
 - `resources/views/components/admin/sidebar.blade.php` - Navigation
@@ -761,6 +777,7 @@ All public content is manageable via admin panel:
 - `resources/views/livewire/public/contact.blade.php` - Contact form with validation
 
 ### **For Data Patterns:**
+
 - `app/Models/User.php` - Complex relationships, teacher access control methods
 - `app/Models/StudentProfile.php` - Polymorphic relationships
 - `app/Models/CompetencyAssessment.php` - Assessment model
@@ -768,12 +785,14 @@ All public content is manageable via admin panel:
 - `app/Models/Program.php` - Public content model
 
 ### **For Route Patterns:**
+
 - `routes/academic.php` - Module routes example
 - `routes/assessments.php` - Assessment routes (4 forms)
 - `routes/public.php` - Public website routes with slug routing
 - `resources/views/sitemap.blade.php` - SEO sitemap generation
 
 ### **For Assessment Forms:**
+
 - `resources/views/livewire/admin/assessments/competency-assessment.blade.php` - Competency form
 - `resources/views/livewire/admin/assessments/p5-assessment.blade.php` - P5 assessment
 - `resources/views/livewire/admin/assessments/extracurricular-assessment.blade.php` - Extracurricular
@@ -835,6 +854,7 @@ $user->isGuru(): bool
 ```
 
 **Usage Example:**
+
 ```php
 // In sidebar - show competency assessment only for PAUD teachers
 @if(auth()->user()->isAdmin() || auth()->user()->teachesPaudLevel())
@@ -846,6 +866,6 @@ $user->isGuru(): bool
 
 ---
 
-**Last Updated:** 2026-01-30
-**Version:** 2.1
-**Maintained By:** AI Development Assistant
+**Last Updated:** 2026-02-15
+**Version:** 2.2
+**Maintained By:** Antigravity AI Assistant
