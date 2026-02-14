@@ -32,5 +32,6 @@ Route::middleware(['auth', 'verified', 'role:guru'])->prefix('teacher')->name('t
     Volt::route('/assessments/extracurricular', 'teacher.assessments.extracurricular')
         ->name('assessments.extracurricular');
     Volt::route('/assessments/paud', 'teacher.report-card.paud.developmental')->name('assessments.paud');
-    Volt::route('/assessments/attendance', 'teacher.assessments.attendance')->name('assessments.attendance');
+    Volt::route('/assessments/attendance', 'teacher.assessments.attendance')->name('assessments.attendance'); // Rekap Rapor
+    Volt::route('/attendance/daily', 'teacher.attendance.daily')->name('attendance.daily'); // Presensi Harian
 });

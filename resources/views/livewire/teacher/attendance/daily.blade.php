@@ -7,7 +7,7 @@ use App\Models\Classroom;
 use Livewire\Attributes\Layout;
 use Livewire\Volt\Component;
 
-new #[Layout('components.admin.layouts.app')] class extends Component {
+new #[Layout('components.teacher.layouts.app')] class extends Component {
     use HandlesDailyAttendance;
 
     public function mount(): void
@@ -17,12 +17,15 @@ new #[Layout('components.admin.layouts.app')] class extends Component {
 
     protected function ensureAccessToClassroom(int $classroomId): void
     {
-        // Admin has access to all
+        if (!auth()->user()->hasAccessToClassroom($classroomId)) {
+             abort(403, 'Anda tidak berhak mengakses kelas ini.');
+        }
     }
 
     protected function getAllowedClassrooms()
     {
-        return Classroom::query()
+        $assignedIds = auth()->user()->getAssignedClassroomIds();
+        return Classroom::whereIn('id', $assignedIds)
              ->when($this->academic_year_id, fn($q) => $q->where('academic_year_id', $this->academic_year_id))
              ->orderBy('name')
              ->get();

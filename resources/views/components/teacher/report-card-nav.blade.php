@@ -33,6 +33,12 @@
                 'icon' => 'document-text',
                 'route' => 'teacher.report-cards',
             ],
+            'home' => [
+                'label' => 'Kembali',
+                'label_short' => 'Home',
+                'icon' => 'home',
+                'route' => 'teacher.dashboard',
+            ],
         ];
     @endphp
 

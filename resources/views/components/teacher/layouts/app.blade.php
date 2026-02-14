@@ -21,9 +21,11 @@
         <x-teacher.report-card-nav />
     @endif
 
-    <flux:main>
+    <flux:main class="pb-20 md:pb-0"> {{-- Add padding-bottom for mobile nav --}}
         {{ $slot }}
     </flux:main>
+
+    <x-teacher.bottom-nav />
 
     @fluxScripts
     @tallStackUiScript
