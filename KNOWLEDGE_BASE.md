@@ -35,7 +35,8 @@
 | **Report Card Generation** | PDF report cards |
 | **Financial Management** | Billing, payments, transactions |
 | **PTK Management** | Teacher and staff data |
-| **Public Website** | School profile, news, gallery, programs |
+| **Public Website** | School profile, news, gallery, programs, contact form |
+| **SEO Optimization** | Sitemap.xml, meta tags, slug-based URLs |
 
 ---
 
@@ -307,10 +308,15 @@ database/
 
 ### **Assessment Types by Level**
 
-| Level | Assessment Type | P5 | Extracurricular |
-|-------|----------------|-----|-----------------|
-| **PAUD** | Narrative description | ❌ | ✅ |
-| **SD/SMP/SMA** | BB/MB/BSH/SB | ✅ | ✅ |
+| Level | Competency Assessment | P5 Assessment | Extracurricular | Notes |
+|-------|----------------------|---------------|-----------------|-------|
+| **PAUD** | BB/MB/BSH/SB | BB/MB/BSH/SB | BB/MB/BSH/SB | Uses 4-level scale for all assessments |
+| **SD/SMP/SMA** | Numeric grades (0-100) | BB/MB/BSH/SB | BB/MB/BSH/SB | Competency uses numbers, P5 & Ekskul use 4-level scale |
+
+**Additional Notes:**
+- **PAUD Developmental Assessment**: Uses narrative descriptions (6 aspects: Agama, Fisik-Motorik, Kognitif, Bahasa, Sosial-Emosional, Seni)
+- **Competency Assessment**: PAUD-only feature (filtered by `education_level = 'PAUD'`)
+- **P5 Assessment**: Available for all education levels (SD/SMP/SMA/PAUD)
 
 ---
 
@@ -431,20 +437,31 @@ public function save(): void
 
 | File | Routes |
 |------|--------|
+| `routes/web.php` | Main routes (imports all other route files) |
+| `routes/public.php` | Public website routes (homepage, about, news, programs, gallery, contact, sitemap) |
 | `routes/academic.php` | Academic module routes |
 | `routes/students.php` | Student module routes |
-| `routes/assessments.php` | Assessment module routes |
+| `routes/assessments.php` | Assessment module routes (4 assessment forms) |
 | `routes/report-card.php` | Report card routes |
 | `routes/financial.php` | Financial module routes |
+| `routes/news.php` | Admin news management |
+| `routes/programs.php` | Admin programs management |
+| `routes/gallery.php` | Admin gallery management |
+| `routes/school-profile.php` | Admin school profile management |
+| `routes/contact-inquiries.php` | Admin contact inquiries |
+| `routes/ptk.php` | PTK (Teacher & Staff) management |
+| `routes/settings.php` | System settings |
+| `routes/teacher.php` | Teacher-specific routes |
 
 ### **Sidebar Navigation Groups**
 
 1. **Dashboard** - Main dashboard
 2. **Data Master** - Siswa, PTK
-3. **Akademik** - Years, Levels, Classrooms, Subjects, Assignments, Attendance
-4. **Penilaian & Raport** - Grades, Competency Assessment, Report Cards
-5. **Keuangan** - Payments, Billings, Categories
-6. **Konten Web** - School Profile, News, Gallery, Programs, Contact
+3. **Akademik** - Years, Levels, Classrooms, Subjects, Assignments, Attendance (6 items)
+4. **Penilaian & Raport** - Grades, Competency Assessment, P5 Assessment, Extracurricular Assessment, Attendance Summary, Report Card Generator (6 items)
+5. **Keuangan** - Payments, Billings, Categories (3 items)
+6. **Konten Web** - School Profile, News, Gallery, Programs, Contact Inquiries (5 items)
+7. **Laporan** - Reports and analytics
 
 ### **Adding New Menu Items**
 
@@ -464,6 +481,12 @@ Edit: `resources/views/components/admin/sidebar.blade.php`
 ---
 
 ## 🗄️ Database Guidelines
+
+### **Database Overview**
+
+- **Total Migrations**: 40 migration files
+- **Total Models**: 35 Eloquent models
+- **Key Tables**: Users, Profiles (polymorphic), Academic data, Assessments, Financial, Public website content
 
 ### **Naming Conventions**
 
@@ -489,7 +512,22 @@ $table->foreignId('classroom_id')->constrained()->onDelete('cascade');
 ```php
 $table->enum('status', ['active', 'inactive'])->default('active');
 $table->enum('competency_level', ['BB', 'MB', 'BSH', 'SB']);
+$table->enum('education_level', ['PAUD', 'SD', 'SMP', 'SMA']);
 ```
+
+### **Kurikulum Merdeka Tables**
+
+| Table | Purpose |
+|-------|----------|
+| `competency_assessments` | Student competency assessments (BB/MB/BSH/SB) |
+| `p5_projects` | P5 project definitions |
+| `p5_assessments` | P5 student assessments |
+| `extracurricular_activities` | Extracurricular activity definitions |
+| `extracurricular_assessments` | Student extracurricular assessments |
+| `developmental_aspects` | PAUD developmental aspect definitions |
+| `developmental_assessments` | PAUD student developmental assessments |
+| `report_attendances` | Attendance summary for report cards |
+| `learning_achievements` | Learning achievement records |
 
 ### **Cross-Database Compatibility**
 
@@ -581,24 +619,72 @@ php artisan make:volt path/component-name --class
 
 ### **Kurikulum Merdeka - Completed ✅**
 
-- [x] Database migrations (11 tables)
-- [x] Models with relationships (8 models)
-- [x] Seeders (3 seeders)
-- [x] Competency assessment form
-- [x] P5 assessment form
-- [x] Extracurricular assessment form
-- [x] PAUD developmental assessment form
-- [x] Sidebar navigation (all assessment links)
-- [x] Route configuration (4 assessment routes)
+- [x] Database migrations (9 Kurikulum Merdeka tables)
+- [x] Models with relationships (9 assessment models)
+- [x] Seeders (developmental aspects, P5 projects, extracurricular activities)
+- [x] **Competency assessment form** (`competency-assessment.blade.php`)
+- [x] **P5 assessment form** (`p5-assessment.blade.php`)
+- [x] **Extracurricular assessment form** (`extracurricular-assessment.blade.php`)
+- [x] **Attendance input form** for report cards (`attendance-input.blade.php`)
+- [x] Sidebar navigation (all 4 assessment links)
+- [x] Route configuration (4 assessment routes in `assessments.php`)
+- [x] Teacher access control (PAUD-specific competency assessment)
 
-### **Kurikulum Merdeka - Pending ⏳**
+### **Public Website - Completed ✅**
+
+- [x] Homepage with hero section
+- [x] About pages (3 pages: Tentang Kami, Struktur Organisasi, Fasilitas)
+- [x] Programs (index + detail with slug routing)
+- [x] News/Articles (index + detail with slug routing)
+- [x] Gallery with photo management
+- [x] Contact page with inquiry form
+- [x] SEO: Sitemap.xml (dynamic generation)
+- [x] Responsive design with dark mode support
+- [x] Admin CMS for all public content
+
+### **Pending Features ⏳**
 
 - [ ] Report card generator (Kurikulum Merdeka format)
 - [ ] PDF templates (separate for PAUD vs SD/SMP/SMA)
-- [ ] Attendance input form (for report card)
 - [ ] Integration with existing report card system
 - [ ] Assessment analytics/reports
+- [ ] Letter generation feature (Fitur Surat)
 
+---
+
+## 🌐 Public Website Structure
+
+### **Public Pages**
+
+| Route | File | Description |
+|-------|------|-------------|
+| `/` | `public.homepage` | Homepage with hero, stats, programs preview |
+| `/tentang-kami` | `public.about.index` | About school page |
+| `/struktur-organisasi` | `public.about.staff` | Staff and organizational structure |
+| `/fasilitas` | `public.about.facilities` | School facilities |
+| `/program-pendidikan` | `public.programs.index` | Programs listing |
+| `/program-pendidikan/{slug}` | `public.programs.show` | Program detail page |
+| `/berita` | `public.news.index` | News/articles listing |
+| `/berita/{slug}` | `public.news.show` | News article detail |
+| `/galeri` | `public.gallery` | Photo gallery |
+| `/kontak` | `public.contact` | Contact form |
+| `/sitemap.xml` | `sitemap` | SEO sitemap (XML) |
+
+### **SEO Implementation**
+
+- **Sitemap.xml**: Dynamically generated from database (school profile, news, programs)
+- **Slug-based URLs**: News and programs use SEO-friendly slugs
+- **Meta Tags**: Each page has proper title and description
+- **Semantic HTML**: Proper heading hierarchy and semantic elements
+
+### **Admin CMS**
+
+All public content is manageable via admin panel:
+- School Profile editor
+- News/Articles CRUD
+- Gallery photo management with WebP optimization
+- Programs CRUD
+- Contact inquiry viewer
 
 ---
 
@@ -629,7 +715,7 @@ php artisan make:volt path/component-name --class
 - [ ] SMS/WhatsApp notification integration
 - [ ] Parent portal (readonly access to student data)
 - [ ] Multi-tenant support (multiple schools)
-- [ ] Mobile responsive improvements
+- [ ] Mobile app (React Native or Flutter)
 
 ---
 
@@ -650,15 +736,27 @@ php artisan make:volt path/component-name --class
 - `resources/views/livewire/admin/academic/grades.blade.php` - Table with inputs
 - `resources/views/livewire/admin/students/index.blade.php` - CRUD with modals
 - `resources/views/components/admin/sidebar.blade.php` - Navigation
+- `resources/views/livewire/public/homepage.blade.php` - Homepage layout
+- `resources/views/livewire/public/contact.blade.php` - Contact form with validation
 
 ### **For Data Patterns:**
-- `app/Models/User.php` - Complex relationships
+- `app/Models/User.php` - Complex relationships, teacher access control methods
 - `app/Models/StudentProfile.php` - Polymorphic relationships
 - `app/Models/CompetencyAssessment.php` - Assessment model
+- `app/Models/NewsArticle.php` - Slug-based routing, image optimization
+- `app/Models/Program.php` - Public content model
 
 ### **For Route Patterns:**
 - `routes/academic.php` - Module routes example
-- `routes/assessments.php` - Assessment routes
+- `routes/assessments.php` - Assessment routes (4 forms)
+- `routes/public.php` - Public website routes with slug routing
+- `resources/views/sitemap.blade.php` - SEO sitemap generation
+
+### **For Assessment Forms:**
+- `resources/views/livewire/admin/assessments/competency-assessment.blade.php` - Competency form
+- `resources/views/livewire/admin/assessments/p5-assessment.blade.php` - P5 assessment
+- `resources/views/livewire/admin/assessments/extracurricular-assessment.blade.php` - Extracurricular
+- `resources/views/livewire/admin/assessments/attendance-input.blade.php` - Attendance summary
 
 ---
 
@@ -688,6 +786,45 @@ php artisan make:volt path/component-name --class
 
 ---
 
-**Last Updated:** 2026-01-22
-**Version:** 2.0
+## 🔑 User Model Helper Methods
+
+### **Teacher Access Control**
+
+The `User` model includes several helper methods for teacher access control:
+
+```php
+// Check if teacher teaches PAUD level
+$user->teachesPaudLevel(): bool
+
+// Check if teacher has access to specific classroom
+$user->hasAccessToClassroom(int $classroomId): bool
+
+// Check if teacher has access to specific subject
+$user->hasAccessToSubject(int $subjectId): bool
+
+// Get array of assigned classroom IDs
+$user->getAssignedClassroomIds(): array
+
+// Get array of assigned subject IDs (includes homeroom subjects)
+$user->getAssignedSubjectIds(): array
+
+// Check user roles
+$user->isAdmin(): bool
+$user->isGuru(): bool
+```
+
+**Usage Example:**
+```php
+// In sidebar - show competency assessment only for PAUD teachers
+@if(auth()->user()->isAdmin() || auth()->user()->teachesPaudLevel())
+    <flux:sidebar.item :href="route('admin.assessments.competency')">
+        {{ __('Penilaian Kompetensi') }}
+    </flux:sidebar.item>
+@endif
+```
+
+---
+
+**Last Updated:** 2026-01-30
+**Version:** 2.1
 **Maintained By:** AI Development Assistant
