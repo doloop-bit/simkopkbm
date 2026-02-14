@@ -445,6 +445,52 @@ public function save(): void
 }
 ```
 
+### **Shared Component Architecture (Multi-Role)**
+
+**Problem:** Using a single component with dynamic `getLayout()` detection often fails to render the correct sidebar/navbar due to race conditions or route ambiguity.
+
+**Solution:** Use **Explicit Context Wrappers**.
+
+1. **Logic**: Extract shared logic into a `Trait`.
+2. **UI**: Extract shared Blade markup into a `_partial`.
+3. **Context**: Create two separate Volt components (Admin/Teacher) that use the Trait + Partial but **explicitly define their layout**.
+
+**Example:**
+
+**1. The Logic (Trait)**
+
+```php
+// app/Traits/Assessments/HandlesGrading.php
+trait HandlesGrading {
+    public function save() { ... }
+}
+```
+
+**2. The UI (Partial)**
+
+```blade
+// resources/views/livewire/shared/_partials/grading-ui.blade.php
+<div>
+    <!-- Table Markup -->
+</div>
+```
+
+**3. The Components (Explicit Layouts)**
+
+```php
+// Teacher Component
+new #[Layout('components.teacher.layouts.app')] class extends Component {
+    use HandlesGrading;
+}
+```
+
+```php
+// Admin Component
+new #[Layout('components.admin.layouts.app')] class extends Component {
+    use HandlesGrading;
+}
+```
+
 ---
 
 ## 🔗 Route & Navigation

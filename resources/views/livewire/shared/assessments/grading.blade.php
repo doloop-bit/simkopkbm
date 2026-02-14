@@ -9,12 +9,14 @@ use App\Models\Classroom;
 use App\Models\Subject;
 use App\Models\AcademicYear;
 use App\Models\LearningAchievement;
-use Livewire\Attributes\Layout;
+use App\Traits\HasAssessmentLogic;
 use Livewire\Volt\Component;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Str;
 
-new #[Layout('components.admin.layouts.app')] class extends Component {
+new class extends Component {
+    use HasAssessmentLogic;
+
     public ?int $academic_year_id = null;
     public ?int $classroom_id = null;
     public ?int $subject_id = null;
@@ -25,6 +27,11 @@ new #[Layout('components.admin.layouts.app')] class extends Component {
 
     // Phase info for display
     public ?string $currentPhase = null;
+
+    public function layout()
+    {
+        return $this->getLayout();
+    }
 
     public function mount(): void
     {
@@ -64,9 +71,6 @@ new #[Layout('components.admin.layouts.app')] class extends Component {
         $this->loadGrades();
     }
 
-    /**
-     * Resolve the Kurikulum Merdeka phase for the selected classroom.
-     */
     public function resolvePhase(): void
     {
         if (!$this->classroom_id) {
@@ -83,6 +87,13 @@ new #[Layout('components.admin.layouts.app')] class extends Component {
         if (!$this->classroom_id || !$this->subject_id || !$this->academic_year_id) {
             $this->grades_data = [];
             return;
+        }
+
+        // Security check for Guru
+        if (auth()->user()->isGuru() && (!auth()->user()->hasAccessToClassroom((int)$this->classroom_id) || !auth()->user()->hasAccessToSubject((int)$this->subject_id))) {
+             $this->grades_data = [];
+             \Flux::toast(variant: 'danger', text: 'Anda tidak memiliki akses ke data ini.');
+             return;
         }
 
         $grades = SubjectGrade::where([
@@ -122,7 +133,18 @@ new #[Layout('components.admin.layouts.app')] class extends Component {
 
     public function save(): void
     {
+        if (!$this->canEditAssessments()) {
+            \Flux::toast(variant: 'danger', text: 'Anda tidak memiliki izin untuk menyimpan data.');
+            return;
+        }
+
         if (!$this->classroom_id || !$this->subject_id || !$this->academic_year_id) {
+            return;
+        }
+
+        // Security check for Guru
+        if (auth()->user()->isGuru() && (!auth()->user()->hasAccessToClassroom((int)$this->classroom_id) || !auth()->user()->hasAccessToSubject((int)$this->subject_id))) {
+            \Flux::toast(variant: 'danger', text: 'Akses ditolak.');
             return;
         }
 
@@ -166,17 +188,12 @@ new #[Layout('components.admin.layouts.app')] class extends Component {
         \Flux::toast('Data penilaian rapor berhasil disimpan.');
     }
 
-    /**
-     * Get TPs filtered by the classroom's phase.
-     * This ensures only TPs relevant to the current fase are shown.
-     */
     public function getFilteredTps()
     {
         if (!$this->subject_id) {
             return collect();
         }
 
-        // If we have a phase, filter TPs by that phase via learning_achievements
         if ($this->currentPhase) {
             $cp = LearningAchievement::where('subject_id', $this->subject_id)
                 ->where('phase', $this->currentPhase)
@@ -189,7 +206,6 @@ new #[Layout('components.admin.layouts.app')] class extends Component {
             return collect();
         }
 
-        // Fallback: if no phase resolved, show all TPs for the subject
         return SubjectTp::whereHas('learningAchievement', function ($q) {
             $q->where('subject_id', $this->subject_id);
         })->orderBy('code')->get();
@@ -198,7 +214,6 @@ new #[Layout('components.admin.layouts.app')] class extends Component {
     public function with(): array
     {
         $students = [];
-
         if ($this->classroom_id) {
             $students = User::where('role', 'siswa')
                 ->whereHas('profiles.profileable', function ($q) {
@@ -208,101 +223,38 @@ new #[Layout('components.admin.layouts.app')] class extends Component {
                 ->get();
         }
 
-        $tps = $this->getFilteredTps();
-        $user = auth()->user();
-
-        $subjects = Subject::orderBy('name')
-            ->when($this->classroom_id, function ($query) {
-                $classroom = Classroom::find($this->classroom_id);
-                if ($classroom) {
-                    $query->where(function ($q) use ($classroom) {
-                        $q->whereNull('level_id')
-                            ->orWhere('level_id', $classroom->level_id);
-                    });
-                }
-            })
-            ->when(!$user->isAdmin(), function ($query) use ($user) {
-                $query->whereIn('id', $user->getAssignedSubjectIds());
-            })
-            ->get();
-
-        $classroomsQuery = Classroom::with('level')
-            ->when($this->academic_year_id, fn($q) => $q->where('academic_year_id', $this->academic_year_id));
-
-        if (!$user->isAdmin()) {
-            $classroomsQuery->whereIn('id', $user->getAssignedClassroomIds());
-        }
-
-        $classrooms = $classroomsQuery->get();
-
         return [
             'years' => AcademicYear::all(),
-            'classrooms' => $classrooms,
-            'subjects' => $subjects,
+            'classrooms' => $this->getFilteredClassrooms(),
+            'subjects' => $this->getFilteredSubjects($this->classroom_id),
             'students' => $students,
-            'tps' => $tps,
+            'tps' => $this->getFilteredTps(),
+            'isReadonly' => !$this->canEditAssessments(),
         ];
     }
 }; ?>
 
-<div>
+<div class="p-6">
     <div class="flex items-center justify-between mb-6">
         <div>
-            <flux:heading size="xl">Nilai Rapor Subjek & TP</flux:heading>
-            <flux:subheading>Input nilai akhir dan deskripsi TP untuk rapor.</flux:subheading>
+            <flux:heading size="xl">{{ __('Penilaian Rapor (Nilai & TP)') }}</flux:heading>
+            <flux:subheading>{{ __('Input nilai akhir dan pemilihan TP kompetensi untuk rapor.') }}</flux:subheading>
         </div>
     </div>
 
-    <!-- Compact Usage Guide 
-    <div class="mb-6 p-3 bg-blue-50 dark:bg-blue-950/30 rounded-lg border border-blue-200 dark:border-blue-800">
-        <div class="flex items-start gap-2">
-            <flux:icon icon="information-circle"
-                class="w-4 h-4 text-blue-600 dark:text-blue-400 flex-shrink-0 mt-0.5" />
-            <div class="flex-1 min-w-0">
-                <p class="text-xs font-medium text-blue-900 dark:text-blue-200 mb-1.5">
-                    Panduan: <span class="hidden md:inline">Gunakan navigasi di atas</span><span
-                        class="md:hidden">Gunakan
-                        navigasi di bawah</span> untuk beralih menu
-                </p>
-                <div class="flex flex-wrap items-center gap-1.5 text-[11px]">
-                    <div
-                        class="flex items-center gap-1 px-2 py-0.5 bg-white dark:bg-zinc-800 rounded border border-blue-200 dark:border-blue-700">
-                        <span
-                            class="flex-shrink-0 w-3.5 h-3.5 bg-blue-600 text-white rounded-full flex items-center justify-center text-[9px] font-bold">1</span>
-                        <span class="text-zinc-700 dark:text-zinc-300 whitespace-nowrap">Input Nilai & TP</span>
-                    </div>
-                    <flux:icon icon="arrow-right" class="w-3 h-3 text-blue-400 dark:text-blue-500 flex-shrink-0" />
-                    <div
-                        class="flex items-center gap-1 px-2 py-0.5 bg-white dark:bg-zinc-800 rounded border border-green-200 dark:border-green-700">
-                        <span
-                            class="flex-shrink-0 w-3.5 h-3.5 bg-green-600 text-white rounded-full flex items-center justify-center text-[9px] font-bold">2</span>
-                        <span class="text-zinc-700 dark:text-zinc-300 whitespace-nowrap">Input Kehadiran</span>
-                    </div>
-                    <flux:icon icon="arrow-right" class="w-3 h-3 text-blue-400 dark:text-blue-500 flex-shrink-0" />
-                    <div
-                        class="flex items-center gap-1 px-2 py-0.5 bg-white dark:bg-zinc-800 rounded border border-purple-200 dark:border-purple-700">
-                        <span
-                            class="flex-shrink-0 w-3.5 h-3.5 bg-purple-600 text-white rounded-full flex items-center justify-center text-[9px] font-bold">3</span>
-                        <span class="text-zinc-700 dark:text-zinc-300 whitespace-nowrap">Buat Rapor</span>
-                    </div>
-                </div>
-            </div>
-        </div>
-    </div> -->
-
     <div class="grid grid-cols-1 md:grid-cols-4 gap-4 mb-6">
-        <flux:select wire:model.live="academic_year_id" label="Tahun Ajaran">
+        <flux:select wire:model.live="academic_year_id" label="Tahun Ajaran" :disabled="$isReadonly">
             @foreach($years as $year)
                 <option value="{{ $year->id }}">{{ $year->name }}</option>
             @endforeach
         </flux:select>
 
-        <flux:select wire:model.live="semester" label="Semester">
+        <flux:select wire:model.live="semester" label="Semester" :disabled="$isReadonly">
             <option value="1">1 (Ganjil)</option>
             <option value="2">2 (Genap)</option>
         </flux:select>
 
-        <flux:select wire:model.live="classroom_id" label="Kelas">
+        <flux:select wire:model.live="classroom_id" label="Kelas" :disabled="$isReadonly">
             <option value="">Pilih Kelas</option>
             @foreach($classrooms as $room)
                 <option value="{{ $room->id }}">
@@ -314,7 +266,7 @@ new #[Layout('components.admin.layouts.app')] class extends Component {
             @endforeach
         </flux:select>
 
-        <flux:select wire:model.live="subject_id" label="Mata Pelajaran">
+        <flux:select wire:model.live="subject_id" label="Mata Pelajaran" :disabled="$isReadonly">
             <option value="">Pilih Mata Pelajaran</option>
             @foreach($subjects as $subject)
                 <option value="{{ $subject->id }}">{{ $subject->name }}</option>
@@ -322,7 +274,6 @@ new #[Layout('components.admin.layouts.app')] class extends Component {
         </flux:select>
     </div>
 
-    {{-- Phase indicator --}}
     @if($currentPhase)
         <div class="mb-4 flex items-center gap-2">
             <flux:badge color="indigo">Fase {{ $currentPhase }}</flux:badge>
@@ -342,7 +293,7 @@ new #[Layout('components.admin.layouts.app')] class extends Component {
                         @if($currentPhase)
                             pada Fase {{ $currentPhase }}
                         @endif
-                        . Silakan tambahkan TP melalui menu <strong>Mata Pelajaran → Kelola CP & TP</strong>.
+                        . Silakan tambahkan TP melalui menu <strong>Mata Pelajaran (Admin)</strong>.
                     </p>
                 </div>
             </div>
@@ -353,15 +304,10 @@ new #[Layout('components.admin.layouts.app')] class extends Component {
                 <table class="w-full text-sm text-left border-collapse min-w-[800px]">
                     <thead class="bg-zinc-50 dark:bg-zinc-800">
                         <tr>
-                            <th class="px-4 py-3 font-medium text-zinc-700 dark:text-zinc-300 border-b w-64">Nama Siswa
-                            </th>
-                            <th class="px-4 py-3 font-medium text-zinc-700 dark:text-zinc-300 border-b w-32 text-center">
-                                Nilai Final (0-100)</th>
-                            <th class="px-4 py-3 font-medium text-zinc-700 dark:text-zinc-300 border-b">TP Tertinggi
-                                (Kompeten)</th>
-                            <th class="px-4 py-3 font-medium text-zinc-700 dark:text-zinc-300 border-b">TP Terendah
-                                (Perlu
-                                Bimbingan)</th>
+                            <th class="px-4 py-3 font-medium text-zinc-700 dark:text-zinc-300 border-b w-64">Nama Siswa</th>
+                            <th class="px-4 py-3 font-medium text-zinc-700 dark:text-zinc-300 border-b w-32 text-center">Nilai Final (0-100)</th>
+                            <th class="px-4 py-3 font-medium text-zinc-700 dark:text-zinc-300 border-b">TP Tertinggi (Kompeten)</th>
+                            <th class="px-4 py-3 font-medium text-zinc-700 dark:text-zinc-300 border-b">TP Terendah (Perlu Bimbingan)</th>
                         </tr>
                     </thead>
                     <tbody class="divide-y divide-zinc-200 dark:divide-zinc-700">
@@ -371,17 +317,24 @@ new #[Layout('components.admin.layouts.app')] class extends Component {
                                     {{ $student->name }}
                                 </td>
                                 <td class="px-4 py-3 align-top">
-                                    <flux:input wire:model="grades_data.{{ $student->id }}.grade" type="number" min="0"
-                                        max="100" step="1" class="text-center" />
+                                    <flux:input 
+                                        wire:model="grades_data.{{ $student->id }}.grade" 
+                                        type="number" 
+                                        min="0"
+                                        max="100" 
+                                        step="1" 
+                                        class="text-center" 
+                                        :readonly="$isReadonly"
+                                    />
                                 </td>
                                 <td class="px-4 py-3 align-top">
                                     <div class="w-full space-y-1">
-                                        <select wire:model="grades_data.{{ $student->id }}.best_tp_id"
+                                        <select wire:model="grades_data.{{ $student->id }}.best_tp_id" :disabled="$isReadonly"
                                             class="block w-full rounded-md border-0 py-1.5 pl-3 pr-10 text-gray-900 ring-1 ring-inset ring-gray-300 focus:ring-2 focus:ring-indigo-600 sm:text-sm sm:leading-6 dark:bg-zinc-900 dark:text-white dark:ring-zinc-700">
                                             <option value="">-- Pilih TP Terbaik --</option>
                                             @foreach($tps as $tp)
                                                 <option value="{{ $tp->id }}">
-                                                    {{ $tp->code ? $tp->code . ' - ' : '' }}{{ str($tp->description)->limit(60) }}
+                                                    {{ $tp->code ? $tp->code . ' - ' : '' }}{{ Str::limit($tp->description, 60) }}
                                                 </option>
                                             @endforeach
                                         </select>
@@ -394,12 +347,12 @@ new #[Layout('components.admin.layouts.app')] class extends Component {
                                 </td>
                                 <td class="px-4 py-3 align-top">
                                     <div class="w-full space-y-1">
-                                        <select wire:model="grades_data.{{ $student->id }}.improvement_tp_id"
+                                        <select wire:model="grades_data.{{ $student->id }}.improvement_tp_id" :disabled="$isReadonly"
                                             class="block w-full rounded-md border-0 py-1.5 pl-3 pr-10 text-gray-900 ring-1 ring-inset ring-gray-300 focus:ring-2 focus:ring-indigo-600 sm:text-sm sm:leading-6 dark:bg-zinc-900 dark:text-white dark:ring-zinc-700">
                                             <option value="">-- Pilih TP Perlu Bimbingan --</option>
                                             @foreach($tps as $tp)
                                                 <option value="{{ $tp->id }}">
-                                                    {{ $tp->code ? $tp->code . ' - ' : '' }}{{ str($tp->description)->limit(60) }}
+                                                    {{ $tp->code ? $tp->code . ' - ' : '' }}{{ Str::limit($tp->description, 60) }}
                                                 </option>
                                             @endforeach
                                         </select>
@@ -416,16 +369,15 @@ new #[Layout('components.admin.layouts.app')] class extends Component {
                 </table>
             </div>
 
-            <div class="p-4 bg-zinc-50 dark:bg-zinc-800 border-t flex justify-end sticky bottom-0 z-10">
-                <flux:button variant="primary" icon="check" wire:click="save">Simpan Penilaian Rapor</flux:button>
-            </div>
+            @if(!$isReadonly)
+                <div class="p-4 bg-zinc-50 dark:bg-zinc-800 border-t flex justify-end sticky bottom-0 z-10">
+                    <flux:button variant="primary" icon="check" wire:click="save">Simpan Penilaian Rapor</flux:button>
+                </div>
+            @endif
         </div>
     @else
         <div class="flex flex-col items-center justify-center py-12 text-zinc-500 border-2 border-dashed rounded-xl">
-            <svg class="w-12 h-12 mb-2 opacity-20" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                    d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
-            </svg>
+            <flux:icon icon="pencil-square" class="w-12 h-12 mb-2 opacity-20" />
             <p>Silakan pilih kelas dan mata pelajaran untuk memulai penilaian rapor.</p>
         </div>
     @endif

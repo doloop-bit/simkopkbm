@@ -127,24 +127,20 @@ new #[Layout('components.teacher.layouts.app')] class extends Component {
     </div>
 
     {{-- Quick Actions --}}
-    <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+    <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
         <a href="{{ route('teacher.students.index') }}" wire:navigate class="p-4 bg-white dark:bg-zinc-800 rounded-lg border border-zinc-200 dark:border-zinc-700 hover:border-blue-500 dark:hover:border-blue-500 transition-colors">
             <flux:icon icon="users" class="w-8 h-8 text-blue-600 mb-2" />
             <p class="font-medium text-zinc-900 dark:text-white">{{ __('Daftar Siswa') }}</p>
             <p class="text-xs text-zinc-500">{{ __('Lihat siswa yang Anda ampu') }}</p>
         </a>
 
-        <a href="{{ route('teacher.grades') }}" wire:navigate class="p-4 bg-white dark:bg-zinc-800 rounded-lg border border-zinc-200 dark:border-zinc-700 hover:border-green-500 dark:hover:border-green-500 transition-colors">
+        <a href="{{ route('teacher.academic.grades') }}" wire:navigate class="p-4 bg-white dark:bg-zinc-800 rounded-lg border border-zinc-200 dark:border-zinc-700 hover:border-green-500 dark:hover:border-green-500 transition-colors">
             <flux:icon icon="pencil-square" class="w-8 h-8 text-green-600 mb-2" />
-            <p class="font-medium text-zinc-900 dark:text-white">{{ __('Input Nilai') }}</p>
-            <p class="text-xs text-zinc-500">{{ __('Input penilaian siswa') }}</p>
+            <p class="font-medium text-zinc-900 dark:text-white">{{ __('Input Nilai & TP') }}</p>
+            <p class="text-xs text-zinc-500">{{ __('Input penilaian rapor dan TP kompetensi') }}</p>
         </a>
 
-        <a href="{{ route('teacher.assessments.competency') }}" wire:navigate class="p-4 bg-white dark:bg-zinc-800 rounded-lg border border-zinc-200 dark:border-zinc-700 hover:border-purple-500 dark:hover:border-purple-500 transition-colors">
-            <flux:icon icon="clipboard-document-check" class="w-8 h-8 text-purple-600 mb-2" />
-            <p class="font-medium text-zinc-900 dark:text-white">{{ __('Penilaian Kompetensi') }}</p>
-            <p class="text-xs text-zinc-500">{{ __('Input capaian kompetensi') }}</p>
-        </a>
+
 
         <a href="{{ route('teacher.report-cards') }}" wire:navigate class="p-4 bg-white dark:bg-zinc-800 rounded-lg border border-zinc-200 dark:border-zinc-700 hover:border-orange-500 dark:hover:border-orange-500 transition-colors">
             <flux:icon icon="document-text" class="w-8 h-8 text-orange-600 mb-2" />

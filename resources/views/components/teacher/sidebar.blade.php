@@ -20,19 +20,10 @@
 
         {{-- Penilaian & Raport --}}
         <flux:sidebar.group expandable icon="pencil-square" :heading="__('Penilaian & Raport')" class="grid">
-            <flux:sidebar.item icon="clipboard-document-list" :href="route('teacher.academic.grades')"
-                :current="request()->routeIs('teacher.academic.grades')" wire:navigate.hover>
-                {{ __('Input Nilai Mapel') }}
-            </flux:sidebar.item>
-
-            <flux:sidebar.item icon="clipboard-document-check" :href="route('teacher.assessments.competency')"
-                :current="request()->routeIs('teacher.assessments.competency')" wire:navigate.hover>
-                {{ __('Nilai Kompetensi') }}
-            </flux:sidebar.item>
-
-            <flux:sidebar.item icon="star" :href="route('teacher.assessments.p5')"
-                :current="request()->routeIs('teacher.assessments.p5')" wire:navigate.hover>
-                {{ __('Nilai P5') }}
+            <flux:sidebar.item icon="document-chart-bar" :href="route('teacher.report-cards')"
+                :current="request()->routeIs('teacher.academic.grades') || request()->routeIs('teacher.assessments.attendance') || request()->routeIs('teacher.assessments.extracurricular') || request()->routeIs('teacher.report-cards')"
+                wire:navigate.hover>
+                {{ __('Raport Kesetaraan') }}
             </flux:sidebar.item>
 
             @if(auth()->user()->teachesPaudLevel())
@@ -41,11 +32,6 @@
                     {{ __('Nilai PAUD') }}
                 </flux:sidebar.item>
             @endif
-
-            <flux:sidebar.item icon="document-chart-bar" :href="route('teacher.report-cards')"
-                :current="request()->routeIs('teacher.report-cards')" wire:navigate.hover>
-                {{ __('Raport') }}
-            </flux:sidebar.item>
         </flux:sidebar.group>
     </flux:sidebar.nav>
 

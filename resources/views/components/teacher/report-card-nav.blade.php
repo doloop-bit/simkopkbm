@@ -10,7 +10,7 @@
     @php
         $tabs = [
             'grades' => [
-                'label' => 'Input Nilai',
+                'label' => 'Input Nilai & TP',
                 'label_short' => 'Nilai',
                 'icon' => 'clipboard-document-list',
                 'route' => 'teacher.academic.grades',
@@ -28,7 +28,7 @@
                 'route' => 'teacher.assessments.extracurricular',
             ],
             'report_cards' => [
-                'label' => 'Generator Rapor',
+                'label' => 'Buat Rapor',
                 'label_short' => 'Rapor',
                 'icon' => 'document-text',
                 'route' => 'teacher.report-cards',

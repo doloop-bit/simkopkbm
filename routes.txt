@@ -1,0 +1,101 @@
+
+  [34mGET[39m[38;2;108;114;128m|[39m[38;2;108;114;128mHEAD[39m   [37m/[39m[38;2;108;114;128m ................................................ home[39m
+  [33mPOST[39m       [37m_boost/browser-logs[39m[38;2;108;114;128m ................ boost.browser-logs[39m
+  [34mGET[39m[38;2;108;114;128m|[39m[38;2;108;114;128mHEAD[39m   [37madmin/academic/assignments[39m[38;2;108;114;128m ....... academic.assignments[39m
+  [34mGET[39m[38;2;108;114;128m|[39m[38;2;108;114;128mHEAD[39m   [37madmin/academic/attendance[39m[38;2;108;114;128m ......... academic.attendance[39m
+  [34mGET[39m[38;2;108;114;128m|[39m[38;2;108;114;128mHEAD[39m   [37madmin/academic/classrooms[39m[38;2;108;114;128m ......... academic.classrooms[39m
+  [34mGET[39m[38;2;108;114;128m|[39m[38;2;108;114;128mHEAD[39m   [37madmin/academic/extracurriculars[39m[38;2;108;114;128m academic.extracurricul…[39m
+  [34mGET[39m[38;2;108;114;128m|[39m[38;2;108;114;128mHEAD[39m   [37madmin/academic/grades[39m[38;2;108;114;128m ................. academic.grades[39m
+  [34mGET[39m[38;2;108;114;128m|[39m[38;2;108;114;128mHEAD[39m   [37madmin/academic/levels[39m[38;2;108;114;128m ................. academic.levels[39m
+  [34mGET[39m[38;2;108;114;128m|[39m[38;2;108;114;128mHEAD[39m   [37madmin/academic/subjects[39m[38;2;108;114;128m ............. academic.subjects[39m
+  [34mGET[39m[38;2;108;114;128m|[39m[38;2;108;114;128mHEAD[39m   [37madmin/academic/years[39m[38;2;108;114;128m ................... academic.years[39m
+  [34mGET[39m[38;2;108;114;128m|[39m[38;2;108;114;128mHEAD[39m   [37madmin/assessments/attendance[39m[38;2;108;114;128m admin.assessments.attenda…[39m
+  [34mGET[39m[38;2;108;114;128m|[39m[38;2;108;114;128mHEAD[39m   [37madmin/assessments/competency[39m[38;2;108;114;128m admin.assessments.compete…[39m
+  [34mGET[39m[38;2;108;114;128m|[39m[38;2;108;114;128mHEAD[39m   [37madmin/assessments/extracurricular[39m[38;2;108;114;128m admin.assessments.ex…[39m
+  [34mGET[39m[38;2;108;114;128m|[39m[38;2;108;114;128mHEAD[39m   [37madmin/berita[39m[38;2;108;114;128m ......................... admin.news.index[39m
+  [34mGET[39m[38;2;108;114;128m|[39m[38;2;108;114;128mHEAD[39m   [37madmin/berita/create[39m[38;2;108;114;128m ................. admin.news.create[39m
+  [34mGET[39m[38;2;108;114;128m|[39m[38;2;108;114;128mHEAD[39m   [37madmin/berita/[39m[33m{id}[39m[37m/edit[39m[38;2;108;114;128m ................ admin.news.edit[39m
+  [34mGET[39m[38;2;108;114;128m|[39m[38;2;108;114;128mHEAD[39m   [37madmin/dashboard[39m[38;2;108;114;128m ............................. dashboard[39m
+  [34mGET[39m[38;2;108;114;128m|[39m[38;2;108;114;128mHEAD[39m   [37madmin/financial/billings[39m[38;2;108;114;128m ........... financial.billings[39m
+  [34mGET[39m[38;2;108;114;128m|[39m[38;2;108;114;128mHEAD[39m   [37madmin/financial/categories[39m[38;2;108;114;128m ....... financial.categories[39m
+  [34mGET[39m[38;2;108;114;128m|[39m[38;2;108;114;128mHEAD[39m   [37madmin/financial/payments[39m[38;2;108;114;128m ........... financial.payments[39m
+  [34mGET[39m[38;2;108;114;128m|[39m[38;2;108;114;128mHEAD[39m   [37madmin/galeri[39m[38;2;108;114;128m ...................... admin.gallery.index[39m
+  [34mGET[39m[38;2;108;114;128m|[39m[38;2;108;114;128mHEAD[39m   [37madmin/pesan-kontak[39m[38;2;108;114;128m ...... admin.contact-inquiries.index[39m
+  [34mGET[39m[38;2;108;114;128m|[39m[38;2;108;114;128mHEAD[39m   [37madmin/profil-sekolah[39m[38;2;108;114;128m ........ admin.school-profile.edit[39m
+  [34mGET[39m[38;2;108;114;128m|[39m[38;2;108;114;128mHEAD[39m   [37madmin/profil-sekolah/fasilitas[39m[38;2;108;114;128m admin.school-profile.fa…[39m
+  [34mGET[39m[38;2;108;114;128m|[39m[38;2;108;114;128mHEAD[39m   [37madmin/profil-sekolah/struktur-organisasi[39m[38;2;108;114;128m admin.school-…[39m
+  [34mGET[39m[38;2;108;114;128m|[39m[38;2;108;114;128mHEAD[39m   [37madmin/programs[39m[38;2;108;114;128m ................... admin.programs.index[39m
+  [34mGET[39m[38;2;108;114;128m|[39m[38;2;108;114;128mHEAD[39m   [37madmin/ptk[39m[38;2;108;114;128m ................................... ptk.index[39m
+  [34mGET[39m[38;2;108;114;128m|[39m[38;2;108;114;128mHEAD[39m   [37madmin/report-card[39m[38;2;108;114;128m ............. admin.report-card.index[39m
+  [34mGET[39m[38;2;108;114;128m|[39m[38;2;108;114;128mHEAD[39m   [37madmin/report-card/create[39m[38;2;108;114;128m ..... admin.report-card.create[39m
+  [34mGET[39m[38;2;108;114;128m|[39m[38;2;108;114;128mHEAD[39m   [37madmin/report-card/grading[39m[38;2;108;114;128m ... admin.report-card.grading[39m
+  [34mGET[39m[38;2;108;114;128m|[39m[38;2;108;114;128mHEAD[39m   [37madmin/reports[39m[38;2;108;114;128m ................................. reports[39m
+  [31mANY[39m        [37madmin/settings[39m[38;2;108;114;128m Illuminate\Routing › RedirectController[39m
+  [34mGET[39m[38;2;108;114;128m|[39m[38;2;108;114;128mHEAD[39m   [37madmin/settings/appearance[39m[38;2;108;114;128m ............. appearance.edit[39m
+  [34mGET[39m[38;2;108;114;128m|[39m[38;2;108;114;128mHEAD[39m   [37madmin/settings/password[39m[38;2;108;114;128m ............ user-password.edit[39m
+  [34mGET[39m[38;2;108;114;128m|[39m[38;2;108;114;128mHEAD[39m   [37madmin/settings/profile[39m[38;2;108;114;128m ................... profile.edit[39m
+  [34mGET[39m[38;2;108;114;128m|[39m[38;2;108;114;128mHEAD[39m   [37madmin/settings/two-factor[39m[38;2;108;114;128m ............. two-factor.show[39m
+  [34mGET[39m[38;2;108;114;128m|[39m[38;2;108;114;128mHEAD[39m   [37madmin/students[39m[38;2;108;114;128m ......................... students.index[39m
+  [34mGET[39m[38;2;108;114;128m|[39m[38;2;108;114;128mHEAD[39m   [37mberita[39m[38;2;108;114;128m .............................. public.news.index[39m
+  [34mGET[39m[38;2;108;114;128m|[39m[38;2;108;114;128mHEAD[39m   [37mberita/[39m[33m{slug}[39m[38;2;108;114;128m ........................ public.news.show[39m
+  [33mPOST[39m       [37memail/verification-notification[39m[38;2;108;114;128m verification.send › La…[39m
+  [34mGET[39m[38;2;108;114;128m|[39m[38;2;108;114;128mHEAD[39m   [37memail/verify[39m[38;2;108;114;128m verification.notice › Laravel\Fortify › E…[39m
+  [34mGET[39m[38;2;108;114;128m|[39m[38;2;108;114;128mHEAD[39m   [37memail/verify/[39m[33m{id}[39m[37m/[39m[33m{hash}[39m[38;2;108;114;128m verification.verify › Laravel…[39m
+  [34mGET[39m[38;2;108;114;128m|[39m[38;2;108;114;128mHEAD[39m   [37mfasilitas[39m[38;2;108;114;128m ........................... public.facilities[39m
+  [34mGET[39m[38;2;108;114;128m|[39m[38;2;108;114;128mHEAD[39m   [37mflux/editor.css[39m[38;2;108;114;128m Flux\AssetManager@editorCss › AssetMan…[39m
+  [34mGET[39m[38;2;108;114;128m|[39m[38;2;108;114;128mHEAD[39m   [37mflux/editor.js[39m[38;2;108;114;128m Flux\AssetManager@editorJs › AssetManag…[39m
+  [34mGET[39m[38;2;108;114;128m|[39m[38;2;108;114;128mHEAD[39m   [37mflux/editor.min.js[39m[38;2;108;114;128m Flux\AssetManager@editorMinJs › Ass…[39m
+  [34mGET[39m[38;2;108;114;128m|[39m[38;2;108;114;128mHEAD[39m   [37mflux/flux.js[39m[38;2;108;114;128m Flux\AssetManager@fluxJs › AssetManager@f…[39m
+  [34mGET[39m[38;2;108;114;128m|[39m[38;2;108;114;128mHEAD[39m   [37mflux/flux.min.js[39m[38;2;108;114;128m Flux\AssetManager@fluxMinJs › AssetMa…[39m
+  [34mGET[39m[38;2;108;114;128m|[39m[38;2;108;114;128mHEAD[39m   [37mforgot-password[39m[38;2;108;114;128m password.request › Laravel\Fortify › P…[39m
+  [33mPOST[39m       [37mforgot-password[39m[38;2;108;114;128m password.email › Laravel\Fortify › Pas…[39m
+  [34mGET[39m[38;2;108;114;128m|[39m[38;2;108;114;128mHEAD[39m   [37mgaleri[39m[38;2;108;114;128m ................................. public.gallery[39m
+  [34mGET[39m[38;2;108;114;128m|[39m[38;2;108;114;128mHEAD[39m   [37mkontak[39m[38;2;108;114;128m ................................. public.contact[39m
+  [34mGET[39m[38;2;108;114;128m|[39m[38;2;108;114;128mHEAD[39m   [37mlivewire-492e1c8c/css/[39m[33m{component}[39m[37m.css[39m[38;2;108;114;128m ................. [39m
+  [34mGET[39m[38;2;108;114;128m|[39m[38;2;108;114;128mHEAD[39m   [37mlivewire-492e1c8c/css/[39m[33m{component}[39m[37m.global.css[39m[38;2;108;114;128m .......... [39m
+  [34mGET[39m[38;2;108;114;128m|[39m[38;2;108;114;128mHEAD[39m   [37mlivewire-492e1c8c/js/[39m[33m{component}[39m[37m.js[39m[38;2;108;114;128m ................... [39m
+  [34mGET[39m[38;2;108;114;128m|[39m[38;2;108;114;128mHEAD[39m   [37mlivewire-492e1c8c/livewire.csp.min.js.map[39m[38;2;108;114;128m Livewire\Mec…[39m
+  [34mGET[39m[38;2;108;114;128m|[39m[38;2;108;114;128mHEAD[39m   [37mlivewire-492e1c8c/livewire.js[39m[38;2;108;114;128m Livewire\Mechanisms › Fr…[39m
+  [34mGET[39m[38;2;108;114;128m|[39m[38;2;108;114;128mHEAD[39m   [37mlivewire-492e1c8c/livewire.min.js.map[39m[38;2;108;114;128m Livewire\Mechani…[39m
+  [34mGET[39m[38;2;108;114;128m|[39m[38;2;108;114;128mHEAD[39m   [37mlivewire-492e1c8c/preview-file/[39m[33m{filename}[39m[38;2;108;114;128m livewire.pre…[39m
+  [33mPOST[39m       [37mlivewire-492e1c8c/update[39m[38;2;108;114;128m livewire.update › Livewire\Me…[39m
+  [33mPOST[39m       [37mlivewire-492e1c8c/upload-file[39m[38;2;108;114;128m livewire.upload-file › L…[39m
+  [34mGET[39m[38;2;108;114;128m|[39m[38;2;108;114;128mHEAD[39m   [37mlogin[39m[38;2;108;114;128m login › Laravel\Fortify › AuthenticatedSessionCo…[39m
+  [33mPOST[39m       [37mlogin[39m[38;2;108;114;128m login.store › Laravel\Fortify › AuthenticatedSes…[39m
+  [33mPOST[39m       [37mlogout[39m[38;2;108;114;128m logout › Laravel\Fortify › AuthenticatedSession…[39m
+  [34mGET[39m[38;2;108;114;128m|[39m[38;2;108;114;128mHEAD[39m   [37mprogram-pendidikan[39m[38;2;108;114;128m .............. public.programs.index[39m
+  [34mGET[39m[38;2;108;114;128m|[39m[38;2;108;114;128mHEAD[39m   [37mprogram-pendidikan/[39m[33m{slug}[39m[38;2;108;114;128m ........ public.programs.show[39m
+  [33mPOST[39m       [37mreset-password[39m[38;2;108;114;128m password.update › Laravel\Fortify › New…[39m
+  [34mGET[39m[38;2;108;114;128m|[39m[38;2;108;114;128mHEAD[39m   [37mreset-password/[39m[33m{token}[39m[38;2;108;114;128m password.reset › Laravel\Fortif…[39m
+  [34mGET[39m[38;2;108;114;128m|[39m[38;2;108;114;128mHEAD[39m   [37msitemap.xml[39m[38;2;108;114;128m ................................... sitemap[39m
+  [34mGET[39m[38;2;108;114;128m|[39m[38;2;108;114;128mHEAD[39m   [37mstorage/[39m[33m{path}[39m[38;2;108;114;128m .......................... storage.local[39m
+  [34mGET[39m[38;2;108;114;128m|[39m[38;2;108;114;128mHEAD[39m   [37mstruktur-organisasi[39m[38;2;108;114;128m ... public.organizational-structure[39m
+  [34mGET[39m[38;2;108;114;128m|[39m[38;2;108;114;128mHEAD[39m   [37mtallstackui/script/[39m[33m{file?}[39m[38;2;108;114;128m tallstackui.script › TallSt…[39m
+  [34mGET[39m[38;2;108;114;128m|[39m[38;2;108;114;128mHEAD[39m   [37mtallstackui/style/[39m[33m{file?}[39m[38;2;108;114;128m tallstackui.style › TallStac…[39m
+  [34mGET[39m[38;2;108;114;128m|[39m[38;2;108;114;128mHEAD[39m   [37mteacher/assessments/attendance[39m[38;2;108;114;128m teacher.assessments.att…[39m
+  [34mGET[39m[38;2;108;114;128m|[39m[38;2;108;114;128mHEAD[39m   [37mteacher/assessments/competency[39m[38;2;108;114;128m teacher.assessments.com…[39m
+  [34mGET[39m[38;2;108;114;128m|[39m[38;2;108;114;128mHEAD[39m   [37mteacher/assessments/extracurricular[39m[38;2;108;114;128m teacher.assessment…[39m
+  [34mGET[39m[38;2;108;114;128m|[39m[38;2;108;114;128mHEAD[39m   [37mteacher/assessments/paud[39m[38;2;108;114;128m ..... teacher.assessments.paud[39m
+  [34mGET[39m[38;2;108;114;128m|[39m[38;2;108;114;128mHEAD[39m   [37mteacher/dashboard[39m[38;2;108;114;128m ................... teacher.dashboard[39m
+  [34mGET[39m[38;2;108;114;128m|[39m[38;2;108;114;128mHEAD[39m   [37mteacher/grades[39m[38;2;108;114;128m ................ teacher.academic.grades[39m
+  [34mGET[39m[38;2;108;114;128m|[39m[38;2;108;114;128mHEAD[39m   [37mteacher/report-cards[39m[38;2;108;114;128m ............. teacher.report-cards[39m
+  [34mGET[39m[38;2;108;114;128m|[39m[38;2;108;114;128mHEAD[39m   [37mteacher/students[39m[38;2;108;114;128m ............... teacher.students.index[39m
+  [34mGET[39m[38;2;108;114;128m|[39m[38;2;108;114;128mHEAD[39m   [37mtentang-kami[39m[38;2;108;114;128m ............................. public.about[39m
+  [34mGET[39m[38;2;108;114;128m|[39m[38;2;108;114;128mHEAD[39m   [37mtest-at[39m[38;2;108;114;128m ............................................... [39m
+  [34mGET[39m[38;2;108;114;128m|[39m[38;2;108;114;128mHEAD[39m   [37mtest-modal[39m[38;2;108;114;128m ............................................ [39m
+  [34mGET[39m[38;2;108;114;128m|[39m[38;2;108;114;128mHEAD[39m   [37mtwo-factor-challenge[39m[38;2;108;114;128m two-factor.login › Laravel\Fortif…[39m
+  [33mPOST[39m       [37mtwo-factor-challenge[39m[38;2;108;114;128m two-factor.login.store › Laravel\…[39m
+  [34mGET[39m[38;2;108;114;128m|[39m[38;2;108;114;128mHEAD[39m   [37mup[39m[38;2;108;114;128m .................................................... [39m
+  [34mGET[39m[38;2;108;114;128m|[39m[38;2;108;114;128mHEAD[39m   [37muser/confirm-password[39m[38;2;108;114;128m password.confirm › Laravel\Forti…[39m
+  [33mPOST[39m       [37muser/confirm-password[39m[38;2;108;114;128m password.confirm.store › Laravel…[39m
+  [34mGET[39m[38;2;108;114;128m|[39m[38;2;108;114;128mHEAD[39m   [37muser/confirmed-password-status[39m[38;2;108;114;128m password.confirmation  …[39m
+  [33mPOST[39m       [37muser/confirmed-two-factor-authentication[39m[38;2;108;114;128m two-factor.co…[39m
+  [33mPOST[39m       [37muser/two-factor-authentication[39m[38;2;108;114;128m two-factor.enable › Lar…[39m
+  [31mDELETE[39m     [37muser/two-factor-authentication[39m[38;2;108;114;128m two-factor.disable › La…[39m
+  [34mGET[39m[38;2;108;114;128m|[39m[38;2;108;114;128mHEAD[39m   [37muser/two-factor-qr-code[39m[38;2;108;114;128m two-factor.qr-code › Laravel\F…[39m
+  [34mGET[39m[38;2;108;114;128m|[39m[38;2;108;114;128mHEAD[39m   [37muser/two-factor-recovery-codes[39m[38;2;108;114;128m two-factor.recovery-cod…[39m
+  [33mPOST[39m       [37muser/two-factor-recovery-codes[39m[38;2;108;114;128m two-factor.regenerate-r…[39m
+  [34mGET[39m[38;2;108;114;128m|[39m[38;2;108;114;128mHEAD[39m   [37muser/two-factor-secret-key[39m[38;2;108;114;128m two-factor.secret-key › Lar…[39m
+
+                                                 [34;1mShowing [97] routes[39;22m
+

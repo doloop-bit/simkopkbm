@@ -9,10 +9,10 @@ Route::middleware(['auth'])->prefix('admin')->name('admin.')->group(function () 
         ->name('assessments.competency');
 
     // Extracurricular Assessment
-    Volt::route('/assessments/extracurricular', 'admin.report-card.extracurricular-assessment')
+    Volt::route('/assessments/extracurricular', 'admin.assessments.extracurricular')
         ->name('assessments.extracurricular');
 
     // Report Attendance Summary (Sick, Permit, Alpha)
-    Volt::route('/assessments/attendance', 'admin.report-card.attendance-input')
+    Volt::route('/assessments/attendance', 'admin.assessments.attendance')
         ->name('assessments.attendance');
 });

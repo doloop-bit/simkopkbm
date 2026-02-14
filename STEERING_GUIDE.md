@@ -40,6 +40,7 @@ Before starting any development:
 ```
 
 **Example Command Sequence:**
+
 ```bash
 # 1. Create component
 php artisan make:volt admin/module/feature-name --class
@@ -104,33 +105,48 @@ npm run dev
    └─> Browser or tinker
 ```
 
+### **Workflow 4: Shared Admin/Teacher Features**
+
+**DO NOT** rely on dynamic layout detection (e.g., `if(request()->is('teacher/*'))`). This is fragile.
+
+**INSTEAD:**
+
+1.  **Extract Logic**: Create a Trait in `app/Traits/Assessments/`.
+2.  **Extract UI**: Create a Partial View in `resources/views/livewire/shared/_partials/`.
+3.  **Create Two Components**:
+    - `livewire/admin/.../feature.blade.php` -> uses `#[Layout('admin')]`
+    - `livewire/teacher/.../feature.blade.php` -> uses `#[Layout('teacher')]`
+4.  **Route Explicitly**:
+    - Admin route -> Admin component
+    - Teacher route -> Teacher component
+
 ---
 
 ## 📍 File Location Guide
 
 ### **Where to Put New Files?**
 
-| Type | Location |
-|------|----------|
-| Admin Page | `resources/views/livewire/admin/{module}/{name}.blade.php` |
-| Public Page | `resources/views/livewire/public/{name}.blade.php` |
-| Model | `app/Models/{ModelName}.php` |
-| Migration | `database/migrations/{date}_create_{table}_table.php` |
-| Seeder | `database/seeders/{ModelName}Seeder.php` |
-| Route File | `routes/{module}.php` |
-| Blade Component | `resources/views/components/admin/{name}.blade.php` |
-| Blade Partial | `resources/views/livewire/admin/{module}/partials/{name}.blade.php` |
+| Type            | Location                                                            |
+| --------------- | ------------------------------------------------------------------- |
+| Admin Page      | `resources/views/livewire/admin/{module}/{name}.blade.php`          |
+| Public Page     | `resources/views/livewire/public/{name}.blade.php`                  |
+| Model           | `app/Models/{ModelName}.php`                                        |
+| Migration       | `database/migrations/{date}_create_{table}_table.php`               |
+| Seeder          | `database/seeders/{ModelName}Seeder.php`                            |
+| Route File      | `routes/{module}.php`                                               |
+| Blade Component | `resources/views/components/admin/{name}.blade.php`                 |
+| Blade Partial   | `resources/views/livewire/admin/{module}/partials/{name}.blade.php` |
 
 ### **Module Mapping**
 
-| Module | Route File | View Directory |
-|--------|------------|----------------|
-| Academic | `routes/academic.php` | `livewire/admin/academic/` |
-| Students | `routes/students.php` | `livewire/admin/students/` |
+| Module      | Route File               | View Directory                |
+| ----------- | ------------------------ | ----------------------------- |
+| Academic    | `routes/academic.php`    | `livewire/admin/academic/`    |
+| Students    | `routes/students.php`    | `livewire/admin/students/`    |
 | Assessments | `routes/assessments.php` | `livewire/admin/assessments/` |
 | Report Card | `routes/report-card.php` | `livewire/admin/report-card/` |
-| Financial | `routes/financial.php` | `livewire/admin/financial/` |
-| News | `routes/news.php` | `livewire/admin/news/` |
+| Financial   | `routes/financial.php`   | `livewire/admin/financial/`   |
+| News        | `routes/news.php`        | `livewire/admin/news/`        |
 
 ---
 
@@ -142,7 +158,7 @@ npm run dev
 Need a component?
 ├─> Check Flux UI first
 │   ├─> Available in Flux Free? → Use Flux
-│   └─> Not available? 
+│   └─> Not available?
 │       ├─> Check TallStack UI
 │       │   ├─> Available? → Use TallStack
 │       │   └─> Not available? → Build custom with Tailwind
@@ -150,31 +166,32 @@ Need a component?
 
 ### **Quick Reference**
 
-| Need | Use |
-|------|-----|
-| Button, Input, Select, Modal | **Flux** `<flux:*>` |
-| Date Picker, Time Picker | **TallStack** `<x-ts-date-picker>` |
-| Searchable Select | **TallStack** `<x-ts-select.styled>` |
-| Tabs, Steps/Wizard | **TallStack** `<x-ts-tab>`, `<x-ts-step>` |
-| Rating, Color Picker | **TallStack** `<x-ts-rating>`, `<x-ts-color-picker>` |
-| Toast Notifications | **Flux** `\Flux::toast()` |
+| Need                         | Use                                                  |
+| ---------------------------- | ---------------------------------------------------- |
+| Button, Input, Select, Modal | **Flux** `<flux:*>`                                  |
+| Date Picker, Time Picker     | **TallStack** `<x-ts-date-picker>`                   |
+| Searchable Select            | **TallStack** `<x-ts-select.styled>`                 |
+| Tabs, Steps/Wizard           | **TallStack** `<x-ts-tab>`, `<x-ts-step>`            |
+| Rating, Color Picker         | **TallStack** `<x-ts-rating>`, `<x-ts-color-picker>` |
+| Toast Notifications          | **Flux** `\Flux::toast()`                            |
 
 ---
 
 ## 🔧 Code Patterns to Follow
 
 ### **Pattern 1: Page with Filters and Table**
+
 Copy from: `grades.blade.php`
 
 ```blade
 <?php
 new #[Layout('components.admin.layouts.app')] class extends Component {
     public ?int $filter_id = null;
-    
+
     public function mount(): void { }
     public function updatedFilterId(): void { }
     public function save(): void { }
-    
+
     public function with(): array {
         return ['items' => Model::all()];
     }
@@ -187,11 +204,11 @@ new #[Layout('components.admin.layouts.app')] class extends Component {
             <flux:subheading>Description</flux:subheading>
         </div>
     </div>
-    
+
     <div class="grid grid-cols-1 md:grid-cols-4 gap-4 mb-6">
         {{-- Filters --}}
     </div>
-    
+
     @if($condition)
         <div class="border rounded-lg bg-white dark:bg-zinc-900 overflow-hidden">
             <table class="w-full text-sm text-left border-collapse">
@@ -208,9 +225,11 @@ new #[Layout('components.admin.layouts.app')] class extends Component {
 ```
 
 ### **Pattern 2: CRUD with Modal**
+
 Copy from: `students/index.blade.php`
 
 ### **Pattern 3: Form Page**
+
 Copy from: `report-card/create.blade.php`
 
 ---
@@ -218,6 +237,7 @@ Copy from: `report-card/create.blade.php`
 ## ⚠️ Common Mistakes to Avoid
 
 ### **1. Wrong Component Location**
+
 ```blade
 {{-- ❌ WRONG - Creates component-style file --}}
 php artisan make:livewire admin/feature
@@ -227,6 +247,7 @@ php artisan make:volt admin/module/feature --class
 ```
 
 ### **2. Not Using UI Libraries**
+
 ```blade
 {{-- ❌ WRONG - Raw HTML --}}
 <input type="text" wire:model="name" class="border rounded px-3 py-2">
@@ -236,12 +257,14 @@ php artisan make:volt admin/module/feature --class
 ```
 
 ### **3. Forgetting to Clear Cache**
+
 ```bash
 # Always run after changes
 php artisan view:clear
 ```
 
 ### **4. Not Following Route Naming**
+
 ```php
 // ❌ WRONG
 Route::get('/competency', ...)->name('competency');
@@ -251,6 +274,7 @@ Route::get('/assessments/competency', ...)->name('admin.assessments.competency')
 ```
 
 ### **5. Hardcoding Strings**
+
 ```blade
 {{-- ❌ WRONG --}}
 <span>Student Name</span>
@@ -260,6 +284,7 @@ Route::get('/assessments/competency', ...)->name('admin.assessments.competency')
 ```
 
 ### **6. Database-Specific SQL**
+
 ```php
 // ❌ WRONG - MySQL-only syntax
 DB::raw('JSON_EXTRACT(data, "$.field")')
@@ -309,23 +334,25 @@ CompetencyAssessment::with('student', 'subject')->get();
 
 ### **Kurikulum Merdeka Implementation**
 
-| Priority | Task | Status |
-|----------|------|--------|
-| 1 | Competency Assessment Form | ✅ Done |
-| 2 | P5 Assessment Form | ⏳ Todo |
-| 3 | Extracurricular Assessment Form | ⏳ Todo |
-| 4 | PAUD Developmental Assessment | ⏳ Todo |
-| 5 | Report Card Generator | ⏳ Todo |
-| 6 | PDF Templates | ⏳ Todo |
+| Priority | Task                            | Status  |
+| -------- | ------------------------------- | ------- |
+| 1        | Competency Assessment Form      | ✅ Done |
+| 2        | P5 Assessment Form              | ⏳ Todo |
+| 3        | Extracurricular Assessment Form | ⏳ Todo |
+| 4        | PAUD Developmental Assessment   | ⏳ Todo |
+| 5        | Report Card Generator           | ⏳ Todo |
+| 6        | PDF Templates                   | ⏳ Todo |
 
 ### **Next Task Details**
 
 **P5 Assessment Form:**
+
 - Location: `resources/views/livewire/admin/assessments/p5-assessment.blade.php`
 - Route: `admin.assessments.p5`
 - Features: Select project, input level (BB/MB/BSH/SB), description
 
 **Extracurricular Assessment Form:**
+
 - Location: `resources/views/livewire/admin/assessments/extracurricular-assessment.blade.php`
 - Route: `admin.assessments.extracurricular`
 - Features: Select activity, input level, description
@@ -335,6 +362,7 @@ CompetencyAssessment::with('student', 'subject')->get();
 ## 🔄 Git Workflow
 
 ### **Branch Naming**
+
 ```
 feature/kurikulum-merdeka  # Current branch
 feature/p5-assessment
@@ -343,6 +371,7 @@ fix/blank-page-issue
 ```
 
 ### **Commit Message Format**
+
 ```
 feat: Add P5 assessment form
 fix: Resolve blank page on competency assessment
@@ -392,5 +421,5 @@ A feature is complete when:
 - **OS**: Windows
 - **Shell**: PowerShell
 - **Test Credentials**:
-  - **Username**: `admin@pkbm.com`
-  - **Password**: `password`
+    - **Username**: `admin@pkbm.com`
+    - **Password**: `password`
