@@ -58,7 +58,7 @@ new #[Layout('components.admin.layouts.app')] class extends Component {
                 ]
             ];
         })->toArray();
-        
+
         // Ensure all students in classroom have an entry
         $students = User::where('role', 'siswa')
             ->whereHas('profiles.profileable', function ($q) {
@@ -92,9 +92,9 @@ new #[Layout('components.admin.layouts.app')] class extends Component {
                     ],
                     [
                         'classroom_id' => $this->classroom_id,
-                        'sick' => (int)($data['sick'] ?? 0),
-                        'permission' => (int)($data['permission'] ?? 0),
-                        'absent' => (int)($data['absent'] ?? 0),
+                        'sick' => (int) ($data['sick'] ?? 0),
+                        'permission' => (int) ($data['permission'] ?? 0),
+                        'absent' => (int) ($data['absent'] ?? 0),
                     ]
                 );
             }
@@ -123,7 +123,10 @@ new #[Layout('components.admin.layouts.app')] class extends Component {
     }
 }; ?>
 
-<div class="p-6">
+<div class="pb-24 md:pb-0">
+    {{-- Navigation Component --}}
+    <x-admin.report-card-nav />
+
     <div class="flex items-center justify-between mb-6">
         <div>
             <flux:heading size="xl" level="1">Presensi Rapor</flux:heading>
@@ -157,9 +160,12 @@ new #[Layout('components.admin.layouts.app')] class extends Component {
                 <thead class="bg-zinc-50 dark:bg-zinc-800">
                     <tr>
                         <th class="px-4 py-3 font-medium text-zinc-700 dark:text-zinc-300 border-b">Nama Siswa</th>
-                        <th class="px-4 py-3 font-medium text-zinc-700 dark:text-zinc-300 border-b w-32 text-center">Sakit</th>
-                        <th class="px-4 py-3 font-medium text-zinc-700 dark:text-zinc-300 border-b w-32 text-center">Izin</th>
-                        <th class="px-4 py-3 font-medium text-zinc-700 dark:text-zinc-300 border-b w-32 text-center">Alpha</th>
+                        <th class="px-4 py-3 font-medium text-zinc-700 dark:text-zinc-300 border-b w-32 text-center">Sakit
+                        </th>
+                        <th class="px-4 py-3 font-medium text-zinc-700 dark:text-zinc-300 border-b w-32 text-center">Izin
+                        </th>
+                        <th class="px-4 py-3 font-medium text-zinc-700 dark:text-zinc-300 border-b w-32 text-center">Alpha
+                        </th>
                     </tr>
                 </thead>
                 <tbody class="divide-y divide-zinc-200 dark:divide-zinc-700">
@@ -169,28 +175,16 @@ new #[Layout('components.admin.layouts.app')] class extends Component {
                                 {{ $student->name }}
                             </td>
                             <td class="px-4 py-3">
-                                <flux:input 
-                                    wire:model="attendance_data.{{ $student->id }}.sick" 
-                                    type="number" 
-                                    min="0"
-                                    class="text-center"
-                                />
+                                <flux:input wire:model="attendance_data.{{ $student->id }}.sick" type="number" min="0"
+                                    class="text-center" />
                             </td>
                             <td class="px-4 py-3">
-                                <flux:input 
-                                    wire:model="attendance_data.{{ $student->id }}.permission" 
-                                    type="number" 
-                                    min="0"
-                                    class="text-center"
-                                />
+                                <flux:input wire:model="attendance_data.{{ $student->id }}.permission" type="number" min="0"
+                                    class="text-center" />
                             </td>
                             <td class="px-4 py-3">
-                                <flux:input 
-                                    wire:model="attendance_data.{{ $student->id }}.absent" 
-                                    type="number" 
-                                    min="0"
-                                    class="text-center"
-                                />
+                                <flux:input wire:model="attendance_data.{{ $student->id }}.absent" type="number" min="0"
+                                    class="text-center" />
                             </td>
                         </tr>
                     @endforeach
