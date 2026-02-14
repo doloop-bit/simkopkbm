@@ -16,8 +16,12 @@
 <body class="min-h-screen bg-white font-sans antialiased dark:bg-zinc-900">
     <x-admin.sidebar />
     <x-admin.header />
-    <x-admin.konten-web-nav />
-    <x-admin.report-card-nav />
+    @if(request()->routeIs('admin.school-profile.*') || request()->routeIs('admin.news.*') || request()->routeIs('admin.gallery.*') || request()->routeIs('admin.programs.*') || request()->routeIs('admin.contact-inquiries.*'))
+        <x-admin.konten-web-nav />
+    @endif
+    @if(request()->routeIs('admin.report-card.*') || request()->routeIs('admin.assessments.attendance'))
+        <x-admin.report-card-nav />
+    @endif
 
     <flux:main>
         {{ $slot }}

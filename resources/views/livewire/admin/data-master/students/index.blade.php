@@ -175,7 +175,7 @@ new #[Layout('components.admin.layouts.app')] class extends Component {
                 ]);
 
                 $profile = $this->editing->latestProfile?->profileable;
-                
+
                 if ($profile) {
                     $profile->update($profileData);
                 } else {
@@ -410,7 +410,7 @@ new #[Layout('components.admin.layouts.app')] class extends Component {
 
         try {
             \Maatwebsite\Excel\Facades\Excel::import(new \App\Imports\StudentsImport, $this->importFile);
-            
+
             $this->dispatch('close-modal', 'import-modal');
             $this->reset(['importFile', 'importErrors']);
             session()->flash('success', 'Data siswa berhasil diimport!');
@@ -425,7 +425,7 @@ new #[Layout('components.admin.layouts.app')] class extends Component {
         } catch (\Illuminate\Database\QueryException $e) {
             // Parse database constraint violations
             $errorMessage = $e->getMessage();
-            
+
             if (str_contains($errorMessage, 'UNIQUE constraint failed: student_profiles.nisn')) {
                 $this->importErrors[] = [
                     'row' => 'Database',
@@ -525,8 +525,10 @@ new #[Layout('components.admin.layouts.app')] class extends Component {
         </div>
     </div>
 
-    <div class="overflow-hidden border rounded-xl border-zinc-200 dark:border-zinc-700 bg-white dark:bg-zinc-900 shadow-sm">
-        <div class="p-4 border-b border-zinc-200 dark:border-zinc-700 flex flex-col md:flex-row gap-4 items-center justify-between bg-zinc-50/50 dark:bg-zinc-800/50">
+    <div
+        class="overflow-hidden border rounded-xl border-zinc-200 dark:border-zinc-700 bg-white dark:bg-zinc-900 shadow-sm">
+        <div
+            class="p-4 border-b border-zinc-200 dark:border-zinc-700 flex flex-col md:flex-row gap-4 items-center justify-between bg-zinc-50/50 dark:bg-zinc-800/50">
             <div class="flex flex-1 gap-3 w-full md:w-auto">
                 <flux:select wire:model.live="filter_level_id" placeholder="Pilih Tingkat" class="max-w-[200px]">
                     <option value="">Semua Tingkat</option>
@@ -541,7 +543,7 @@ new #[Layout('components.admin.layouts.app')] class extends Component {
                     @endforeach
                 </flux:select>
             </div>
-            
+
             <div class="flex gap-2 w-full md:w-auto justify-end">
                 <flux:button wire:click="export" icon="arrow-down-tray" variant="outline">Export XLSX</flux:button>
             </div>
@@ -550,24 +552,31 @@ new #[Layout('components.admin.layouts.app')] class extends Component {
         <table class="w-full text-sm text-left border-collapse">
             <thead class="bg-zinc-50 dark:bg-zinc-800/50">
                 <tr>
-                    <th class="px-4 py-3 font-semibold text-zinc-900 dark:text-zinc-100 border-b border-zinc-200 dark:border-zinc-700">
-                        <button wire:click="sortBy('name')" class="flex items-center gap-1 hover:text-primary-600 transition-colors">
+                    <th
+                        class="px-4 py-3 font-semibold text-zinc-900 dark:text-zinc-100 border-b border-zinc-200 dark:border-zinc-700">
+                        <button wire:click="sortBy('name')"
+                            class="flex items-center gap-1 hover:text-primary-600 transition-colors">
                             Siswa
                             @if($sortField === 'name')
-                                <flux:icon :icon="$sortDirection === 'asc' ? 'chevron-up' : 'chevron-down'" class="w-3 h-3" />
+                                <flux:icon :icon="$sortDirection === 'asc' ? 'chevron-up' : 'chevron-down'"
+                                    class="w-3 h-3" />
                             @endif
                         </button>
                     </th>
-                    <th class="px-4 py-3 font-semibold text-zinc-900 dark:text-zinc-100 border-b border-zinc-200 dark:border-zinc-700">
+                    <th
+                        class="px-4 py-3 font-semibold text-zinc-900 dark:text-zinc-100 border-b border-zinc-200 dark:border-zinc-700">
                         NIS/NISN
                     </th>
-                    <th class="px-4 py-3 font-semibold text-zinc-900 dark:text-zinc-100 border-b border-zinc-200 dark:border-zinc-700">
+                    <th
+                        class="px-4 py-3 font-semibold text-zinc-900 dark:text-zinc-100 border-b border-zinc-200 dark:border-zinc-700">
                         Kelas
                     </th>
-                    <th class="px-4 py-3 font-semibold text-zinc-900 dark:text-zinc-100 border-b border-zinc-200 dark:border-zinc-700">
+                    <th
+                        class="px-4 py-3 font-semibold text-zinc-900 dark:text-zinc-100 border-b border-zinc-200 dark:border-zinc-700">
                         Orang Tua/Wali
                     </th>
-                    <th class="px-4 py-3 font-semibold text-zinc-900 dark:text-zinc-100 border-b border-zinc-200 dark:border-zinc-700 text-right">
+                    <th
+                        class="px-4 py-3 font-semibold text-zinc-900 dark:text-zinc-100 border-b border-zinc-200 dark:border-zinc-700 text-right">
                         Aksi
                     </th>
                 </tr>
@@ -575,15 +584,19 @@ new #[Layout('components.admin.layouts.app')] class extends Component {
             <tbody class="divide-y divide-zinc-200 dark:divide-zinc-700">
                 @forelse ($students as $student)
                     @php $profile = $student->latestProfile?->profileable; @endphp
-                    <tr wire:key="{{ $student->id }}" class="hover:bg-zinc-50/80 dark:hover:bg-zinc-800/30 transition-colors group">
+                    <tr wire:key="{{ $student->id }}"
+                        class="hover:bg-zinc-50/80 dark:hover:bg-zinc-800/30 transition-colors group">
                         <td class="px-4 py-4">
-                            <button type="button" class="flex items-center gap-3 cursor-pointer text-left focus:outline-none"
+                            <button type="button"
+                                class="flex items-center gap-3 cursor-pointer text-left focus:outline-none"
                                 wire:click="viewDetails({{ $student->id }})"
                                 x-on:click="$flux.modal('detail-modal').show()">
                                 @if($profile?->photo && Storage::disk('public')->exists($profile->photo))
-                                    <flux:avatar src="/storage/{{ $profile->photo }}" size="sm" class="group-hover:ring-1 ring-primary-500/20 transition-all" />
+                                    <flux:avatar src="/storage/{{ $profile->photo }}" size="sm"
+                                        class="group-hover:ring-1 ring-primary-500/20 transition-all" />
                                 @else
-                                    <div class="group-hover:ring-1 flex aspect-square size-8 items-center justify-center rounded-lg bg-zinc-100 text-zinc-400 group-hover:bg-primary-50 group-hover:text-primary-600 transition-all dark:bg-zinc-800 dark:text-zinc-500 dark:group-hover:bg-primary-900/20 dark:group-hover:text-primary-400">
+                                    <div
+                                        class="group-hover:ring-1 flex aspect-square size-8 items-center justify-center rounded-lg bg-zinc-100 text-zinc-400 group-hover:bg-primary-50 group-hover:text-primary-600 transition-all dark:bg-zinc-800 dark:text-zinc-500 dark:group-hover:bg-primary-900/20 dark:group-hover:text-primary-400">
                                         <flux:icon icon="user" variant="mini" class="size-5" />
                                     </div>
                                 @endif
@@ -597,12 +610,14 @@ new #[Layout('components.admin.layouts.app')] class extends Component {
                         <td class="px-4 py-4 text-zinc-600 dark:text-zinc-400">
                             <div class="flex flex-col">
                                 <span class="text-sm font-medium">{{ $profile?->nis ?? '-' }}</span>
-                                <span class="text-[10px] uppercase tracking-wider opacity-60">NISN: {{ $profile?->nisn ?? '-' }}</span>
+                                <span class="text-[10px] uppercase tracking-wider opacity-60">NISN:
+                                    {{ $profile?->nisn ?? '-' }}</span>
                             </div>
                         </td>
                         <td class="px-4 py-4">
                             @if($profile?->classroom)
-                                <flux:badge size="sm" variant="neutral" class="bg-zinc-100 dark:bg-zinc-800 border-zinc-200 dark:border-zinc-700">
+                                <flux:badge size="sm" variant="neutral"
+                                    class="bg-zinc-100 dark:bg-zinc-800 border-zinc-200 dark:border-zinc-700">
                                     {{ $profile->classroom->name }}
                                 </flux:badge>
                             @else
@@ -611,8 +626,10 @@ new #[Layout('components.admin.layouts.app')] class extends Component {
                         </td>
                         <td class="px-4 py-4 text-zinc-600 dark:text-zinc-400">
                             <div class="flex flex-col">
-                                <span class="text-sm font-medium">{{ ($profile?->father_name ?: ($profile?->mother_name ?: ($profile?->guardian_name ?: '-'))) }}</span>
-                                <span class="text-xs opacity-75">{{ ($profile?->guardian_phone ?: ($profile?->phone ?: '-')) }}</span>
+                                <span
+                                    class="text-sm font-medium">{{ ($profile?->father_name ?: ($profile?->mother_name ?: ($profile?->guardian_name ?: '-'))) }}</span>
+                                <span
+                                    class="text-xs opacity-75">{{ ($profile?->guardian_phone ?: ($profile?->phone ?: '-')) }}</span>
                             </div>
                         </td>
                         <td class="px-4 py-4 text-right space-x-1">
@@ -622,7 +639,8 @@ new #[Layout('components.admin.layouts.app')] class extends Component {
                             <flux:button size="sm" variant="ghost" icon="pencil-square"
                                 wire:click="edit({{ $student->id }})" x-on:click="$flux.modal('student-modal').show()"
                                 tooltip="Edit Siswa" />
-                            <flux:button size="sm" variant="ghost" icon="trash" class="text-red-500 hover:bg-red-50 dark:hover:bg-red-900/20"
+                            <flux:button size="sm" variant="ghost" icon="trash"
+                                class="text-red-500 hover:bg-red-50 dark:hover:bg-red-900/20"
                                 wire:confirm="Yakin ingin menghapus siswa ini?" wire:click="delete({{ $student->id }})"
                                 tooltip="Hapus Siswa" />
                         </td>
@@ -757,7 +775,7 @@ new #[Layout('components.admin.layouts.app')] class extends Component {
     </flux:modal>
 
     {{-- Modals --}}
-    @include('livewire.admin.students.partials.import-modal')
-    @include('livewire.admin.students.partials.periodic-modal')
-    @include('livewire.admin.students.partials.detail-modal')
+    @include('livewire.admin.data-master.students.partials.import-modal')
+    @include('livewire.admin.data-master.students.partials.periodic-modal')
+    @include('livewire.admin.data-master.students.partials.detail-modal')
 </div>
