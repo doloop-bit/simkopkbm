@@ -173,6 +173,7 @@ Need a component?
 | Searchable Select            | **TallStack** `<x-ts-select.styled>`                 |
 | Tabs, Steps/Wizard           | **TallStack** `<x-ts-tab>`, `<x-ts-step>`            |
 | Rating, Color Picker         | **TallStack** `<x-ts-rating>`, `<x-ts-color-picker>` |
+| Table                        | **HTML + Tailwind** (Flux Free has no table component)|
 | Toast Notifications          | **Flux** `\Flux::toast()`                            |
 
 ---

@@ -145,43 +145,45 @@ new class extends Component {
         </div>
     </div>
 
-    <div class="overflow-x-auto">
-        <table class="min-w-full divide-y divide-zinc-200 dark:divide-zinc-700">
-            <thead>
+    <div class="overflow-x-auto border rounded-xl border-zinc-200 dark:border-zinc-700 bg-white dark:bg-zinc-900 shadow-sm">
+        <table class="w-full text-sm text-left border-collapse">
+            <thead class="bg-zinc-50 dark:bg-zinc-800/50">
                 <tr>
-                    <th class="px-4 py-3 text-left text-xs font-medium text-zinc-500 uppercase">Nama & Email</th>
-                    <th class="px-4 py-3 text-left text-xs font-medium text-zinc-500 uppercase">Role</th>
-                    <th class="px-4 py-3 text-left text-xs font-medium text-zinc-500 uppercase">No. HP (WA)</th>
-                    <th class="px-4 py-3 text-left text-xs font-medium text-zinc-500 uppercase">Level</th>
-                    <th class="px-4 py-3 text-left text-xs font-medium text-zinc-500 uppercase">Status</th>
-                    <th class="px-4 py-3 text-right text-xs font-medium text-zinc-500 uppercase">Aksi</th>
+                    <th class="px-4 py-3 font-semibold text-zinc-900 dark:text-zinc-100 border-b border-zinc-200 dark:border-zinc-700">Nama & Email</th>
+                    <th class="px-4 py-3 font-semibold text-zinc-900 dark:text-zinc-100 border-b border-zinc-200 dark:border-zinc-700 whitespace-nowrap">Role</th>
+                    <th class="px-4 py-3 font-semibold text-zinc-900 dark:text-zinc-100 border-b border-zinc-200 dark:border-zinc-700 whitespace-nowrap">No. HP (WA)</th>
+                    <th class="px-4 py-3 font-semibold text-zinc-900 dark:text-zinc-100 border-b border-zinc-200 dark:border-zinc-700 whitespace-nowrap">Level</th>
+                    <th class="px-4 py-3 font-semibold text-zinc-900 dark:text-zinc-100 border-b border-zinc-200 dark:border-zinc-700 whitespace-nowrap">Status</th>
+                    <th class="px-4 py-3 font-semibold text-zinc-900 dark:text-zinc-100 border-b border-zinc-200 dark:border-zinc-700 text-right whitespace-nowrap">Aksi</th>
                 </tr>
             </thead>
             <tbody class="divide-y divide-zinc-200 dark:divide-zinc-700">
                 @foreach($users as $user)
-                    <tr class="hover:bg-zinc-50 dark:hover:bg-zinc-800">
-                        <td class="px-4 py-3">
-                            <div class="text-sm font-medium text-zinc-900 dark:text-zinc-100">{{ $user->name }}</div>
-                            <div class="text-sm text-zinc-500">{{ $user->email }}</div>
+                    <tr class="hover:bg-zinc-50/80 dark:hover:bg-zinc-800/30 transition-colors">
+                        <td class="px-4 py-4">
+                            <div class="flex flex-col">
+                                <span class="font-semibold text-zinc-900 dark:text-white">{{ $user->name }}</span>
+                                <span class="text-xs text-zinc-500">{{ $user->email }}</span>
+                            </div>
                         </td>
-                        <td class="px-4 py-3 whitespace-nowrap text-sm text-zinc-500">
+                        <td class="px-4 py-4 whitespace-nowrap text-zinc-600 dark:text-zinc-400">
                             <span class="capitalize">{{ $this->roles[$user->role] ?? $user->role }}</span>
                         </td>
-                        <td class="px-4 py-3 whitespace-nowrap text-sm text-zinc-500">
+                        <td class="px-4 py-4 whitespace-nowrap text-zinc-600 dark:text-zinc-400">
                             {{ $user->phone ?? '-' }}
                         </td>
-                        <td class="px-4 py-3 whitespace-nowrap text-sm text-zinc-500">
+                        <td class="px-4 py-4 whitespace-nowrap text-zinc-600 dark:text-zinc-400">
                             {{ $user->managedLevel->name ?? '-' }}
                         </td>
-                        <td class="px-4 py-3 whitespace-nowrap">
+                        <td class="px-4 py-4 whitespace-nowrap">
                             <flux:badge variant="{{ $user->is_active ? 'success' : 'danger' }}" size="sm">
                                 {{ $user->is_active ? 'Aktif' : 'Non-Aktif' }}
                             </flux:badge>
                         </td>
-                        <td class="px-4 py-3 text-right space-x-2">
+                        <td class="px-4 py-4 text-right space-x-1">
                             <flux:button size="sm" variant="ghost" icon="pencil-square" wire:click="edit({{ $user->id }})" />
                             @if($user->id !== auth()->id())
-                                <flux:button size="sm" variant="ghost" icon="trash" class="text-red-500" wire:confirm="Hapus user ini?" wire:click="delete({{ $user->id }})" />
+                                <flux:button size="sm" variant="ghost" icon="trash" class="text-red-500 hover:bg-red-50 dark:hover:bg-red-900/20" wire:confirm="Hapus user ini?" wire:click="delete({{ $user->id }})" />
                             @endif
                         </td>
                     </tr>
