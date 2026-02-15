@@ -11,6 +11,7 @@
         $title = $title ? $title . ' - ' . config('app.name', 'Laravel') : config('app.name', 'Laravel');
     @endphp
     
+    
     @include('partials.head')
 </head>
 <body class="min-h-screen bg-white font-sans antialiased dark:bg-zinc-900">

@@ -45,19 +45,19 @@ class FonnteService implements WhatsAppService
         }
 
         try {
-            // Fonnte recommends creating a temporary URL if possible, or multipart upload.
-            // For simplicity with generated content, multipart is best.
+            // Updated Strategy: Upload file to public storage and send link
+            // because Fonnte Free plan doesn't support direct file uploads efficiently.
             
-            $response = Http::withHeaders([
-                'Authorization' => $this->token,
-            ])->attach(
-                'file', $fileContent, $fileName
-            )->post("{$this->baseUrl}/send", [
-                'target' => $target,
-                'message' => $caption ?? $fileName,
-            ]);
+            $path = 'whatsapp-files/' . date('Y-m-d') . '/' . $fileName;
+            \Illuminate\Support\Facades\Storage::disk('public')->put($path, $fileContent);
+            
+            $url = \Illuminate\Support\Facades\Storage::disk('public')->url($path);
+            
+            // Format message with explicit spacing for link recognition
+            $message = ($caption ? $caption . "\n\n" : "") . "Link Download:\n" . $url . "\n\n(Harap dibuka di browser)";
 
-            return $response->json();
+            return $this->sendMessage($target, $message);
+
         } catch (\Exception $e) {
             Log::error('Fonnte Send Document Error: ' . $e->getMessage());
             return false;

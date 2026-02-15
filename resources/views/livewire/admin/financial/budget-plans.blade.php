@@ -24,6 +24,7 @@ new class extends Component {
     
     // Items Form
     public $formItems = []; // Array of ['standard_item_id', 'name', 'unit', 'quantity', 'amount', 'total', 'category_name']
+    public $itemSearches = []; // Per row search input
 
     // Master Data Cache
     public $standardItems = [];
@@ -68,8 +69,10 @@ new class extends Component {
              }
         }
 
-        $this->reset(['academic_year_id', 'title', 'editing', 'notes']);
+        $this->reset(['title', 'editing', 'notes']);
+        $this->academic_year_id = AcademicYear::where('is_active', true)->first()?->id ?? '';
         $this->formItems = [];
+        $this->itemSearches = [''];
         $this->addItemRow(); // Start with 1 empty row
         $this->dispatch('open-plan-modal');
     }
@@ -101,6 +104,8 @@ new class extends Component {
             ];
         })->toArray();
 
+        $this->itemSearches = collect($this->formItems)->pluck('name')->toArray();
+
         $this->dispatch('open-plan-modal');
     }
 
@@ -115,12 +120,15 @@ new class extends Component {
             'total' => 0,
             'category_name' => '-',
         ];
+        $this->itemSearches[] = '';
     }
 
     public function removeItemRow($index): void
     {
         unset($this->formItems[$index]);
+        unset($this->itemSearches[$index]);
         $this->formItems = array_values($this->formItems); // Re-index
+        $this->itemSearches = array_values($this->itemSearches); // Re-index
     }
 
     public function updatedFormItems($value, $key): void
@@ -133,13 +141,16 @@ new class extends Component {
         $field = $parts[1];
 
         if ($field === 'standard_item_id') {
-            $selectedItem = $this->standardItems->firstWhere('id', $value);
-            if ($selectedItem) {
-                $this->formItems[$index]['name'] = $selectedItem->name;
-                $this->formItems[$index]['unit'] = $selectedItem->unit;
-                $this->formItems[$index]['amount'] = $selectedItem->default_price ?? 0;
-                $this->formItems[$index]['category_name'] = $selectedItem->category->name ?? '-';
-                $this->calculateRowTotal($index);
+            if ($value && is_numeric($value)) {
+                $selectedItem = $this->standardItems->firstWhere('id', (int) $value);
+                if ($selectedItem) {
+                    $this->formItems[$index]['name'] = $selectedItem->name;
+                    $this->formItems[$index]['unit'] = $selectedItem->unit;
+                    $this->formItems[$index]['amount'] = $selectedItem->default_price ?? 0;
+                    $this->formItems[$index]['category_name'] = $selectedItem->category->name ?? '-';
+                    $this->calculateRowTotal($index);
+                    $this->itemSearches[$index] = $selectedItem->name;
+                }
             }
         } elseif ($field === 'quantity' || $field === 'amount') {
             $this->calculateRowTotal($index);
@@ -166,7 +177,8 @@ new class extends Component {
             'academic_year_id' => 'required',
             'title' => 'required|string|max:255',
             'formItems' => 'required|array|min:1',
-            'formItems.*.standard_item_id' => 'required',
+            'formItems.*.name' => 'required|string|max:255',
+            'formItems.*.standard_item_id' => 'nullable',
             'formItems.*.quantity' => 'required|integer|min:1',
             'formItems.*.amount' => 'required|numeric|min:0',
         ]);
@@ -198,7 +210,7 @@ new class extends Component {
 
         foreach ($this->formItems as $item) {
             $plan->items()->create([
-                'standard_budget_item_id' => $item['standard_item_id'],
+                'standard_budget_item_id' => is_numeric($item['standard_item_id']) ? $item['standard_item_id'] : null,
                 'name' => $item['name'] ?? 'Item',
                 'quantity' => $item['quantity'],
                 'unit' => $item['unit'] ?? 'Unit',
@@ -212,7 +224,8 @@ new class extends Component {
                 $plan->load(['items.standardItem.category', 'level', 'academicYear', 'submitter']); 
 
                 // 1. Generate PDF
-                $pdf = \Barryvdh\DomPDF\Facade\Pdf::loadView('pdf.rab', ['plan' => $plan]);
+                $profile = \App\Models\SchoolProfile::first();
+                $pdf = \Barryvdh\DomPDF\Facade\Pdf::loadView('pdf.rab', ['plan' => $plan, 'profile' => $profile]);
                 $pdfContent = $pdf->output();
 
                 // 2. Find Targets (Admin + Yayasan with phone)
@@ -268,6 +281,14 @@ new class extends Component {
         }
         $plan->delete();
     }
+
+    public function createSubItem($index, $name): void
+    {
+        $this->formItems[$index]['name'] = $name;
+        $this->formItems[$index]['standard_item_id'] = ''; // Ensure it's empty/null for manual items
+        $this->formItems[$index]['category_name'] = 'Manual / Lainnya';
+        $this->itemSearches[$index] = $name;
+    }
 }; ?>
 
 <div class="flex flex-col gap-6">
@@ -312,7 +333,7 @@ new class extends Component {
             </thead>
             <tbody class="divide-y divide-zinc-200 dark:divide-zinc-700">
                 @foreach($plans as $plan)
-                    <tr class="hover:bg-zinc-50 dark:hover:bg-zinc-800">
+                    <tr wire:key="plan-{{ $plan->id }}" class="hover:bg-zinc-50 dark:hover:bg-zinc-800">
                         <td class="px-4 py-3 whitespace-nowrap text-sm font-medium text-zinc-900 dark:text-zinc-100">{{ $plan->title }}</td>
                         <td class="px-4 py-3 whitespace-nowrap text-sm text-zinc-500">{{ $plan->level->name }}</td>
                         <td class="px-4 py-3 whitespace-nowrap text-sm text-zinc-500">{{ $plan->academicYear->name }}</td>
@@ -333,22 +354,22 @@ new class extends Component {
                         </td>
                         <td class="px-4 py-3 text-right space-x-2">
                             <!-- View/Edit -->
-                            <flux:button size="sm" variant="ghost" icon="eye" wire:click="edit({{ $plan->id }})" />
+                            <flux:button size="sm" variant="ghost" icon="eye" wire:click="edit({{ $plan->id }})" wire:target="edit({{ $plan->id }})" />
                             
                             <!-- Delete (Draft Only) -->
-                            @if($plan->status === 'draft')
-                                <flux:button size="sm" variant="ghost" icon="trash" class="text-red-500" wire:confirm="Hapus RAB ini?" wire:click="delete({{ $plan->id }})" />
+                            @if($plan->status === 'draft' || Auth::user()->isAdmin())
+                                <flux:button size="sm" variant="ghost" icon="trash" class="text-red-500" wire:confirm="Hapus RAB ini?" wire:click="delete({{ $plan->id }})" wire:target="delete({{ $plan->id }})" />
                             @endif
                             
                             <!-- Approval Actions (Yayasan) -->
                             @if((Auth::user()->isYayasan() || Auth::user()->isAdmin()) && $plan->status === 'submitted')
-                                <flux:button size="sm" variant="primary" icon="check" wire:click="updateStatus({{ $plan->id }}, 'approved')" />
-                                <flux:button size="sm" variant="danger" icon="x-mark" wire:click="updateStatus({{ $plan->id }}, 'rejected')" />
+                                <flux:button size="sm" variant="primary" icon="check" wire:click="updateStatus({{ $plan->id }}, 'approved')" wire:target="updateStatus({{ $plan->id }}, 'approved')" />
+                                <flux:button size="sm" variant="danger" icon="x-mark" wire:click="updateStatus({{ $plan->id }}, 'rejected')" wire:target="updateStatus({{ $plan->id }}, 'rejected')" />
                             @endif
                             
                             <!-- Transfer Action (Yayasan) -->
                             @if((Auth::user()->isYayasan() || Auth::user()->isAdmin()) && $plan->status === 'approved')
-                                <flux:button size="sm" variant="primary" icon="banknotes" wire:click="updateStatus({{ $plan->id }}, 'transferred')" title="Tandai Sudah Transfer" />
+                                <flux:button size="sm" variant="primary" icon="banknotes" wire:click="updateStatus({{ $plan->id }}, 'transferred')" wire:target="updateStatus({{ $plan->id }}, 'transferred')" title="Tandai Sudah Transfer" />
                             @endif
                         </td>
                     </tr>
@@ -361,15 +382,15 @@ new class extends Component {
         {{ $plans->links() }}
     </div>
 
-    <!-- RAB Modal (Fullscreen or Large) -->
-    <flux:modal name="plan-modal" class="min-w-[800px] max-h-[90vh] overflow-y-auto" @open-plan-modal.window="$flux.modal('plan-modal').show()" x-on:plan-saved.window="$flux.modal('plan-modal').close()">
+    <!-- RAB Modal (Large) -->
+    <flux:modal name="plan-modal" class="w-full max-w-6xl max-h-[95vh] overflow-y-auto" @open-plan-modal.window="$flux.modal('plan-modal').show()" x-on:plan-saved.window="$flux.modal('plan-modal').close()">
         <div class="space-y-6">
             <div>
                 <flux:heading size="lg">{{ $editing ? 'Edit RAB' : 'Buat RAB Baru' }}</flux:heading>
                 <flux:subheading>Anggaran diajukan oleh Bendahara/Kepsek untuk disetujui Yayasan.</flux:subheading>
             </div>
 
-            <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-4 items-start">
                 <flux:select wire:model="academic_year_id" label="Tahun Ajaran" placeholder="Pilih Tahun Ajaran">
                     @foreach($years as $year)
                         <option value="{{ $year->id }}">{{ $year->name }}</option>
@@ -380,16 +401,16 @@ new class extends Component {
             </div>
 
             <!-- Items Table -->
-            <div class="border rounded-lg overflow-hidden">
+            <div class="border rounded-lg bg-zinc-50 dark:bg-zinc-800/50 p-1">
                 <table class="min-w-full divide-y divide-zinc-200">
                     <thead class="bg-zinc-50 dark:bg-zinc-800">
                         <tr>
-                            <th class="px-3 py-2 text-left text-xs font-medium text-zinc-500 uppercase">Item (Ketik utk cari)</th>
-                            <th class="px-3 py-2 text-left text-xs font-medium text-zinc-500 uppercase">Kategori</th>
-                            <th class="px-3 py-2 text-center text-xs font-medium text-zinc-500 uppercase w-24">Qty</th>
+                            <th class="px-3 py-2 text-left text-xs font-medium text-zinc-500 uppercase">Item Standar / Baru</th>
+                            <th class="px-3 py-2 text-left text-xs font-medium text-zinc-500 uppercase w-32">Kategori</th>
+                            <th class="px-3 py-2 text-center text-xs font-medium text-zinc-500 uppercase w-28">Qty</th>
                             <th class="px-3 py-2 text-center text-xs font-medium text-zinc-500 uppercase w-24">Satuan</th>
-                            <th class="px-3 py-2 text-right text-xs font-medium text-zinc-500 uppercase w-32">Harga Satuan</th>
-                            <th class="px-3 py-2 text-right text-xs font-medium text-zinc-500 uppercase w-32">Total</th>
+                            <th class="px-3 py-2 text-right text-xs font-medium text-zinc-500 uppercase w-40">Harga Satuan</th>
+                            <th class="px-3 py-2 text-right text-xs font-medium text-zinc-500 uppercase w-40">Total</th>
                             <th class="px-3 py-2 w-10"></th>
                         </tr>
                     </thead>
@@ -397,22 +418,84 @@ new class extends Component {
                         @foreach($formItems as $index => $item)
                         <tr wire:key="item-{{ $index }}">
                             <td class="px-3 py-2">
-                                <flux:select wire:model.live="formItems.{{ $index }}.standard_item_id" placeholder="Pilih Item" searchable>
-                                    @foreach($standardItems as $std)
-                                        <option value="{{ $std->id }}">{{ $std->name }}</option>
-                                    @endforeach
-                                </flux:select>
+                                <div class="relative items-select" 
+                                    x-data="{ 
+                                        open: false, 
+                                        search: @entangle('itemSearches.' . $index),
+                                        options: {{ $standardItems->map(fn($i) => ['id' => $i->id, 'name' => $i->name])->toJson() }},
+                                        get filteredOptions() {
+                                            if (!this.search) return this.options.slice(0, 10);
+                                            return this.options.filter(o => o.name.toLowerCase().includes(this.search.toLowerCase())).slice(0, 10);
+                                        },
+                                        get exactMatch() {
+                                            return this.options.some(o => o.name.toLowerCase() === this.search.toLowerCase());
+                                        },
+                                        select(opt) {
+                                            $wire.set('formItems.{{ $index }}.standard_item_id', opt.id);
+                                            this.search = opt.name;
+                                            this.open = false;
+                                        },
+                                        create() {
+                                            $wire.createSubItem({{ $index }}, this.search);
+                                            this.open = false;
+                                        }
+                                    }"
+                                    x-on:click.away="open = false"
+                                >
+                                    <flux:input 
+                                        x-model="search" 
+                                        x-on:focus="open = true"
+                                        x-on:input="open = true"
+                                        placeholder="Cari atau ketik nama baru..."
+                                        size="sm"
+                                    />
+                                    
+                                    <div x-show="open" 
+                                        class="absolute z-50 w-full mt-1 bg-white dark:bg-zinc-800 border rounded shadow-lg max-h-60 overflow-auto"
+                                        x-transition
+                                        style="display: none;"
+                                    >
+                                        <template x-for="opt in filteredOptions" :key="opt.id">
+                                            <div x-on:click="select(opt)" 
+                                                class="px-3 py-2 hover:bg-zinc-100 dark:hover:bg-zinc-700 cursor-pointer text-sm"
+                                                x-text="opt.name">
+                                            </div>
+                                        </template>
+                                        
+                                        <div x-show="search && search.length > 1 && !exactMatch" 
+                                            x-on:click="create()"
+                                            class="px-3 py-2 hover:bg-zinc-100 dark:hover:bg-zinc-700 cursor-pointer text-sm border-t font-medium text-emerald-600 dark:text-emerald-400 flex items-center gap-2"
+                                        >
+                                            <flux:icon name="plus" size="xs" />
+                                            <span>Tambah "<span x-text="search"></span>"</span>
+                                        </div>
+                                        
+                                        <div x-show="search && filteredOptions.length === 0 && !exactMatch" 
+                                            class="p-4 text-zinc-400 italic text-xs text-center">
+                                            Tekan "Tambah" di atas untuk item baru
+                                        </div>
+                                    </div>
+                                </div>
                             </td>
-                            <td class="px-3 py-2 text-sm text-zinc-500">{{ $item['category_name'] }}</td>
-                            <td class="px-3 py-2">
-                                <flux:input type="number" wire:model.live="formItems.{{ $index }}.quantity" class="text-center" min="1" />
+                            <td class="px-3 py-2 text-xs text-zinc-500">{{ $item['category_name'] }}</td>
+                            <td class="px-3 py-2 text-center">
+                                <flux:input type="number" wire:model.live.debounce.1000ms="formItems.{{ $index }}.quantity" class="text-center w-28 mx-auto" min="1" />
                             </td>
-                            <td class="px-3 py-2 text-sm text-center text-zinc-500">{{ $item['unit'] }}</td>
+                            <td class="px-3 py-2 text-center">
+                                <flux:input wire:model="formItems.{{ $index }}.unit" placeholder="Satuan" class="text-center w-16 mx-auto" />
+                            </td>
                             <td class="px-3 py-2">
-                                <flux:input type="number" wire:model.live="formItems.{{ $index }}.amount" class="text-right" min="0" />
+                                <flux:input type="number" wire:model.live.debounce.1300ms="formItems.{{ $index }}.amount" class="text-right w-32 ml-auto" min="0" />
                             </td>
                             <td class="px-3 py-2 text-right font-medium">
-                                Rp {{ number_format($item['total'], 0, ',', '.') }}
+                                <div wire:loading.remove wire:target="formItems.{{ $index }}.quantity, formItems.{{ $index }}.amount">
+                                    Rp {{ number_format($item['total'], 0, ',', '.') }}
+                                </div>
+                                <div wire:loading wire:target="formItems.{{ $index }}.quantity, formItems.{{ $index }}.amount">
+                                    <div class="flex justify-end">
+                                        <div class="animate-spin h-4 w-4 border-2 border-zinc-300 border-t-zinc-600 rounded-full"></div>
+                                    </div>
+                                </div>
                             </td>
                             <td class="px-3 py-2 text-center">
                                 <button type="button" wire:click="removeItemRow({{ $index }})" class="text-red-500 hover:text-red-700">
@@ -455,5 +538,5 @@ new class extends Component {
                 </div>
             </div>
         </div>
-    </flux:modal>
+</flux:modal>
 </div>
