@@ -22,6 +22,14 @@ new #[Layout('components.admin.layouts.app')] class extends Component {
     public ?int $filterLevelId = null;
 
     public ?ExtracurricularActivity $editing = null;
+    public bool $isModalOpen = false;
+
+    public function createNew(): void
+    {
+        $this->reset(['name', 'instructor', 'description', 'level_id', 'is_active', 'editing']);
+        $this->resetValidation();
+        $this->dispatch('open-activity-modal');
+    }
 
     public function updatingSearch(): void
     {
@@ -66,8 +74,9 @@ new #[Layout('components.admin.layouts.app')] class extends Component {
         }
 
         $this->reset(['name', 'instructor', 'description', 'level_id', 'is_active', 'editing']);
-        $this->modal('activity-modal')->close();
+        $this->dispatch('activity-saved');
     }
+
 
     public function edit(ExtracurricularActivity $activity): void
     {
@@ -78,7 +87,7 @@ new #[Layout('components.admin.layouts.app')] class extends Component {
         $this->level_id = $activity->level_id;
         $this->is_active = $activity->is_active;
 
-        $this->modal('activity-modal')->show();
+        $this->dispatch('open-activity-modal');
     }
 
     public function delete(ExtracurricularActivity $activity): void
@@ -116,9 +125,7 @@ new #[Layout('components.admin.layouts.app')] class extends Component {
             <flux:subheading>Kelola daftar kegiatan ekstrakurikuler untuk siswa.</flux:subheading>
         </div>
 
-        <flux:modal.trigger name="activity-modal">
-            <flux:button variant="primary" icon="plus" wire:click="$set('editing', null)">Tambah Ekskul</flux:button>
-        </flux:modal.trigger>
+        <flux:button variant="primary" icon="plus" wire:click="createNew" wire:loading.attr="disabled">Tambah Ekskul</flux:button>
     </div>
 
     <div class="flex flex-col md:flex-row gap-4 mb-6 items-center justify-between">
@@ -170,7 +177,7 @@ new #[Layout('components.admin.layouts.app')] class extends Component {
                             </button>
                         </td>
                         <td class="px-4 py-3 text-right space-x-2">
-                            <flux:button size="sm" variant="ghost" icon="pencil-square" wire:click="edit({{ $activity->id }})" />
+                            <flux:button size="sm" variant="ghost" icon="pencil-square" wire:click="edit({{ $activity->id }})" wire:loading.attr="disabled" />
                             <flux:button size="sm" variant="ghost" icon="trash" class="text-red-500" wire:confirm="Yakin ingin menghapus ekstrakurikuler ini?" wire:click="delete({{ $activity->id }})" />
                         </td>
                     </tr>
@@ -190,7 +197,7 @@ new #[Layout('components.admin.layouts.app')] class extends Component {
     </div>
 
     {{-- Activity Create/Edit Modal --}}
-    <flux:modal name="activity-modal" class="max-w-md">
+    <flux:modal name="activity-modal" class="max-w-md" @open-activity-modal.window="$flux.modal('activity-modal').show()" x-on:activity-saved.window="$flux.modal('activity-modal').close()">
         <form wire:submit="save" class="space-y-6">
             <div>
                 <flux:heading size="lg">{{ $editing ? 'Edit Ekstrakurikuler' : 'Tambah Ekstrakurikuler' }}</flux:heading>

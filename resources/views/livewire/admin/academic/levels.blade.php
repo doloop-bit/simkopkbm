@@ -19,12 +19,13 @@ new #[Layout('components.admin.layouts.app')] class extends Component {
         $this->reset(['name', 'type', 'education_level', 'phase_map', 'editing']);
         $this->updatedEducationLevel();
         $this->resetValidation();
+        $this->dispatch('open-level-modal');
     }
 
     public function updatedEducationLevel(): void
     {
         $this->phase_map = match($this->education_level) {
-            'paud' => ['1' => 'A', '2' => 'B'],
+            'paud' => [],
             'sd' => ['1' => 'A', '2' => 'A', '3' => 'B', '4' => 'B', '5' => 'C', '6' => 'C'],
             'smp' => ['7' => 'D', '8' => 'D', '9' => 'D'],
             'sma' => ['10' => 'E', '11' => 'F', '12' => 'F'],
@@ -63,6 +64,7 @@ new #[Layout('components.admin.layouts.app')] class extends Component {
         $this->type = $level->type;
         $this->education_level = $level->education_level ?? 'sd';
         $this->phase_map = $level->phase_map ?? [];
+        $this->dispatch('open-level-modal');
     }
 
     public function delete(Level $level): void
@@ -85,9 +87,7 @@ new #[Layout('components.admin.layouts.app')] class extends Component {
             <flux:subheading>Atur jenjang SPP dan skema pengajaran (Guru Kelas vs Mata Pelajaran).</flux:subheading>
         </div>
 
-        <flux:modal.trigger name="level-modal">
-            <flux:button variant="primary" icon="plus" wire:click="createNew">Tambah Jenjang</flux:button>
-        </flux:modal.trigger>
+        <flux:button variant="primary" icon="plus" wire:click="createNew" wire:loading.attr="disabled">Tambah Jenjang</flux:button>
     </div>
 
     <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
@@ -97,7 +97,15 @@ new #[Layout('components.admin.layouts.app')] class extends Component {
                     <div class="flex items-start justify-between">
                         <div>
                             <flux:heading size="lg">{{ $level->name }}</flux:heading>
-                            <flux:text class="text-xs font-bold text-blue-600 uppercase">{{ $level->education_level === 'paud' ? 'PAUD' : 'Paket ' . strtoupper(substr($level->education_level, 0, 1)) }}</flux:text>
+                            <flux:text class="text-xs font-bold text-blue-600 uppercase">
+                                {{ match($level->education_level) {
+                                    'paud' => 'PAUD',
+                                    'sd' => 'Paket A',
+                                    'smp' => 'Paket B',
+                                    'sma' => 'Paket C',
+                                    default => 'Lainnya',
+                                } }}
+                            </flux:text>
                         </div>
                         <flux:badge variant="{{ $level->type === 'class_teacher' ? 'success' : 'info' }}" size="sm">
                             {{ $level->type === 'class_teacher' ? 'Guru Kelas' : 'Guru Mapel' }}
@@ -107,24 +115,18 @@ new #[Layout('components.admin.layouts.app')] class extends Component {
                         {{ $level->type === 'class_teacher' ? 'Satu guru mengampu semua mata pelajaran.' : 'Satu mata pelajaran diampu oleh satu guru spesialis.' }}
                     </flux:text>
                     
-                    @if($level->phase_map)
-                        <div class="mt-4 flex flex-wrap gap-1">
-                            @foreach($level->phase_map as $grade => $phase)
-                                <flux:badge size="sm" inset color="zinc">Kelas {{ $grade }} ({{ $phase }})</flux:badge>
-                            @endforeach
-                        </div>
-                    @endif
+
                 </div>
 
                 <div class="mt-6 flex justify-end gap-2">
-                    <flux:button size="sm" variant="ghost" icon="pencil-square" wire:click="edit({{ $level->id }})" x-on:click="$flux.modal('level-modal').show()" />
+                    <flux:button size="sm" variant="ghost" icon="pencil-square" wire:click="edit({{ $level->id }})" wire:loading.attr="disabled" />
                     <flux:button size="sm" variant="ghost" icon="trash" class="text-red-500" wire:confirm="Yakin ingin menghapus jenjang ini?" wire:click="delete({{ $level->id }})" />
                 </div>
             </div>
         @endforeach
     </div>
 
-    <flux:modal name="level-modal" class="max-w-md" x-on:level-saved.window="$flux.modal('level-modal').close()">
+    <flux:modal name="level-modal" class="max-w-md" @open-level-modal.window="$flux.modal('level-modal').show()" x-on:level-saved.window="$flux.modal('level-modal').close()">
         <form wire:submit="save" class="space-y-6">
             <div>
                 <flux:heading size="lg">{{ $editing ? 'Edit Jenjang' : 'Tambah Jenjang Baru' }}</flux:heading>
