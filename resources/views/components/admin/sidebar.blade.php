@@ -93,6 +93,18 @@
                     :current="request()->routeIs('financial.categories')" wire:navigate.hover>
                     {{ __('Kategori Biaya') }}
                 </flux:sidebar.item>
+                <flux:sidebar.item icon="tag" :href="route('financial.budget-categories')"
+                    :current="request()->routeIs('financial.budget-categories')" wire:navigate.hover>
+                    {{ __('Kategori Anggaran') }}
+                </flux:sidebar.item>
+                <flux:sidebar.item icon="shopping-cart" :href="route('financial.standard-items')"
+                    :current="request()->routeIs('financial.standard-items')" wire:navigate.hover>
+                    {{ __('Item Standar') }}
+                </flux:sidebar.item>
+                <flux:sidebar.item icon="document-currency-dollar" :href="route('financial.budget-plans')"
+                    :current="request()->routeIs('financial.budget-plans')" wire:navigate.hover>
+                    {{ __('RAB / Anggaran') }}
+                </flux:sidebar.item>
             </flux:sidebar.group>
 
 

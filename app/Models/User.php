@@ -199,4 +199,34 @@ class User extends Authenticatable
             ->map(fn($word) => Str::substr($word, 0, 1))
             ->implode('');
     }
+
+    // Financial & Level Management Roles
+    public function managedLevel()
+    {
+        return $this->belongsTo(Level::class, 'managed_level_id');
+    }
+
+    public function isTreasurer(): bool
+    {
+        return $this->role === 'bendahara';
+    }
+
+    public function isHeadmaster(): bool
+    {
+        return $this->role === 'kepsek';
+    }
+
+    public function isYayasan(): bool
+    {
+        return $this->role === 'yayasan';
+    }
+
+    public function canManageLevel(int $levelId): bool
+    {
+        if ($this->isAdmin() || $this->isYayasan()) {
+            return true;
+        }
+
+        return $this->managed_level_id === $levelId;
+    }
 }
