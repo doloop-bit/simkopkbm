@@ -28,6 +28,10 @@
                     wire:navigate.hover>
                     {{ __('PTK') }}
                 </flux:sidebar.item>
+                <flux:sidebar.item icon="user-circle" :href="route('users.index')" :current="request()->routeIs('users.index')"
+                    wire:navigate.hover>
+                    {{ __('Pengguna') }}
+                </flux:sidebar.item>
             </flux:sidebar.group>
         @endif
 

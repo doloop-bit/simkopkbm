@@ -199,12 +199,41 @@ new class extends Component {
         foreach ($this->formItems as $item) {
             $plan->items()->create([
                 'standard_budget_item_id' => $item['standard_item_id'],
-                'name' => $item['name'],
+                'name' => $item['name'] ?? 'Item',
                 'quantity' => $item['quantity'],
-                'unit' => $item['unit'],
+                'unit' => $item['unit'] ?? 'Unit',
                 'amount' => $item['amount'],
                 'total' => $item['quantity'] * $item['amount'],
             ]);
+        }
+
+        if ($action === 'submit') {
+            try {
+                $plan->load(['items.standardItem.category', 'level', 'academicYear', 'submitter']); 
+
+                // 1. Generate PDF
+                $pdf = \Barryvdh\DomPDF\Facade\Pdf::loadView('pdf.rab', ['plan' => $plan]);
+                $pdfContent = $pdf->output();
+
+                // 2. Find Targets (Admin + Yayasan with phone)
+                $targets = \App\Models\User::whereNotNull('phone')
+                   ->whereIn('role', ['admin', 'yayasan'])
+                   ->get();
+                
+                // 3. Send via Fonnte
+                $whatsapp = new \App\Services\WhatsApp\FonnteService();
+                foreach ($targets as $target) {
+                    $whatsapp->sendDocument(
+                        $target->phone, 
+                        $pdfContent, 
+                        'RAB-' . $plan->id . '.pdf',
+                        "Pengajuan RAB Baru:\nJudul: {$plan->title}\nOleh: {$user->name}\nTotal: Rp " . number_format($plan->total_amount, 0, ',', '.')
+                    );
+                }
+            } catch (\Exception $e) {
+                \Illuminate\Support\Facades\Log::error('WA Notification Error: ' . $e->getMessage());
+                // Don't block the UI flow, just log
+            }
         }
 
         $this->dispatch('plan-saved');
