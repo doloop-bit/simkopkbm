@@ -75,8 +75,10 @@ trait HandlesExtracurricularAssessment
         
         // Ensure all students in classroom have an entry
         $students = User::where('role', 'siswa')
-            ->whereHas('profiles.profileable', function ($q) {
-                $q->where('classroom_id', $this->classroom_id);
+            ->whereHas('profiles', function ($q) {
+                $q->whereHasMorph('profileable', [\App\Models\StudentProfile::class], function ($q) {
+                    $q->where('classroom_id', $this->classroom_id);
+                });
             })->get();
 
         foreach ($students as $student) {
@@ -135,8 +137,10 @@ trait HandlesExtracurricularAssessment
 
         if ($this->classroom_id) {
             $students = User::where('role', 'siswa')
-                ->whereHas('profiles.profileable', function ($q) {
-                    $q->where('classroom_id', $this->classroom_id);
+                ->whereHas('profiles', function ($q) {
+                    $q->whereHasMorph('profileable', [\App\Models\StudentProfile::class], function ($q) {
+                        $q->where('classroom_id', $this->classroom_id);
+                    });
                 })
                 ->orderBy('name')
                 ->get();

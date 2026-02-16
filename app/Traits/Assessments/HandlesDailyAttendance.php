@@ -83,8 +83,10 @@ trait HandlesDailyAttendance
             
             // Default to present for all students in classroom
             $students = User::where('role', 'siswa')
-                ->whereHas('profiles.profileable', function ($q) {
-                    $q->where('classroom_id', $this->classroom_id);
+                ->whereHas('profiles', function ($q) {
+                    $q->whereHasMorph('profileable', [\App\Models\StudentProfile::class], function ($q) {
+                        $q->where('classroom_id', $this->classroom_id);
+                    });
                 })->get();
 
             foreach ($students as $student) {
@@ -150,8 +152,10 @@ trait HandlesDailyAttendance
              // But let's assume classroom_id is valid from getAllowedClassrooms or updatedClassroomId hook.
              
             $students = User::where('role', 'siswa')
-                ->whereHas('profiles.profileable', function ($q) {
-                    $q->where('classroom_id', $this->classroom_id);
+                ->whereHas('profiles', function ($q) {
+                    $q->whereHasMorph('profileable', [\App\Models\StudentProfile::class], function ($q) {
+                        $q->where('classroom_id', $this->classroom_id);
+                    });
                 })
                 ->orderBy('name')
                 ->get();
