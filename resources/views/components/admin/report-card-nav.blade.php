@@ -36,7 +36,7 @@
     @endphp
 
     {{-- Desktop: Horizontal navbar below header --}}
-    <flux:header class="hidden lg:block bg-white dark:bg-zinc-900 border-b border-zinc-200 dark:border-zinc-700 lg:px-6">
+    <flux:header sticky class="hidden lg:block bg-white dark:bg-zinc-900 border-b border-zinc-200 dark:border-zinc-700 lg:px-6">
         <flux:navbar>
             @foreach($tabs as $key => $tab)
                 <flux:navbar.item :icon="$tab['icon']" :href="route($tab['route'])" :current="request()->routeIs($tab['route'])"

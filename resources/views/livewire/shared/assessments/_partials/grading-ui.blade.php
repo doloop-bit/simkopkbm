@@ -63,7 +63,7 @@
             </div>
         @endif
 
-        <div class="border rounded-lg bg-white dark:bg-zinc-900 overflow-hidden">
+        <div class="border rounded-lg bg-white dark:bg-zinc-900 pb-20">
             <div class="overflow-x-auto">
                 <table class="w-full text-sm text-left border-collapse min-w-[800px]">
                     <thead class="bg-zinc-50 dark:bg-zinc-800">
@@ -97,7 +97,6 @@
                                         :options="$tps"
                                         select="label:code|value:id|description:description"
                                         multiple
-                                        searchable
                                         placeholder="Pilih TP Terbaik..."
                                         :disabled="$isReadonly"
                                         color="indigo"
@@ -109,7 +108,6 @@
                                         :options="$tps"
                                         select="label:code|value:id|description:description"
                                         multiple
-                                        searchable
                                         placeholder="Pilih TP Lemah..."
                                         :disabled="$isReadonly"
                                         color="orange"
