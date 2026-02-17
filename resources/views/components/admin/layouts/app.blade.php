@@ -29,5 +29,6 @@
     </flux:main>
 
     @fluxScripts
+    @tallStackUiScript
 </body>
 </html>

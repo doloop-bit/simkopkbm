@@ -103,12 +103,14 @@ trait HandlesReportCardGeneration
                         'classroom_id' => $this->classroomId,
                         'academic_year_id' => $this->academicYearId,
                         'semester' => $this->semester,
-                    ])->with(['subject', 'bestTp', 'improvementTp'])->get()->map(fn($g) => [
-                        'subject_name' => $g->subject?->name ?? 'N/A',
-                        'grade' => $g->grade,
-                        'best_tp' => $g->bestTp?->description ?? null,
-                        'improvement_tp' => $g->improvementTp?->description ?? null,
-                    ])->toArray();
+                    ])->with('subject')->get()->map(function($g) {
+                        return [
+                            'subject_name' => $g->subject?->name ?? 'N/A',
+                            'grade' => $g->grade,
+                            'best_tp' => $g->getBestTpsAttribute()->pluck('description')->join('; '),
+                            'improvement_tp' => $g->getImprovementTpsAttribute()->pluck('description')->join('; '),
+                        ];
+                    })->toArray();
 
                     // Fetch Competency Assessments (if needed)
                     $aggregatedData['competencies'] = CompetencyAssessment::where([

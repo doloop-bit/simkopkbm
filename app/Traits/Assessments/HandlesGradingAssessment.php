@@ -23,10 +23,17 @@ trait HandlesGradingAssessment
     public string $semester = '1';
 
     // Data containers
-    public array $grades_data = []; // [student_id => ['grade' => float, 'best_tp_id' => int, 'improvement_tp_id' => int]]
+    public array $grades_data = []; // [student_id => ['grade' => float, 'best_tp_ids' => [], 'improvement_tp_ids' => []]]
 
     // Phase info for display
     public ?string $currentPhase = null;
+
+    // TP Selection Modal State
+    public bool $showTpModal = false;
+    public ?int $editingStudentId = null;
+    public ?string $editingType = null; // 'best' or 'improvement'
+    public ?string $editingStudentName = null;
+    public array $tempSelectedTps = [];
 
     public function mountHandlesGradingAssessment(): void
     {
@@ -105,8 +112,8 @@ trait HandlesGradingAssessment
         foreach ($grades as $grade) {
             $scores[$grade->student_id] = [
                 'grade' => $grade->grade,
-                'best_tp_id' => $grade->best_tp_id,
-                'improvement_tp_id' => $grade->improvement_tp_id,
+                'best_tp_ids' => $grade->best_tp_ids ?? [],
+                'improvement_tp_ids' => $grade->improvement_tp_ids ?? [],
             ];
         }
 
@@ -122,8 +129,8 @@ trait HandlesGradingAssessment
             if (!isset($scores[$student->id])) {
                 $scores[$student->id] = [
                     'grade' => null,
-                    'best_tp_id' => null,
-                    'improvement_tp_id' => null,
+                    'best_tp_ids' => [],
+                    'improvement_tp_ids' => [],
                 ];
             }
         }
@@ -150,10 +157,10 @@ trait HandlesGradingAssessment
 
         // Validate duplicates locally
         foreach ($this->grades_data as $studentId => $data) {
-            if (!empty($data['best_tp_id']) && !empty($data['improvement_tp_id'])) {
-                if ($data['best_tp_id'] == $data['improvement_tp_id']) {
+            if (!empty($data['best_tp_ids']) && !empty($data['improvement_tp_ids'])) {
+                if (array_intersect($data['best_tp_ids'], $data['improvement_tp_ids'])) {
                     $studentName = User::find($studentId)?->name ?? 'Siswa';
-                    \Flux::toast(variant: 'danger', text: "TP Terbaik dan TP Perlu Peningkatan tidak boleh sama untuk $studentName.");
+                    \Flux::toast(variant: 'danger', text: "TP yang sama tidak boleh dipilih sebagai Terbaik dan Perlu Peningkatan sekaligus untuk $studentName.");
                     return;
                 }
             }
@@ -162,8 +169,8 @@ trait HandlesGradingAssessment
         DB::transaction(function () {
             foreach ($this->grades_data as $studentId => $data) {
                 $hasGrade = isset($data['grade']) && $data['grade'] !== '';
-                $hasBestTp = !empty($data['best_tp_id']);
-                $hasImpTp = !empty($data['improvement_tp_id']);
+                $hasBestTp = !empty($data['best_tp_ids']);
+                $hasImpTp = !empty($data['improvement_tp_ids']);
 
                 if (!$hasGrade && !$hasBestTp && !$hasImpTp)
                     continue;
@@ -178,8 +185,8 @@ trait HandlesGradingAssessment
                     ],
                     [
                         'grade' => $hasGrade ? (float) $data['grade'] : 0,
-                        'best_tp_id' => $data['best_tp_id'] ?: null,
-                        'improvement_tp_id' => $data['improvement_tp_id'] ?: null,
+                        'best_tp_ids' => $data['best_tp_ids'] ?: null,
+                        'improvement_tp_ids' => $data['improvement_tp_ids'] ?: null,
                     ]
                 );
             }
@@ -209,6 +216,38 @@ trait HandlesGradingAssessment
         return SubjectTp::whereHas('learningAchievement', function ($q) {
             $q->where('subject_id', $this->subject_id);
         })->orderBy('code')->get();
+    }
+
+    public function openTpSelection($studentId, $type)
+    {
+        $this->editingStudentId = $studentId;
+        $this->editingType = $type;
+        $this->editingStudentName = User::find($studentId)?->name;
+        
+        $key = $type . '_tp_ids';
+        $this->tempSelectedTps = $this->grades_data[$studentId][$key] ?? [];
+        
+        $this->showTpModal = true;
+    }
+
+    public function saveTpSelection()
+    {
+        if ($this->editingStudentId && $this->editingType) {
+            $key = $this->editingType . '_tp_ids';
+            $this->grades_data[$this->editingStudentId][$key] = $this->tempSelectedTps;
+            
+            // Validate intersection immediately for better UX
+            $otherType = $this->editingType === 'best' ? 'improvement' : 'best';
+            $otherKey = $otherType . '_tp_ids';
+            $otherTps = $this->grades_data[$this->editingStudentId][$otherKey] ?? [];
+            
+            if (array_intersect($this->tempSelectedTps, $otherTps)) {
+                // TP overlap detected - still save but could warn
+            }
+        }
+        
+        $this->showTpModal = false;
+        $this->reset(['editingStudentId', 'editingType', 'editingStudentName', 'tempSelectedTps']);
     }
 
     public function with(): array

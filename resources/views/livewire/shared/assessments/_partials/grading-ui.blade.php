@@ -92,40 +92,54 @@
                                     />
                                 </td>
                                 <td class="px-4 py-3 align-top">
-                                    <div class="w-full space-y-1">
-                                        <select wire:model="grades_data.{{ $student->id }}.best_tp_id" :disabled="$isReadonly"
-                                            class="block w-full rounded-md border-0 py-1.5 pl-3 pr-10 text-gray-900 ring-1 ring-inset ring-gray-300 focus:ring-2 focus:ring-indigo-600 sm:text-sm sm:leading-6 dark:bg-zinc-900 dark:text-white dark:ring-zinc-700">
-                                            <option value="">-- Pilih TP Terbaik --</option>
-                                            @foreach($tps as $tp)
-                                                <option value="{{ $tp->id }}">
-                                                    {{ $tp->code ? $tp->code . ' - ' : '' }}{{ Str::limit($tp->description, 60) }}
-                                                </option>
-                                            @endforeach
-                                        </select>
-                                        @if(!empty($grades_data[$student->id]['best_tp_id']))
-                                            <p class="text-xs text-green-600 dark:text-green-400 italic">
-                                                {{ $tps->find($grades_data[$student->id]['best_tp_id'])?->description }}
-                                            </p>
-                                        @endif
+                                    <div class="flex items-center justify-between p-2 border rounded-md bg-zinc-50 dark:bg-zinc-800 dark:border-zinc-700 min-h-[42px]">
+                                        <div class="text-sm truncate mr-2">
+                                            @php 
+                                                $selectedIds = $grades_data[$student->id]['best_tp_ids'] ?? [];
+                                                $count = count($selectedIds);
+                                            @endphp
+                                            @if($count > 0)
+                                                <span class="font-medium text-indigo-600 dark:text-indigo-400">{{ $count }} TP dipilih</span>
+                                            @else
+                                                <span class="text-zinc-400 italic">Pilih TP...</span>
+                                            @endif
+                                        </div>
+                                        <flux:button size="sm" icon="pencil-square" variant="ghost" class="-my-1"
+                                            wire:click="openTpSelection({{ $student->id }}, 'best')" 
+                                            :disabled="$isReadonly" />
                                     </div>
+                                    @if(count($grades_data[$student->id]['best_tp_ids'] ?? []) > 0)
+                                        <div class="mt-1 text-xs text-zinc-500 truncate">
+                                            @foreach($grades_data[$student->id]['best_tp_ids'] as $id)
+                                                {{ $tps->firstWhere('id', $id)->code ?? '' }}@if(!$loop->last), @endif
+                                            @endforeach
+                                        </div>
+                                    @endif
                                 </td>
                                 <td class="px-4 py-3 align-top">
-                                    <div class="w-full space-y-1">
-                                        <select wire:model="grades_data.{{ $student->id }}.improvement_tp_id" :disabled="$isReadonly"
-                                            class="block w-full rounded-md border-0 py-1.5 pl-3 pr-10 text-gray-900 ring-1 ring-inset ring-gray-300 focus:ring-2 focus:ring-indigo-600 sm:text-sm sm:leading-6 dark:bg-zinc-900 dark:text-white dark:ring-zinc-700">
-                                            <option value="">-- Pilih TP Perlu Bimbingan --</option>
-                                            @foreach($tps as $tp)
-                                                <option value="{{ $tp->id }}">
-                                                    {{ $tp->code ? $tp->code . ' - ' : '' }}{{ Str::limit($tp->description, 60) }}
-                                                </option>
-                                            @endforeach
-                                        </select>
-                                        @if(!empty($grades_data[$student->id]['improvement_tp_id']))
-                                            <p class="text-xs text-orange-600 dark:text-orange-400 italic">
-                                                {{ $tps->find($grades_data[$student->id]['improvement_tp_id'])?->description }}
-                                            </p>
-                                        @endif
+                                    <div class="flex items-center justify-between p-2 border rounded-md bg-zinc-50 dark:bg-zinc-800 dark:border-zinc-700 min-h-[42px]">
+                                        <div class="text-sm truncate mr-2">
+                                            @php 
+                                                $selectedIds = $grades_data[$student->id]['improvement_tp_ids'] ?? [];
+                                                $count = count($selectedIds);
+                                            @endphp
+                                            @if($count > 0)
+                                                <span class="font-medium text-orange-600 dark:text-orange-400">{{ $count }} TP dipilih</span>
+                                            @else
+                                                <span class="text-zinc-400 italic">Pilih TP...</span>
+                                            @endif
+                                        </div>
+                                        <flux:button size="sm" icon="pencil-square" variant="ghost" class="-my-1"
+                                            wire:click="openTpSelection({{ $student->id }}, 'improvement')"
+                                            :disabled="$isReadonly" />
                                     </div>
+                                    @if(count($grades_data[$student->id]['improvement_tp_ids'] ?? []) > 0)
+                                        <div class="mt-1 text-xs text-zinc-500 truncate">
+                                            @foreach($grades_data[$student->id]['improvement_tp_ids'] as $id)
+                                                {{ $tps->firstWhere('id', $id)->code ?? '' }}@if(!$loop->last), @endif
+                                            @endforeach
+                                        </div>
+                                    @endif
                                 </td>
                             </tr>
                         @endforeach
@@ -145,4 +159,60 @@
             <p>Silakan pilih kelas dan mata pelajaran untuk memulai penilaian rapor.</p>
         </div>
     @endif
+
+    <!-- TP Selection Modal -->
+    <div x-data x-show="$wire.showTpModal" 
+         x-cloak
+         @keydown.escape.window="$wire.showTpModal = false"
+         class="fixed inset-0 z-50 overflow-y-auto" 
+         style="display: none;">
+        <!-- Backdrop -->
+        <div class="fixed inset-0 bg-black/50 transition-opacity" 
+             @click="$wire.showTpModal = false"></div>
+        
+        <!-- Modal Content -->
+        <div class="flex min-h-full items-center justify-center p-4">
+            <div class="relative bg-white dark:bg-zinc-900 rounded-xl shadow-2xl max-w-2xl w-full border border-zinc-200 dark:border-zinc-700">
+                <div class="p-6 space-y-6">
+                    <div>
+                        <flux:heading size="lg">Pilih TP {{ $editingType === 'best' ? 'Terbaik' : 'Perlu Bimbingan' }}</flux:heading>
+                        <flux:subheading>Siswa: {{ $editingStudentName }}</flux:subheading>
+                    </div>
+
+                    <div class="max-h-[60vh] overflow-y-auto space-y-3 pr-2">
+                        @if($tps->isNotEmpty())
+                            @foreach($tps as $tp)
+                                <div class="flex items-start gap-3 p-3 rounded-lg border border-zinc-200 dark:border-zinc-700 hover:bg-zinc-50 dark:hover:bg-zinc-800/50 transition-colors">
+                                    <flux:checkbox 
+                                        wire:model="tempSelectedTps" 
+                                        value="{{ $tp->id }}" 
+                                    />
+                                    <div class="flex-1 text-sm">
+                                        <span class="font-bold text-zinc-900 dark:text-zinc-100 block mb-1">
+                                            {{ $tp->code ?? 'TP' }}
+                                            @if($tp->learningAchievement) 
+                                                <span class="font-normal text-zinc-500">({{ $tp->learningAchievement->phase ?? '' }})</span>
+                                            @endif
+                                        </span>
+                                        <span class="text-zinc-600 dark:text-zinc-400 block leading-relaxed">
+                                            {{ $tp->description }}
+                                        </span>
+                                    </div>
+                                </div>
+                            @endforeach
+                        @else
+                            <div class="text-center py-8 text-zinc-500">
+                                Tidak ada TP yang tersedia.
+                            </div>
+                        @endif
+                    </div>
+
+                    <div class="flex justify-end gap-2 pt-4 border-t border-zinc-200 dark:border-zinc-700">
+                        <flux:button variant="ghost" @click="$wire.showTpModal = false">Batal</flux:button>
+                        <flux:button variant="primary" wire:click="saveTpSelection">Simpan Pilihan</flux:button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
 </div>

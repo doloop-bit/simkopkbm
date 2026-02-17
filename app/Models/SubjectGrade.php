@@ -13,8 +13,8 @@ class SubjectGrade extends Model
         'academic_year_id',
         'semester',
         'grade',
-        'best_tp_id',
-        'improvement_tp_id',
+        'best_tp_ids',
+        'improvement_tp_ids',
         'teacher_notes',
     ];
 
@@ -22,6 +22,8 @@ class SubjectGrade extends Model
     {
         return [
             'grade' => 'decimal:2',
+            'best_tp_ids' => 'array',
+            'improvement_tp_ids' => 'array',
         ];
     }
 
@@ -45,13 +47,19 @@ class SubjectGrade extends Model
         return $this->belongsTo(AcademicYear::class);
     }
 
-    public function bestTp()
+    /**
+     * Get distinct best TPs for display.
+     * Note: This is not a relationship but a helper.
+     */
+    public function getBestTpsAttribute()
     {
-        return $this->belongsTo(SubjectTp::class, 'best_tp_id');
+        if (empty($this->best_tp_ids)) return collect();
+        return SubjectTp::whereIn('id', $this->best_tp_ids)->get();
     }
 
-    public function improvementTp()
+    public function getImprovementTpsAttribute()
     {
-        return $this->belongsTo(SubjectTp::class, 'improvement_tp_id');
+        if (empty($this->improvement_tp_ids)) return collect();
+        return SubjectTp::whereIn('id', $this->improvement_tp_ids)->get();
     }
 }

@@ -18,5 +18,6 @@
             </div>
         </div>
         @fluxScripts
+        @tallStackUiScript
     </body>
 </html>
