@@ -28,12 +28,7 @@ trait HandlesGradingAssessment
     // Phase info for display
     public ?string $currentPhase = null;
 
-    // TP Selection Modal State
-    public bool $showTpModal = false;
-    public ?int $editingStudentId = null;
-    public ?string $editingType = null; // 'best' or 'improvement'
-    public ?string $editingStudentName = null;
-    public array $tempSelectedTps = [];
+
 
     public function mountHandlesGradingAssessment(): void
     {
@@ -218,37 +213,7 @@ trait HandlesGradingAssessment
         })->orderBy('code')->get();
     }
 
-    public function openTpSelection($studentId, $type)
-    {
-        $this->editingStudentId = $studentId;
-        $this->editingType = $type;
-        $this->editingStudentName = User::find($studentId)?->name;
-        
-        $key = $type . '_tp_ids';
-        $this->tempSelectedTps = $this->grades_data[$studentId][$key] ?? [];
-        
-        $this->showTpModal = true;
-    }
 
-    public function saveTpSelection()
-    {
-        if ($this->editingStudentId && $this->editingType) {
-            $key = $this->editingType . '_tp_ids';
-            $this->grades_data[$this->editingStudentId][$key] = $this->tempSelectedTps;
-            
-            // Validate intersection immediately for better UX
-            $otherType = $this->editingType === 'best' ? 'improvement' : 'best';
-            $otherKey = $otherType . '_tp_ids';
-            $otherTps = $this->grades_data[$this->editingStudentId][$otherKey] ?? [];
-            
-            if (array_intersect($this->tempSelectedTps, $otherTps)) {
-                // TP overlap detected - still save but could warn
-            }
-        }
-        
-        $this->showTpModal = false;
-        $this->reset(['editingStudentId', 'editingType', 'editingStudentName', 'tempSelectedTps']);
-    }
 
     public function with(): array
     {
