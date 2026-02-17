@@ -15,11 +15,11 @@ new #[Layout('components.admin.layouts.app')] class extends Component {
 
     public string $name = '';
     public string $code = '';
-    public ?int $level_id = null;
+    public ?string $phase = null; // Replaces level_id
     
     // Filters
     public string $search = '';
-    public ?int $filterLevelId = null;
+    public ?string $filterPhase = null; // Replaces filterLevelId
     
     // TP Management
     public ?Subject $managingSubject = null;
@@ -28,20 +28,21 @@ new #[Layout('components.admin.layouts.app')] class extends Component {
     public $tpDescription = '';
     public ?int $editingTpId = null;
 
-    // Phase & CP selection for TP management
-    public ?string $selectedPhase = null;
-    public array $availablePhases = [];
+    // CP selection for TP management (Phase is now fixed per subject)
     public ?int $selectedCpId = null;
     public ?string $selectedCpDescription = null;
 
     public ?Subject $editing = null;
+
+    // Constants
+    public array $phases = ['Fondasi', 'A', 'B', 'C', 'D', 'E', 'F'];
 
     public function updatingSearch(): void
     {
         $this->resetPage();
     }
 
-    public function updatingFilterLevelId(): void
+    public function updatingFilterPhase(): void
     {
         $this->resetPage();
     }
@@ -51,10 +52,9 @@ new #[Layout('components.admin.layouts.app')] class extends Component {
         return [
             'name' => ['required', 'string', 'max:255'],
             'code' => ['required', 'string', 'max:50', 'unique:subjects,code,' . ($this->editing->id ?? 'NULL')],
-            'level_id' => ['nullable', 'exists:levels,id'],
+            'phase' => ['required', 'string', 'in:Fondasi,A,B,C,D,E,F'],
         ];
     }
-
     public function save(): void
     {
         $validated = $this->validate();
@@ -65,7 +65,7 @@ new #[Layout('components.admin.layouts.app')] class extends Component {
             Subject::create($validated);
         }
 
-        $this->reset(['name', 'code', 'level_id', 'editing']);
+        $this->reset(['name', 'code', 'phase', 'editing']);
         $this->dispatch('subject-saved');
         $this->modal('subject-modal')->close();
     }
@@ -75,7 +75,7 @@ new #[Layout('components.admin.layouts.app')] class extends Component {
         $this->editing = $subject;
         $this->name = $subject->name;
         $this->code = $subject->code;
-        $this->level_id = $subject->level_id;
+        $this->phase = $subject->phase;
 
         $this->modal('subject-modal')->show();
     }
@@ -88,43 +88,19 @@ new #[Layout('components.admin.layouts.app')] class extends Component {
     public function manageTps(Subject $subject): void
     {
         $this->managingSubject = $subject;
-        $this->selectedPhase = null;
         $this->selectedCpId = null;
         $this->selectedCpDescription = null;
         $this->subjectTps = [];
         $this->cancelEditTp();
 
-        $this->loadAvailablePhases();
-
-        // Auto-select first phase if only one available
-        if (count($this->availablePhases) === 1) {
-            $this->selectedPhase = $this->availablePhases[0];
-            $this->loadTps();
-        }
+        $this->loadTps();
 
         $this->modal('tp-modal')->show();
     }
 
-    public function loadAvailablePhases(): void
-    {
-        if (!$this->managingSubject?->level_id) {
-            $this->availablePhases = [];
-            return;
-        }
-
-        $level = Level::find($this->managingSubject->level_id);
-        $this->availablePhases = $level ? $level->getAvailablePhases() : [];
-    }
-
-    public function updatedSelectedPhase(): void
-    {
-        $this->cancelEditTp();
-        $this->loadTps();
-    }
-
     public function loadTps(): void
     {
-        if (!$this->managingSubject || !$this->selectedPhase) {
+        if (!$this->managingSubject || !$this->managingSubject->phase) {
             $this->subjectTps = [];
             $this->selectedCpId = null;
             $this->selectedCpDescription = null;
@@ -135,10 +111,10 @@ new #[Layout('components.admin.layouts.app')] class extends Component {
         $cp = LearningAchievement::firstOrCreate(
             [
                 'subject_id' => $this->managingSubject->id,
-                'phase' => $this->selectedPhase,
+                'phase' => $this->managingSubject->phase,
             ],
             [
-                'description' => "CP Fase {$this->selectedPhase} - {$this->managingSubject->name}",
+                'description' => "CP Fase {$this->managingSubject->phase} - {$this->managingSubject->name}",
             ]
         );
 
@@ -166,7 +142,7 @@ new #[Layout('components.admin.layouts.app')] class extends Component {
         ]);
 
         if (!$this->selectedCpId) {
-            \Flux::toast(variant: 'danger', text: 'Pilih fase terlebih dahulu.');
+            \Flux::toast(variant: 'danger', text: 'CP tidak ditemukan.');
             return;
         }
 
@@ -213,17 +189,16 @@ new #[Layout('components.admin.layouts.app')] class extends Component {
     public function with(): array
     {
         return [
-            'subjects' => Subject::with('level')
+            'subjects' => Subject::query()
                 ->when($this->search, function ($query) {
                     $query->where(function ($q) {
                         $q->where('name', 'like', '%' . $this->search . '%')
                           ->orWhere('code', 'like', '%' . $this->search . '%');
                     });
                 })
-                ->when($this->filterLevelId, fn($q) => $q->where('level_id', $this->filterLevelId))
+                ->when($this->filterPhase, fn($q) => $q->where('phase', $this->filterPhase))
                 ->latest()
                 ->paginate(15),
-            'levels' => Level::all(),
         ];
     }
 }; ?>
@@ -244,10 +219,10 @@ new #[Layout('components.admin.layouts.app')] class extends Component {
         <div class="flex flex-col md:flex-row flex-1 gap-4 w-full">
             <flux:input wire:model.live.debounce.300ms="search" placeholder="Cari kode atau nama mapel..." icon="magnifying-glass" class="w-full md:w-80" />
             
-            <flux:select wire:model.live="filterLevelId" placeholder="Semua Jenjang" class="w-full md:w-64">
-                <option value="">Semua Jenjang</option>
-                @foreach($levels as $level)
-                    <option value="{{ $level->id }}">{{ $level->name }}</option>
+            <flux:select wire:model.live="filterPhase" placeholder="Semua Fase" class="w-full md:w-64">
+                <option value="">Semua Fase</option>
+                @foreach($phases as $p)
+                    <option value="{{ $p }}">Fase {{ $p }}</option>
                 @endforeach
             </flux:select>
         </div>
@@ -259,7 +234,7 @@ new #[Layout('components.admin.layouts.app')] class extends Component {
                 <tr>
                     <th class="px-4 py-3 font-medium text-zinc-700 dark:text-zinc-300 border-b border-zinc-200 dark:border-zinc-700">Kode</th>
                     <th class="px-4 py-3 font-medium text-zinc-700 dark:text-zinc-300 border-b border-zinc-200 dark:border-zinc-700">Nama</th>
-                    <th class="px-4 py-3 font-medium text-zinc-700 dark:text-zinc-300 border-b border-zinc-200 dark:border-zinc-700">Jenjang</th>
+                    <th class="px-4 py-3 font-medium text-zinc-700 dark:text-zinc-300 border-b border-zinc-200 dark:border-zinc-700">Jenis/Fase</th>
                     <th class="px-4 py-3 font-medium text-zinc-700 dark:text-zinc-300 border-b border-zinc-200 dark:border-zinc-700 text-center">CP / TP</th>
                     <th class="px-4 py-3 font-medium text-zinc-700 dark:text-zinc-300 border-b border-zinc-200 dark:border-zinc-700 text-right">Aksi</th>
                 </tr>
@@ -274,23 +249,18 @@ new #[Layout('components.admin.layouts.app')] class extends Component {
                             {{ $subject->name }}
                         </td>
                         <td class="px-4 py-3">
-                            @if($subject->level)
-                                <flux:badge size="sm" variant="neutral">{{ $subject->level->name }}</flux:badge>
+                            @if($subject->phase)
+                                <flux:badge size="sm" variant="neutral">Fase {{ $subject->phase }}</flux:badge>
                             @else
                                 <span class="text-zinc-400 text-sm">Umum</span>
                             @endif
                         </td>
                         <td class="px-4 py-3 text-center">
-                            @if($subject->level && $subject->level->phase_map)
+                            @if($subject->phase)
                                 @php
-                                    $phases = $subject->level->getAvailablePhases();
-                                    $cpCount = $subject->learningAchievements()->count();
-                                    $tpCount = $subject->tps()->count();
+                                    $tpCount = $subject->tpsForPhase($subject->phase)->count();
                                 @endphp
                                 <div class="flex items-center justify-center gap-2 text-xs">
-                                    <span class="px-2 py-0.5 rounded bg-blue-100 text-blue-700 dark:bg-blue-900 dark:text-blue-300">
-                                        {{ implode(', ', array_map(fn($p) => "Fase $p", $phases)) }}
-                                    </span>
                                     <span class="text-zinc-500">{{ $tpCount }} TP</span>
                                 </div>
                             @else
@@ -299,7 +269,7 @@ new #[Layout('components.admin.layouts.app')] class extends Component {
                         </td>
                         <td class="px-4 py-3 text-right space-x-2">
                             <flux:button size="sm" variant="ghost" icon="pencil-square" wire:click="edit({{ $subject->id }})" x-on:click="$flux.modal('subject-modal').show()" />
-                            @if($subject->level && $subject->level->phase_map)
+                            @if($subject->phase)
                                 <flux:button size="sm" variant="ghost" icon="list-bullet" wire:click="manageTps({{ $subject->id }})" x-on:click="$flux.modal('tp-modal').show()" tooltip="Kelola CP & TP" />
                             @endif
                             <flux:button size="sm" variant="ghost" icon="trash" class="text-red-500" wire:confirm="Yakin ingin menghapus mapel ini?" wire:click="delete({{ $subject->id }})" />
@@ -325,10 +295,10 @@ new #[Layout('components.admin.layouts.app')] class extends Component {
             <flux:input wire:model="code" label="Kode Mapel (e.g. MAT-A, INDO-P1)" required />
             <flux:input wire:model="name" label="Nama Mata Pelajaran" required />
 
-            <flux:select wire:model="level_id" label="Jenjang (Opsional)">
-                <option value="">Wajib Semua Jenjang / Umum</option>
-                @foreach($levels as $level)
-                    <option value="{{ $level->id }}">{{ $level->name }}</option>
+            <flux:select wire:model="phase" label="Fase (Kurikulum Merdeka)" required>
+                <option value="">Pilih Fase</option>
+                @foreach($phases as $p)
+                    <option value="{{ $p }}">Fase {{ $p }}</option>
                 @endforeach
             </flux:select>
 
@@ -349,37 +319,19 @@ new #[Layout('components.admin.layouts.app')] class extends Component {
                 <flux:heading size="lg">Kelola CP & Tujuan Pembelajaran (TP)</flux:heading>
                 <flux:subheading>
                     Mata Pelajaran: <strong>{{ $managingSubject?->name }}</strong>
-                    @if($managingSubject?->level)
-                        — {{ $managingSubject->level->name }}
+                    @if($managingSubject?->phase)
+                        — Fase {{ $managingSubject->phase }}
                     @endif
                 </flux:subheading>
             </div>
 
-            {{-- Phase Selector --}}
-            @if(count($availablePhases) > 1)
-                <div class="flex gap-2">
-                    @foreach($availablePhases as $phase)
-                        <button
-                            type="button"
-                            wire:click="$set('selectedPhase', '{{ $phase }}')"
-                            class="px-4 py-2 text-sm font-medium rounded-lg transition-colors
-                                {{ $selectedPhase === $phase
-                                    ? 'bg-indigo-600 text-white shadow-sm'
-                                    : 'bg-zinc-100 text-zinc-700 hover:bg-zinc-200 dark:bg-zinc-800 dark:text-zinc-300 dark:hover:bg-zinc-700' }}"
-                        >
-                            Fase {{ $phase }}
-                        </button>
-                    @endforeach
-                </div>
-            @endif
-
-            @if($selectedPhase && $selectedCpId)
+            @if($selectedCpId)
                 {{-- CP Description --}}
                 <div class="p-4 rounded-lg border border-blue-200 bg-blue-50 dark:bg-blue-950/30 dark:border-blue-900">
                     <div class="flex items-start justify-between gap-4">
                         <div class="flex-1">
                             <label class="block text-xs font-semibold text-blue-600 dark:text-blue-400 mb-1">
-                                Capaian Pembelajaran (CP) — Fase {{ $selectedPhase }}
+                                Capaian Pembelajaran (CP)
                             </label>
                             <flux:textarea
                                 wire:model="selectedCpDescription"
@@ -440,16 +392,10 @@ new #[Layout('components.admin.layouts.app')] class extends Component {
                         </tbody>
                     </table>
                 </div>
-            @elseif($selectedPhase === null && count($availablePhases) > 0)
-                <div class="flex flex-col items-center justify-center py-8 text-zinc-500 border-2 border-dashed rounded-xl">
-                    <flux:icon icon="academic-cap" class="w-10 h-10 mb-2 opacity-20" />
-                    <p>Pilih fase di atas untuk mengelola TP.</p>
-                </div>
-            @elseif(count($availablePhases) === 0)
+            @elseif($managingSubject && !$managingSubject->phase)
                 <div class="flex flex-col items-center justify-center py-8 text-zinc-500 border-2 border-dashed rounded-xl">
                     <flux:icon icon="exclamation-triangle" class="w-10 h-10 mb-2 opacity-20" />
-                    <p>Jenjang untuk mata pelajaran ini belum memiliki konfigurasi fase.</p>
-                    <p class="text-xs mt-1">Pastikan jenjang sudah memiliki phase_map yang benar.</p>
+                    <p>Mata pelajaran ini tidak memiliki fase yang valid.</p>
                 </div>
             @endif
 

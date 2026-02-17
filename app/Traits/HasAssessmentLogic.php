@@ -32,9 +32,12 @@ trait HasAssessmentLogic
             ->when($classroomId, function ($query) use ($classroomId) {
                 $classroom = Classroom::find($classroomId);
                 if ($classroom) {
-                    $query->where(function ($q) use ($classroom) {
-                        $q->whereNull('level_id')
-                            ->orWhere('level_id', $classroom->level_id);
+                    $phase = $classroom->getPhase();
+                    $query->where(function ($q) use ($phase) {
+                        $q->whereNull('phase');
+                        if ($phase) {
+                            $q->orWhere('phase', $phase);
+                        }
                     });
                 }
             })

@@ -46,8 +46,11 @@ trait HandlesGradingAssessment
             $classroom = Classroom::find($this->classroom_id);
             $isValid = Subject::where('id', $this->subject_id)
                 ->where(function ($q) use ($classroom) {
-                    $q->whereNull('level_id')
-                        ->orWhere('level_id', $classroom->level_id);
+                    $phase = $classroom->getPhase();
+                    $q->whereNull('phase');
+                    if ($phase) {
+                        $q->orWhere('phase', $phase);
+                    }
                 })->exists();
 
             if (!$isValid) {
