@@ -210,7 +210,9 @@ trait HandlesReportCardGeneration
 
         $this->ensureAccessToClassroom((int)$reportCard->classroom_id);
 
-        $studentProfile = StudentProfile::where('user_id', $reportCard->student_id)->first();
+        $studentProfile = StudentProfile::whereHas('profile', function($q) use ($reportCard) {
+            $q->where('user_id', $reportCard->student_id);
+        })->first();
 
         $this->previewData = [
             'student' => $reportCard->student,
@@ -241,7 +243,9 @@ trait HandlesReportCardGeneration
 
         $this->ensureAccessToClassroom((int)$reportCard->classroom_id);
 
-        $studentProfile = StudentProfile::where('user_id', $reportCard->student_id)->first();
+        $studentProfile = StudentProfile::whereHas('profile', function($q) use ($reportCard) {
+            $q->where('user_id', $reportCard->student_id);
+        })->first();
 
         $data = [
             'reportCard' => $reportCard,
