@@ -29,16 +29,16 @@
 
 ### **Core Features**
 
-| Feature                    | Description                                           |
-| -------------------------- | ----------------------------------------------------- |
-| **Student Management**     | Student data, enrollment, profiles                    |
-| **Academic Management**    | Years, levels, classrooms, subjects                   |
-| **Assessment System**      | Grades (numeric) & Competency (Kurikulum Merdeka)     |
-| **Report Card Generation** | PDF report cards                                      |
-| **Financial Management**   | Billing, payments, transactions                       |
-| **PTK Management**         | Teacher and staff data                                |
-| **Public Website**         | School profile, news, gallery, programs, contact form |
-| **SEO Optimization**       | Sitemap.xml, meta tags, slug-based URLs               |
+| Feature                    | Description                                            |
+| -------------------------- | ------------------------------------------------------ |
+| **Student Management**     | Student data, enrollment, profiles                     |
+| **Academic Management**    | Years, levels, classrooms, subjects                    |
+| **Assessment System**      | Grades (numeric) & Competency (Kurikulum Merdeka-PAUD) |
+| **Report Card Generation** | PDF report cards                                       |
+| **Financial Management**   | Billing, payments, transactions                        |
+| **PTK Management**         | Teacher and staff data                                 |
+| **Public Website**         | School profile, news, gallery, programs, contact form  |
+| **SEO Optimization**       | Sitemap.xml, meta tags, slug-based URLs                |
 
 ---
 
@@ -233,7 +233,7 @@ This project uses **TWO UI libraries**. Follow this priority:
 
 ### **Key Directories**
 
-```
+````
 app/
 ├── Models/                    # Eloquent models
 ├── Imports/                   # Excel imports
@@ -243,38 +243,42 @@ app/
 resources/
 ├── views/
 │   ├── livewire/
+```markdown
 │   │   ├── admin/             # Admin panel pages
 │   │   │   ├── academic/      # Academic management
 │   │   │   ├── assessments/   # Assessment forms
-│   │   │   ├── students/      # Student management
+│   │   │   ├── data-master/   # Master data management
 │   │   │   ├── financial/     # Financial management
 │   │   │   ├── report-card/   # Report card generation
 │   │   │   └── ...
-│   │   └── public/            # Public website pages
-│   └── components/
-│       └── admin/
-│           ├── layouts/       # Admin layouts
-│           ├── sidebar.blade.php  # Navigation sidebar
-│           └── header.blade.php   # Header component
+````
+
+│ │ └── public/ # Public website pages
+│ └── components/
+│ └── admin/
+│ ├── layouts/ # Admin layouts
+│ ├── sidebar.blade.php # Navigation sidebar
+│ └── header.blade.php # Header component
 
 routes/
-├── web.php                    # Main routes (imports others)
-├── academic.php               # Academic routes
-├── students.php               # Student routes
-├── assessments.php            # Assessment routes
+├── web.php # Main routes (imports others)
+├── academic.php # Academic routes
+├── students.php # Student routes
+├── assessments.php # Assessment routes
 └── ...
 
 database/
-├── migrations/                # Database migrations
-├── seeders/                   # Database seeders
-└── database.sqlite            # SQLite database file (dev only)
+├── migrations/ # Database migrations
+├── seeders/ # Database seeders
+└── database.sqlite # SQLite database file (dev only)
+
 ```
 
 ---
 
 ## 📊 Domain Knowledge: Kurikulum Merdeka
 
-### **Competency Levels (Capaian Kompetensi)**
+### **Competency Levels for PAUD (Capaian Kompetensi)**
 
 | Code    | Name                      | Description                                      |
 | ------- | ------------------------- | ------------------------------------------------ |
@@ -298,12 +302,14 @@ database/
 ### **CP → TP Hierarchy (Implemented)**
 
 ```
+
 Level (Paket A/B/C) → has phase_map JSON
-  └── Classroom → has class_level (tingkat kelas)
-        └── resolves to Phase (Fase A-F) via level.phase_map
-              └── CP (learning_achievements) per Fase per Subject
-                    └── TP (subject_tps) per CP
-```
+└── Classroom → has class_level (tingkat kelas)
+└── resolves to Phase (Fase A-F) via level.phase_map
+└── CP (learning_achievements) per Fase per Subject
+└── TP (subject_tps) per CP
+
+````
 
 **Key tables:**
 
@@ -318,14 +324,7 @@ Level (Paket A/B/C) → has phase_map JSON
 2. Based on phase + subject → find CP (learning_achievement)
 3. Load TPs from that CP → show in dropdown
 
-### **Profil Pelajar Pancasila (P5) - 6 Dimensions**
 
-1. **Beriman** - Beriman, bertakwa kepada Tuhan YME, dan berakhlak mulia
-2. **Berkebinekaan** - Berkebinekaan global
-3. **Gotong Royong** - Bergotong royong
-4. **Mandiri** - Mandiri
-5. **Bernalar Kritis** - Bernalar kritis
-6. **Kreatif** - Kreatif
 
 ### **PAUD Developmental Aspects (6 Aspek)**
 
@@ -347,7 +346,7 @@ Level (Paket A/B/C) → has phase_map JSON
 
 - **PAUD Developmental Assessment**: Uses narrative descriptions (6 aspects: Agama, Fisik-Motorik, Kognitif, Bahasa, Sosial-Emosional, Seni)
 - **Competency Assessment**: PAUD-only feature (filtered by `education_level = 'PAUD'`)
-- **P5 Assessment**: Available for all education levels (SD/SMP/SMA/PAUD), uses BB/MB/BSH/SB scale.
+
 - **Extracurricular Assessment**: Uses descriptive scale (Sangat Baik, Baik, Cukup, Perlu Ditingkatkan).
 
 ---
@@ -401,7 +400,7 @@ new #[Layout('components.admin.layouts.app')] class extends Component {
 <div class="p-6">
     {{-- View content --}}
 </div>
-```
+````
 
 ### **Loading Related Data Pattern**
 
@@ -596,17 +595,17 @@ $table->enum('education_level', ['PAUD', 'SD', 'SMP', 'SMA']);
 
 ### **Kurikulum Merdeka Tables**
 
-| Table                         | Purpose                                       |
-| ----------------------------- | --------------------------------------------- |
-| `competency_assessments`      | Student competency assessments (BB/MB/BSH/SB) |
-| `p5_projects`                 | P5 project definitions                        |
-| `p5_assessments`              | P5 student assessments                        |
-| `extracurricular_activities`  | Extracurricular activity definitions          |
-| `extracurricular_assessments` | Student extracurricular assessments           |
-| `developmental_aspects`       | PAUD developmental aspect definitions         |
-| `developmental_assessments`   | PAUD student developmental assessments        |
-| `report_attendances`          | Attendance summary for report cards           |
-| `learning_achievements`       | Learning achievement records                  |
+| Table                    | Purpose                                       |
+| ------------------------ | --------------------------------------------- |
+| `competency_assessments` | Student competency assessments (BB/MB/BSH/SB) |
+
+|
+| `extracurricular_activities` | Extracurricular activity definitions |
+| `extracurricular_assessments` | Student extracurricular assessments |
+| `developmental_aspects` | PAUD developmental aspect definitions |
+| `developmental_assessments` | PAUD student developmental assessments |
+| `report_attendances` | Attendance summary for report cards |
+| `learning_achievements` | Learning achievement records |
 
 ### **Cross-Database Compatibility**
 
@@ -694,44 +693,6 @@ php artisan make:volt path/component-name --class
 
 ---
 
-## 📦 Implementation Status
-
-### **Kurikulum Merdeka - Completed ✅**
-
-- [x] Database migrations (9 Kurikulum Merdeka tables)
-- [x] Models with relationships (9 assessment models)
-- [x] Seeders (developmental aspects, P5 projects, extracurricular activities)
-- [x] **Competency assessment form** (`competency-assessment.blade.php`)
-- [x] **P5 assessment form** (`p5-assessment.blade.php`)
-- [x] **Extracurricular management** (`extracurriculars.blade.php`) - Admin only
-- [x] **Extracurricular assessment form** (`extracurricular-assessment.blade.php`)
-- [x] **Attendance input form** for report cards (`attendance-input.blade.php`)
-- [x] Sidebar navigation (all 4 assessment links)
-- [x] Route configuration (4 assessment routes in `assessments.php`)
-- [x] Teacher access control (PAUD-specific competency assessment)
-
-### **Public Website - Completed ✅**
-
-- [x] Homepage with hero section
-- [x] About pages (3 pages: Tentang Kami, Struktur Organisasi, Fasilitas)
-- [x] Programs (index + detail with slug routing)
-- [x] News/Articles (index + detail with slug routing)
-- [x] Gallery with photo management
-- [x] Contact page with inquiry form
-- [x] SEO: Sitemap.xml (dynamic generation)
-- [x] Responsive design with dark mode support
-- [x] Admin CMS for all public content
-
-### **Pending Features ⏳**
-
-- [ ] Report card generator (Kurikulum Merdeka format)
-- [ ] PDF templates (separate for PAUD vs SD/SMP/SMA)
-- [ ] Integration with existing report card system
-- [ ] Assessment analytics/reports
-- [ ] Letter generation feature (Fitur Surat)
-
----
-
 ## 🌐 Public Website Structure
 
 ### **Public Pages**
@@ -803,7 +764,7 @@ All public content is manageable via admin panel:
 
 ## 💻 Environment Information
 
-- **Local Development URL**: `http://simkopkbm.test1`
+- **Local Development URL**: `http://simkopkbm.test`
 - **Web Server**: Laragon (Windows)
 - **Database Engine**: SQLite (Local)
 - **Test Credentials**:

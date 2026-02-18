@@ -166,15 +166,15 @@ Need a component?
 
 ### **Quick Reference**
 
-| Need                         | Use                                                  |
-| ---------------------------- | ---------------------------------------------------- |
-| Button, Input, Select, Modal | **Flux** `<flux:*>`                                  |
-| Date Picker, Time Picker     | **TallStack** `<x-ts-date-picker>`                   |
-| Searchable Select            | **TallStack** `<x-ts-select.styled>`                 |
-| Tabs, Steps/Wizard           | **TallStack** `<x-ts-tab>`, `<x-ts-step>`            |
-| Rating, Color Picker         | **TallStack** `<x-ts-rating>`, `<x-ts-color-picker>` |
-| Table                        | **HTML + Tailwind** (Flux Free has no table component)|
-| Toast Notifications          | **Flux** `\Flux::toast()`                            |
+| Need                         | Use                                                    |
+| ---------------------------- | ------------------------------------------------------ |
+| Button, Input, Select, Modal | **Flux** `<flux:*>`                                    |
+| Date Picker, Time Picker     | **TallStack** `<x-ts-date-picker>`                     |
+| Searchable Select            | **TallStack** `<x-ts-select.styled>`                   |
+| Tabs, Steps/Wizard           | **TallStack** `<x-ts-tab>`, `<x-ts-step>`              |
+| Rating, Color Picker         | **TallStack** `<x-ts-rating>`, `<x-ts-color-picker>`   |
+| Table                        | **HTML + Tailwind** (Flux Free has no table component) |
+| Toast Notifications          | **Flux** `\Flux::toast()`                              |
 
 ---
 
@@ -331,35 +331,6 @@ CompetencyAssessment::with('student', 'subject')->get();
 
 ---
 
-## 📋 Current Priority Tasks
-
-### **Kurikulum Merdeka Implementation**
-
-| Priority | Task                            | Status  |
-| -------- | ------------------------------- | ------- |
-| 1        | Competency Assessment Form      | ✅ Done |
-| 2        | P5 Assessment Form              | ⏳ Todo |
-| 3        | Extracurricular Assessment Form | ⏳ Todo |
-| 4        | PAUD Developmental Assessment   | ⏳ Todo |
-| 5        | Report Card Generator           | ⏳ Todo |
-| 6        | PDF Templates                   | ⏳ Todo |
-
-### **Next Task Details**
-
-**P5 Assessment Form:**
-
-- Location: `resources/views/livewire/admin/assessments/p5-assessment.blade.php`
-- Route: `admin.assessments.p5`
-- Features: Select project, input level (BB/MB/BSH/SB), description
-
-**Extracurricular Assessment Form:**
-
-- Location: `resources/views/livewire/admin/assessments/extracurricular-assessment.blade.php`
-- Route: `admin.assessments.extracurricular`
-- Features: Select activity, input level, description
-
----
-
 ## 🔄 Git Workflow
 
 ### **Branch Naming**
@@ -417,7 +388,7 @@ A feature is complete when:
 
 ## 💻 Environment Cheat Sheet
 
-- **Local URL**: `http://simkopkbm.test1`
+- **Local URL**: `http://simkopkbm.test`
 - **Laragon Project Name**: `simkopkbm`
 - **OS**: Windows
 - **Shell**: PowerShell
