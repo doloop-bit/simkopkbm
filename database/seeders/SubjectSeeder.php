@@ -73,25 +73,26 @@ class SubjectSeeder extends Seeder
             ['name' => 'Bahasa Jawa', 'code' => 'BJAW'],
         ];
 
-        // Map level name => subjects array & suffix
+        // Map level names (from LevelSeeder) => subjects array & suffix
         $mapping = [
-            'PAUD' => ['subjects' => $paudSubjects, 'suffix' => 'PD'],
-            'Paket A' => ['subjects' => $paketASubjects, 'suffix' => 'PA'],
-            'Paket B' => ['subjects' => $paketBSubjects, 'suffix' => 'PB'],
-            'Paket C (Kelas 12)' => ['subjects' => $paketCSubjects, 'suffix' => 'PC'],
+            'Kelompok Bermain (KB)' => ['subjects' => $paudSubjects, 'suffix' => 'PD'],
+            'Taman Kanak-Kanak (TK)' => ['subjects' => $paudSubjects, 'suffix' => 'PD'],
+            'Paket A (Setara SD)' => ['subjects' => $paketASubjects, 'suffix' => 'PA'],
+            'Paket B (Setara SMP)' => ['subjects' => $paketBSubjects, 'suffix' => 'PB'],
+            'Paket C (Setara SMA)' => ['subjects' => $paketCSubjects, 'suffix' => 'PC'],
         ];
 
         foreach ($mapping as $levelName => $config) {
-            if (!isset($levels[$levelName])) {
+            $level = $levels->where('name', $levelName)->first();
+            
+            if (!$level) {
                 $this->command->warn("Level '{$levelName}' not found, skipping...");
                 continue;
             }
 
-            $level = $levels[$levelName];
-
             foreach ($config['subjects'] as $subject) {
                 Subject::firstOrCreate(
-                    ['code' => $subject['code'] . '-' . $config['suffix']],
+                    ['code' => $subject['code'] . '-' . $config['suffix'], 'level_id' => $level->id],
                     [
                         'name' => $subject['name'],
                         'level_id' => $level->id,

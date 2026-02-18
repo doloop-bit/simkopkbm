@@ -112,7 +112,10 @@ class DevelopmentalAspectsSeeder extends Seeder
         ];
 
         foreach ($aspects as $aspect) {
-            DevelopmentalAspect::create($aspect);
+            DevelopmentalAspect::firstOrCreate(
+                ['name' => $aspect['name'], 'aspect_type' => $aspect['aspect_type']],
+                $aspect
+            );
         }
     }
 }

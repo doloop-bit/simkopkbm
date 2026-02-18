@@ -16,95 +16,63 @@ class DatabaseSeeder extends Seeder
      */
     public function run(): void
     {
-        // User::factory(10)->create();
+        $this->command->info('Configuring core application data...');
 
+        // 1. Core Authentication & Users
         User::firstOrCreate(
             ['email' => 'admin@pkbm.com'],
             [
                 'name' => 'Administrator PKBM',
                 'role' => 'admin',
-                'password' => bcrypt('password'), // Default password for seeded users
+                'password' => bcrypt('password'),
             ]
         );
 
-        $categories = [
-            ['name' => 'Tugas', 'weight' => 20],
-            ['name' => 'Kuis', 'weight' => 10],
-            ['name' => 'UTS', 'weight' => 30],
-            ['name' => 'UAS', 'weight' => 40],
-        ];
+        // 2. Academic Infrastructure
+        \App\Models\AcademicYear::firstOrCreate(
+            ['is_active' => true],
+            [
+                'name' => '2024/2025',
+                'start_date' => '2024-07-01',
+                'end_date' => '2025-06-30',
+                'status' => 'open',
+            ]
+        );
 
-        foreach ($categories as $cat) {
-            \App\Models\ScoreCategory::firstOrCreate(['name' => $cat['name']], $cat);
-        }
-
-        $students = [
-            ['name' => 'Student One', 'email' => 'student1@pkbm.com'],
-            ['name' => 'Student Two', 'email' => 'student2@pkbm.com'],
-        ];
-
-        foreach ($students as $s) {
-            $user = User::firstOrCreate(
-                ['email' => $s['email']],
-                [
-                    'name' => $s['name'],
-                    'role' => 'siswa',
-                    'password' => bcrypt('password'), // Default password for seeded users
-                ]
-            );
-
-            // Check if profile already exists for this user to avoid duplicates
-            if (!$user->profiles()->exists()) {
-                // First, ensure there's at least one classroom
-                $classroom = \App\Models\Classroom::first();
-                if (!$classroom) {
-                    // Create required related records first
-                    $academicYear = \App\Models\AcademicYear::first();
-                    if (!$academicYear) {
-                        $academicYear = \App\Models\AcademicYear::create([
-                            'name' => '2024/2025',
-                            'start_date' => '2024-08-01',
-                            'end_date' => '2025-06-30',
-                        ]);
-                    }
-
-                    $level = \App\Models\Level::first();
-                    if (!$level) {
-                        $level = \App\Models\Level::create([
-                            'name' => 'Basic Level',
-                            'type' => 'regular', // Assuming 'regular' as default type
-                        ]);
-                    }
-
-                    $teacher = \App\Models\User::where('role', 'guru')->first();
-                    if (!$teacher) {
-                        $teacher = User::firstOrCreate(
-                            ['email' => 'teacher@pkbm.com'],
-                            [
-                                'name' => 'Default Teacher',
-                                'role' => 'guru',
-                                'password' => bcrypt('password'),
-                            ]
-                        );
-                    }
-
-                    $classroom = \App\Models\Classroom::create([
-                        'name' => 'Default Classroom',
-                        'academic_year_id' => $academicYear->id,
-                        'level_id' => $level->id,
-                        'homeroom_teacher_id' => $teacher->id,
-                    ]);
-                }
-
-                $profile = \App\Models\StudentProfile::create([
-                    'classroom_id' => $classroom->id,
-                ]);
-
-                $user->profiles()->create([
-                    'profileable_id' => $profile->id,
-                    'profileable_type' => \App\Models\StudentProfile::class,
-                ]);
+        if (\App\Models\ScoreCategory::count() === 0) {
+            $categories = [
+                ['name' => 'Tugas', 'weight' => 20],
+                ['name' => 'Kuis', 'weight' => 10],
+                ['name' => 'UTS', 'weight' => 30],
+                ['name' => 'UAS', 'weight' => 40],
+            ];
+            foreach ($categories as $cat) {
+                \App\Models\ScoreCategory::create($cat);
             }
         }
+
+        // 3. Run Core Seeders
+        $this->command->info('Running Level and Subject seeders...');
+        $this->call([
+            LevelSeeder::class,
+            SubjectSeeder::class,
+            LearningAchievementSeeder::class, // Extends levels with phase_map and creates CPs
+        ]);
+
+        // 4. Kurikulum Merdeka Seeders
+        $this->command->info('Running Kurikulum Merdeka seeders...');
+        $this->call([
+            DevelopmentalAspectsSeeder::class,     // For PAUD
+            ExtracurricularActivitiesSeeder::class, // For Extracurriculars
+            P5ProjectsSeeder::class,               // For P5
+        ]);
+
+        // 5. Financial Infrastructure
+        $this->command->info('Running Financial seeders...');
+        $this->call([
+            FinancialSeeder::class,
+        ]);
+
+        $this->command->info('Database seeding completed successfully!');
     }
 }

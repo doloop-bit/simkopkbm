@@ -82,7 +82,10 @@ class P5ProjectsSeeder extends Seeder
         ];
 
         foreach ($projects as $project) {
-            P5Project::create($project);
+            P5Project::firstOrCreate(
+                ['name' => $project['name'], 'academic_year_id' => $project['academic_year_id']],
+                $project
+            );
         }
 
         $this->command->info('P5 Projects seeded successfully!');

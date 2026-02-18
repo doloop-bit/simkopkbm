@@ -80,7 +80,10 @@ class ExtracurricularActivitiesSeeder extends Seeder
 
         foreach ($activities as $activity) {
             $activity['level_id'] = $levelId;
-            ExtracurricularActivity::create($activity);
+            ExtracurricularActivity::firstOrCreate(
+                ['name' => $activity['name']],
+                $activity
+            );
         }
     }
 }
