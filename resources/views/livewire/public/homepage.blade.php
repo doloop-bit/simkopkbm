@@ -69,11 +69,11 @@ new #[Layout('components.public.layouts.public')] class extends Component {
                         </svg>
                         Lihat Program
                     </a>
-                    <a href="{{ route('public.contact') }}" class="group inline-flex items-center justify-center px-6 sm:px-8 py-3 sm:py-4 border-2 border-white/20 text-white font-semibold rounded-xl hover:bg-white/10 transition-all duration-300 transform hover:scale-105 w-full sm:w-auto">
+                    <a href="{{ route('public.register') }}" class="group inline-flex items-center justify-center px-6 sm:px-8 py-3 sm:py-4 border-2 border-white/20 text-white font-semibold rounded-xl hover:bg-white/10 transition-all duration-300 transform hover:scale-105 w-full sm:w-auto">
                         <svg class="w-5 h-5 mr-2 group-hover:translate-x-1 transition-transform duration-200" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 8l7.89 4.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" />
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M18 9v3m0 0v3m0-3h3m-3 0h-3m-2-5a4 4 0 11-8 0 4 4 0 018 0zM3 20a6 6 0 0112 0v1H3v-1z" />
                         </svg>
-                        Hubungi Kami
+                        Daftar Sekarang
                     </a>
                 </div>
             </div>
@@ -282,11 +282,11 @@ new #[Layout('components.public.layouts.public')] class extends Component {
                     Mari wujudkan impian pendidikan yang lebih baik bersama-sama.
                 </p>
                 <div class="flex flex-col sm:flex-row gap-4 sm:gap-6 justify-center items-center px-4">
-                    <a href="{{ route('public.contact') }}" class="group inline-flex items-center justify-center px-8 sm:px-10 py-4 sm:py-5 bg-amber-500 text-white font-bold rounded-xl shadow-xl hover:shadow-2xl hover:shadow-amber-500/30 transition-all duration-300 transform hover:scale-105 hover:bg-amber-600 w-full sm:w-auto">
+                    <a href="{{ route('public.register') }}" class="group inline-flex items-center justify-center px-8 sm:px-10 py-4 sm:py-5 bg-amber-500 text-white font-bold rounded-xl shadow-xl hover:shadow-2xl hover:shadow-amber-500/30 transition-all duration-300 transform hover:scale-105 hover:bg-amber-600 w-full sm:w-auto">
                         <svg class="w-5 sm:w-6 h-5 sm:h-6 mr-2 sm:mr-3 group-hover:translate-x-1 transition-transform duration-200" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 8l7.89 4.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" />
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M18 9v3m0 0v3m0-3h3m-3 0h-3m-2-5a4 4 0 11-8 0 4 4 0 018 0zM3 20a6 6 0 0112 0v1H3v-1z" />
                         </svg>
-                        Hubungi Kami Sekarang
+                        Daftar Sekarang
                     </a>
                     <a href="{{ route('public.about') }}" class="group inline-flex items-center justify-center px-8 sm:px-10 py-4 sm:py-5 border-2 border-slate-200 text-slate-600 font-bold rounded-xl hover:bg-slate-50 hover:text-slate-900 hover:border-slate-300 transition-all duration-300 transform hover:scale-105 w-full sm:w-auto">
                         <svg class="w-5 sm:w-6 h-5 sm:h-6 mr-2 sm:mr-3 group-hover:translate-x-1 transition-transform duration-200" fill="none" stroke="currentColor" viewBox="0 0 24 24">
