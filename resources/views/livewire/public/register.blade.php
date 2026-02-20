@@ -355,15 +355,27 @@ new #[Layout('components.public.layouts.public')] class extends Component {
 
                                 <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
                                     <!-- POB -->
-                                    <div>
+                                    <div x-data="pobHandler('{{ $wilayahApiUrl }}')" x-init="init()">
                                         <label class="block text-sm font-semibold text-gray-700 mb-1">Tempat Lahir</label>
-                                        <input type="text" wire:model="pob"
-                                           class="w-full px-4 py-3 border border-gray-300 rounded-xl shadow-sm focus:outline-none focus:ring-2 focus:ring-amber-500 focus:border-amber-500 transition-colors"
-                                           placeholder="Kota kelahiran">
+                                        <input type="text" 
+                                           wire:model="pob"
+                                           x-ref="pobInput"
+                                           x-on:focus="onFocus()"
+                                           x-on:input="onInput($event)"
+                                           list="pob-suggestions"
+                                           class="w-full px-4 py-3 border border-gray-300 rounded-xl shadow-sm focus:outline-none focus:ring-2 focus:ring-amber-500 focus:border-amber-500 transition-colors uppercase"
+                                           placeholder="KOTA/KABUPATEN KELAHIRAN">
+                                        <datalist id="pob-suggestions">
+                                            <template x-for="suggestion in suggestions" :key="suggestion">
+                                                <option :value="suggestion"></option>
+                                            </template>
+                                        </datalist>
+                                        <p class="mt-1 text-[10px] text-gray-400">Contoh: KABUPATEN MALANG, KOTA SURABAYA, atau KUALA LUMPUR</p>
                                     </div>
 
                                     <!-- DOB -->
                                     <x-date wire:model="dob" 
+                                        class="w-full px-4 py-3 border border-gray-300 rounded-xl shadow-sm focus:outline-none focus:ring-2 focus:ring-amber-500 focus:border-amber-500 transition-colors"
                                         label="Tanggal Lahir"
                                         format="DD/MM/YYYY"
                                         placeholder="Pilih tanggal lahir..."
@@ -613,14 +625,42 @@ new #[Layout('components.public.layouts.public')] class extends Component {
                             <div class="mt-8 p-5 bg-amber-50 border border-amber-200 rounded-xl">
                                 <h3 class="text-sm font-bold text-amber-800 uppercase tracking-wide mb-3">Ringkasan Data</h3>
                                 <div class="grid grid-cols-1 sm:grid-cols-2 gap-x-6 gap-y-2 text-sm">
-                                    <div><span class="text-gray-500">Nama:</span> <span class="font-medium text-gray-900">{{ $name ?: '-' }}</span></div>
-                                    <div><span class="text-gray-500">NIK:</span> <span class="font-medium text-gray-900">{{ $nik ?: '-' }}</span></div>
-                                    <div><span class="text-gray-500">TTL:</span> <span class="font-medium text-gray-900">{{ $pob ?: '-' }}, {{ $dob ? \Carbon\Carbon::parse($dob)->format('d/m/Y') : '-' }}</span></div>
-                                    <div><span class="text-gray-500">JK:</span> <span class="font-medium text-gray-900">{{ $gender === 'L' ? 'Laki-laki' : ($gender === 'P' ? 'Perempuan' : '-') }}</span></div>
-                                    <div><span class="text-gray-500">Alamat:</span> <span class="font-medium text-gray-900">{{ $address ?: '-' }}</span></div>
-                                    <div><span class="text-gray-500">Wilayah:</span> <span class="font-medium text-gray-900">{{ collect([$village_name, $district_name, $regency_name, $province_name])->filter()->implode(', ') ?: '-' }}</span></div>
-                                    <div><span class="text-gray-500">Ayah:</span> <span class="font-medium text-gray-900">{{ $father_name ?: '-' }}</span></div>
-                                    <div><span class="text-gray-500">Ibu:</span> <span class="font-medium text-gray-900">{{ $mother_name ?: '-' }}</span></div>
+                                    <div class="flex flex-col gap-1">
+                                        <div class="flex pb-1 border-b border-amber-100/50">
+                                            <span class="text-gray-500 w-24 shrink-0">Nama</span>
+                                            <span class="font-medium text-gray-900">: {{ $name ?: '-' }}</span>
+                                        </div>
+                                        <div class="flex pb-1 border-b border-amber-100/50">
+                                            <span class="text-gray-500 w-24 shrink-0">NIK</span>
+                                            <span class="font-medium text-gray-900">: {{ $nik ?: '-' }}</span>
+                                        </div>
+                                        <div class="flex pb-1 border-b border-amber-100/50">
+                                            <span class="text-gray-500 w-24 shrink-0">TTL</span>
+                                            <span class="font-medium text-gray-900">: {{ $pob ?: '-' }}, {{ $dob ? \Carbon\Carbon::parse($dob)->format('d/m/Y') : '-' }}</span>
+                                        </div>
+                                        <div class="flex pb-1 border-b border-amber-100/50">
+                                            <span class="text-gray-500 w-24 shrink-0">JK</span>
+                                            <span class="font-medium text-gray-900">: {{ $gender === 'L' ? 'Laki-laki' : ($gender === 'P' ? 'Perempuan' : '-') }}</span>
+                                        </div>
+                                    </div>
+                                    <div class="flex flex-col gap-1">
+                                        <div class="flex pb-1 border-b border-amber-100/50">
+                                            <span class="text-gray-500 w-24 shrink-0">Alamat</span>
+                                            <span class="font-medium text-gray-900">: {{ $address ?: '-' }}</span>
+                                        </div>
+                                        <div class="flex pb-1 border-b border-amber-100/50">
+                                            <span class="text-gray-500 w-24 shrink-0">Wilayah</span>
+                                            <span class="font-medium text-gray-900">: {{ collect([$village_name, $district_name, $regency_name, $province_name])->filter()->implode(', ') ?: '-' }}</span>
+                                        </div>
+                                        <div class="flex pb-1 border-b border-amber-100/50">
+                                            <span class="text-gray-500 w-24 shrink-0">Ayah</span>
+                                            <span class="font-medium text-gray-900">: {{ $father_name ?: '-' }}</span>
+                                        </div>
+                                        <div class="flex pb-1 border-b border-amber-100/50">
+                                            <span class="text-gray-500 w-24 shrink-0">Ibu</span>
+                                            <span class="font-medium text-gray-900">: {{ $mother_name ?: '-' }}</span>
+                                        </div>
+                                    </div>
                                 </div>
                             </div>
                         </div>
@@ -651,7 +691,7 @@ new #[Layout('components.public.layouts.public')] class extends Component {
                             @else
                                 <button type="submit"
                                     wire:loading.attr="disabled"
-                                    class="inline-flex items-center px-8 py-3 rounded-xl bg-gradient-to-r from-green-500 to-emerald-600 text-white font-bold shadow-lg shadow-green-500/30 hover:shadow-green-500/50 transition-all transform hover:-translate-y-0.5 disabled:opacity-50">
+                                    class="inline-flex items-center px-6 py-2.5 rounded-xl bg-green-600 text-white font-bold shadow-lg shadow-green-600/20 hover:shadow-green-600/40 hover:bg-green-700 transition-all transform hover:-translate-y-0.5 disabled:opacity-50">
                                     <span wire:loading.remove>
                                         <svg class="w-5 h-5 mr-2 inline" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"/>
@@ -811,6 +851,73 @@ new #[Layout('components.public.layouts.public')] class extends Component {
                     }
                     const [id, name] = this.selectedVillage.split('|');
                     this.$wire.set('village_id', id); this.$wire.set('village_name', name);
+                }
+            }
+        }
+
+        function pobHandler(apiUrl) {
+            return {
+                apiUrl: apiUrl,
+                suggestions: [],
+                hasFetched: false,
+
+                init() {
+                    // Check if we have cached suggestions in session storage to avoid re-fetching
+                    const cached = sessionStorage.getItem('pob_suggestions');
+                    if (cached) {
+                        this.suggestions = JSON.parse(cached);
+                        this.hasFetched = true;
+                    }
+                },
+
+                async onFocus() {
+                    if (this.hasFetched) return;
+                    
+                    try {
+                        const provRes = await fetch(`${this.apiUrl}/provinces.json`);
+                        const provinces = await provRes.json();
+                        
+                        // We fetch regencies in chunks to avoid overwhelming the browser/API
+                        // First, prioritze East Java (ID: 35) since the school is in Malang
+                        const prioritizedIds = ['35', '33', '34', '32', '31', '36', '51', '52', '73', '61'];
+                        
+                        const fetchPromises = provinces.map(async (prov) => {
+                            try {
+                                const res = await fetch(`${this.apiUrl}/regencies/${prov.id}.json`);
+                                return await res.json();
+                            } catch (e) { return []; }
+                        });
+
+                        const results = await Promise.all(fetchPromises);
+                        this.suggestions = results.flat().map(r => r.name).sort();
+                        
+                        // Cache the results for the session
+                        sessionStorage.setItem('pob_suggestions', JSON.stringify(this.suggestions));
+                        this.hasFetched = true;
+                    } catch (e) {
+                        console.error('Failed to fetch POB suggestions:', e);
+                    }
+                },
+
+                onInput(e) {
+                    let val = e.target.value;
+                    if (!val) return;
+
+                    // Auto-format abbreviations and ensure uppercase
+                    let formatted = val.toUpperCase()
+                        .replace(/^KAB\.?\s/i, 'KABUPATEN ')
+                        .replace(/^KOTA\.?\s/i, 'KOTA ')
+                        .replace(/^KTA\.?\s/i, 'KOTA ');
+
+                    if (formatted !== val) {
+                        this.$nextTick(() => {
+                            // Only update if it actually changed to avoid cursor jumping
+                            const start = e.target.selectionStart;
+                            this.$wire.set('pob', formatted);
+                            // We wait for Livewire to sync then reset cursor if needed
+                            // But for simple datalist inputs, this is usually enough
+                        });
+                    }
                 }
             }
         }
