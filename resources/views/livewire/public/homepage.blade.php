@@ -28,182 +28,206 @@ new #[Layout('components.public.layouts.public')] class extends Component {
 
 <div>
     <!-- Hero Section -->
-    <div class="relative bg-slate-900 text-white overflow-hidden">
+    <div class="relative bg-zinc-950 text-zinc-50 overflow-hidden">
         <!-- Background Pattern -->
-        <div class="absolute inset-0 opacity-20">
-            <svg class="w-full h-full" viewBox="0 0 100 100" fill="none">
-                <defs>
-                    <pattern id="hero-grid" width="20" height="20" patternUnits="userSpaceOnUse">
-                        <path d="M 20 0 L 0 0 0 20" fill="none" stroke="currentColor" stroke-width="0.5"/>
-                    </pattern>
-                </defs>
-                <rect width="100" height="100" fill="url(#hero-grid)" />
-            </svg>
-        </div>
+        <div class="absolute inset-0 bg-[radial-gradient(ellipse_at_top,_var(--tw-gradient-stops))] from-zinc-800/40 via-zinc-950 to-zinc-950"></div>
+        <div class="absolute inset-0 opacity-[0.03] pointer-events-none" style="background-image: url('data:image/svg+xml,%3Csvg width=\'60\' height=\'60\' viewBox=\'0 0 60 60\' xmlns=\'http://www.w3.org/2000/svg\'%3E%3Cg fill=\'none\' fill-rule=\'evenodd\'%3E%3Cg fill=\'%23ffffff\' fill-opacity=\'1\'%3E%3Cpath d=\'M36 34v-4h-2v4h-4v2h4v4h2v-4h4v-2h-4zm0-30V0h-2v4h-4v2h4v4h2V6h4V4h-4zM6 34v-4H4v4H0v2h4v4h2v-4h4v-2H6zM6 4V0H4v4H0v2h4v4h2V6h4V4H6z\'/%3E%3C/g%3E%3C/g%3E%3C/svg%3E');"></div>
         
-
-        <div class="relative max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-16 sm:py-20 lg:py-24">
-            <div class="text-center">
+        <div class="relative max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-20 sm:py-28 lg:py-32">
+            <div class="text-center max-w-4xl mx-auto">
                 @if($schoolProfile && $schoolProfile->logo_path)
-                    <div class="mb-6 sm:mb-8">
-                        <img src="{{ Storage::url($schoolProfile->logo_path) }}" alt="{{ $schoolProfile->name }}" class="h-24 sm:h-28 lg:h-32 mx-auto drop-shadow-2xl">
+                    <div class="mb-8">
+                        <img src="{{ Storage::url($schoolProfile->logo_path) }}" alt="{{ $schoolProfile->name }}" class="h-20 sm:h-24 lg:h-28 mx-auto drop-shadow-xl hover:scale-105 transition-transform duration-300">
                     </div>
                 @endif
-                <h1 class="text-3xl sm:text-4xl md:text-5xl lg:text-6xl xl:text-7xl font-bold font-heading mb-4 sm:mb-6 leading-tight">
-                    <span class="bg-gradient-to-r from-white to-slate-300 bg-clip-text text-transparent">
+                <h1 class="text-4xl sm:text-5xl md:text-6xl lg:text-7xl font-bold font-heading mb-6 tracking-tight leading-tight">
+                    <span class="bg-gradient-to-br from-white via-zinc-200 to-zinc-400 bg-clip-text text-transparent">
                         {{ $schoolProfile?->name ?? config('app.name') }}
                     </span>
                 </h1>
-                <p class="text-lg sm:text-xl md:text-2xl lg:text-3xl mb-6 sm:mb-8 text-slate-400 font-light">
+                <p class="text-lg sm:text-xl md:text-2xl mb-8 text-zinc-400 font-medium tracking-wide">
                     Pusat Kegiatan Belajar Masyarakat
                 </p>
                 @if($schoolProfile && $schoolProfile->vision)
-                    <p class="text-base sm:text-lg md:text-xl max-w-2xl lg:max-w-4xl mx-auto text-slate-300 leading-relaxed mb-8 sm:mb-10 lg:mb-12 px-4">
+                    <p class="text-base sm:text-lg text-zinc-400 leading-relaxed mb-10 px-4 max-w-3xl mx-auto font-light">
                         {{ Str::limit($schoolProfile->vision, 200) }}
                     </p>
                 @endif
-                <div class="flex flex-col sm:flex-row gap-4 sm:gap-6 justify-center items-center px-4">
-                    <a href="{{ route('public.programs.index') }}" class="group inline-flex items-center justify-center px-6 sm:px-8 py-3 sm:py-4 bg-amber-500 text-white font-bold rounded-xl shadow-xl hover:shadow-2xl hover:shadow-amber-500/20 transition-all duration-300 transform hover:scale-105 hover:bg-amber-600 w-full sm:w-auto">
-                        <svg class="w-5 h-5 mr-2 group-hover:translate-x-1 transition-transform duration-200" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477 4.5 1.253v13C19.832 18.477 18.246 18 16.5 18c-1.746 0-3.332.477-4.5 1.253" />
-                        </svg>
+                <div class="flex flex-col sm:flex-row gap-4 justify-center items-center px-4">
+                    <a href="{{ route('public.programs.index') }}" class="group inline-flex items-center justify-center px-8 py-4 bg-zinc-100 text-zinc-900 font-semibold rounded-full shadow-lg hover:shadow-xl hover:bg-white transition-all duration-300 transform hover:-translate-y-0.5 w-full sm:w-auto">
                         Lihat Program
-                    </a>
-                    <a href="{{ route('public.register') }}" class="group inline-flex items-center justify-center px-6 sm:px-8 py-3 sm:py-4 border-2 border-white/20 text-white font-semibold rounded-xl hover:bg-white/10 transition-all duration-300 transform hover:scale-105 w-full sm:w-auto">
-                        <svg class="w-5 h-5 mr-2 group-hover:translate-x-1 transition-transform duration-200" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M18 9v3m0 0v3m0-3h3m-3 0h-3m-2-5a4 4 0 11-8 0 4 4 0 018 0zM3 20a6 6 0 0112 0v1H3v-1z" />
+                        <svg class="w-5 h-5 ml-2 group-hover:translate-x-1 transition-transform duration-200" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 8l4 4m0 0l-4 4m4-4H3" />
                         </svg>
-                        Daftar Sekarang
+                    </a>
+                    <a href="{{ route('public.register') }}" class="group inline-flex items-center justify-center px-8 py-4 bg-amber-500 text-white font-semibold rounded-full shadow-lg shadow-amber-500/20 hover:shadow-amber-500/40 hover:bg-amber-400 transition-all duration-300 transform hover:-translate-y-0.5 w-full sm:w-auto">
+                        Pendaftaran Siswa
+                        <svg class="w-5 h-5 ml-2 group-hover:translate-x-1 transition-transform duration-200" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
+                        </svg>
                     </a>
                 </div>
             </div>
         </div>
         
-        <!-- Wave Bottom -->
-        <div class="absolute bottom-0 left-0 right-0">
-            <svg viewBox="0 0 1440 120" fill="none" class="w-full h-auto">
-                <path d="M0,64L48,69.3C96,75,192,85,288,80C384,75,480,53,576,48C672,43,768,53,864,64C960,75,1056,85,1152,80C1248,75,1344,53,1392,42.7L1440,32L1440,120L1392,120C1344,120,1248,120,1152,120C1056,120,960,120,864,120C768,120,672,120,576,120C480,120,384,120,288,120C192,120,96,120,48,120L0,120Z" fill="rgb(249 250 251)"/>
-            </svg>
+    <!-- Subtle gradient separator -->
+        <div class="absolute bottom-0 left-0 right-0 h-px bg-gradient-to-r from-transparent via-zinc-700 to-transparent"></div>
+    </div>
+
+    <!-- Admission Banner Carousel Section -->
+    @if($programs->count() > 0)
+    <div x-data="{
+            activeSlide: 0,
+            slides: [
+                @foreach($programs as $program)
+                {
+                    image: '{{ $program->image_path ? Storage::url($program->image_path) : 'https://placehold.co/1920x600/27272a/ffffff.png?text=Pendaftaran+'.urlencode($program->name) }}',
+                    title: '{{ addslashes($program->name) }}',
+                    desc: '{{ addslashes(Str::limit($program->description, 100)) }}'
+                }{{ !$loop->last ? ',' : '' }}
+                @endforeach
+            ],
+            init() {
+                if (this.slides.length > 1) {
+                    setInterval(() => {
+                        this.activeSlide = this.activeSlide === this.slides.length - 1 ? 0 : this.activeSlide + 1;
+                    }, 5000);
+                }
+            }
+        }"
+        class="relative w-full overflow-hidden bg-zinc-900 group border-b border-zinc-200/50"
+    >
+        <div class="relative w-full aspect-[16/9] sm:aspect-[21/9] lg:aspect-[3/1]">
+            <template x-for="(slide, index) in slides" :key="index">
+                <div x-show="activeSlide === index" 
+                     x-transition:enter="transition-opacity duration-1000 ease-in-out" 
+                     x-transition:enter-start="opacity-0" 
+                     x-transition:enter-end="opacity-100" 
+                     x-transition:leave="transition-opacity duration-1000 ease-in-out absolute inset-0" 
+                     x-transition:leave-start="opacity-100" 
+                     x-transition:leave-end="opacity-0" 
+                     class="absolute inset-0 w-full h-full">
+                    <img :src="slide.image" class="object-cover w-full h-full opacity-90" :alt="slide.title">
+                    <div class="absolute inset-0 bg-gradient-to-t from-zinc-950/95 via-zinc-950/50 to-transparent"></div>
+                    <div class="absolute bottom-0 left-0 w-full px-6 py-12 sm:p-16 text-center sm:text-left text-white">
+                        <div class="max-w-7xl mx-auto sm:px-6 lg:px-8">
+                            <span class="inline-block px-3 py-1 mb-4 text-xs font-semibold tracking-wider text-amber-500 uppercase bg-amber-500/10 rounded-full border border-amber-500/20 shadow-sm backdrop-blur-sm">Penerimaan Siswa Baru</span>
+                            <h3 class="text-3xl sm:text-4xl lg:text-5xl font-bold font-heading mb-4 drop-shadow-lg tracking-tight" x-text="slide.title"></h3>
+                            <p class="text-base sm:text-lg lg:text-xl text-zinc-100 drop-shadow-md max-w-2xl lg:max-w-3xl font-light leading-relaxed mb-8" x-text="slide.desc"></p>
+                            
+                            <a href="{{ route('public.register') }}" class="inline-flex items-center justify-center px-6 py-3 bg-amber-500 text-white font-semibold rounded-full hover:bg-amber-400 transition-colors shadow-lg shadow-amber-500/20">
+                                Daftar Sekarang
+                                <svg class="w-4 h-4 ml-2" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M14 5l7 7m0 0l-7 7m7-7H3"></path></svg>
+                            </a>
+                        </div>
+                    </div>
+                </div>
+            </template>
+        </div>
+
+        <!-- Navigation Buttons -->
+        <button x-show="slides.length > 1" @click="activeSlide = activeSlide === 0 ? slides.length - 1 : activeSlide - 1" class="absolute left-2 sm:left-6 top-1/2 -translate-y-1/2 bg-black/40 hover:bg-amber-500 text-white p-2.5 sm:p-3 rounded-full opacity-0 group-hover:opacity-100 transition-all duration-300 backdrop-blur-md shadow-xl z-10 focus:outline-none">
+            <svg class="w-5 h-5 sm:w-6 sm:h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7"></path></svg>
+        </button>
+        <button x-show="slides.length > 1" @click="activeSlide = activeSlide === slides.length - 1 ? 0 : activeSlide + 1" class="absolute right-2 sm:right-6 top-1/2 -translate-y-1/2 bg-black/40 hover:bg-amber-500 text-white p-2.5 sm:p-3 rounded-full opacity-0 group-hover:opacity-100 transition-all duration-300 backdrop-blur-md shadow-xl z-10 focus:outline-none">
+            <svg class="w-5 h-5 sm:w-6 sm:h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"></path></svg>
+        </button>
+
+        <!-- Indicators -->
+        <div x-show="slides.length > 1" class="absolute bottom-6 left-1/2 -translate-x-1/2 flex space-x-2 z-10">
+            <template x-for="(slide, index) in slides" :key="index">
+                <button @click="activeSlide = index" 
+                        :class="{'w-8 bg-amber-500 hover:bg-amber-400': activeSlide === index, 'w-2 bg-white/40 hover:bg-white/80': activeSlide !== index}" 
+                        class="h-2 rounded-full transition-all duration-300 focus:outline-none shadow-sm"></button>
+            </template>
         </div>
     </div>
+    @endif
 
     <!-- Latest News Section -->
     @if($latestNews->count() > 0)
-        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-20">
-            <div class="text-center mb-16">
-                <h2 class="text-4xl font-bold font-heading text-slate-900 mb-4">Berita Terbaru</h2>
-                <p class="text-lg text-slate-600 max-w-2xl mx-auto">
-                    Ikuti perkembangan terbaru dan kegiatan menarik di PKBM kami
-                </p>
-                <div class="w-24 h-1 bg-amber-500 mx-auto mt-6 rounded-full"></div>
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-24">
+            <div class="flex flex-col md:flex-row md:items-end justify-between mb-12 gap-6">
+                <div class="max-w-2xl">
+                    <h2 class="text-3xl md:text-4xl font-bold font-heading text-zinc-900 tracking-tight">Berita Terbaru</h2>
+                    <p class="text-zinc-500 mt-4 text-lg">Ikuti perkembangan terbaru dan kegiatan menarik di PKBM kami.</p>
+                </div>
+                <a href="{{ route('public.news.index') }}" class="inline-flex items-center text-zinc-900 font-semibold hover:text-amber-600 transition-colors group">
+                    Lihat Semua
+                    <svg class="w-5 h-5 ml-2 group-hover:translate-x-1 transition-transform" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 8l4 4m0 0l-4 4m4-4H3" />
+                    </svg>
+                </a>
             </div>
 
-            <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6 sm:gap-8">
+            <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
                 @foreach($latestNews as $article)
-                    <article class="group bg-white rounded-2xl shadow-lg hover:shadow-2xl transition-all duration-300 overflow-hidden transform hover:-translate-y-2">
-                        <div class="relative overflow-hidden">
+                    <article class="group relative flex flex-col items-start justify-between bg-white rounded-2xl ring-1 ring-zinc-200/50 shadow-sm hover:shadow-lg hover:ring-zinc-200 transition-all duration-300 overflow-hidden">
+                        <div class="block w-full overflow-hidden aspect-[16/9] bg-zinc-100">
                             @if($article->featured_image_path)
-                                <img src="{{ Storage::url($article->featured_image_path) }}" alt="{{ $article->title }}" class="w-full h-48 sm:h-56 object-cover group-hover:scale-110 transition-transform duration-500">
+                                <img src="{{ Storage::url($article->featured_image_path) }}" alt="{{ $article->title }}" class="object-cover w-full h-full group-hover:scale-105 transition-transform duration-500">
                             @else
-                                <div class="w-full h-48 sm:h-56 bg-slate-100 flex items-center justify-center">
-                                    <svg class="w-12 sm:w-16 h-12 sm:h-16 text-slate-300" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <div class="w-full h-full flex items-center justify-center">
+                                    <svg class="w-12 h-12 text-zinc-300" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
                                     </svg>
                                 </div>
                             @endif
-                            <div class="absolute top-4 left-4">
-                                <span class="bg-amber-500 text-white px-3 py-1 rounded-full text-sm font-medium">
-                                    {{ $article->published_at->format('d M Y') }}
-                                </span>
-                            </div>
                         </div>
-                        <div class="p-4 sm:p-6">
-                            <h3 class="text-lg sm:text-xl font-bold font-heading text-slate-900 mb-3 line-clamp-2 group-hover:text-amber-600 transition-colors duration-200">
-                                {{ $article->title }}
+                        <div class="p-6 md:p-8 flex-1 flex flex-col">
+                            <div class="flex items-center gap-x-4 text-xs mb-4">
+                                <time datetime="{{ $article->published_at->format('Y-m-d') }}" class="text-zinc-500">
+                                    {{ $article->published_at->format('d M Y') }}
+                                </time>
+                            </div>
+                            <h3 class="mt-3 text-xl font-bold font-heading leading-tight text-zinc-900 group-hover:text-amber-600 transition-colors line-clamp-2">
+                                <a href="{{ route('public.news.show', $article->slug) }}">
+                                    <span class="absolute inset-0"></span>
+                                    {{ $article->title }}
+                                </a>
                             </h3>
-                            <p class="text-slate-600 mb-4 line-clamp-3 leading-relaxed text-sm sm:text-base">
+                            <p class="mt-4 text-zinc-600 line-clamp-3 text-sm leading-relaxed flex-1">
                                 {{ $article->excerpt ?? Str::limit(strip_tags($article->content), 120) }}
                             </p>
-                            <a href="{{ route('public.news.show', $article->slug) }}" class="inline-flex items-center text-amber-600 hover:text-amber-700 font-semibold group text-sm sm:text-base">
-                                Baca Selengkapnya
-                                <svg class="w-4 h-4 ml-2 group-hover:translate-x-1 transition-transform duration-200" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"/>
-                                </svg>
-                            </a>
                         </div>
                     </article>
                 @endforeach
-            </div>
-
-            <div class="text-center mt-12">
-                <a href="{{ route('public.news.index') }}" class="inline-flex items-center justify-center px-8 py-4 bg-slate-800 text-white font-semibold rounded-xl shadow-lg hover:shadow-xl hover:bg-slate-700 transition-all duration-300 transform hover:scale-105">
-                    <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 20H5a2 2 0 01-2-2V6a2 2 0 012-2h10a2 2 0 012 2v1m2 13a2 2 0 01-2-2V7m2 13a2 2 0 002-2V9a2 2 0 00-2-2h-2m-4-3H9M7 16h6M7 8h6v4H7V8z" />
-                    </svg>
-                    Lihat Semua Berita
-                </a>
             </div>
         </div>
     @endif
 
     <!-- Programs Section -->
     @if($programs->count() > 0)
-        <div class="bg-white py-20 border-t border-slate-100">
+        <div class="bg-zinc-50 border-y border-zinc-200/60 py-24">
             <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-                <div class="text-center mb-16">
-                    <h2 class="text-4xl font-bold font-heading text-slate-900 mb-4">Program Pendidikan</h2>
-                    <p class="text-lg text-slate-600 max-w-3xl mx-auto">
-                        Kami menawarkan berbagai program pendidikan berkualitas yang disesuaikan dengan kebutuhan dan perkembangan masyarakat
+                <div class="text-center max-w-2xl mx-auto mb-16">
+                    <h2 class="text-3xl md:text-4xl font-bold font-heading text-zinc-900 tracking-tight">Program Pendidikan</h2>
+                    <p class="mt-4 text-lg text-zinc-500">
+                        Kami menawarkan berbagai program pendidikan berkualitas yang disesuaikan dengan kebutuhan dan perkembangan masyarakat.
                     </p>
-                    <div class="w-24 h-1 bg-amber-500 mx-auto mt-6 rounded-full"></div>
                 </div>
 
-                <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6 sm:gap-8">
+                <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
                     @foreach($programs as $program)
-                        <div class="group bg-white rounded-2xl shadow-lg hover:shadow-2xl transition-all duration-300 overflow-hidden transform hover:-translate-y-2">
-                            <div class="relative overflow-hidden">
+                        <a href="{{ route('public.programs.show', $program->slug) }}" class="group block bg-white rounded-3xl p-6 ring-1 ring-zinc-200/50 shadow-sm hover:shadow-xl hover:ring-zinc-200 transition-all duration-300 hover:-translate-y-1">
+                            <div class="w-14 h-14 rounded-2xl bg-zinc-900 text-white flex items-center justify-center mb-6 shadow-md group-hover:bg-amber-500 transition-colors">
                                 @if($program->image_path)
-                                    <img src="{{ Storage::url($program->image_path) }}" alt="{{ $program->name }}" class="w-full h-40 sm:h-48 object-cover group-hover:scale-110 transition-transform duration-500">
+                                    <svg class="w-7 h-7" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477 4.5 1.253v13C19.832 18.477 18.246 18 16.5 18c-1.746 0-3.332.477-4.5 1.253" /></svg>
                                 @else
-                                    <div class="w-full h-40 sm:h-48 bg-slate-800 flex items-center justify-center relative overflow-hidden">
-                                        <div class="absolute inset-0 bg-black opacity-10"></div>
-                                        <span class="relative text-white text-2xl sm:text-3xl font-bold drop-shadow-lg font-heading">{{ Str::upper(Str::substr($program->name, 0, 1)) }}</span>
-                                        <!-- Decorative circles -->
-                                        <div class="absolute top-4 right-4 w-6 sm:w-8 h-6 sm:h-8 bg-white opacity-10 rounded-full"></div>
-                                        <div class="absolute bottom-4 left-4 w-4 sm:w-6 h-4 sm:h-6 bg-white opacity-10 rounded-full"></div>
-                                    </div>
+                                    <span class="text-2xl font-bold font-heading">{{ Str::upper(Str::substr($program->name, 0, 1)) }}</span>
                                 @endif
-                                <div class="absolute top-4 left-4">
-                                    <span class="bg-white/90 backdrop-blur-sm text-slate-900 px-2 sm:px-3 py-1 rounded-full text-xs sm:text-sm font-semibold border border-slate-200">
-                                        {{ Str::upper($program->level) }}
-                                    </span>
-                                </div>
                             </div>
-                            <div class="p-4 sm:p-6">
-                                <h3 class="text-lg sm:text-xl font-bold text-slate-900 mb-3 group-hover:text-amber-600 transition-colors duration-200">
-                                    {{ $program->name }}
-                                </h3>
-                                <p class="text-slate-600 text-sm mb-4 sm:mb-6 line-clamp-3 leading-relaxed">
-                                    {{ Str::limit($program->description, 100) }}
-                                </p>
-                                <a href="{{ route('public.programs.show', $program->slug) }}" class="inline-flex items-center text-amber-600 hover:text-amber-700 font-semibold group text-sm sm:text-base">
-                                    Selengkapnya
-                                    <svg class="w-4 h-4 ml-2 group-hover:translate-x-1 transition-transform duration-200" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"/>
-                                    </svg>
-                                </a>
+                            <h3 class="text-xl font-bold text-zinc-900 mb-2 font-heading tracking-tight">
+                                {{ $program->name }}
+                            </h3>
+                            <div class="inline-flex items-center rounded-full bg-zinc-100 px-2.5 py-0.5 text-xs font-semibold text-zinc-800 mb-4">
+                                {{ Str::upper($program->level) }}
                             </div>
-                        </div>
+                            <p class="text-zinc-500 text-sm line-clamp-3 leading-relaxed">
+                                {{ Str::limit($program->description, 100) }}
+                            </p>
+                        </a>
                     @endforeach
-                </div>
-
-                <div class="text-center mt-12">
-                    <a href="{{ route('public.programs.index') }}" class="inline-flex items-center justify-center px-8 py-4 bg-slate-800 text-white font-semibold rounded-xl shadow-lg hover:shadow-xl hover:bg-slate-700 transition-all duration-300 transform hover:scale-105">
-                        <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477 4.5 1.253v13C19.832 18.477 18.246 18 16.5 18c-1.746 0-3.332.477-4.5 1.253" />
-                        </svg>
-                        Lihat Semua Program
-                    </a>
                 </div>
             </div>
         </div>
@@ -211,88 +235,64 @@ new #[Layout('components.public.layouts.public')] class extends Component {
 
     <!-- Gallery Preview Section -->
     @if($featuredPhotos->count() > 0)
-        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-20">
-            <div class="text-center mb-16">
-                <h2 class="text-4xl font-bold font-heading text-slate-900 mb-4">Galeri Foto</h2>
-                <p class="text-lg text-slate-600 max-w-2xl mx-auto">
-                    Dokumentasi kegiatan dan momen berharga dalam perjalanan pendidikan di PKBM kami
-                </p>
-                <div class="w-24 h-1 bg-amber-500 mx-auto mt-6 rounded-full"></div>
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-24">
+            <div class="flex flex-col md:flex-row md:items-end justify-between mb-12 gap-6">
+                <div class="max-w-2xl">
+                    <h2 class="text-3xl md:text-4xl font-bold font-heading text-zinc-900 tracking-tight">Galeri Foto</h2>
+                    <p class="mt-4 text-lg text-zinc-500">
+                        Dokumentasi kegiatan dan momen berharga dalam perjalanan pendidikan di PKBM kami.
+                    </p>
+                </div>
+                <a href="{{ route('public.gallery') }}" class="inline-flex items-center text-zinc-900 font-semibold hover:text-amber-600 transition-colors group">
+                    Lihat Semua
+                    <svg class="w-5 h-5 ml-2 group-hover:translate-x-1 transition-transform" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 8l4 4m0 0l-4 4m4-4H3" />
+                    </svg>
+                </a>
             </div>
 
-            <div class="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-3 sm:gap-4">
+            <div class="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-4">
                 @foreach($featuredPhotos as $photo)
-                    <a href="{{ route('public.gallery') }}" class="group relative overflow-hidden rounded-xl sm:rounded-2xl aspect-square shadow-lg hover:shadow-2xl transition-all duration-300 transform hover:scale-105">
+                    <a href="{{ route('public.gallery') }}" class="group relative overflow-hidden rounded-2xl aspect-square ring-1 ring-zinc-200/50 shadow-sm hover:shadow-xl transition-all duration-300 transform hover:-translate-y-1 block">
                         <x-global.optimized-image
                             :src="Storage::url($photo->thumbnail_path)"
                             :webp-src="$photo->thumbnail_webp_path ? Storage::url($photo->thumbnail_webp_path) : null"
                             :alt="$photo->title"
-                            class="w-full h-full object-cover group-hover:scale-110 transition-transform duration-500"
+                            class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-700"
                             :lazy="true"
                         />
-                        <div class="absolute inset-0 bg-gradient-to-t from-black/60 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300"></div>
-                        <div class="absolute bottom-0 left-0 right-0 p-2 sm:p-4 text-white transform translate-y-full group-hover:translate-y-0 transition-transform duration-300">
-                            <h3 class="font-semibold text-xs sm:text-sm mb-1">{{ $photo->title }}</h3>
-                            @if($photo->caption)
-                                <p class="text-xs text-gray-200 hidden sm:block">{{ Str::limit($photo->caption, 50) }}</p>
-                            @endif
-                        </div>
-                        <!-- Overlay icon -->
-                        <div class="absolute top-2 sm:top-4 right-2 sm:right-4 w-6 sm:w-8 h-6 sm:h-8 bg-white/20 backdrop-blur-sm rounded-full flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity duration-300">
-                            <svg class="w-3 sm:w-4 h-3 sm:h-4 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
-                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" />
-                            </svg>
+                        <div class="absolute inset-0 bg-gradient-to-t from-zinc-950/80 via-zinc-950/20 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300"></div>
+                        <div class="absolute bottom-0 left-0 right-0 p-4 text-white transform translate-y-4 group-hover:translate-y-0 transition-transform duration-300 opacity-0 group-hover:opacity-100">
+                            <h3 class="font-bold text-sm leading-tight mb-1">{{ $photo->title }}</h3>
                         </div>
                     </a>
                 @endforeach
-            </div>
-
-            <div class="text-center mt-12">
-                <a href="{{ route('public.gallery') }}" class="inline-flex items-center justify-center px-8 py-4 bg-white border border-slate-200 text-slate-700 font-semibold rounded-xl shadow-sm hover:shadow-lg hover:text-amber-600 transition-all duration-300 transform hover:scale-105">
-                    <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
-                    </svg>
-                    Lihat Semua Foto
-                </a>
             </div>
         </div>
     @endif
 
     <!-- Call to Action Section -->
-    <div class="relative bg-white text-slate-900 overflow-hidden border-t border-slate-100">
-        <!-- Background Pattern -->
-        <div class="absolute inset-0 opacity-5">
-            <svg class="w-full h-full" viewBox="0 0 100 100" fill="none">
-                <defs>
-                    <pattern id="cta-grid" width="20" height="20" patternUnits="userSpaceOnUse">
-                        <path d="M 20 0 L 0 0 0 20" fill="none" stroke="currentColor" stroke-width="0.5"/>
-                    </pattern>
-                </defs>
-                <rect width="100" height="100" fill="url(#cta-grid)" />
-            </svg>
+    <div class="relative bg-zinc-950 text-white overflow-hidden py-24 sm:py-32">
+        <div class="absolute inset-0 overflow-hidden">
+             <div class="absolute -top-1/2 -right-1/4 w-full h-full bg-gradient-to-b from-zinc-800/50 to-transparent rounded-full blur-3xl transform rotate-12 opacity-50"></div>
         </div>
-        
 
-        <div class="relative max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-16 sm:py-20 text-center">
-            <div class="max-w-2xl sm:max-w-3xl lg:max-w-4xl mx-auto">
-                <h2 class="text-3xl sm:text-4xl md:text-5xl font-bold font-heading mb-4 sm:mb-6 text-slate-900">Bergabunglah Bersama Kami</h2>
-                <p class="text-lg sm:text-xl md:text-2xl text-slate-600 mb-8 sm:mb-10 lg:mb-12 leading-relaxed px-4">
-                    Daftarkan diri Anda atau keluarga untuk mendapatkan pendidikan berkualitas dan terjangkau di PKBM kami. 
-                    Mari wujudkan impian pendidikan yang lebih baik bersama-sama.
+        <div class="relative max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 text-center">
+            <div class="max-w-3xl mx-auto">
+                <h2 class="text-3xl sm:text-4xl md:text-5xl font-bold font-heading mb-6 tracking-tight">Bergabunglah Bersama Kami</h2>
+                <p class="text-lg sm:text-xl text-zinc-400 mb-10 leading-relaxed font-light">
+                    Daftarkan diri Anda atau keluarga untuk mendapatkan pendidikan berkualitas dan terjangkau. 
+                    Mari wujudkan masa depan yang lebih baik.
                 </p>
-                <div class="flex flex-col sm:flex-row gap-4 sm:gap-6 justify-center items-center px-4">
-                    <a href="{{ route('public.register') }}" class="group inline-flex items-center justify-center px-8 sm:px-10 py-4 sm:py-5 bg-amber-500 text-white font-bold rounded-xl shadow-xl hover:shadow-2xl hover:shadow-amber-500/30 transition-all duration-300 transform hover:scale-105 hover:bg-amber-600 w-full sm:w-auto">
-                        <svg class="w-5 sm:w-6 h-5 sm:h-6 mr-2 sm:mr-3 group-hover:translate-x-1 transition-transform duration-200" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M18 9v3m0 0v3m0-3h3m-3 0h-3m-2-5a4 4 0 11-8 0 4 4 0 018 0zM3 20a6 6 0 0112 0v1H3v-1z" />
+                <div class="flex flex-col sm:flex-row gap-4 justify-center items-center">
+                    <a href="{{ route('public.register') }}" class="group inline-flex items-center justify-center px-8 py-4 bg-amber-500 text-white font-semibold rounded-full shadow-xl hover:shadow-amber-500/30 hover:bg-amber-400 transition-all duration-300 transform hover:-translate-y-0.5 w-full sm:w-auto">
+                        Pendaftaran Siswa
+                        <svg class="w-5 h-5 ml-2 group-hover:translate-x-1 transition-transform" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 8l4 4m0 0l-4 4m4-4H3" />
                         </svg>
-                        Daftar Sekarang
                     </a>
-                    <a href="{{ route('public.about') }}" class="group inline-flex items-center justify-center px-8 sm:px-10 py-4 sm:py-5 border-2 border-slate-200 text-slate-600 font-bold rounded-xl hover:bg-slate-50 hover:text-slate-900 hover:border-slate-300 transition-all duration-300 transform hover:scale-105 w-full sm:w-auto">
-                        <svg class="w-5 sm:w-6 h-5 sm:h-6 mr-2 sm:mr-3 group-hover:translate-x-1 transition-transform duration-200" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
-                        </svg>
-                        Tentang Kami
+                    <a href="{{ route('public.about') }}" class="group inline-flex items-center justify-center px-8 py-4 bg-zinc-800 text-white font-semibold rounded-full hover:bg-zinc-700 transition-all duration-300 w-full sm:w-auto">
+                        Pelajari Lebih Lanjut
                     </a>
                 </div>
             </div>
