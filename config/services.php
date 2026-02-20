@@ -39,4 +39,8 @@ return [
         'token' => env('FONNTE_TOKEN'),
     ],
 
+    'wilayah' => [
+        'api_url' => env('WILAYAH_API_URL', 'https://emsifa.github.io/api-wilayah-indonesia/api'),
+    ],
+
 ];

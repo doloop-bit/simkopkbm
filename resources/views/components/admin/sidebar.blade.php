@@ -32,6 +32,10 @@
                     wire:navigate.hover>
                     {{ __('Pengguna') }}
                 </flux:sidebar.item>
+                <flux:sidebar.item icon="user-plus" :href="route('admin.registrations.index')" :current="request()->routeIs('admin.registrations.*')"
+                    wire:navigate.hover>
+                    {{ __('Pendaftaran') }}
+                </flux:sidebar.item>
             </flux:sidebar.group>
         @endif
 

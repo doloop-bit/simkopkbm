@@ -23,6 +23,7 @@ require __DIR__.'/report-card.php';
 require __DIR__.'/assessments.php';
 require __DIR__.'/teacher.php';
 require __DIR__.'/users.php';
+require __DIR__.'/registrations.php';
 
 \Livewire\Volt\Volt::route('/test-modal', 'test-modal')
     ->middleware(['auth', 'verified']);

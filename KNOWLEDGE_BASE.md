@@ -32,6 +32,7 @@
 | Feature                    | Description                                            |
 | -------------------------- | ------------------------------------------------------ |
 | **Student Management**     | Student data, enrollment, profiles                     |
+| **Student Registration**   | Online registration form, admin review, enrollment     |
 | **Academic Management**    | Years, levels, classrooms, subjects                    |
 | **Assessment System**      | Grades (numeric) & Competency (Kurikulum Merdeka-PAUD) |
 | **Report Card Generation** | PDF report cards                                       |

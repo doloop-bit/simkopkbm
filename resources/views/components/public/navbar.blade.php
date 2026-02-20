@@ -109,7 +109,7 @@
 
             <div class="hidden lg:flex lg:items-center lg:space-x-4 flex-shrink-0">
                     <!-- CTA Button -->
-                    <a href="{{ route('public.contact') }}" class="inline-flex items-center px-6 py-2.5 rounded-full text-sm font-bold bg-gradient-to-r from-amber-500 to-amber-600 text-white shadow-lg hover:shadow-amber-500/30 hover:from-amber-600 hover:to-amber-700 transition-all duration-200 transform hover:-translate-y-0.5" wire:navigate>
+                    <a href="{{ route('public.register') }}" class="inline-flex items-center px-6 py-2.5 rounded-full text-sm font-bold bg-gradient-to-r from-amber-500 to-amber-600 text-white shadow-lg hover:shadow-amber-500/30 hover:from-amber-600 hover:to-amber-700 transition-all duration-200 transform hover:-translate-y-0.5" wire:navigate>
                     Daftar Sekarang
                 </a>
             </div>
@@ -159,7 +159,7 @@
                            Galeri
                         </a>
                         <div class="pt-4 mt-4 border-t border-slate-700">
-                            <a href="{{ route('public.contact') }}" class="flex items-center justify-center px-3 py-3 rounded-full text-base font-bold bg-amber-500 text-white shadow-lg mx-3 hover:bg-amber-600" wire:navigate>
+                            <a href="{{ route('public.register') }}" class="flex items-center justify-center px-3 py-3 rounded-full text-base font-bold bg-amber-500 text-white shadow-lg mx-3 hover:bg-amber-600" wire:navigate>
                                 Daftar Sekarang
                             </a>
                         </div>
