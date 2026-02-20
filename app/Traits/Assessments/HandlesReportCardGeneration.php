@@ -107,8 +107,8 @@ trait HandlesReportCardGeneration
                         return [
                             'subject_name' => $g->subject?->name ?? 'N/A',
                             'grade' => $g->grade,
-                            'best_tp' => $g->getBestTpsAttribute()->pluck('description')->join('; '),
-                            'improvement_tp' => $g->getImprovementTpsAttribute()->pluck('description')->join('; '),
+                            'best_tp' => $g->getBestTpsAttribute()->pluck('description')->toArray(),
+                            'improvement_tp' => $g->getImprovementTpsAttribute()->pluck('description')->toArray(),
                         ];
                     })->toArray();
 

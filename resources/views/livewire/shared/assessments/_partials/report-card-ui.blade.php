@@ -163,17 +163,28 @@
                             <p>Tahun Ajaran {{ $previewData['academicYear']->name }} - Semester {{ $previewData['reportCard']->semester }}</p>
                         </div>
 
-                        <div class="grid grid-cols-2 gap-x-12 gap-y-2 text-sm mb-8">
-                            <div class="flex justify-between"><span>Nama Siswa</span> <span>:</span></div>
-                            <div class="font-bold">{{ $previewData['student']->name }}</div>
-                            <div class="flex justify-between"><span>Nomor Induk / NISN</span> <span>:</span></div>
-                            <div>{{ $previewData['studentProfile']->nis ?? '-' }} / {{ $previewData['studentProfile']->nisn ?? '-' }}</div>
-                            <div class="flex justify-between"><span>Kelas</span> <span>:</span></div>
-                            <div>{{ $previewData['classroom']->name }}</div>
-                            <div class="flex justify-between"><span>Tahun Ajaran</span> <span>:</span></div>
-                            <div>{{ $previewData['academicYear']->name }}</div>
+                        <div class="mb-8 border-b pb-6">
+                            <table style="width: 100%; border-collapse: collapse;">
+                                <tr>
+                                    <td style="width: 60%; vertical-align: top; padding-right: 20px;">
+                                        <table style="width: 100%;">
+                                            <tr class="align-top"><td class="py-1 w-[100px] text-zinc-500">Nama Murid</td><td class="py-1 w-4 text-center">:</td><td class="py-1 font-bold">{{ $previewData['student']->name }}</td></tr>
+                                            <tr class="align-top"><td class="py-1 text-zinc-500">NISN</td><td class="py-1 text-center">:</td><td class="py-1">{{ $previewData['studentProfile']->nisn ?? '-' }}</td></tr>
+                                            <tr class="align-top"><td class="py-1 text-zinc-500">Sekolah</td><td class="py-1 text-center">:</td><td class="py-1">{{ config('app.name') }}</td></tr>
+                                            <tr class="align-top"><td class="py-1 text-zinc-500">Alamat</td><td class="py-1 text-center">:</td><td class="py-1 text-sm">{{ $previewData['studentProfile']->address ?? '-' }}</td></tr>
+                                        </table>
+                                    </td>
+                                    <td style="width: 40%; vertical-align: top;">
+                                        <table style="width: 100%;">
+                                            <tr class="align-top"><td class="py-1 w-[100px] text-zinc-500">Kelas</td><td class="py-1 w-4 text-center">:</td><td class="py-1">{{ $previewData['classroom']->name }}</td></tr>
+                                            <tr class="align-top"><td class="py-1 text-zinc-500">Fase</td><td class="py-1 text-center">:</td><td class="py-1">{{ strtoupper($previewData['classroom']->level?->phase ?? $previewData['classroom']->level?->education_level ?? '-') }}</td></tr>
+                                            <tr class="align-top"><td class="py-1 text-zinc-500">Semester</td><td class="py-1 text-center">:</td><td class="py-1">{{ $previewData['reportCard']->semester }}</td></tr>
+                                            <tr class="align-top"><td class="py-1 text-zinc-500">Tahun Ajaran</td><td class="py-1 text-center">:</td><td class="py-1">{{ $previewData['academicYear']->name }}</td></tr>
+                                        </table>
+                                    </td>
+                                </tr>
+                            </table>
                         </div>
-
                             <div class="space-y-6">
                                 <!-- Competencies -->
                                 <div>
@@ -188,23 +199,43 @@
                                             </tr>
                                         </thead>
                                         <tbody>
+                                            <tr>
+                                                <td colspan="4" class="border border-black p-2 text-left font-semibold bg-zinc-50 italic">Kelompok Pelajaran Umum</td>
+                                            </tr>
                                             @forelse($previewData['reportCard']->scores['subject_grades'] ?? [] as $idx => $grade)
                                                 <tr>
                                                     <td class="border border-black p-2 text-center">{{ $idx + 1 }}</td>
                                                     <td class="border border-black p-2 font-medium">{{ $grade['subject_name'] }}</td>
                                                     <td class="border border-black p-2 text-center font-bold">{{ round($grade['grade']) }}</td>
                                                     <td class="border border-black p-2 text-xs">
-                                                        @if($grade['best_tp'])
-                                                            <div class="mb-1"><strong>Menunjukkan penguasaan dalam:</strong> {{ $grade['best_tp'] }}</div>
+                                                        @if(!empty($grade['best_tp']))
+                                                            <div class="mb-1">
+                                                                <strong>Menunjukkan penguasaan dalam:</strong>
+                                                                <ul class="list-disc pl-4 mt-1">
+                                                                    @foreach((array)$grade['best_tp'] as $tp)
+                                                                        <li>{{ $tp }}</li>
+                                                                    @endforeach
+                                                                </ul>
+                                                            </div>
                                                         @endif
-                                                        @if($grade['improvement_tp'])
-                                                            <div><strong>Perlu bantuan dalam:</strong> {{ $grade['improvement_tp'] }}</div>
+                                                        @if(!empty($grade['improvement_tp']))
+                                                            <div>
+                                                                <strong>Perlu bantuan dalam:</strong>
+                                                                <ul class="list-disc pl-4 mt-1">
+                                                                    @foreach((array)$grade['improvement_tp'] as $tp)
+                                                                        <li>{{ $tp }}</li>
+                                                                    @endforeach
+                                                                </ul>
+                                                            </div>
                                                         @endif
                                                     </td>
                                                 </tr>
                                             @empty
                                                 <tr><td colspan="4" class="border border-black p-4 text-center text-zinc-400 italic">Data nilai & TP tidak ditemukan</td></tr>
                                             @endforelse
+                                            <tr>
+                                                <td colspan="4" class="border border-black p-2 text-left font-semibold bg-zinc-50 italic">Muatan pemberdayaan dan keterampilan</td>
+                                            </tr>
                                         </tbody>
                                     </table>
                                 </div>

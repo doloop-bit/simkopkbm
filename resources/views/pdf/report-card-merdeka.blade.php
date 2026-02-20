@@ -39,12 +39,12 @@
 
     <table class="info-table">
         <tr>
-            <td class="label">Nama Peserta Didik</td><td class="colon">:</td><td>{{ $student->name }}</td>
+            <td class="label">Nama Murid</td><td class="colon">:</td><td style="width: 35%;">{{ $student->name }}</td>
             <td class="label">Kelas</td><td class="colon">:</td><td>{{ $classroom->name }}</td>
         </tr>
         <tr>
-            <td class="label">NISN / NIS</td><td class="colon">:</td><td>{{ $studentProfile->nisn ?? '-' }} / {{ $studentProfile->nis ?? '-' }}</td>
-            <td class="label">Fase</td><td class="colon">:</td><td>{{ strtoupper($classroom->level?->education_level ?? '-') }}</td>
+            <td class="label">NISN</td><td class="colon">:</td><td>{{ $studentProfile->nisn ?? '-' }}</td>
+            <td class="label">Fase</td><td class="colon">:</td><td>{{ strtoupper($classroom->level?->phase ?? $classroom->level?->education_level ?? '-') }}</td>
         </tr>
         <tr>
             <td class="label">Sekolah</td><td class="colon">:</td><td>{{ config('app.name') }}</td>
@@ -52,7 +52,7 @@
         </tr>
         <tr>
             <td class="label">Alamat</td><td class="colon">:</td><td>{{ $studentProfile->address ?? '-' }}</td>
-            <td class="label">Tahun Ajaran</td><td class="colon">:</td><td>{{ $academicYear->year }}</td>
+            <td class="label">Tahun Ajaran</td><td class="colon">:</td><td>{{ $academicYear->name ?? $academicYear->year }}</td>
         </tr>
     </table>
 
@@ -78,25 +78,34 @@
                 </tr>
             </thead>
             <tbody>
+                <tr>
+                    <td colspan="4" class="text-right">Kelompok Pelajaran Umum</td>
+                </tr>
                 @forelse($reportCard->scores['subject_grades'] ?? [] as $index => $grade)
                 <tr>
                     <td class="text-center">{{ $index + 1 }}</td>
                     <td>{{ $grade['subject_name'] }}</td>
                     <td class="text-center" style="font-weight: bold; font-size: 13px;">{{ round($grade['grade']) }}</td>
                     <td style="text-align: justify; font-size: 10px;">
-                        @if($grade['best_tp'])
+                        @if(!empty($grade['best_tp']))
                             <div style="margin-bottom: 5px;">
-                                <strong>Menunjukkan penguasaan dalam:</strong> {{ $grade['best_tp'] }}
+                                <strong>Menunjukkan penguasaan dalam:</strong>
+                                @foreach((array)$grade['best_tp'] as $tp)
+                                    <div style="margin-left: 10px;">- {{ $tp }}</div>
+                                @endforeach
                             </div>
                         @endif
                         
-                        @if($grade['improvement_tp'])
+                        @if(!empty($grade['improvement_tp']))
                             <div>
-                                <strong>Perlu bantuan dalam:</strong> {{ $grade['improvement_tp'] }}
+                                <strong>Perlu bantuan dalam:</strong>
+                                @foreach((array)$grade['improvement_tp'] as $tp)
+                                    <div style="margin-left: 10px;">- {{ $tp }}</div>
+                                @endforeach
                             </div>
                         @endif
 
-                        @if(!$grade['best_tp'] && !$grade['improvement_tp'])
+                        @if(empty($grade['best_tp']) && empty($grade['improvement_tp']))
                             <span class="text-zinc-400 italic">Belum ada deskripsi capaian</span>
                         @endif
                     </td>
@@ -106,6 +115,9 @@
                     <td colspan="4" class="text-center font-italic">Tidak ada data nilai</td>
                 </tr>
                 @endforelse
+                <tr>
+                    <td colspan="4" class="text-right">Muatan pemberdayaan dan keterampilan</td>
+                </tr>
             </tbody>
         </table>
 
