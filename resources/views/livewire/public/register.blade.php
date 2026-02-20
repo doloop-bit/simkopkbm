@@ -370,7 +370,6 @@ new #[Layout('components.public.layouts.public')] class extends Component {
                                                 <option :value="suggestion"></option>
                                             </template>
                                         </datalist>
-                                        
                                     </div>
 
                                     <!-- DOB -->
