@@ -19,14 +19,9 @@ class DatabaseSeeder extends Seeder
         $this->command->info('Configuring core application data...');
 
         // 1. Core Authentication & Users
-        User::firstOrCreate(
-            ['email' => 'admin@pkbm.com'],
-            [
-                'name' => 'Administrator PKBM',
-                'role' => 'admin',
-                'password' => bcrypt('password'),
-            ]
-        );
+        $this->call([
+            AdminSeeder::class,
+        ]);
 
         // 2. Academic Infrastructure
         \App\Models\AcademicYear::firstOrCreate(
