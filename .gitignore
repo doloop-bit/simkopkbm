@@ -21,11 +21,6 @@ yarn-error.log
 /.nova
 /.vscode
 /.zed
-/.kiro
-/.gemini
-CLAUDE.md
-GEMINI.md
-Tambahan fitur.md
-Walkthrough.md
+
 
 composer-prod.json
