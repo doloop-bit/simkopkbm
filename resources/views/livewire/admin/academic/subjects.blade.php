@@ -385,7 +385,7 @@ new #[Layout('components.admin.layouts.app')] class extends Component {
                             @empty
                                 <tr>
                                     <td colspan="3" class="px-4 py-8 text-center text-zinc-500">
-                                        Belum ada TP untuk Fase {{ $selectedPhase }}. Tambahkan TP di atas.
+                                        Belum ada TP untuk Fase {{ $managingSubject?->phase }}. Tambahkan TP di atas.
                                     </td>
                                 </tr>
                             @endforelse
