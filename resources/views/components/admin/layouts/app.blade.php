@@ -23,6 +23,9 @@
     @if(request()->routeIs('admin.report-card.*') || request()->routeIs('admin.assessments.attendance') || request()->routeIs('admin.assessments.extracurricular'))
         <x-admin.report-card-nav />
     @endif
+    @if(request()->routeIs('financial.*'))
+        <x-admin.keuangan-nav />
+    @endif
 
     <flux:main>
         {{ $slot }}

@@ -94,31 +94,11 @@
             <!-- Keuangan -->
             <flux:sidebar.group expandable icon="banknotes" :heading="__('Keuangan')" class="grid">
                 <flux:sidebar.item icon="wallet" :href="route('financial.payments')"
-                    :current="request()->routeIs('financial.payments')" wire:navigate.hover>
-                    {{ __('Transaksi') }}
-                </flux:sidebar.item>
-                <flux:sidebar.item icon="document-text" :href="route('financial.billings')"
-                    :current="request()->routeIs('financial.billings')" wire:navigate.hover>
-                    {{ __('Tagihan Siswa') }}
-                </flux:sidebar.item>
-                <flux:sidebar.item icon="gift" :href="route('financial.discounts')"
-                    :current="request()->routeIs('financial.discounts')" wire:navigate.hover>
-                    {{ __('Potongan & Beasiswa') }}
-                </flux:sidebar.item>
-                <flux:sidebar.item icon="swatch" :href="route('financial.categories')"
-                    :current="request()->routeIs('financial.categories')" wire:navigate.hover>
-                    {{ __('Kategori Biaya') }}
-                </flux:sidebar.item>
-                <flux:sidebar.item icon="tag" :href="route('financial.budget-categories')"
-                    :current="request()->routeIs('financial.budget-categories')" wire:navigate.hover>
-                    {{ __('Kategori Anggaran') }}
-                </flux:sidebar.item>
-                <flux:sidebar.item icon="shopping-cart" :href="route('financial.standard-items')"
-                    :current="request()->routeIs('financial.standard-items')" wire:navigate.hover>
-                    {{ __('Item Standar') }}
+                    :current="request()->routeIs('financial.payments') || request()->routeIs('financial.billings') || request()->routeIs('financial.discounts') || request()->routeIs('financial.categories')" wire:navigate.hover>
+                    {{ __('Transaksi Keuangan') }}
                 </flux:sidebar.item>
                 <flux:sidebar.item icon="document-currency-dollar" :href="route('financial.budget-plans')"
-                    :current="request()->routeIs('financial.budget-plans')" wire:navigate.hover>
+                    :current="request()->routeIs('financial.budget-plans') || request()->routeIs('financial.budget-categories') || request()->routeIs('financial.standard-items')" wire:navigate.hover>
                     {{ __('RAB / Anggaran') }}
                 </flux:sidebar.item>
             </flux:sidebar.group>

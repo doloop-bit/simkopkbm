@@ -51,8 +51,10 @@ new #[Layout('components.admin.layouts.app')] class extends Component {
 
         $students = User::where('role', 'siswa')
             ->with(['feeDiscounts' => function($q) {
-                $q->where('fee_category_id', $this->fee_category_id)
-                  ->orWhereNull('fee_category_id');
+                $q->where(function ($query) {
+                    $query->where('fee_category_id', $this->fee_category_id)
+                          ->orWhereNull('fee_category_id');
+                });
             }])
             ->whereHas('profiles.profileable', function ($q) {
                 $q->where('classroom_id', $this->classroom_id);
@@ -60,15 +62,14 @@ new #[Layout('components.admin.layouts.app')] class extends Component {
 
         $count = 0;
         foreach ($students as $student) {
-            // Check if billing already exists to avoid duplicates
-            $exists = StudentBilling::where([
+            $existingBilling = StudentBilling::where([
                 'student_id' => $student->id,
                 'fee_category_id' => $this->fee_category_id,
                 'academic_year_id' => $this->academic_year_id,
                 'month' => $this->month,
-            ])->exists();
+            ])->first();
 
-            if (!$exists) {
+            if (!$existingBilling || $existingBilling->status === 'unpaid') {
                 $finalAmount = (float) $this->amount;
                 $notes = '';
 
@@ -90,16 +91,23 @@ new #[Layout('components.admin.layouts.app')] class extends Component {
                     }
                 }
 
-                StudentBilling::create([
-                    'student_id' => $student->id,
-                    'fee_category_id' => $this->fee_category_id,
-                    'academic_year_id' => $this->academic_year_id,
-                    'month' => $this->month,
-                    'amount' => $finalAmount,
-                    'due_date' => now()->addDays(14),
-                    'status' => 'unpaid',
-                    'notes' => trim($notes) ?: null,
-                ]);
+                if ($existingBilling) {
+                    $existingBilling->update([
+                        'amount' => $finalAmount,
+                        'notes' => trim($notes) ?: null,
+                    ]);
+                } else {
+                    StudentBilling::create([
+                        'student_id' => $student->id,
+                        'fee_category_id' => $this->fee_category_id,
+                        'academic_year_id' => $this->academic_year_id,
+                        'month' => $this->month,
+                        'amount' => $finalAmount,
+                        'due_date' => now()->addDays(14),
+                        'status' => 'unpaid',
+                        'notes' => trim($notes) ?: null,
+                    ]);
+                }
                 $count++;
             }
         }
