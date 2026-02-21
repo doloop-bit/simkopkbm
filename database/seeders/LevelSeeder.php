@@ -14,17 +14,17 @@ class LevelSeeder extends Seeder
     public function run(): void
     {
         // KB / PAUD
-        Level::updateOrCreate(
-            ['name' => 'Kelompok Bermain (KB)'],
-            [
-                'type' => 'class_teacher', // Guru Kelas
-                'education_level' => 'paud',
-                'phase_map' => null, // Fase Fondasi usually, or distinct
-            ]
-        );
+        // Level::updateOrCreate(
+        //     ['name' => 'Kelompok Bermain (KB)'],
+        //     [
+        //         'type' => 'class_teacher', // Guru Kelas
+        //         'education_level' => 'paud',
+        //         'phase_map' => null, // Fase Fondasi usually, or distinct
+        //     ]
+        // );
 
         Level::updateOrCreate(
-            ['name' => 'Taman Kanak-Kanak (TK)'],
+            ['name' => 'PAUD'],
             [
                 'type' => 'class_teacher',
                 'education_level' => 'paud',
