@@ -3,6 +3,7 @@
 declare(strict_types=1);
 
 use App\Models\FeeCategory;
+use App\Models\Level;
 use Livewire\Attributes\Layout;
 use Livewire\Volt\Component;
 use Livewire\WithPagination;
@@ -14,6 +15,7 @@ new #[Layout('components.admin.layouts.app')] class extends Component {
     public string $code = '';
     public string $description = '';
     public float $default_amount = 0;
+    public ?int $level_id = null;
 
     public ?FeeCategory $editing = null;
 
@@ -21,9 +23,10 @@ new #[Layout('components.admin.layouts.app')] class extends Component {
     {
         return [
             'name' => 'required|string|max:255',
-            'code' => 'required|string|max:10|unique:fee_categories,code,' . ($this->editing?->id ?? 'NULL'),
+            'code' => 'required|string|max:15|unique:fee_categories,code,' . ($this->editing?->id ?? 'NULL'),
             'description' => 'nullable|string',
             'default_amount' => 'required|numeric|min:0',
+            'level_id' => 'nullable|exists:levels,id',
         ];
     }
 
@@ -37,6 +40,7 @@ new #[Layout('components.admin.layouts.app')] class extends Component {
                 'code' => $this->code,
                 'description' => $this->description,
                 'default_amount' => $this->default_amount,
+                'level_id' => $this->level_id ?: null,
             ]);
             \Flux::toast('Kategori biaya berhasil diperbarui.');
         } else {
@@ -45,11 +49,12 @@ new #[Layout('components.admin.layouts.app')] class extends Component {
                 'code' => $this->code,
                 'description' => $this->description,
                 'default_amount' => $this->default_amount,
+                'level_id' => $this->level_id ?: null,
             ]);
             \Flux::toast('Kategori biaya berhasil ditambahkan.');
         }
 
-        $this->reset(['name', 'code', 'description', 'default_amount', 'editing']);
+        $this->reset(['name', 'code', 'description', 'default_amount', 'level_id', 'editing']);
         $this->dispatch('close-modal');
     }
 
@@ -60,6 +65,7 @@ new #[Layout('components.admin.layouts.app')] class extends Component {
         $this->code = $category->code;
         $this->description = $category->description ?? '';
         $this->default_amount = (float) $category->default_amount;
+        $this->level_id = $category->level_id;
     }
 
     public function delete(FeeCategory $category): void
@@ -76,7 +82,8 @@ new #[Layout('components.admin.layouts.app')] class extends Component {
     public function with(): array
     {
         return [
-            'categories' => FeeCategory::latest()->paginate(10),
+            'categories' => FeeCategory::with('level')->latest()->paginate(10),
+            'levels' => Level::all(),
         ];
     }
 }; ?>
@@ -98,6 +105,7 @@ new #[Layout('components.admin.layouts.app')] class extends Component {
                 <tr>
                     <th class="px-4 py-3 font-medium text-zinc-700 dark:text-zinc-300 border-b">Kode</th>
                     <th class="px-4 py-3 font-medium text-zinc-700 dark:text-zinc-300 border-b">Nama Kategori</th>
+                    <th class="px-4 py-3 font-medium text-zinc-700 dark:text-zinc-300 border-b">Jenjang</th>
                     <th class="px-4 py-3 font-medium text-zinc-700 dark:text-zinc-300 border-b">Nominal Default</th>
                     <th class="px-4 py-3 font-medium text-zinc-700 dark:text-zinc-300 border-b text-right">Aksi</th>
                 </tr>
@@ -112,6 +120,9 @@ new #[Layout('components.admin.layouts.app')] class extends Component {
                             <div class="font-medium text-zinc-900 dark:text-white">{{ $category->name }}</div>
                             <div class="text-xs text-zinc-500">{{ $category->description }}</div>
                         </td>
+                        <td class="px-4 py-3 text-zinc-600 dark:text-zinc-400">
+                            {{ $category->level ? $category->level->name : 'Semua Jenjang' }}
+                        </td>
                         <td class="px-4 py-3 text-zinc-900 dark:text-white">
                             Rp {{ number_format($category->default_amount, 0, ',', '.') }}
                         </td>
@@ -120,8 +131,27 @@ new #[Layout('components.admin.layouts.app')] class extends Component {
                                 <flux:modal.trigger name="add-category">
                                     <flux:button variant="ghost" icon="pencil-square" size="sm" wire:click="edit({{ $category->id }})" />
                                 </flux:modal.trigger>
-                                <flux:button variant="ghost" icon="trash" size="sm" wire:click="delete({{ $category->id }})" />
+                                <flux:modal.trigger name="delete-category-{{ $category->id }}">
+                                    <flux:button variant="ghost" icon="trash" size="sm" />
+                                </flux:modal.trigger>
                             </div>
+                            
+                            <!-- Delete Confirmation Modal -->
+                            <flux:modal name="delete-category-{{ $category->id }}" class="md:w-[400px]">
+                                <form wire:submit="delete({{ $category->id }})" class="space-y-6">
+                                    <div>
+                                        <flux:heading size="lg">Hapus Kategori Biaya?</flux:heading>
+                                        <flux:subheading>Apakah Anda yakin ingin menghapus kategori biaya <span class="font-bold">"{{ $category->name }}"</span>? Aksi ini tidak dapat dibatalkan.</flux:subheading>
+                                    </div>
+                                    <div class="flex gap-2">
+                                        <flux:spacer />
+                                        <flux:modal.close>
+                                            <flux:button variant="ghost">Batal</flux:button>
+                                        </flux:modal.close>
+                                        <flux:button type="submit" variant="danger">Hapus</flux:button>
+                                    </div>
+                                </form>
+                            </flux:modal>
                         </td>
                     </tr>
                 @endforeach
@@ -141,6 +171,14 @@ new #[Layout('components.admin.layouts.app')] class extends Component {
 
             <flux:input wire:model="code" label="Kode Kategori" placeholder="Contoh: SPP-10" />
             <flux:input wire:model="name" label="Nama Kategori" placeholder="Contoh: SPP Kelas 10" />
+            
+            <flux:select wire:model="level_id" label="Jenjang (Opsional)">
+                <option value="">Semua Jenjang</option>
+                @foreach($levels as $lvl)
+                    <option value="{{ $lvl->id }}">{{ $lvl->name }}</option>
+                @endforeach
+            </flux:select>
+
             <flux:input wire:model="default_amount" type="number" label="Nominal Default" icon="banknotes" />
             <flux:textarea wire:model="description" label="Deskripsi" rows="2" />
 

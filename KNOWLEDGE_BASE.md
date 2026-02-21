@@ -537,7 +537,7 @@ new #[Layout('components.admin.layouts.app')] class extends Component {
 2. **Data Master** - Siswa, PTK
 3. **Akademik** - Years, Levels, Classrooms, Subjects, Assignments, Attendance (6 items)
 4. **Penilaian & Raport** - Grades, Competency Assessment, P5 Assessment, Extracurricular Assessment, Attendance Summary, Report Card Generator (6 items)
-5. **Keuangan** - Payments, Billings, Categories (3 items)
+5. **Keuangan** - Payments, Billings, Discounts, Categories (4 items)
 6. **Konten Web** - School Profile, News, Gallery, Programs, Contact Inquiries (5 items)
 7. **Laporan** - Reports and analytics
 

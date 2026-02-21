@@ -50,6 +50,10 @@ new #[Layout('components.admin.layouts.app')] class extends Component {
         ]);
 
         $students = User::where('role', 'siswa')
+            ->with(['feeDiscounts' => function($q) {
+                $q->where('fee_category_id', $this->fee_category_id)
+                  ->orWhereNull('fee_category_id');
+            }])
             ->whereHas('profiles.profileable', function ($q) {
                 $q->where('classroom_id', $this->classroom_id);
             })->get();
@@ -65,14 +69,36 @@ new #[Layout('components.admin.layouts.app')] class extends Component {
             ])->exists();
 
             if (!$exists) {
+                $finalAmount = (float) $this->amount;
+                $notes = '';
+
+                // Apply discounts/scholarships if any
+                $discounts = $student->feeDiscounts;
+                if ($discounts->isNotEmpty()) {
+                    foreach ($discounts as $discount) {
+                        if ($discount->discount_type === 'percentage') {
+                            $discountValue = $this->amount * ($discount->amount / 100);
+                            $finalAmount -= $discountValue;
+                        } else {
+                            $discountValue = $discount->amount;
+                            $finalAmount -= $discountValue;
+                        }
+                        $notes .= "Potongan/Beasiswa: {$discount->name} ";
+                    }
+                    if ($finalAmount < 0) {
+                        $finalAmount = 0;
+                    }
+                }
+
                 StudentBilling::create([
                     'student_id' => $student->id,
                     'fee_category_id' => $this->fee_category_id,
                     'academic_year_id' => $this->academic_year_id,
                     'month' => $this->month,
-                    'amount' => $this->amount,
+                    'amount' => $finalAmount,
                     'due_date' => now()->addDays(14),
                     'status' => 'unpaid',
+                    'notes' => trim($notes) ?: null,
                 ]);
                 $count++;
             }
@@ -98,10 +124,21 @@ new #[Layout('components.admin.layouts.app')] class extends Component {
             ->latest()
             ->paginate(15);
 
+        $categoriesQuery = FeeCategory::query();
+        if ($this->classroom_id) {
+            $classroom = Classroom::find($this->classroom_id);
+            if ($classroom) {
+                $categoriesQuery->where(function($q) use ($classroom) {
+                    $q->where('level_id', $classroom->level_id)
+                      ->orWhereNull('level_id');
+                });
+            }
+        }
+
         return [
             'years' => AcademicYear::all(),
             'classrooms' => Classroom::all(),
-            'categories' => FeeCategory::all(),
+            'categories' => $categoriesQuery->get(),
             'billings' => $billings,
         ];
     }
@@ -145,10 +182,10 @@ new #[Layout('components.admin.layouts.app')] class extends Component {
                 @foreach($billings as $billing)
                     <tr wire:key="{{ $billing->id }}">
                         <td class="px-4 py-3 font-medium text-zinc-900 dark:text-white">
-                            {{ $billing->student->name }}
+                            {{ $billing->student?->name ?? 'Siswa Dihapus' }}
                         </td>
                         <td class="px-4 py-3 text-zinc-600 dark:text-zinc-400">
-                            {{ $billing->feeCategory->name }}
+                            {{ $billing->feeCategory?->name ?? 'Kategori Dihapus' }}
                         </td>
                         <td class="px-4 py-3 text-zinc-600 dark:text-zinc-400">
                             {{ $billing->month ?? '-' }}

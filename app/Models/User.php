@@ -59,6 +59,11 @@ class User extends Authenticatable
         return $this->hasMany(ReportCard::class, 'student_id');
     }
 
+    public function feeDiscounts()
+    {
+        return $this->hasMany(StudentFeeDiscount::class, 'student_id');
+    }
+
     public function studentProfile()
     {
         return $this->hasOneThrough(StudentProfile::class, Profile::class, 'user_id', 'id', 'id', 'profileable_id')

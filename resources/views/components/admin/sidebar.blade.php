@@ -97,6 +97,14 @@
                     :current="request()->routeIs('financial.payments')" wire:navigate.hover>
                     {{ __('Transaksi') }}
                 </flux:sidebar.item>
+                <flux:sidebar.item icon="document-text" :href="route('financial.billings')"
+                    :current="request()->routeIs('financial.billings')" wire:navigate.hover>
+                    {{ __('Tagihan Siswa') }}
+                </flux:sidebar.item>
+                <flux:sidebar.item icon="gift" :href="route('financial.discounts')"
+                    :current="request()->routeIs('financial.discounts')" wire:navigate.hover>
+                    {{ __('Potongan & Beasiswa') }}
+                </flux:sidebar.item>
                 <flux:sidebar.item icon="swatch" :href="route('financial.categories')"
                     :current="request()->routeIs('financial.categories')" wire:navigate.hover>
                     {{ __('Kategori Biaya') }}
