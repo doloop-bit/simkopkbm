@@ -111,10 +111,10 @@ new #[Layout('components.admin.layouts.app')] class extends Component {
                 @foreach($discounts as $discount)
                     <tr wire:key="{{ $discount->id }}">
                         <td class="px-4 py-3 text-zinc-900 dark:text-white font-medium">
-                            {{ $discount->student->name }}
+                            {{ $discount->student?->name ?? 'Siswa Dihapus' }}
                         </td>
                         <td class="px-4 py-3 text-zinc-600 dark:text-zinc-400">
-                            {{ $discount->feeCategory ? $discount->feeCategory->name : 'Semua Biaya' }}
+                            {{ $discount->feeCategory?->name ?? 'Semua Biaya' }}
                         </td>
                         <td class="px-4 py-3">
                             <span class="text-zinc-900 dark:text-white">{{ $discount->name }}</span>

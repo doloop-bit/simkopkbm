@@ -75,8 +75,8 @@ class SubjectSeeder extends Seeder
 
         // Map level names (from LevelSeeder) => subjects array & suffix
         $mapping = [
-            'Kelompok Bermain (KB)' => ['subjects' => $paudSubjects, 'suffix' => 'PD'],
-            'Taman Kanak-Kanak (TK)' => ['subjects' => $paudSubjects, 'suffix' => 'PD'],
+            'Kelompok Bermain (KB)' => ['subjects' => $paudSubjects, 'suffix' => 'KB'],
+            'Taman Kanak-Kanak (TK)' => ['subjects' => $paudSubjects, 'suffix' => 'TK'],
             'Paket A (Setara SD)' => ['subjects' => $paketASubjects, 'suffix' => 'PA'],
             'Paket B (Setara SMP)' => ['subjects' => $paketBSubjects, 'suffix' => 'PB'],
             'Paket C (Setara SMA)' => ['subjects' => $paketCSubjects, 'suffix' => 'PC'],

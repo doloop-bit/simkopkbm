@@ -141,8 +141,8 @@ new #[Layout('components.admin.layouts.app')] class extends Component {
                         @php $totalIncome += $tx->amount; @endphp
                         <tr>
                             <td class="px-4 py-3 text-zinc-500">{{ $tx->payment_date->format('d/m/Y') }}</td>
-                            <td class="px-4 py-3 font-medium dark:text-white">{{ $tx->billing->student->name }}</td>
-                            <td class="px-4 py-3 text-zinc-600 dark:text-zinc-400">{{ $tx->billing->feeCategory->name }}</td>
+                            <td class="px-4 py-3 font-medium dark:text-white">{{ $tx->billing?->student?->name ?? 'Siswa Dihapus' }}</td>
+                            <td class="px-4 py-3 text-zinc-600 dark:text-zinc-400">{{ $tx->billing?->feeCategory?->name ?? 'Kategori Dihapus' }}</td>
                             <td class="px-4 py-3 text-zinc-600 dark:text-zinc-400 uppercase text-xs">{{ $tx->payment_method }}</td>
                             <td class="px-4 py-3 text-right font-mono dark:text-white">
                                 Rp {{ number_format($tx->amount, 0, ',', '.') }}

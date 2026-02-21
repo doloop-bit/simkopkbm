@@ -154,7 +154,7 @@ new #[Layout('components.admin.layouts.app')] class extends Component {
                             <div class="p-3 border rounded-lg hover:border-zinc-400 dark:hover:border-zinc-500 cursor-pointer transition" wire:click="selectBilling({{ $billing->id }})">
                                 <div class="flex justify-between items-start">
                                     <div>
-                                        <div class="font-bold dark:text-white">{{ $billing->feeCategory->name }}</div>
+                                        <div class="font-bold dark:text-white">{{ $billing->feeCategory?->name ?? 'Kategori Dihapus' }}</div>
                                         <div class="text-xs text-zinc-500">{{ $billing->month ?? 'Sekali Bayar' }}</div>
                                     </div>
                                     <flux:badge size="sm" :variant="$billing->status === 'partial' ? 'warning' : 'danger'">
@@ -182,11 +182,11 @@ new #[Layout('components.admin.layouts.app')] class extends Component {
                     <div class="grid grid-cols-2 gap-6 mb-6">
                         <div class="space-y-1">
                             <div class="text-xs text-zinc-500 uppercase tracking-wider">Siswa</div>
-                            <div class="font-bold text-lg dark:text-white">{{ $selectedBilling->student->name }}</div>
+                            <div class="font-bold text-lg dark:text-white">{{ $selectedBilling->student?->name ?? 'Siswa Dihapus' }}</div>
                         </div>
                         <div class="space-y-1">
                             <div class="text-xs text-zinc-500 uppercase tracking-wider">Kategori</div>
-                            <div class="font-bold text-lg dark:text-white">{{ $selectedBilling->feeCategory->name }}</div>
+                            <div class="font-bold text-lg dark:text-white">{{ $selectedBilling->feeCategory?->name ?? 'Kategori Dihapus' }}</div>
                         </div>
                     </div>
 
@@ -228,8 +228,8 @@ new #[Layout('components.admin.layouts.app')] class extends Component {
                         @foreach($recentTransactions as $tx)
                             <tr wire:key="tx-{{ $tx->id }}">
                                 <td class="px-4 py-3 text-zinc-500">{{ $tx->payment_date->format('d/m/Y') }}</td>
-                                <td class="px-4 py-3 font-medium dark:text-white">{{ $tx->billing->student->name }}</td>
-                                <td class="px-4 py-3 text-zinc-600 dark:text-zinc-400">{{ $tx->billing->feeCategory->name }}</td>
+                                <td class="px-4 py-3 font-medium dark:text-white">{{ $tx->billing?->student?->name ?? 'Siswa Dihapus' }}</td>
+                                <td class="px-4 py-3 text-zinc-600 dark:text-zinc-400">{{ $tx->billing?->feeCategory?->name ?? 'Kategori Dihapus' }}</td>
                                 <td class="px-4 py-3 text-right font-mono text-success">
                                     Rp {{ number_format($tx->amount, 0, ',', '.') }}
                                 </td>

@@ -131,11 +131,11 @@ new class extends Component {
                         <div class="flex justify-between items-start">
                             <div class="flex gap-3">
                                 <div class="w-10 h-10 rounded-full bg-zinc-100 dark:bg-zinc-800 flex items-center justify-center font-bold text-zinc-500">
-                                    {{ substr($tx->billing->student->name, 0, 1) }}
+                                    {{ substr($tx->billing?->student?->name ?? '?', 0, 1) }}
                                 </div>
                                 <div>
-                                    <div class="font-medium dark:text-white">{{ $tx->billing->student->name }}</div>
-                                    <div class="text-xs text-zinc-500">{{ $tx->billing->feeCategory->name }} - {{ $tx->payment_method }}</div>
+                                    <div class="font-medium dark:text-white">{{ $tx->billing?->student?->name ?? 'Siswa Dihapus' }}</div>
+                                    <div class="text-xs text-zinc-500">{{ $tx->billing?->feeCategory?->name ?? 'Kategori Dihapus' }} - {{ $tx->payment_method }}</div>
                                 </div>
                             </div>
                             <div class="text-right">
