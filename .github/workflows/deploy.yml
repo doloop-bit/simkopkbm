@@ -57,8 +57,8 @@ jobs:
             # Migrate Database
             /opt/alt/php84/usr/bin/php artisan migrate --force
 
-            # Clear and Cache Optimizations
+            # Clear Optimizations (Do NOT cache views/routes remotely due to PHP FPM mismatch)
             /opt/alt/php84/usr/bin/php artisan optimize:clear
-            /opt/alt/php84/usr/bin/php artisan config:cache
-            /opt/alt/php84/usr/bin/php artisan route:cache
-            /opt/alt/php84/usr/bin/php artisan view:cache
+            /opt/alt/php84/usr/bin/php artisan config:clear
+            /opt/alt/php84/usr/bin/php artisan route:clear
+            /opt/alt/php84/usr/bin/php artisan view:clear
