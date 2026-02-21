@@ -37,13 +37,13 @@ jobs:
         uses: easingthemes/ssh-deploy@main
         env:
           SSH_PRIVATE_KEY: ${{ secrets.SSH_PRIVATE_KEY }}
-          ARGS: "-rlgoDzvc -i --delete"
+          ARGS: "-rlgoDzvc -i"
           SOURCE: "./"
           REMOTE_HOST: ${{ secrets.SSH_HOST }}
           REMOTE_USER: ${{ secrets.SSH_USER }}
           REMOTE_PORT: ${{ secrets.SSH_PORT || 65002 }}
           TARGET: ${{ secrets.SSH_TARGET }}
-          EXCLUDE: "/.git/, /node_modules/, /.github/, /tests/, /phpunit.xml, /.editorconfig, /.gitattributes, /.nvmrc"
+          EXCLUDE: "/.git/, /node_modules/, /.github/, /tests/, /phpunit.xml, /.editorconfig, /.gitattributes, /.nvmrc, /.env"
 
       - name: 🛠️ Execute Laravel Commands
         uses: appleboy/ssh-action@master
