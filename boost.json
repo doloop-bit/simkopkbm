@@ -2,11 +2,20 @@
     "agents": [
         "gemini"
     ],
-    "editors": [
-        "vscode"
-    ],
-    "guidelines": [
+    "guidelines": true,
+    "herd_mcp": false,
+    "mcp": true,
+    "nightwatch_mcp": false,
+    "packages": [
         "laravel/fortify"
     ],
-    "herd_mcp": true
+    "sail": false,
+    "skills": [
+        "fluxui-development",
+        "livewire-development",
+        "volt-development",
+        "pest-testing",
+        "tailwindcss-development",
+        "developing-with-fortify"
+    ]
 }

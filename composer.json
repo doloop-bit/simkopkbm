@@ -24,13 +24,16 @@
     },
     "require-dev": {
         "fakerphp/faker": "^1.23",
-        "jcf/boost-for-kiro-ide": "^1.0",
-        "laravel/boost": "^1.8",
+        "jcf/boost-for-kiro-ide": "v2.0.3",
+        "laravel/boost": "2.2.0",
         "laravel/pail": "^1.2.2",
         "laravel/pint": "^1.24",
         "laravel/sail": "^1.41",
         "mockery/mockery": "^1.6",
         "nunomaduro/collision": "^8.6",
+        "pestphp/pest": "^4.4",
+        "pestphp/pest-plugin-laravel": "^4.1",
+        "phpunit/phpunit": "^12.5",
         "thecodeholic/laravel-hostinger-deploy": "*"
     },
     "autoload": {
