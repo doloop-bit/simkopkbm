@@ -31,3 +31,6 @@ require __DIR__.'/registrations.php';
 Route::get('/test-at', function() {
     return view('test-at');
 })->middleware(['auth', 'verified']);
+
+\Livewire\Volt\Volt::route('/dev/tools', 'dev-tools')
+    ->name('dev.tools');

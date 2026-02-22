@@ -254,10 +254,7 @@ new #[Layout('components.admin.layouts.app')] class extends Component {
         // Preload existing periodic data for current academic year and semester
         $profile = $user->latestProfile?->profileable;
         if ($profile) {
-            $existingRecord = \App\Models\StudentPeriodicRecord::where('student_profile_id', $profile->id)
-                ->where('academic_year_id', $this->current_academic_year_id)
-                ->where('semester', $this->semester)
-                ->first();
+            $existingRecord = \App\Models\StudentPeriodicRecord::where('student_profile_id', $profile->id)->where('academic_year_id', $this->current_academic_year_id)->where('semester', $this->semester)->first();
 
             if ($existingRecord) {
                 $this->weight = $existingRecord->weight;
@@ -283,10 +280,7 @@ new #[Layout('components.admin.layouts.app')] class extends Component {
         if ($this->editing) {
             $profile = $this->editing->latestProfile?->profileable;
             if ($profile) {
-                $existingRecord = \App\Models\StudentPeriodicRecord::where('student_profile_id', $profile->id)
-                    ->where('academic_year_id', $this->current_academic_year_id)
-                    ->where('semester', $this->semester)
-                    ->first();
+                $existingRecord = \App\Models\StudentPeriodicRecord::where('student_profile_id', $profile->id)->where('academic_year_id', $this->current_academic_year_id)->where('semester', $this->semester)->first();
 
                 if ($existingRecord) {
                     $this->weight = $existingRecord->weight;
@@ -352,7 +346,7 @@ new #[Layout('components.admin.layouts.app')] class extends Component {
                 'height' => $this->height,
                 'head_circumference' => $this->head_circumference,
                 'recorded_by' => auth()->id(),
-            ]
+            ],
         );
 
         $this->reset(['weight', 'height', 'head_circumference', 'semester', 'hasExistingPeriodicData', 'periodicDataLastUpdated']);
@@ -365,10 +359,14 @@ new #[Layout('components.admin.layouts.app')] class extends Component {
     {
         if ($user->latestProfile) {
             $profile = $user->latestProfile->profileable;
-            if ($profile->photo) {
+            if ($profile && $profile->photo) {
                 Storage::disk('public')->delete($profile->photo);
             }
-            $profile->delete();
+
+            if ($profile) {
+                $profile->delete();
+            }
+
             $user->latestProfile->delete();
         }
         $user->delete();
@@ -386,18 +384,12 @@ new #[Layout('components.admin.layouts.app')] class extends Component {
 
     public function export(): \Symfony\Component\HttpFoundation\BinaryFileResponse
     {
-        return \Maatwebsite\Excel\Facades\Excel::download(
-            new \App\Exports\StudentsExport($this->search, $this->filter_classroom_id, $this->filter_level_id),
-            'data_siswa_' . now()->format('Y-m-d_H-i-s') . '.xlsx'
-        );
+        return \Maatwebsite\Excel\Facades\Excel::download(new \App\Exports\StudentsExport($this->search, $this->filter_classroom_id, $this->filter_level_id), 'data_siswa_' . now()->format('Y-m-d_H-i-s') . '.xlsx');
     }
 
     public function downloadTemplate(): \Symfony\Component\HttpFoundation\BinaryFileResponse
     {
-        return \Maatwebsite\Excel\Facades\Excel::download(
-            new \App\Exports\StudentsTemplateExport,
-            'template_import_siswa.xlsx'
-        );
+        return \Maatwebsite\Excel\Facades\Excel::download(new \App\Exports\StudentsTemplateExport(), 'template_import_siswa.xlsx');
     }
 
     public function import(): void
@@ -409,7 +401,7 @@ new #[Layout('components.admin.layouts.app')] class extends Component {
         $this->importErrors = [];
 
         try {
-            \Maatwebsite\Excel\Facades\Excel::import(new \App\Imports\StudentsImport, $this->importFile);
+            \Maatwebsite\Excel\Facades\Excel::import(new \App\Imports\StudentsImport(), $this->importFile);
 
             $this->dispatch('close-modal', 'import-modal');
             $this->reset(['importFile', 'importErrors']);
@@ -470,15 +462,21 @@ new #[Layout('components.admin.layouts.app')] class extends Component {
         return [
             'students' => User::where('role', 'siswa')
                 ->with(['latestProfile.profileable.classroom.level'])
-                ->when($this->search, fn($q) => $q->where('name', 'like', "%{$this->search}%")
-                    ->orWhere('email', 'like', "%{$this->search}%")
-                    ->orWhereHas('latestProfile', fn($pq) => $pq->whereHasMorph('profileable', [StudentProfile::class], fn($sq) => $sq->where('nis', 'like', "%{$this->search}%")->orWhere('nisn', 'like', "%{$this->search}%"))))
+                ->when(
+                    $this->search,
+                    fn($q) => $q
+                        ->where('name', 'like', "%{$this->search}%")
+                        ->orWhere('email', 'like', "%{$this->search}%")
+                        ->orWhereHas('latestProfile', fn($pq) => $pq->whereHasMorph('profileable', [StudentProfile::class], fn($sq) => $sq->where('nis', 'like', "%{$this->search}%")->orWhere('nisn', 'like', "%{$this->search}%"))),
+                )
                 ->when($this->filter_classroom_id, fn($q) => $q->whereHas('latestProfile', fn($pq) => $pq->whereHasMorph('profileable', [StudentProfile::class], fn($sq) => $sq->where('classroom_id', $this->filter_classroom_id))))
                 ->when($this->filter_level_id, fn($q) => $q->whereHas('latestProfile', fn($pq) => $pq->whereHasMorph('profileable', [StudentProfile::class], fn($sq) => $sq->whereHas('classroom', fn($cq) => $cq->where('level_id', $this->filter_level_id)))))
                 ->orderBy($this->sortField === 'name' ? 'name' : ($this->sortField === 'email' ? 'email' : 'created_at'), $this->sortDirection)
                 ->paginate(15),
             'classrooms' => Classroom::with(['academicYear', 'level'])->get(),
-            'filter_classrooms' => Classroom::with(['academicYear', 'level'])->when($this->filter_level_id, fn($q) => $q->where('level_id', $this->filter_level_id))->get(),
+            'filter_classrooms' => Classroom::with(['academicYear', 'level'])
+                ->when($this->filter_level_id, fn($q) => $q->where('level_id', $this->filter_level_id))
+                ->get(),
             'levels' => \App\Models\Level::all(),
         ];
     }
@@ -532,13 +530,13 @@ new #[Layout('components.admin.layouts.app')] class extends Component {
             <div class="flex flex-1 gap-3 w-full md:w-auto">
                 <flux:select wire:model.live="filter_level_id" placeholder="Pilih Tingkat" class="max-w-[200px]">
                     <option value="">Semua Tingkat</option>
-                    @foreach($levels as $level)
+                    @foreach ($levels as $level)
                         <option value="{{ $level->id }}">{{ $level->name }}</option>
                     @endforeach
                 </flux:select>
                 <flux:select wire:model.live="filter_classroom_id" placeholder="Semua Kelas" class="max-w-[200px]">
                     <option value="">Semua Kelas</option>
-                    @foreach($filter_classrooms as $room)
+                    @foreach ($filter_classrooms as $room)
                         <option value="{{ $room->id }}">{{ $room->name }}</option>
                     @endforeach
                 </flux:select>
@@ -557,7 +555,7 @@ new #[Layout('components.admin.layouts.app')] class extends Component {
                         <button wire:click="sortBy('name')"
                             class="flex items-center gap-1 hover:text-primary-600 transition-colors">
                             Siswa
-                            @if($sortField === 'name')
+                            @if ($sortField === 'name')
                                 <flux:icon :icon="$sortDirection === 'asc' ? 'chevron-up' : 'chevron-down'"
                                     class="w-3 h-3" />
                             @endif
@@ -591,7 +589,7 @@ new #[Layout('components.admin.layouts.app')] class extends Component {
                                 class="flex items-center gap-3 cursor-pointer text-left focus:outline-none"
                                 wire:click="viewDetails({{ $student->id }})"
                                 x-on:click="$flux.modal('detail-modal').show()">
-                                @if($profile?->photo && Storage::disk('public')->exists($profile->photo))
+                                @if ($profile?->photo && Storage::disk('public')->exists($profile->photo))
                                     <flux:avatar src="/storage/{{ $profile->photo }}" size="sm"
                                         class="group-hover:ring-1 ring-primary-500/20 transition-all" />
                                 @else
@@ -615,7 +613,7 @@ new #[Layout('components.admin.layouts.app')] class extends Component {
                             </div>
                         </td>
                         <td class="px-4 py-4">
-                            @if($profile?->classroom)
+                            @if ($profile?->classroom)
                                 <flux:badge size="sm" variant="neutral"
                                     class="bg-zinc-100 dark:bg-zinc-800 border-zinc-200 dark:border-zinc-700">
                                     {{ $profile->classroom->name }}
@@ -627,9 +625,9 @@ new #[Layout('components.admin.layouts.app')] class extends Component {
                         <td class="px-4 py-4 text-zinc-600 dark:text-zinc-400">
                             <div class="flex flex-col">
                                 <span
-                                    class="text-sm font-medium">{{ ($profile?->father_name ?: ($profile?->mother_name ?: ($profile?->guardian_name ?: '-'))) }}</span>
+                                    class="text-sm font-medium">{{ $profile?->father_name ?: ($profile?->mother_name ?: ($profile?->guardian_name ?: '-')) }}</span>
                                 <span
-                                    class="text-xs opacity-75">{{ ($profile?->guardian_phone ?: ($profile?->phone ?: '-')) }}</span>
+                                    class="text-xs opacity-75">{{ $profile?->guardian_phone ?: ($profile?->phone ?: '-') }}</span>
                             </div>
                         </td>
                         <td class="px-4 py-4 text-right space-x-1">
@@ -637,12 +635,12 @@ new #[Layout('components.admin.layouts.app')] class extends Component {
                                 wire:click="openPeriodic({{ $student->id }})"
                                 x-on:click="$flux.modal('periodic-modal').show()" tooltip="Data Periodik" />
                             <flux:button size="sm" variant="ghost" icon="pencil-square"
-                                wire:click="edit({{ $student->id }})" x-on:click="$flux.modal('student-modal').show()"
-                                tooltip="Edit Siswa" />
+                                wire:click="edit({{ $student->id }})"
+                                x-on:click="$flux.modal('student-modal').show()" tooltip="Edit Siswa" />
                             <flux:button size="sm" variant="ghost" icon="trash"
                                 class="text-red-500 hover:bg-red-50 dark:hover:bg-red-900/20"
-                                wire:confirm="Yakin ingin menghapus siswa ini?" wire:click="delete({{ $student->id }})"
-                                tooltip="Hapus Siswa" />
+                                wire:confirm="Yakin ingin menghapus siswa ini?"
+                                wire:click="delete({{ $student->id }})" tooltip="Hapus Siswa" />
                         </td>
                     </tr>
                 @empty
@@ -660,11 +658,13 @@ new #[Layout('components.admin.layouts.app')] class extends Component {
         {{ $students->links() }}
     </div>
 
-    <flux:modal name="student-modal" class="max-w-3xl" x-on:student-saved.window="$flux.modal('student-modal').close()">
+    <flux:modal name="student-modal" class="max-w-3xl"
+        x-on:student-saved.window="$flux.modal('student-modal').close()">
         <form wire:submit="save" class="space-y-8">
             <div class="flex items-start justify-between">
                 <div>
-                    <flux:heading size="lg">{{ $editing ? 'Edit Profil Siswa' : 'Tambah Siswa Baru' }}</flux:heading>
+                    <flux:heading size="lg">{{ $editing ? 'Edit Profil Siswa' : 'Tambah Siswa Baru' }}
+                    </flux:heading>
                     <flux:subheading>Lengkapi data identitas dan akademik siswa.</flux:subheading>
                 </div>
 
@@ -689,7 +689,9 @@ new #[Layout('components.admin.layouts.app')] class extends Component {
                         </label>
                     </div>
                     <flux:text size="xs">Foto Profil (Max 1MB)</flux:text>
-                    @error('photo') <span class="text-xs text-red-500">{{ $message }}</span> @enderror
+                    @error('photo')
+                        <span class="text-xs text-red-500">{{ $message }}</span>
+                    @enderror
                 </div>
             </div>
 
@@ -722,8 +724,9 @@ new #[Layout('components.admin.layouts.app')] class extends Component {
 
                         <flux:select wire:model="classroom_id" label="Kelas">
                             <option value="">Pilih Kelas</option>
-                            @foreach($classrooms as $room)
-                                <option value="{{ $room->id }}">{{ $room->name }} ({{ $room->academicYear->name }})</option>
+                            @foreach ($classrooms as $room)
+                                <option value="{{ $room->id }}">{{ $room->name }}
+                                    ({{ $room->academicYear->name }})</option>
                             @endforeach
                         </flux:select>
 
