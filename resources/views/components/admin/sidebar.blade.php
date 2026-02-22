@@ -93,8 +93,8 @@
         @if(auth()->user()->isAdmin())
             <!-- Keuangan -->
             <flux:sidebar.group expandable icon="banknotes" :heading="__('Keuangan')" class="grid">
-                <flux:sidebar.item icon="wallet" :href="route('financial.payments')"
-                    :current="request()->routeIs('financial.payments') || request()->routeIs('financial.billings') || request()->routeIs('financial.discounts') || request()->routeIs('financial.categories')" wire:navigate.hover>
+                <flux:sidebar.item icon="wallet" :href="route('financial.transactions')"
+                    :current="request()->routeIs('financial.transactions') || request()->routeIs('financial.billings') || request()->routeIs('financial.discounts') || request()->routeIs('financial.categories')" wire:navigate.hover>
                     {{ __('Transaksi Keuangan') }}
                 </flux:sidebar.item>
                 <flux:sidebar.item icon="document-currency-dollar" :href="route('financial.budget-plans')"

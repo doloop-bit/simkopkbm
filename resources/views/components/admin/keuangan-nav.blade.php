@@ -1,5 +1,5 @@
 @php
-    $isTransaksi = request()->routeIs('financial.payments') || request()->routeIs('financial.billings') || request()->routeIs('financial.discounts') || request()->routeIs('financial.categories');
+    $isTransaksi = request()->routeIs('financial.transactions') || request()->routeIs('financial.billings') || request()->routeIs('financial.discounts') || request()->routeIs('financial.categories');
     
     $isAnggaran = request()->routeIs('financial.budget-plans') || request()->routeIs('financial.budget-categories') || request()->routeIs('financial.standard-items');
     
@@ -10,8 +10,8 @@
                 'label' => 'Transaksi',
                 'label_short' => 'Transaksi',
                 'icon' => 'wallet',
-                'route' => 'financial.payments',
-                'route_pattern' => 'financial.payments',
+                'route' => 'financial.transactions',
+                'route_pattern' => 'financial.transactions',
             ],
             'billings' => [
                 'label' => 'Tagihan Siswa',

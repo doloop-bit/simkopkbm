@@ -477,8 +477,8 @@ new #[Layout('components.admin.layouts.app')] class extends Component {
                 ->when($this->filter_level_id, fn($q) => $q->whereHas('latestProfile', fn($pq) => $pq->whereHasMorph('profileable', [StudentProfile::class], fn($sq) => $sq->whereHas('classroom', fn($cq) => $cq->where('level_id', $this->filter_level_id)))))
                 ->orderBy($this->sortField === 'name' ? 'name' : ($this->sortField === 'email' ? 'email' : 'created_at'), $this->sortDirection)
                 ->paginate(15),
-            'classrooms' => Classroom::with('academicYear')->get(),
-            'filter_classrooms' => Classroom::when($this->filter_level_id, fn($q) => $q->where('level_id', $this->filter_level_id))->get(),
+            'classrooms' => Classroom::with(['academicYear', 'level'])->get(),
+            'filter_classrooms' => Classroom::with(['academicYear', 'level'])->when($this->filter_level_id, fn($q) => $q->where('level_id', $this->filter_level_id))->get(),
             'levels' => \App\Models\Level::all(),
         ];
     }

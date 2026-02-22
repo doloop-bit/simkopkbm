@@ -123,7 +123,7 @@ new class extends Component {
         <div class="border rounded-xl bg-white dark:bg-zinc-900 overflow-hidden shadow-sm">
             <div class="px-4 py-3 border-b bg-zinc-50 dark:bg-zinc-800 flex justify-between items-center">
                 <flux:heading size="md">Transaksi Terakhir</flux:heading>
-                <flux:button variant="ghost" size="sm" :href="route('financial.payments')" wire:navigate>Lihat Semua</flux:button>
+                <flux:button variant="ghost" size="sm" :href="route('financial.transactions')" wire:navigate>Lihat Semua</flux:button>
             </div>
             <div class="divide-y">
                 @forelse($recentTransactions as $tx)

@@ -267,6 +267,14 @@ new class extends Component {
         if (in_array($status, ['approved', 'rejected'])) {
             $updateData['approved_by'] = $user->id;
         }
+
+        if (in_array($status, ['approved', 'transferred'])) {
+            $updateData['is_active'] = true;
+            BudgetPlan::where('level_id', $plan->level_id)
+                ->where('academic_year_id', $plan->academic_year_id)
+                ->where('id', '!=', $plan->id)
+                ->update(['is_active' => false]);
+        }
         
         $plan->update($updateData);
         $this->dispatch('plan-saved'); // Refresh list

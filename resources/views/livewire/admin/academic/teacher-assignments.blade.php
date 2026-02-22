@@ -46,7 +46,7 @@ new #[Layout('components.admin.layouts.app')] class extends Component {
             'academic_year_id' => $this->academic_year_id,
             'classroom_id' => $this->classroom_id,
             'teacher_id' => $this->teacher_id,
-            'subject_id' => $this->subject_id,
+            'subject_id' => $this->type === 'subject_teacher' ? $this->subject_id : null,
             'type' => $this->type,
         ];
 
@@ -57,7 +57,7 @@ new #[Layout('components.admin.layouts.app')] class extends Component {
         }
 
         $this->reset(['teacher_id', 'subject_id', 'type', 'editing']);
-        $this->dispatch('close-modal', 'assignment-modal');
+        $this->dispatch('assignment-saved');
     }
 
     public function edit(TeacherAssignment $assignment): void
@@ -68,7 +68,7 @@ new #[Layout('components.admin.layouts.app')] class extends Component {
         $this->type = $assignment->type;
         $this->classroom_id = $assignment->classroom_id;
 
-        $this->dispatch('open-modal', 'assignment-modal');
+        $this->dispatch('open-assignment-modal');
     }
 
     public function delete(TeacherAssignment $assignment): void
@@ -79,7 +79,7 @@ new #[Layout('components.admin.layouts.app')] class extends Component {
     public function with(): array
     {
         return [
-            'assignments' => TeacherAssignment::with(['teacher', 'subject', 'classroom'])
+            'assignments' => TeacherAssignment::with(['teacher', 'subject', 'classroom.academicYear'])
                 ->when($this->academic_year_id, fn($q) => $q->where('academic_year_id', $this->academic_year_id))
                 ->when($this->classroom_id, fn($q) => $q->where('classroom_id', $this->classroom_id))
                 ->get(),
@@ -153,7 +153,7 @@ new #[Layout('components.admin.layouts.app')] class extends Component {
                             </flux:badge>
                         </td>
                         <td class="px-4 py-3 text-right space-x-2">
-                            <flux:button size="sm" variant="ghost" icon="pencil-square" wire:click="edit({{ $assignment->id }})" />
+                            <flux:button size="sm" variant="ghost" icon="pencil-square" wire:click="edit({{ $assignment->id }})" x-on:click="$flux.modal('assignment-modal').show()" />
                             <flux:button size="sm" variant="ghost" icon="trash" class="text-red-500" wire:confirm="Yakin ingin menghapus penugasan ini?" wire:click="delete({{ $assignment->id }})" />
                         </td>
                     </tr>
@@ -168,7 +168,7 @@ new #[Layout('components.admin.layouts.app')] class extends Component {
         </table>
     </div>
 
-    <flux:modal name="assignment-modal" class="max-w-md">
+    <flux:modal name="assignment-modal" class="max-w-md" @open-assignment-modal.window="$flux.modal('assignment-modal').show()" x-on:assignment-saved.window="$flux.modal('assignment-modal').close()">
         <form wire:submit="save" class="space-y-6">
             <div>
                 <flux:heading size="lg">{{ $editing ? 'Edit Penugasan' : 'Tambah Penugasan Baru' }}</flux:heading>

@@ -7,13 +7,16 @@ use Illuminate\Database\Eloquent\Model;
 class Transaction extends Model
 {
     protected $fillable = [
+        'type',
         'student_billing_id',
+        'budget_plan_id',
+        'budget_plan_item_id',
         'user_id',
         'amount',
         'payment_date',
         'payment_method',
         'reference_number',
-        'notes'
+        'notes',
     ];
 
     protected function casts(): array
@@ -32,5 +35,15 @@ class Transaction extends Model
     public function user()
     {
         return $this->belongsTo(User::class);
+    }
+
+    public function budgetPlan()
+    {
+        return $this->belongsTo(BudgetPlan::class, 'budget_plan_id');
+    }
+
+    public function budgetItem()
+    {
+        return $this->belongsTo(BudgetPlanItem::class, 'budget_plan_item_id');
     }
 }

@@ -220,7 +220,13 @@ new #[Layout('components.admin.layouts.app')] class extends Component {
 
     public function with(): array
     {
-        $users = User::with(['profile.profileable'])
+        $users = User::with([
+            'profile.profileable' => function ($morph) {
+                $morph->morphWith([
+                    StaffProfile::class => ['level'],
+                ]);
+            }
+        ])
             ->whereIn('role', ['guru', 'staf'])
             ->when($this->search, function($q) {
                 $q->where('name', 'like', "%{$this->search}%")
@@ -311,7 +317,7 @@ new #[Layout('components.admin.layouts.app')] class extends Component {
                 <flux:subheading>Isi informasi akun dan data profil PTK.</flux:subheading>
             </div>
 
-            <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-4 items-start">
                 <flux:input wire:model="name" label="Nama Lengkap" placeholder="Nama tanpa gelar" />
                 <flux:input wire:model="email" label="Email" type="email" placeholder="email@contoh.com" />
                 
@@ -329,7 +335,7 @@ new #[Layout('components.admin.layouts.app')] class extends Component {
 
             <flux:separator variant="subtle" />
 
-            <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-4 items-start">
                 <flux:input wire:model="phone" label="No. Telepon" icon="phone" />
                 
                 @if($role === 'guru')

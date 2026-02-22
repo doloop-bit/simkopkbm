@@ -8,7 +8,7 @@ class BudgetPlan extends Model
 {
     protected $fillable = [
         'level_id', 'academic_year_id', 'title', 'total_amount',
-        'status', 'submitted_by', 'approved_by', 'notes'
+        'status', 'is_active', 'submitted_by', 'approved_by', 'notes',
     ];
 
     protected $casts = [

@@ -7,7 +7,7 @@ Route::middleware(['auth', 'verified', 'role:admin'])->prefix('admin')->group(fu
     Volt::route('/financial/categories', 'admin.financial.categories')->name('financial.categories');
     Volt::route('/financial/billings', 'admin.financial.billings')->name('financial.billings');
     Volt::route('/financial/discounts', 'admin.financial.discounts')->name('financial.discounts');
-    Volt::route('/financial/payments', 'admin.financial.payments')->name('financial.payments');
+    Volt::route('/financial/transactions', 'admin.financial.transactions')->name('financial.transactions');
     
     // Master Budget Data
     Volt::route('/financial/budget-categories', 'admin.financial.budget-categories')->name('financial.budget-categories');
