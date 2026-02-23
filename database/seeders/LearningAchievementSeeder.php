@@ -2,9 +2,9 @@
 
 namespace Database\Seeders;
 
+use App\Models\LearningAchievement;
 use App\Models\Level;
 use App\Models\Subject;
-use App\Models\LearningAchievement;
 use Illuminate\Database\Seeder;
 
 class LearningAchievementSeeder extends Seeder
@@ -26,6 +26,9 @@ class LearningAchievementSeeder extends Seeder
             '1' => 'E',
             '2' => 'F', '3' => 'F',
         ],
+        'PAUD' => [
+            '0' => 'Fondasi', // Or whatever class level is used for Fondasi
+        ],
     ];
 
     public function run(): void
@@ -46,12 +49,12 @@ class LearningAchievementSeeder extends Seeder
         $subjects = Subject::with('level')->get();
 
         foreach ($subjects as $subject) {
-            if (!$subject->level_id) {
+            if (! $subject->level_id) {
                 continue;
             }
 
             $level = $subject->level;
-            if (!$level || !$level->phase_map) {
+            if (! $level || ! $level->phase_map) {
                 continue;
             }
 

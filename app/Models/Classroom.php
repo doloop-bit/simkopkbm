@@ -38,6 +38,11 @@ class Classroom extends Model
         return $this->hasMany(TeacherAssignment::class);
     }
 
+    public function students()
+    {
+        return $this->hasMany(StudentProfile::class, 'classroom_id');
+    }
+
     /**
      * Get the Kurikulum Merdeka phase for this classroom.
      * Resolves based on the level's phase_map and the classroom's class_level.
@@ -46,13 +51,13 @@ class Classroom extends Model
      */
     public function getPhase(): ?string
     {
-        if (!$this->class_level || !$this->level) {
+        if (! $this->class_level || ! $this->level) {
             return null;
         }
 
         $phaseMap = $this->level->phase_map;
 
-        if (!$phaseMap) {
+        if (! $phaseMap) {
             return null;
         }
 

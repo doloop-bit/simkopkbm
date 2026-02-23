@@ -24,6 +24,10 @@
                     :current="request()->routeIs('students.index')" wire:navigate.hover>
                     {{ __('Siswa') }}
                 </flux:sidebar.item>
+                <flux:sidebar.item icon="arrows-right-left" :href="route('students.class-placement')"
+                    :current="request()->routeIs('students.class-placement')" wire:navigate.hover>
+                    {{ __('Penempatan Kelas') }}
+                </flux:sidebar.item>
                 <flux:sidebar.item icon="briefcase" :href="route('ptk.index')" :current="request()->routeIs('ptk.index')"
                     wire:navigate.hover>
                     {{ __('PTK') }}

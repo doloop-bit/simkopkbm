@@ -14,7 +14,7 @@ return new class extends Migration
         Schema::create('learning_achievements', function (Blueprint $table) {
             $table->id();
             $table->foreignId('subject_id')->constrained()->onDelete('cascade');
-            $table->enum('phase', ['A', 'B', 'C', 'D', 'E', 'F'])->comment('Fase pembelajaran sesuai Kurikulum Merdeka');
+            $table->enum('phase', ['Fondasi', 'A', 'B', 'C', 'D', 'E', 'F'])->comment('Fase pembelajaran sesuai Kurikulum Merdeka');
             $table->text('description')->comment('Deskripsi capaian pembelajaran');
             $table->timestamps();
 
