@@ -34,13 +34,10 @@
     <meta name="twitter:image:alt" content="{{ $twitterImageAlt ?? $ogImageAlt ?? $twitterTitle ?? $title ?? config('app.name') }}">
     @endif
 
-    <!-- DNS Prefetch for common domains -->
-    <link rel="dns-prefetch" href="https://fonts.bunny.net">
-    <link rel="dns-prefetch" href="https://cdnjs.cloudflare.com">
-    
-    <!-- Bunny Fonts (privacy-friendly, GDPR compliant) -->
-    <link rel="preconnect" href="https://fonts.bunny.net">
-    <link href="https://fonts.bunny.net/css?family=montserrat:400,500,600,700|open-sans:400,600&display=swap" rel="stylesheet">
+    <!-- Fonts Optimization (Self-hosted) -->
+    <link rel="preload" as="style" href="{{ asset('fonts/fonts.css') }}" />
+    <link rel="stylesheet" href="{{ asset('fonts/fonts.css') }}" media="print" onload="this.media='all'" />
+
     
     <tallstackui:script />
     @vite(['resources/css/app.css', 'resources/js/app.js'])

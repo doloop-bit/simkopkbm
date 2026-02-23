@@ -1,17 +1,16 @@
 User-agent: *
 Allow: /
 
-# Disallow admin routes
-Disallow: /admin/
+# Admin routes are protected by meta noindex tags
+# This allows search engines to crawl them but respect the "noindex" directive
+Allow: /admin/
+Disallow: /admin/login
 Disallow: /dashboard
-Disallow: /login
+
+# Common sensitive paths
 Disallow: /register
 Disallow: /forgot-password
-Disallow: /reset-password
-Disallow: /verify-email
-Disallow: /confirm-password
-Disallow: /two-factor-challenge
-Disallow: /two-factor-recovery
+
 
 # Allow public routes
 Allow: /
