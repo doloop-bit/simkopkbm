@@ -19,6 +19,7 @@ new class extends Component {
     // Form Properties
     public ?BudgetPlan $editing = null;
     public $academic_year_id = '';
+    public $level_id = '';
     public $title = '';
     public $notes = '';
     
@@ -69,8 +70,9 @@ new class extends Component {
              }
         }
 
-        $this->reset(['title', 'editing', 'notes']);
+        $this->reset(['title', 'editing', 'notes', 'level_id']);
         $this->academic_year_id = AcademicYear::where('is_active', true)->first()?->id ?? '';
+        $this->level_id = $user->managed_level_id ?? Level::first()?->id ?? '';
         $this->formItems = [];
         $this->itemSearches = [''];
         $this->addItemRow(); // Start with 1 empty row
@@ -87,6 +89,7 @@ new class extends Component {
 
         $this->editing = $plan;
         $this->academic_year_id = $plan->academic_year_id;
+        $this->level_id = $plan->level_id;
         $this->title = $plan->title;
         $this->notes = $plan->notes;
         
@@ -175,6 +178,7 @@ new class extends Component {
 
         $this->validate([
             'academic_year_id' => 'required',
+            'level_id' => 'required|exists:levels,id',
             'title' => 'required|string|max:255',
             'formItems' => 'required|array|min:1',
             'formItems.*.name' => 'required|string|max:255',
@@ -183,13 +187,11 @@ new class extends Component {
             'formItems.*.amount' => 'required|numeric|min:0',
         ]);
 
-        $levelId = $this->editing ? $this->editing->level_id : ($user->managed_level_id ?? Level::first()->id); 
-        // Admin creates for first level if not managed (should refine for admin creation later)
-        
         if ($this->editing) {
             $plan = $this->editing;
             $plan->update([
                 'academic_year_id' => $this->academic_year_id,
+                'level_id' => $this->level_id,
                 'title' => $this->title,
                 'total_amount' => $this->getTotalAmountProperty(),
                 'status' => $action === 'submit' ? 'submitted' : 'draft',
@@ -199,7 +201,7 @@ new class extends Component {
             $plan->items()->delete();
         } else {
             $plan = BudgetPlan::create([
-                'level_id' => $levelId,
+                'level_id' => $this->level_id,
                 'academic_year_id' => $this->academic_year_id,
                 'title' => $this->title,
                 'total_amount' => $this->getTotalAmountProperty(),
@@ -240,7 +242,7 @@ new class extends Component {
                         $target->phone, 
                         $pdfContent, 
                         'RAB-' . $plan->id . '.pdf',
-                        "Pengajuan RAB Baru:\nJudul: {$plan->title}\nOleh: {$user->name}\nTotal: Rp " . number_format($plan->total_amount, 0, ',', '.')
+                        "Assalamu'alaikum Warahmatullahi Wabarakatuh\nPengajuan RAB Baru:\nJudul: {$plan->title}\nOleh: {$user->name}\nTotal: Rp " . number_format($plan->total_amount, 0, ',', '.')
                     );
                 }
             } catch (\Exception $e) {
@@ -296,6 +298,23 @@ new class extends Component {
         $this->formItems[$index]['standard_item_id'] = ''; // Ensure it's empty/null for manual items
         $this->formItems[$index]['category_name'] = 'Manual / Lainnya';
         $this->itemSearches[$index] = $name;
+    }
+
+    public function exportPdf(BudgetPlan $plan)
+    {
+        $plan->load(['items.standardItem.category', 'level', 'academicYear', 'submitter', 'approver']);
+        $profile = \App\Models\SchoolProfile::first();
+
+        $pdf = \Barryvdh\DomPDF\Facade\Pdf::loadView('pdf.rab', [
+            'plan' => $plan,
+            'profile' => $profile,
+        ]);
+
+        return response()->streamDownload(
+            fn () => print($pdf->output()),
+            'RAB-' . str($plan->title)->slug() . '.pdf',
+            ['Content-Type' => 'application/pdf']
+        );
     }
 }; ?>
 
@@ -363,6 +382,9 @@ new class extends Component {
                         <td class="px-4 py-3 text-right space-x-2">
                             <!-- View/Edit -->
                             <flux:button size="sm" variant="ghost" icon="eye" wire:click="edit({{ $plan->id }})" wire:target="edit({{ $plan->id }})" />
+
+                            <!-- Preview PDF -->
+                            <flux:button size="sm" variant="ghost" icon="printer" wire:click="exportPdf({{ $plan->id }})" wire:target="exportPdf({{ $plan->id }})" />
                             
                             <!-- Delete (Draft Only) -->
                             @if($plan->status === 'draft' || Auth::user()->isAdmin())
@@ -398,10 +420,16 @@ new class extends Component {
                 <flux:subheading>Anggaran diajukan oleh Bendahara/Kepsek untuk disetujui Yayasan.</flux:subheading>
             </div>
 
-            <div class="grid grid-cols-1 md:grid-cols-2 gap-4 items-start">
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-4 items-start">
                 <flux:select wire:model="academic_year_id" label="Tahun Ajaran" placeholder="Pilih Tahun Ajaran">
                     @foreach($years as $year)
                         <option value="{{ $year->id }}">{{ $year->name }}</option>
+                    @endforeach
+                </flux:select>
+
+                <flux:select wire:model="level_id" label="Jenjang / Level" placeholder="Pilih Jenjang">
+                    @foreach($levels as $level)
+                        <option value="{{ $level->id }}">{{ $level->name }}</option>
                     @endforeach
                 </flux:select>
                 
