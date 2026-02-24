@@ -109,24 +109,20 @@
 
             <div class="hidden lg:flex lg:items-center lg:space-x-4 flex-shrink-0">
                 <!-- Admin Shortcut -->
-                @auth
-                    @php
-                        $dashboardRoute = auth()->user()->role === 'guru' ? route('teacher.dashboard') : route('dashboard');
-                    @endphp
-                    <a href="{{ $dashboardRoute }}" class="inline-flex items-center px-6 py-2.5 rounded-full text-sm font-bold border-2 border-slate-700 text-slate-300 hover:bg-slate-800 hover:text-white hover:border-amber-500 transition-all duration-200 transform hover:-translate-y-0.5">
+                    <a href="{{ $dashboardRoute }}" class="inline-flex items-center px-6 py-2.5 rounded-full text-sm font-bold border-2 border-slate-700 text-slate-300 hover:bg-slate-800 hover:text-white hover:border-amber-500 hover:shadow-lg hover:shadow-amber-500/20 transition-all duration-200 transform hover:-translate-y-1 hover:scale-105">
                         <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6" />
                         </svg>
                         Dashboard
                     </a>
-                @else
-                    <a href="{{ route('login') }}" class="inline-flex items-center px-6 py-2.5 rounded-full text-sm font-bold border-2 border-slate-700 text-slate-300 hover:bg-slate-800 hover:text-white hover:border-amber-500 transition-all duration-200 transform hover:-translate-y-0.5">
+@else
+                    <a href="{{ route('login') }}" class="inline-flex items-center px-6 py-2.5 rounded-full text-sm font-bold border-2 border-slate-700 text-slate-300 hover:bg-slate-800 hover:text-white hover:border-amber-500 hover:shadow-lg hover:shadow-amber-500/20 transition-all duration-200 transform hover:-translate-y-1 hover:scale-105">
                         <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 16l-4-4m0 0l4-4m-4 4h14m-5 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h7a3 3 0 013 3v1" />
                         </svg>
                         Login Admin
                     </a>
-                @endauth
+@endauth
 
                 <!-- CTA Button -->
                 <a href="{{ route('public.register') }}" class="inline-flex items-center px-6 py-2.5 rounded-full text-sm font-bold bg-gradient-to-r from-amber-500 to-amber-600 text-white shadow-lg hover:shadow-amber-500/30 hover:from-amber-600 hover:to-amber-700 transition-all duration-200 transform hover:-translate-y-0.5" wire:navigate>
@@ -187,14 +183,14 @@
                                 @php
                                     $dashboardRoute = auth()->user()->role === 'guru' ? route('teacher.dashboard') : route('dashboard');
                                 @endphp
-                                <a href="{{ $dashboardRoute }}" class="flex items-center justify-center px-3 py-3 rounded-full text-base font-bold border-2 border-slate-700 text-slate-300 mx-3 hover:bg-white/5 hover:text-white hover:border-amber-400 transition-all">
+                                <a href="{{ $dashboardRoute }}" class="flex items-center justify-center px-3 py-3 rounded-full text-base font-bold border-2 border-slate-700 text-slate-300 mx-3 hover:bg-white/5 hover:text-white hover:border-amber-400 hover:shadow-lg hover:shadow-amber-500/20 transition-all active:scale-95">
                                     <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6" />
                                     </svg>
                                     Dashboard
                                 </a>
                             @else
-                                <a href="{{ route('login') }}" class="flex items-center justify-center px-3 py-3 rounded-full text-base font-bold border-2 border-slate-700 text-slate-300 mx-3 hover:bg-white/5 hover:text-white hover:border-amber-400 transition-all">
+                                <a href="{{ route('login') }}" class="flex items-center justify-center px-3 py-3 rounded-full text-base font-bold border-2 border-slate-700 text-slate-300 mx-3 hover:bg-white/5 hover:text-white hover:border-amber-400 hover:shadow-lg hover:shadow-amber-500/20 transition-all active:scale-95">
                                     <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 16l-4-4m0 0l4-4m-4 4h14m-5 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h7a3 3 0 013 3v1" />
                                     </svg>
