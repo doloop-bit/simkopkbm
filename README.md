@@ -1,7 +1,6 @@
 <div align="center">
-  <img src="public/img/logo.png" alt="SIMKOPKBM Logo" width="120">
-  <h1>SIMKOPKBM</h1>
-  <p><strong>Sistem Informasi Manajemen Koperasi Pendidikan KB/TK Baitusyukur Malang</strong></p>
+  <h1 align="center">🏫 SIMPKBM</h1>
+  <p align="center"><strong>Sistem Informasi Manajemen PKBM (Pusat Kegiatan Belajar Masyarakat)</strong></p>
 
 [![Laravel](https://img.shields.io/badge/Laravel-12.x-FF2D20?style=for-the-badge&logo=laravel)](https://laravel.com)
 [![Livewire](https://img.shields.io/badge/Livewire-4.x-FB70A9?style=for-the-badge&logo=livewire)](https://livewire.laravel.com)
@@ -14,7 +13,7 @@
 
 ## 📌 Overview
 
-**SIMKOPKBM** is a comprehensive school management system designed specifically for **KB/TK (Kelompok Bermain/Taman Kanak-kanak) Baitusyukur Malang**. It streamlines academic processes, student management, assessment reporting based on Kurikulum Merdeka, and financial tracking into a single integrated platform.
+**SIMPKBM** is a comprehensive school management system for **PKBM (Pusat Kegiatan Belajar Masyarakat)**. It streamlines academic processes, student management, academic assessment, financial tracking, and public website operations into a single integrated platform.
 
 Built with the latest Laravel 12 ecosystem, it focuses on ease of use for teachers and administrative staff while providing a professional public presence for the school.
 
@@ -28,7 +27,7 @@ Built with the latest Laravel 12 ecosystem, it focuses on ease of use for teache
 
 ### 📝 Kurikulum Merdeka Assessment
 
-- **PAUD/TK Specific Grading**: Narrative and competency-based assessments covering the 6 developmental aspects:
+- **PKBM Academic Grading**: Narrative and competency-based assessments covering developmental and academic aspects:
     - _Nilai Agama dan Budi Pekerti_
     - _Fisik-Motorik_
     - _Kognitif_
@@ -121,4 +120,4 @@ For detailed technical documentation, please refer to the files in the `docs/` d
 
 ---
 
-© 2026 KB/TK Baitusyukur Malang. Built with ❤️ by doloop-bit.
+© 2026 PKBM (Pusat Kegiatan Belajar Masyarakat). Built with ❤️ by doloop-bit.
