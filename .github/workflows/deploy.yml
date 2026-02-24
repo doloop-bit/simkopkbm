@@ -3,12 +3,14 @@ name: Deploy to Hostinger
 on:
   push:
     branches:
-      - main # Change this if your primary branch is master
+      - main
+      - develop
   workflow_dispatch:
 
 jobs:
   deploy:
     runs-on: ubuntu-latest
+    environment: ${{ github.ref_name == 'main' && 'production' || 'demo' }}
 
     steps:
       - name: 🚚 Checkout Code
