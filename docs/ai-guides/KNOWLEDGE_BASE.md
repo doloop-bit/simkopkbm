@@ -25,7 +25,7 @@
 
 ### **What is SIMKOPKBM?**
 
-**Sistem Informasi Manajemen Koperasi Pendidikan KB/TK Baitusyukur Malang** - A comprehensive school management system for KB/TK (Kelompok Bermain/Taman Kanak-kanak) Baitusyukur Malang.
+**Sistem Informasi Manajemen PKBM (Pusat Kegiatan Belajar Masyarakat)** - A comprehensive school management system for PKBM Pusat Kegiatan Belajar Masyarakat, with features for student management, academic assessment, financial tracking, and public website.
 
 ### **Core Features**
 
