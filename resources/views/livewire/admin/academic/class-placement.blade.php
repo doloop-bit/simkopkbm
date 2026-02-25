@@ -258,36 +258,37 @@ new #[Layout('components.admin.layouts.app')] class extends Component {
                     </div>
                 </div>
                 
-                <div class="flex-1 p-2 overflow-y-auto space-y-1 min-h-[400px]"
+                <div class="p-2 overflow-y-auto h-[450px]"
                      x-on:dragover.prevent="draggingSource = true"
                      x-on:dragleave.prevent="draggingSource = false"
                      x-on:drop.prevent="onDropSource($event)"
                      x-bind:class="draggingSource ? 'bg-indigo-50 dark:bg-indigo-900/20 ring-2 ring-indigo-500 rounded' : ''">
-                    
-                    @if(count($sourceStudents) === 0 && $source_classroom_id)
-                        <div class="py-8 text-center flex justify-center text-zinc-500 dark:text-zinc-400">
-                            Tidak ada siswa di kelas ini.
-                        </div>
-                    @endif
-                    
-                    @foreach($sourceStudents as $student)
-                        <div class="p-3 border rounded-lg shadow-sm flex items-center bg-white border-zinc-200 dark:bg-zinc-900 dark:border-zinc-700 cursor-move hover:border-indigo-500 transition-colors"
-                             draggable="true"
-                             x-on:dragstart="$event.dataTransfer.setData('text/plain', getDragDataSource({{ $student['id'] }}))"
-                             x-bind:class="selectedSource.includes({{ $student['id'] }}) ? 'ring-2 ring-indigo-500 bg-indigo-50/50 dark:bg-indigo-900/20' : ''"
-                             x-on:click="toggleSource({{ $student['id'] }})">
-                             
-                            <flux:icon icon="bars-3" class="w-4 h-4 mr-3 text-zinc-400" />
-                            <div class="flex-1">
-                                <div class="font-medium text-zinc-900 dark:text-white">{{ $student['name'] }}</div>
-                                <div class="text-xs text-zinc-500 dark:text-zinc-400">NIS: {{ $student['nis'] ?? '-' }}</div>
+                    <div class="space-y-1 pb-4">
+                        @if(count($sourceStudents) === 0 && $source_classroom_id)
+                            <div class="py-8 text-center flex justify-center text-zinc-500 dark:text-zinc-400">
+                                Tidak ada siswa di kelas ini.
                             </div>
-                            <!-- Stop propagation so the div click doesn't trigger twice -->
-                            <div x-on:click.stop>
-                                <flux:checkbox id="source-{{ $student['id'] }}" x-model="selectedSource" value="{{ $student['id'] }}" />
+                        @endif
+                        
+                        @foreach($sourceStudents as $student)
+                            <div class="p-3 border rounded-lg shadow-sm flex items-center bg-white border-zinc-200 dark:bg-zinc-900 dark:border-zinc-700 cursor-move hover:border-indigo-500 transition-colors"
+                                 draggable="true"
+                                 x-on:dragstart="$event.dataTransfer.setData('text/plain', getDragDataSource({{ $student['id'] }}))"
+                                 x-bind:class="selectedSource.includes({{ $student['id'] }}) ? 'ring-2 ring-indigo-500 bg-indigo-50/50 dark:bg-indigo-900/20' : ''"
+                                 x-on:click="toggleSource({{ $student['id'] }})">
+                                 
+                                <flux:icon icon="bars-3" class="w-4 h-4 mr-3 text-zinc-400" />
+                                <div class="flex-1">
+                                    <div class="font-medium text-zinc-900 dark:text-white">{{ $student['name'] }}</div>
+                                    <div class="text-xs text-zinc-500 dark:text-zinc-400">NIS: {{ $student['nis'] ?? '-' }}</div>
+                                </div>
+                                <!-- Stop propagation so the div click doesn't trigger twice -->
+                                <div x-on:click.stop>
+                                    <flux:checkbox id="source-{{ $student['id'] }}" x-model="selectedSource" value="{{ $student['id'] }}" />
+                                </div>
                             </div>
-                        </div>
-                    @endforeach
+                        @endforeach
+                    </div>
                 </div>
             </div>
 
@@ -314,35 +315,36 @@ new #[Layout('components.admin.layouts.app')] class extends Component {
                     </div>
                 </div>
                 
-                <div class="flex-1 p-2 overflow-y-auto space-y-1 min-h-[400px]"
+                <div class="p-2 overflow-y-auto h-[450px]"
                      x-on:dragover.prevent="draggingTarget = true"
                      x-on:dragleave.prevent="draggingTarget = false"
                      x-on:drop.prevent="onDropTarget($event)"
                      x-bind:class="draggingTarget ? 'bg-indigo-50 dark:bg-indigo-900/20 ring-2 ring-indigo-500 rounded' : ''">
-                    
-                    @if(count($targetStudents) === 0 && $target_classroom_id)
-                        <div class="py-8 text-center text-zinc-500 dark:text-zinc-400">
-                            Pilih / Drag siswa ke sini.
-                        </div>
-                    @endif
-                    
-                    @foreach($targetStudents as $student)
-                        <div class="p-3 border rounded-lg shadow-sm flex items-center bg-white border-zinc-200 dark:bg-zinc-900 dark:border-zinc-700 cursor-move hover:border-indigo-500 transition-colors"
-                             draggable="true"
-                             x-on:dragstart="$event.dataTransfer.setData('text/plain', getDragDataTarget({{ $student['id'] }}))"
-                             x-bind:class="selectedTarget.includes({{ $student['id'] }}) ? 'ring-2 ring-indigo-500 bg-indigo-50/50 dark:bg-indigo-900/20' : ''"
-                             x-on:click="toggleTarget({{ $student['id'] }})">
-                             
-                            <flux:icon icon="bars-3" class="w-4 h-4 mr-3 text-zinc-400" />
-                            <div class="flex-1">
-                                <div class="font-medium text-zinc-900 dark:text-white">{{ $student['name'] }}</div>
-                                <div class="text-xs text-zinc-500 dark:text-zinc-400">NIS: {{ $student['nis'] ?? '-' }}</div>
+                    <div class="space-y-1 pb-4">
+                        @if(count($targetStudents) === 0 && $target_classroom_id)
+                            <div class="py-8 text-center text-zinc-500 dark:text-zinc-400">
+                                Pilih / Drag siswa ke sini.
                             </div>
-                            <div x-on:click.stop>
-                                <flux:checkbox id="target-{{ $student['id'] }}" x-model="selectedTarget" value="{{ $student['id'] }}" />
+                        @endif
+                        
+                        @foreach($targetStudents as $student)
+                            <div class="p-3 border rounded-lg shadow-sm flex items-center bg-white border-zinc-200 dark:bg-zinc-900 dark:border-zinc-700 cursor-move hover:border-indigo-500 transition-colors"
+                                 draggable="true"
+                                 x-on:dragstart="$event.dataTransfer.setData('text/plain', getDragDataTarget({{ $student['id'] }}))"
+                                 x-bind:class="selectedTarget.includes({{ $student['id'] }}) ? 'ring-2 ring-indigo-500 bg-indigo-50/50 dark:bg-indigo-900/20' : ''"
+                                 x-on:click="toggleTarget({{ $student['id'] }})">
+                                 
+                                <flux:icon icon="bars-3" class="w-4 h-4 mr-3 text-zinc-400" />
+                                <div class="flex-1">
+                                    <div class="font-medium text-zinc-900 dark:text-white">{{ $student['name'] }}</div>
+                                    <div class="text-xs text-zinc-500 dark:text-zinc-400">NIS: {{ $student['nis'] ?? '-' }}</div>
+                                </div>
+                                <div x-on:click.stop>
+                                    <flux:checkbox id="target-{{ $student['id'] }}" x-model="selectedTarget" value="{{ $student['id'] }}" />
+                                </div>
                             </div>
-                        </div>
-                    @endforeach
+                        @endforeach
+                    </div>
                 </div>
             </div>
             
