@@ -22,6 +22,7 @@ class LevelFactory extends Factory
         return [
             'name' => fake()->randomElement(['PAUD', 'TK', 'Paket A', 'Paket B', 'Paket C']),
             'type' => fake()->randomElement(['class_teacher', 'subject_teacher']),
+            'education_level' => fake()->randomElement(['paud', 'sd', 'smp', 'sma']),
         ];
     }
 }

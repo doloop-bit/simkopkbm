@@ -2,6 +2,7 @@
 
 declare(strict_types=1);
 
+use App\Models\Level;
 use App\Models\Program;
 use App\Models\User;
 use Illuminate\Http\UploadedFile;
@@ -18,7 +19,7 @@ test('admin can access programs management page', function () {
     $this->actingAs($this->admin)
         ->get(route('admin.programs.index'))
         ->assertOk()
-        ->assertSeeLivewire('admin.programs.index');
+        ->assertSeeLivewire('admin.web-content.programs.index');
 });
 
 test('non-admin cannot access programs management page', function () {
@@ -32,12 +33,12 @@ test('non-admin cannot access programs management page', function () {
 test('admin can create a program', function () {
     $this->actingAs($this->admin);
 
+    $level = Level::factory()->create(['name' => 'Paket A']);
     $image = UploadedFile::fake()->image('program.jpg', 800, 600);
 
-    Volt::test('admin.programs.index')
-        ->set('name', 'Paket A')
+    Volt::test('admin.web-content.programs.index')
+        ->set('level_id', $level->id)
         ->set('description', 'Program setara SD untuk dewasa')
-        ->set('level', 'paket_a')
         ->set('duration', '1 tahun')
         ->set('requirements', 'Usia minimal 15 tahun')
         ->set('image', $image)
@@ -45,11 +46,10 @@ test('admin can create a program', function () {
         ->call('save')
         ->assertHasNoErrors();
 
-    expect(Program::where('name', 'Paket A')->exists())->toBeTrue();
-
-    $program = Program::where('name', 'Paket A')->first();
+    $program = Program::where('level_id', $level->id)->first();
+    expect($program)->not->toBeNull();
+    expect($program->name)->toBe('Paket A');
     expect($program->description)->toBe('Program setara SD untuk dewasa');
-    expect($program->level)->toBe('paket_a');
     expect($program->duration)->toBe('1 tahun');
     expect($program->requirements)->toBe('Usia minimal 15 tahun');
     expect($program->is_active)->toBeTrue();
@@ -66,27 +66,25 @@ test('admin can edit a program', function () {
         'description' => 'Original Description',
     ]);
 
-    Volt::test('admin.programs.index')
+    Volt::test('admin.web-content.programs.index')
         ->call('edit', $program->id)
-        ->set('name', 'Updated Name')
         ->set('description', 'Updated Description')
         ->call('save')
         ->assertHasNoErrors();
 
     $program->refresh();
-    expect($program->name)->toBe('Updated Name');
     expect($program->description)->toBe('Updated Description');
 });
 
 test('admin can delete a program', function () {
     $this->actingAs($this->admin);
-    
+
     $image = UploadedFile::fake()->image('program.jpg');
     $program = Program::factory()->create([
         'image_path' => $image->store('programs', 'public'),
     ]);
 
-    Volt::test('admin.programs.index')
+    Volt::test('admin.web-content.programs.index')
         ->call('delete', $program->id);
 
     expect(Program::find($program->id))->toBeNull();
@@ -95,11 +93,11 @@ test('admin can delete a program', function () {
 
 test('admin can reorder programs', function () {
     $this->actingAs($this->admin);
-    
+
     $program1 = Program::factory()->create(['order' => 1]);
     $program2 = Program::factory()->create(['order' => 2]);
 
-    Volt::test('admin.programs.index')
+    Volt::test('admin.web-content.programs.index')
         ->call('moveDown', $program1->id);
 
     $program1->refresh();
@@ -111,27 +109,40 @@ test('admin can reorder programs', function () {
 
 test('program creation requires valid data', function () {
     $this->actingAs($this->admin);
-    
-    Volt::test('admin.programs.index')
-        ->set('name', '')
+
+    Volt::test('admin.web-content.programs.index')
+        ->set('level_id', null)
         ->set('description', '')
-        ->set('level', '')
         ->set('duration', '')
         ->call('save')
-        ->assertHasErrors(['name', 'description', 'level', 'duration']);
+        ->assertHasErrors(['level_id', 'description', 'duration']);
 });
 
 test('program image must be valid image file', function () {
     $this->actingAs($this->admin);
-    
+
+    $level = Level::factory()->create();
     $invalidFile = UploadedFile::fake()->create('document.pdf', 1000);
 
-    Volt::test('admin.programs.index')
-        ->set('name', 'Test Program')
+    Volt::test('admin.web-content.programs.index')
+        ->set('level_id', $level->id)
         ->set('description', 'Test Description')
-        ->set('level', 'paket_b')
         ->set('duration', 'Test Duration')
         ->set('image', $invalidFile)
         ->call('save')
         ->assertHasErrors(['image']);
+});
+
+test('cannot create duplicate program for same level', function () {
+    $this->actingAs($this->admin);
+
+    $level = Level::factory()->create(['name' => 'PAUD']);
+    Program::factory()->forLevel($level)->create();
+
+    Volt::test('admin.web-content.programs.index')
+        ->set('level_id', $level->id)
+        ->set('description', 'Another program')
+        ->set('duration', '1 tahun')
+        ->call('save')
+        ->assertHasErrors(['level_id']);
 });

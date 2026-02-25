@@ -2,22 +2,28 @@
 
 namespace App\Services;
 
-use App\Models\SchoolProfile;
-use App\Models\Program;
-use App\Models\NewsArticle;
 use App\Models\GalleryPhoto;
+use App\Models\NewsArticle;
+use App\Models\Program;
+use App\Models\SchoolProfile;
 use Illuminate\Support\Facades\Cache;
 
 class CacheService
 {
     const SCHOOL_PROFILE_KEY = 'school_profile_active';
+
     const NAVIGATION_MENU_KEY = 'navigation_menu';
+
     const PROGRAMS_ACTIVE_KEY = 'programs_active';
+
     const LATEST_NEWS_KEY = 'latest_news';
+
     const GALLERY_CATEGORIES_KEY = 'gallery_categories';
+
     const FEATURED_PHOTOS_KEY = 'featured_photos';
 
     const DEFAULT_TTL = 3600; // 1 hour
+
     const LONG_TTL = 86400; // 24 hours
 
     /**
@@ -37,7 +43,7 @@ class CacheService
     {
         return Cache::remember(self::NAVIGATION_MENU_KEY, self::LONG_TTL, function () {
             $schoolProfile = $this->getSchoolProfile();
-            
+
             return [
                 'school_name' => $schoolProfile?->name ?? config('app.name'),
                 'logo_path' => $schoolProfile?->logo_path,
@@ -67,7 +73,8 @@ class CacheService
         return Cache::remember(self::PROGRAMS_ACTIVE_KEY, self::DEFAULT_TTL, function () {
             return Program::active()
                 ->ordered()
-                ->select(['id', 'name', 'slug', 'description', 'level', 'image_path', 'order'])
+                ->with('level')
+                ->select(['id', 'level_id', 'name', 'slug', 'description', 'image_path', 'order'])
                 ->get();
         });
     }
@@ -77,8 +84,8 @@ class CacheService
      */
     public function getLatestNews(int $limit = 3): \Illuminate\Database\Eloquent\Collection
     {
-        $key = self::LATEST_NEWS_KEY . "_{$limit}";
-        
+        $key = self::LATEST_NEWS_KEY."_{$limit}";
+
         return Cache::remember($key, self::DEFAULT_TTL, function () use ($limit) {
             return NewsArticle::published()
                 ->latest()
@@ -110,8 +117,8 @@ class CacheService
      */
     public function getFeaturedPhotos(int $limit = 6): \Illuminate\Database\Eloquent\Collection
     {
-        $key = self::FEATURED_PHOTOS_KEY . "_{$limit}";
-        
+        $key = self::FEATURED_PHOTOS_KEY."_{$limit}";
+
         return Cache::remember($key, self::DEFAULT_TTL, function () use ($limit) {
             return GalleryPhoto::published()
                 ->ordered()
@@ -144,10 +151,10 @@ class CacheService
     public function clearNewsCache(): void
     {
         // Cache::tags(['news'])->flush(); // Not supported by database driver
-        
+
         // Clear specific keys
         for ($i = 1; $i <= 10; $i++) {
-            Cache::forget(self::LATEST_NEWS_KEY . "_{$i}");
+            Cache::forget(self::LATEST_NEWS_KEY."_{$i}");
         }
     }
 
@@ -157,10 +164,10 @@ class CacheService
     public function clearGalleryCache(): void
     {
         Cache::forget(self::GALLERY_CATEGORIES_KEY);
-        
+
         // Clear featured photos with different limits
         for ($i = 1; $i <= 20; $i++) {
-            Cache::forget(self::FEATURED_PHOTOS_KEY . "_{$i}");
+            Cache::forget(self::FEATURED_PHOTOS_KEY."_{$i}");
         }
     }
 

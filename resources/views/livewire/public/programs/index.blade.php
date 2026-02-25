@@ -75,7 +75,7 @@ new #[Layout('components.public.layouts.public')] class extends Component
                                     <div class="mb-3 flex items-center gap-3">
                                         <h3 class="text-2xl font-bold font-heading text-slate-900">{{ $program->name }}</h3>
                                         <span class="rounded-full bg-amber-100 px-3 py-1 text-sm font-medium text-amber-800">
-                                            {{ $program->level }}
+                                            {{ $program->level?->name ?? '-' }}
                                         </span>
                                     </div>
 

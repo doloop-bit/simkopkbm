@@ -12,7 +12,8 @@ new #[Layout('components.public.layouts.public')] class extends Component
 
     public function mount(string $slug): void
     {
-        $this->program = Program::where('slug', $slug)
+        $this->program = Program::with('level')
+            ->where('slug', $slug)
             ->where('is_active', true)
             ->firstOrFail();
     }
@@ -31,7 +32,7 @@ new #[Layout('components.public.layouts.public')] class extends Component
             'schoolProfile' => $schoolProfile,
             'title' => $title,
             'description' => $description,
-            'keywords' => 'Program ' . $this->program->name . ', ' . $this->program->level . ', Pendidikan, PKBM, ' . config('app.name'),
+            'keywords' => 'Program ' . $this->program->name . ', ' . ($this->program->level?->name ?? '') . ', Pendidikan, PKBM, ' . config('app.name'),
             'ogTitle' => $title,
             'ogDescription' => $description,
             'ogImage' => $this->program->image_path ? Storage::url($this->program->image_path) : null,
@@ -61,7 +62,7 @@ new #[Layout('components.public.layouts.public')] class extends Component
                     </ol>
                 </nav>
                 <h1 class="mb-4 text-4xl font-bold md:text-5xl font-heading">{{ $program->name }}</h1>
-                <p class="text-xl text-slate-300">{{ $program->level }}</p>
+                <p class="text-xl text-slate-300">{{ $program->level?->name ?? '-' }}</p>
             </div>
         </div>
     </div>
@@ -139,7 +140,7 @@ new #[Layout('components.public.layouts.public')] class extends Component
                                     </svg>
                                     <div>
                                         <p class="text-sm font-medium text-slate-900">Tingkat</p>
-                                        <p class="text-sm text-slate-600">{{ $program->level }}</p>
+                                        <p class="text-sm text-slate-600">{{ $program->level?->name ?? '-' }}</p>
                                     </div>
                                 </div>
                             </div>

@@ -1,18 +1,19 @@
 <?php
 
+use App\Models\Level;
 use App\Models\Program;
 use App\Services\CacheService;
 use Illuminate\Support\Facades\Storage;
+use Livewire\Attributes\Layout;
 use Livewire\Volt\Component;
 use Livewire\WithFileUploads;
 
-new class extends Component
+new #[Layout('components.admin.layouts.app')] class extends Component
 {
     use WithFileUploads;
 
-    public string $name = '';
+    public ?int $level_id = null;
     public string $description = '';
-    public string $level = '';
     public string $duration = '';
     public string $requirements = '';
     public $image = null;
@@ -23,9 +24,8 @@ new class extends Component
     public function rules(): array
     {
         return [
-            'name' => 'required|string|max:255',
+            'level_id' => 'required|exists:levels,id',
             'description' => 'required|string',
-            'level' => 'required|string|max:100',
             'duration' => 'required|string|max:100',
             'requirements' => 'nullable|string',
             'image' => 'nullable|image|mimes:jpeg,jpg,png,webp|max:2048',
@@ -36,9 +36,8 @@ new class extends Component
     public function validationAttributes(): array
     {
         return [
-            'name' => 'nama program',
+            'level_id' => 'jenjang',
             'description' => 'deskripsi',
-            'level' => 'tingkat',
             'duration' => 'durasi',
             'requirements' => 'persyaratan',
             'image' => 'gambar',
@@ -49,11 +48,13 @@ new class extends Component
     {
         $this->validate();
 
+        $level = Level::findOrFail($this->level_id);
+
         $data = [
-            'name' => $this->name,
-            'slug' => \Illuminate\Support\Str::slug($this->name),
+            'level_id' => $this->level_id,
+            'name' => $level->name,
+            'slug' => \Illuminate\Support\Str::slug($level->name),
             'description' => $this->description,
-            'level' => $this->level,
             'duration' => $this->duration,
             'requirements' => $this->requirements,
             'is_active' => $this->is_active,
@@ -77,6 +78,13 @@ new class extends Component
             $program->update($data);
             session()->flash('message', 'Program berhasil diperbarui.');
         } else {
+            // Check if this level already has a program
+            if (Program::where('level_id', $this->level_id)->exists()) {
+                $this->addError('level_id', 'Jenjang ini sudah memiliki program.');
+
+                return;
+            }
+
             // Get the next order value
             $maxOrder = Program::max('order') ?? 0;
             $data['order'] = $maxOrder + 1;
@@ -97,9 +105,8 @@ new class extends Component
         $program = Program::findOrFail($id);
         
         $this->editingId = $id;
-        $this->name = $program->name;
+        $this->level_id = $program->level_id;
         $this->description = $program->description;
-        $this->level = $program->level;
         $this->duration = $program->duration;
         $this->requirements = $program->requirements ?? '';
         $this->is_active = $program->is_active;
@@ -165,7 +172,11 @@ new class extends Component
     public function with(): array
     {
         return [
-            'programs' => Program::ordered()->get(),
+            'programs' => Program::with('level')->ordered()->get(),
+            'levels' => Level::all(),
+            'usedLevelIds' => Program::when($this->editingId, fn ($q) => $q->where('id', '!=', $this->editingId))
+                ->pluck('level_id')
+                ->toArray(),
         ];
     }
 }; ?>
@@ -173,7 +184,7 @@ new class extends Component
 <div>
     <div class="mb-6">
         <flux:heading size="xl">Program Pendidikan</flux:heading>
-        <flux:subheading>Kelola program-program pendidikan sekolah</flux:subheading>
+        <flux:subheading>Kelola profil program pendidikan untuk setiap jenjang</flux:subheading>
     </div>
 
     @if (session()->has('message'))
@@ -190,24 +201,18 @@ new class extends Component
 
         <form wire:submit="save" class="space-y-4">
             <div class="grid grid-cols-1 gap-4 md:grid-cols-2">
-                <flux:input 
-                    wire:model="name" 
-                    label="Nama Program" 
-                    type="text" 
-                    required 
-                    placeholder="Contoh: Paket A, PAUD"
-                />
+                <flux:select wire:model="level_id" label="Jenjang Pendidikan" required placeholder="Pilih Jenjang...">
+                    @foreach ($levels as $level)
+                        <option 
+                            value="{{ $level->id }}" 
+                            @if (in_array($level->id, $usedLevelIds)) disabled @endif
+                        >
+                            {{ $level->name }}
+                            @if (in_array($level->id, $usedLevelIds)) (sudah ada program) @endif
+                        </option>
+                    @endforeach
+                </flux:select>
 
-                <flux:input 
-                    wire:model="level" 
-                    label="Tingkat" 
-                    type="text" 
-                    required 
-                    placeholder="Contoh: Setara SD, Setara SMP"
-                />
-            </div>
-
-            <div class="grid grid-cols-1 gap-4 md:grid-cols-2">
                 <flux:input 
                     wire:model="duration" 
                     label="Durasi" 
@@ -215,14 +220,14 @@ new class extends Component
                     required 
                     placeholder="Contoh: 6 bulan, 1 tahun"
                 />
-
-                <flux:input 
-                    wire:model="image" 
-                    label="Gambar Program" 
-                    type="file" 
-                    accept="image/jpeg,image/jpg,image/png,image/webp"
-                />
             </div>
+
+            <flux:input 
+                wire:model="image" 
+                label="Gambar Program" 
+                type="file" 
+                accept="image/jpeg,image/jpg,image/png,image/webp"
+            />
 
             <flux:textarea 
                 wire:model="description" 
@@ -291,7 +296,7 @@ new class extends Component
                                 <div>
                                     <flux:heading size="lg" class="mb-1">{{ $program->name }}</flux:heading>
                                     <div class="flex items-center gap-4 text-sm text-zinc-600 dark:text-zinc-400">
-                                        <span>{{ $program->level }}</span>
+                                        <span>{{ $program->level?->name ?? '-' }}</span>
                                         <span>•</span>
                                         <span>{{ $program->duration }}</span>
                                         <span>•</span>
