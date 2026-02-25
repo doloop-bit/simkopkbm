@@ -203,12 +203,13 @@ new #[Layout('components.admin.layouts.app')] class extends Component
             <div class="grid grid-cols-1 gap-4 md:grid-cols-2">
                 <flux:select wire:model="level_id" label="Jenjang Pendidikan" required placeholder="Pilih Jenjang...">
                     @foreach ($levels as $level)
+                        @php $isUsed = in_array($level->id, $usedLevelIds); @endphp
                         <option 
+                            wire:key="level-{{ $level->id }}"
                             value="{{ $level->id }}" 
-                            @if (in_array($level->id, $usedLevelIds)) disabled @endif
+                            {{ $isUsed ? 'disabled' : '' }}
                         >
-                            {{ $level->name }}
-                            @if (in_array($level->id, $usedLevelIds)) (sudah ada program) @endif
+                            {{ $level->name }} {{ $isUsed ? '(sudah ada program)' : '' }}
                         </option>
                     @endforeach
                 </flux:select>
