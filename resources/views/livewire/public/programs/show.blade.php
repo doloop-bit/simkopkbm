@@ -20,7 +20,7 @@ new #[Layout('components.public.layouts.public')] class extends Component
 
     public function with(): array
     {
-        $schoolProfile = SchoolProfile::active()->first();
+        $schoolProfile = SchoolProfile::active();
         
         // Set SEO data dynamically
         $title = $this->program->name . ' - Program Pendidikan ' . config('app.name');
