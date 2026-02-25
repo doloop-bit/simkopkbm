@@ -50,60 +50,63 @@ new #[Layout('components.public.layouts.public')] class extends Component
     </div>
 
     {{-- Programs --}}
-    <div class="py-16">
+    <div class="py-24 bg-white">
         <div class="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
             @if ($programs->isNotEmpty())
-                <div class="grid grid-cols-1 gap-8 lg:grid-cols-2">
+                <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-8 justify-center">
                     @foreach ($programs as $program)
-                        <div class="group overflow-hidden rounded-lg bg-white shadow-lg transition-transform duration-300 hover:scale-105">
-                            <div class="md:flex">
-                                {{-- Image --}}
+                        <div class="group relative flex flex-col items-center text-center bg-white rounded-[2rem] p-8 ring-1 ring-zinc-200/60 shadow-sm hover:shadow-2xl hover:ring-zinc-300 transition-all duration-500 hover:-translate-y-2 overflow-hidden">
+                            {{-- Decorative Background --}}
+                            <div class="absolute -top-12 -right-12 w-24 h-24 bg-amber-500/5 rounded-full blur-2xl group-hover:bg-amber-500/10 transition-colors"></div>
+                            
+                            {{-- Icon/Image --}}
+                            <div class="relative mb-8 transform group-hover:scale-110 transition-transform duration-500">
                                 @if ($program->image_path)
-                                    <div class="md:w-1/3">
-                                        <div class="aspect-video overflow-hidden bg-slate-100 md:aspect-square">
-                                            <img 
-                                                src="{{ Storage::url($program->image_path) }}" 
-                                                alt="{{ $program->name }}"
-                                                class="h-full w-full object-cover transition-transform duration-300 group-hover:scale-110"
-                                            >
-                                        </div>
+                                    <div class="h-24 w-24 rounded-3xl overflow-hidden shadow-lg ring-4 ring-white">
+                                        <img 
+                                            src="{{ Storage::url($program->image_path) }}" 
+                                            alt="{{ $program->name }}"
+                                            class="h-full w-full object-cover"
+                                        >
+                                    </div>
+                                @else
+                                    <div class="flex h-20 w-20 items-center justify-center rounded-3xl bg-zinc-900 text-3xl font-bold text-white shadow-xl group-hover:bg-amber-500 transition-colors">
+                                        {{ Str::upper(Str::substr($program->name, 0, 1)) }}
                                     </div>
                                 @endif
-
-                                {{-- Content --}}
-                                <div class="p-6 {{ $program->image_path ? 'md:w-2/3' : 'w-full' }}">
-                                    <div class="mb-3 flex items-center gap-3">
-                                        <h3 class="text-2xl font-bold font-heading text-slate-900">{{ $program->name }}</h3>
-                                        <span class="rounded-full bg-amber-100 px-3 py-1 text-sm font-medium text-amber-800">
-                                            {{ $program->level?->name ?? '-' }}
-                                        </span>
-                                    </div>
-
-                                    <div class="mb-4 flex items-center gap-4 text-sm text-slate-600">
-                                        <div class="flex items-center gap-1">
-                                            <svg class="h-4 w-4 text-slate-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"/>
-                                            </svg>
-                                            <span>{{ $program->duration }}</span>
-                                        </div>
-                                    </div>
-
-                                    <p class="mb-6 text-slate-600 leading-relaxed">
-                                        {{ Str::limit($program->description, 200) }}
-                                    </p>
-
-                                    <div class="flex items-center justify-between">
-                                        <a 
-                                            href="{{ route('public.programs.show', $program->slug) }}" 
-                                            class="inline-flex items-center gap-2 rounded-lg bg-amber-500 px-4 py-2 text-sm font-medium text-white transition-colors hover:bg-amber-600"
-                                        >
-                                            Selengkapnya
-                                            <svg class="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"/>
-                                            </svg>
-                                        </a>
-                                    </div>
+                                {{-- Badge --}}
+                                <div class="absolute -bottom-2 -right-2 bg-amber-500 text-white p-2 rounded-xl shadow-lg border-2 border-white transform rotate-12 group-hover:rotate-0 transition-transform">
+                                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/></svg>
                                 </div>
+                            </div>
+
+                            <div class="flex-1 flex flex-col items-center">
+                                <span class="inline-flex items-center rounded-full bg-zinc-100 px-3 py-1 text-[10px] font-bold uppercase tracking-wider text-zinc-600 mb-4 group-hover:bg-amber-100 group-hover:text-amber-800 transition-colors">
+                                    {{ $program->level?->name ?? 'Program' }}
+                                </span>
+                                
+                                <h3 class="text-2xl font-bold font-heading text-zinc-900 mb-4 tracking-tight">{{ $program->name }}</h3>
+                                
+                                <div class="flex items-center gap-2 mb-6 text-zinc-500 text-xs font-medium">
+                                    <svg class="h-4 w-4 text-amber-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"/>
+                                    </svg>
+                                    <span>{{ $program->duration }}</span>
+                                </div>
+
+                                <p class="text-zinc-500 text-sm leading-relaxed mb-8 line-clamp-3">
+                                    {{ $program->description }}
+                                </p>
+
+                                <a 
+                                    href="{{ route('public.programs.show', $program->slug) }}" 
+                                    class="mt-auto inline-flex items-center gap-2 rounded-2xl bg-zinc-900 px-6 py-3 text-sm font-semibold text-white transition-all hover:bg-amber-500 hover:shadow-xl hover:shadow-amber-500/20 group/btn"
+                                >
+                                    Lihat Detail
+                                    <svg class="h-4 w-4 transform group-hover/btn:translate-x-1 transition-transform" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"/>
+                                    </svg>
+                                </a>
                             </div>
                         </div>
                     @endforeach

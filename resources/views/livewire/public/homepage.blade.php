@@ -207,21 +207,21 @@ new #[Layout('components.public.layouts.public')] class extends Component {
                     </p>
                 </div>
 
-                <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+                <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 justify-center">
                     @foreach($programs as $program)
-                        <a href="{{ route('public.programs.show', $program->slug) }}" class="group block bg-white rounded-3xl p-6 ring-1 ring-zinc-200/50 shadow-sm hover:shadow-xl hover:ring-zinc-200 transition-all duration-300 hover:-translate-y-1">
-                            <div class="w-14 h-14 rounded-2xl bg-zinc-900 text-white flex items-center justify-center mb-6 shadow-md group-hover:bg-amber-500 transition-colors">
+                        <a href="{{ route('public.programs.show', $program->slug) }}" class="group flex flex-col items-center text-center bg-white rounded-3xl p-8 ring-1 ring-zinc-200/50 shadow-sm hover:shadow-xl hover:ring-zinc-200 transition-all duration-300 hover:-translate-y-1">
+                            <div class="w-16 h-16 rounded-2xl bg-zinc-900 text-white flex items-center justify-center mb-6 shadow-md group-hover:bg-amber-500 transition-colors">
                                 @if($program->image_path)
-                                    <svg class="w-7 h-7" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477 4.5 1.253v13C19.832 18.477 18.246 18 16.5 18c-1.746 0-3.332.477-4.5 1.253" /></svg>
+                                    <img src="{{ Storage::url($program->image_path) }}" alt="{{ $program->name }}" class="w-full h-full object-cover rounded-2xl">
                                 @else
-                                    <span class="text-2xl font-bold font-heading">{{ Str::upper(Str::substr($program->name, 0, 1)) }}</span>
+                                    <span class="text-3xl font-bold font-heading">{{ Str::upper(Str::substr($program->name, 0, 1)) }}</span>
                                 @endif
                             </div>
                             <h3 class="text-xl font-bold text-zinc-900 mb-2 font-heading tracking-tight">
                                 {{ $program->name }}
                             </h3>
-                            <div class="inline-flex items-center rounded-full bg-zinc-100 px-2.5 py-0.5 text-xs font-semibold text-zinc-800 mb-4">
-                                {{ Str::upper($program->level) }}
+                            <div class="inline-flex items-center rounded-full bg-zinc-100 px-3 py-1 text-xs font-semibold text-zinc-800 mb-4">
+                                {{ $program->level?->name }}
                             </div>
                             <p class="text-zinc-500 text-sm line-clamp-3 leading-relaxed">
                                 {{ Str::limit($program->description, 100) }}

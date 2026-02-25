@@ -183,25 +183,31 @@ new #[Layout('components.admin.layouts.app')] class extends Component
 
 <div>
     <div class="mb-6">
-        <flux:heading size="xl">Program Pendidikan</flux:heading>
-        <flux:subheading>Kelola profil program pendidikan untuk setiap jenjang</flux:subheading>
+        <x-ts-text size="xl" color="neutral" weight="bold">Program Pendidikan</x-ts-text>
+        <x-ts-text size="sm" color="neutral">Kelola profil program pendidikan untuk setiap jenjang</x-ts-text>
     </div>
 
     @if (session()->has('message'))
-        <flux:callout color="green" icon="check-circle" class="mb-6">
-            {{ session('message') }}
-        </flux:callout>
+        <x-ts-alert title="Sukses" text="{{ session('message') }}" color="green" icon="check-circle" class="mb-6" close />
     @endif
 
     {{-- Form --}}
-    <div class="mb-8 rounded-lg border border-zinc-200 bg-white p-6 dark:border-zinc-700 dark:bg-zinc-800">
-        <flux:heading size="lg" class="mb-4">
-            {{ $editingId ? 'Edit Program' : 'Tambah Program Baru' }}
-        </flux:heading>
+    <x-ts-card class="mb-8">
+        <x-slot:header>
+            <x-ts-text size="lg" weight="bold">
+                {{ $editingId ? 'Edit Program' : 'Tambah Program Baru' }}
+            </x-ts-text>
+        </x-slot:header>
 
         <form wire:submit="save" class="space-y-4">
             <div class="grid grid-cols-1 gap-4 md:grid-cols-2">
-                <flux:select wire:model="level_id" label="Jenjang Pendidikan" required placeholder="Pilih Jenjang...">
+                <x-ts-select.native 
+                    wire:model="level_id" 
+                    label="Jenjang Pendidikan" 
+                    required 
+                    placeholder="Pilih Jenjang..."
+                >
+                    <option value="">Pilih Jenjang...</option>
                     @foreach ($levels as $level)
                         @php $isUsed = in_array($level->id, $usedLevelIds); @endphp
                         <option 
@@ -212,25 +218,24 @@ new #[Layout('components.admin.layouts.app')] class extends Component
                             {{ $level->name }} {{ $isUsed ? '(sudah ada program)' : '' }}
                         </option>
                     @endforeach
-                </flux:select>
+                </x-ts-select.native>
 
-                <flux:input 
+                <x-ts-input 
                     wire:model="duration" 
                     label="Durasi" 
-                    type="text" 
                     required 
                     placeholder="Contoh: 6 bulan, 1 tahun"
                 />
             </div>
 
-            <flux:input 
+            <x-ts-input 
                 wire:model="image" 
                 label="Gambar Program" 
                 type="file" 
                 accept="image/jpeg,image/jpg,image/png,image/webp"
             />
 
-            <flux:textarea 
+            <x-ts-textarea 
                 wire:model="description" 
                 label="Deskripsi" 
                 rows="4" 
@@ -238,7 +243,7 @@ new #[Layout('components.admin.layouts.app')] class extends Component
                 placeholder="Jelaskan tentang program ini..."
             />
 
-            <flux:textarea 
+            <x-ts-textarea 
                 wire:model="requirements" 
                 label="Persyaratan (Opsional)" 
                 rows="3" 
@@ -246,120 +251,116 @@ new #[Layout('components.admin.layouts.app')] class extends Component
             />
 
             <div class="flex items-center gap-2">
-                <flux:checkbox wire:model="is_active" />
-                <flux:text>Program aktif (ditampilkan di website)</flux:text>
+                <x-ts-checkbox wire:model="is_active" label="Program aktif (ditampilkan di website)" />
             </div>
 
             <div class="flex justify-end gap-3">
                 @if ($editingId)
-                    <flux:button wire:click="cancelEdit" variant="ghost">
+                    <x-ts-button wire:click="cancelEdit" color="neutral" variant="ghost">
                         Batal
-                    </flux:button>
+                    </x-ts-button>
                 @endif
-                <flux:button 
-                    variant="primary" 
+                <x-ts-button 
+                    color="primary" 
                     type="submit" 
                     wire:loading.attr="disabled"
                 >
                     <span wire:loading.remove>{{ $editingId ? 'Perbarui' : 'Simpan' }}</span>
                     <span wire:loading>Menyimpan...</span>
-                </flux:button>
+                </x-ts-button>
             </div>
         </form>
-    </div>
+    </x-ts-card>
 
     {{-- Programs List --}}
     @if ($programs->isEmpty())
-        <div class="rounded-lg border border-zinc-200 bg-white p-12 text-center dark:border-zinc-700 dark:bg-zinc-800">
-            <flux:text class="text-zinc-500 dark:text-zinc-400">
+        <x-ts-card class="p-12 text-center">
+            <x-ts-text color="neutral">
                 Belum ada program pendidikan. Tambahkan program pertama Anda!
-            </flux:text>
-        </div>
+            </x-ts-text>
+        </x-ts-card>
     @else
-        <div class="space-y-4">
+        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 justify-center">
             @foreach ($programs as $program)
-                <div class="rounded-lg border border-zinc-200 bg-white p-6 dark:border-zinc-700 dark:bg-zinc-800">
-                    <div class="flex items-start gap-6">
-                        {{-- Image --}}
-                        @if ($program->image_path)
-                            <div class="flex-shrink-0">
+                <x-ts-card wire:key="program-{{ $program->id }}" class="flex flex-col items-center">
+                    <div class="flex flex-col items-center w-full text-center">
+                        {{-- Icon/Avatar --}}
+                        <div class="mb-4">
+                            @if ($program->image_path)
                                 <img 
                                     src="{{ Storage::url($program->image_path) }}" 
                                     alt="{{ $program->name }}"
-                                    class="h-24 w-32 rounded-lg object-cover"
+                                    class="h-24 w-24 rounded-2xl object-cover shadow-sm border border-zinc-200 dark:border-zinc-700"
                                 >
-                            </div>
-                        @endif
-
-                        {{-- Content --}}
-                        <div class="flex-1">
-                            <div class="mb-2 flex items-start justify-between">
-                                <div>
-                                    <flux:heading size="lg" class="mb-1">{{ $program->name }}</flux:heading>
-                                    <div class="flex items-center gap-4 text-sm text-zinc-600 dark:text-zinc-400">
-                                        <span>{{ $program->level?->name ?? '-' }}</span>
-                                        <span>•</span>
-                                        <span>{{ $program->duration }}</span>
-                                        <span>•</span>
-                                        @if ($program->is_active)
-                                            <flux:badge color="green" size="sm">Aktif</flux:badge>
-                                        @else
-                                            <flux:badge color="zinc" size="sm">Tidak Aktif</flux:badge>
-                                        @endif
-                                    </div>
-                                </div>
-
-                                {{-- Action Buttons --}}
-                                <div class="flex gap-2">
-                                    <flux:button 
-                                        wire:click="moveUp({{ $program->id }})" 
-                                        variant="ghost" 
-                                        size="sm"
-                                        title="Pindah ke atas"
-                                    >
-                                        ↑
-                                    </flux:button>
-                                    <flux:button 
-                                        wire:click="moveDown({{ $program->id }})" 
-                                        variant="ghost" 
-                                        size="sm"
-                                        title="Pindah ke bawah"
-                                    >
-                                        ↓
-                                    </flux:button>
-                                    <flux:button 
-                                        wire:click="edit({{ $program->id }})" 
-                                        variant="ghost" 
-                                        size="sm"
-                                    >
-                                        Edit
-                                    </flux:button>
-                                    <flux:button 
-                                        wire:click="delete({{ $program->id }})" 
-                                        variant="danger" 
-                                        size="sm"
-                                        wire:confirm="Apakah Anda yakin ingin menghapus program ini?"
-                                    >
-                                        Hapus
-                                    </flux:button>
-                                </div>
-                            </div>
-
-                            <flux:text class="mb-3">{{ $program->description }}</flux:text>
-
-                            @if ($program->requirements)
-                                <div class="rounded-lg bg-zinc-50 p-3 dark:bg-zinc-900">
-                                    <flux:text class="text-sm font-medium text-zinc-700 dark:text-zinc-300">
-                                        Persyaratan:
-                                    </flux:text>
-                                    <flux:text class="text-sm text-zinc-600 dark:text-zinc-400">
-                                        {{ $program->requirements }}
-                                    </flux:text>
+                            @else
+                                <div class="flex h-20 w-20 items-center justify-center rounded-2xl bg-zinc-900 text-2xl font-bold text-white shadow-md">
+                                    {{ substr($program->name, 0, 1) }}
                                 </div>
                             @endif
                         </div>
+
+                        {{-- Content --}}
+                        <div class="space-y-2 w-full">
+                            <x-ts-text size="lg" weight="bold" class="block truncate">{{ $program->name }}</x-ts-text>
+                            
+                            <div class="flex flex-col items-center gap-2">
+                                <x-ts-text size="sm" color="neutral" weight="medium">{{ $program->level?->name ?? '-' }}</x-ts-text>
+                                <div class="flex items-center gap-2">
+                                    <x-ts-badge color="neutral" light size="sm">{{ $program->duration }}</x-ts-badge>
+                                    @if ($program->is_active)
+                                        <x-ts-badge color="green" size="sm">Aktif</x-ts-badge>
+                                    @else
+                                        <x-ts-badge color="neutral" size="sm">Tidak Aktif</x-ts-badge>
+                                    @endif
+                                </div>
+                            </div>
+
+                            <x-ts-text size="sm" class="mt-4 line-clamp-2 text-zinc-600 dark:text-zinc-400">
+                                {{ $program->description }}
+                            </x-ts-text>
+
+                            {{-- Action Buttons --}}
+                            <div class="flex justify-center gap-2 mt-6">
+                                <div class="flex gap-1 mr-2 border-r pr-2 border-zinc-200 dark:border-zinc-700">
+                                    <x-ts-button.circle 
+                                        wire:click="moveUp({{ $program->id }})" 
+                                        icon="chevron-up" 
+                                        size="xs"
+                                        color="neutral"
+                                        variant="ghost"
+                                        title="Pindah ke atas"
+                                    />
+                                    <x-ts-button.circle 
+                                        wire:click="moveDown({{ $program->id }})" 
+                                        icon="chevron-down" 
+                                        size="xs"
+                                        color="neutral"
+                                        variant="ghost"
+                                        title="Pindah ke bawah"
+                                    />
+                                </div>
+                                
+                                <x-ts-button 
+                                    wire:click="edit({{ $program->id }})" 
+                                    size="sm"
+                                    color="neutral"
+                                    variant="outline"
+                                >
+                                    Edit
+                                </x-ts-button>
+                                <x-ts-button 
+                                    wire:click="delete({{ $program->id }})" 
+                                    size="sm"
+                                    color="red"
+                                    variant="ghost"
+                                    wire:confirm="Apakah Anda yakin ingin menghapus program ini?"
+                                >
+                                    Hapus
+                                </x-ts-button>
+                            </div>
+                        </div>
                     </div>
-                </div>
+                </x-ts-card>
             @endforeach
         </div>
     @endif
