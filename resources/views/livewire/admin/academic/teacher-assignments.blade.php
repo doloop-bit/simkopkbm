@@ -8,7 +8,7 @@ use App\Models\Classroom;
 use App\Models\Subject;
 use App\Models\User;
 use Livewire\Attributes\Layout;
-use Livewire\Volt\Component;
+use Livewire\Component;
 
 new #[Layout('components.admin.layouts.app')] class extends Component {
     public ?int $academic_year_id = null;

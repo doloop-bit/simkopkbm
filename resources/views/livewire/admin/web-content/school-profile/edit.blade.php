@@ -3,7 +3,7 @@
 use App\Models\SchoolProfile;
 use App\Services\CacheService;
 use Illuminate\Support\Facades\Storage;
-use Livewire\Volt\Component;
+use Livewire\Component;
 use Livewire\WithFileUploads;
 
 new class extends Component {
@@ -157,224 +157,205 @@ new class extends Component {
 }; ?>
 
 <div>
-    <flux:heading size="xl">Profil Sekolah</flux:heading>
-    <flux:subheading>Kelola informasi profil sekolah yang ditampilkan di website publik</flux:subheading>
+    <div class="p-6">
+    <x-header title="Profil Sekolah" subtitle="Kelola informasi profil sekolah yang ditampilkan di website publik" separator />
 
     @if (session()->has('message'))
-        <flux:callout color="green" icon="check-circle" class="mt-6">
+        <x-alert title="Sukses" icon="o-check-circle" class="alert-success mb-6">
             {{ session('message') }}
-        </flux:callout>
+        </x-alert>
     @endif
 
-    <form wire:submit="save" class="mt-6 space-y-8">
+    <form wire:submit="save" class="space-y-8">
         {{-- Informasi Dasar --}}
-        <div class="space-y-4">
-            <flux:heading size="lg">Informasi Dasar</flux:heading>
-            <flux:subheading class="mb-4">Informasi umum tentang sekolah</flux:subheading>
-
-            <flux:input 
-                wire:model="name" 
-                label="Nama Sekolah" 
-                type="text" 
-                required 
-                placeholder="Contoh: PKBM Harapan Bangsa"
-            />
-
-            <flux:textarea 
-                wire:model="address" 
-                label="Alamat Lengkap" 
-                rows="3" 
-                required 
-                placeholder="Masukkan alamat lengkap sekolah"
-            />
-
-            <div class="grid grid-cols-1 gap-4 md:grid-cols-2">
-                <flux:input 
-                    wire:model="phone" 
-                    label="Nomor Telepon" 
+        <x-card title="Informasi Dasar" subtitle="Informasi umum tentang sekolah" separator shadow>
+            <div class="space-y-4">
+                <x-input 
+                    wire:model="name" 
+                    label="Nama Sekolah" 
                     type="text" 
                     required 
-                    placeholder="Contoh: 021-12345678"
+                    placeholder="Contoh: PKBM Harapan Bangsa"
                 />
 
-                <flux:input 
-                    wire:model="email" 
-                    label="Email" 
-                    type="email" 
+                <x-textarea 
+                    wire:model="address" 
+                    label="Alamat Lengkap" 
+                    rows="3" 
                     required 
-                    placeholder="Contoh: info@sekolah.com"
+                    placeholder="Masukkan alamat lengkap sekolah"
+                />
+
+                <div class="grid grid-cols-1 gap-4 md:grid-cols-2">
+                    <x-input 
+                        wire:model="phone" 
+                        label="Nomor Telepon" 
+                        type="text" 
+                        required 
+                        placeholder="Contoh: 021-12345678"
+                    />
+
+                    <x-input 
+                        wire:model="email" 
+                        label="Email" 
+                        type="email" 
+                        required 
+                        placeholder="Contoh: info@sekolah.com"
+                    />
+                </div>
+
+                <x-input 
+                    wire:model="operating_hours" 
+                    label="Jam Operasional" 
+                    type="text" 
+                    placeholder="Contoh: Senin - Jumat, 08:00 - 16:00"
+                    icon="o-clock"
                 />
             </div>
-
-            <flux:input 
-                wire:model="operating_hours" 
-                label="Jam Operasional" 
-                type="text" 
-                placeholder="Contoh: Senin - Jumat, 08:00 - 16:00"
-            />
-        </div>
-
-        <flux:separator />
+        </x-card>
 
         {{-- Logo Sekolah --}}
-        <div class="space-y-4">
-            <flux:heading size="lg">Logo Sekolah</flux:heading>
-            <flux:subheading class="mb-4">Upload logo sekolah (maksimal 5MB, format: JPEG, PNG, WebP)</flux:subheading>
-
-            @if ($currentLogoPath)
-                <div class="flex items-start gap-4">
-                    <img 
-                        src="{{ Storage::url($currentLogoPath) }}" 
-                        alt="Logo Sekolah" 
-                        class="h-32 w-32 rounded-lg border object-contain"
-                    >
-                    <div class="flex flex-col gap-2">
-                        <flux:text>Logo saat ini</flux:text>
-                        <flux:button 
-                            wire:click="removeLogo" 
-                            variant="danger" 
-                            size="sm"
-                            type="button"
-                            wire:confirm="Apakah Anda yakin ingin menghapus logo?"
+        <x-card title="Logo Sekolah" subtitle="Upload logo sekolah (maksimal 5MB, format: JPEG, PNG, WebP)" separator shadow>
+            <div class="space-y-6">
+                @if ($currentLogoPath)
+                    <div class="flex items-start gap-4 p-4 bg-base-200 rounded-lg">
+                        <img 
+                            src="{{ Storage::url($currentLogoPath) }}" 
+                            alt="Logo Sekolah" 
+                            class="h-32 w-32 rounded-lg border border-base-300 object-contain bg-white"
                         >
-                            Hapus Logo
-                        </flux:button>
+                        <div class="flex flex-col gap-2">
+                            <span class="text-sm font-medium">Logo saat ini</span>
+                            <x-button 
+                                wire:click="removeLogo" 
+                                label="Hapus Logo"
+                                icon="o-trash"
+                                class="btn-error btn-sm"
+                                wire:confirm="Apakah Anda yakin ingin menghapus logo?"
+                            />
+                        </div>
                     </div>
-                </div>
-            @endif
+                @endif
 
-            <div>
-                <flux:input 
+                <x-file 
                     wire:model="logo" 
                     label="Upload Logo Baru" 
-                    type="file" 
                     accept="image/jpeg,image/jpg,image/png,image/webp"
-                />
-                @if ($logo)
-                    <flux:text class="mt-2 text-sm">
-                        File dipilih: {{ $logo->getClientOriginalName() }}
-                    </flux:text>
-                @endif
+                    crop-after-change
+                >
+                     @if ($logo)
+                        <div class="text-sm mt-2">
+                            File dipilih: <span class="font-medium">{{ $logo->getClientOriginalName() }}</span>
+                        </div>
+                    @endif
+                </x-file>
             </div>
-
-            <div wire:loading wire:target="logo" class="text-sm text-zinc-600 dark:text-zinc-400">
-                Mengunggah file...
-            </div>
-        </div>
-
-        <flux:separator />
+        </x-card>
 
         {{-- Visi & Misi --}}
-        <div class="space-y-4">
-            <flux:heading size="lg">Visi & Misi</flux:heading>
-            <flux:subheading class="mb-4">Visi dan misi sekolah</flux:subheading>
+        <x-card title="Visi & Misi" subtitle="Visi dan misi sekolah" separator shadow>
+            <div class="space-y-4">
+                <x-textarea 
+                    wire:model="vision" 
+                    label="Visi" 
+                    rows="4" 
+                    required 
+                    placeholder="Masukkan visi sekolah"
+                />
 
-            <flux:textarea 
-                wire:model="vision" 
-                label="Visi" 
-                rows="4" 
-                required 
-                placeholder="Masukkan visi sekolah"
-            />
-
-            <flux:textarea 
-                wire:model="mission" 
-                label="Misi" 
-                rows="6" 
-                required 
-                placeholder="Masukkan misi sekolah"
-            />
-        </div>
-
-        <flux:separator />
+                <x-textarea 
+                    wire:model="mission" 
+                    label="Misi" 
+                    rows="6" 
+                    required 
+                    placeholder="Masukkan misi sekolah"
+                />
+            </div>
+        </x-card>
 
         {{-- Sejarah --}}
-        <div class="space-y-4">
-            <flux:heading size="lg">Sejarah</flux:heading>
-            <flux:subheading class="mb-4">Sejarah singkat sekolah (opsional)</flux:subheading>
-
-            <flux:textarea 
+        <x-card title="Sejarah" subtitle="Sejarah singkat sekolah (opsional)" separator shadow>
+            <x-textarea 
                 wire:model="history" 
                 label="Sejarah Sekolah" 
                 rows="6" 
                 placeholder="Masukkan sejarah singkat sekolah"
             />
-        </div>
-
-        <flux:separator />
+        </x-card>
 
         {{-- Media Sosial --}}
-        <div class="space-y-4">
-            <flux:heading size="lg">Media Sosial</flux:heading>
-            <flux:subheading class="mb-4">Link ke akun media sosial sekolah (opsional)</flux:subheading>
-
-            <flux:input 
-                wire:model="facebook_url" 
-                label="Facebook" 
-                type="url" 
-                placeholder="https://facebook.com/namaakun"
-            />
-
-            <flux:input 
-                wire:model="instagram_url" 
-                label="Instagram" 
-                type="url" 
-                placeholder="https://instagram.com/namaakun"
-            />
-
-            <flux:input 
-                wire:model="youtube_url" 
-                label="YouTube" 
-                type="url" 
-                placeholder="https://youtube.com/@namaakun"
-            />
-
-            <flux:input 
-                wire:model="twitter_url" 
-                label="Twitter/X" 
-                type="url" 
-                placeholder="https://twitter.com/namaakun"
-            />
-        </div>
-
-        <flux:separator />
-
-        {{-- Lokasi --}}
-        <div class="space-y-4">
-            <flux:heading size="lg">Lokasi</flux:heading>
-            <flux:subheading class="mb-4">Koordinat lokasi untuk Google Maps (opsional)</flux:subheading>
-
-            <div class="grid grid-cols-1 gap-4 md:grid-cols-2">
-                <flux:input 
-                    wire:model="latitude" 
-                    label="Latitude" 
-                    type="text" 
-                    placeholder="Contoh: -6.200000"
+        <x-card title="Media Sosial" subtitle="Link ke akun media sosial sekolah (opsional)" separator shadow>
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <x-input 
+                    wire:model="facebook_url" 
+                    label="Facebook" 
+                    type="url" 
+                    placeholder="https://facebook.com/namaakun"
+                    icon="o-link"
                 />
 
-                <flux:input 
-                    wire:model="longitude" 
-                    label="Longitude" 
-                    type="text" 
-                    placeholder="Contoh: 106.816666"
+                <x-input 
+                    wire:model="instagram_url" 
+                    label="Instagram" 
+                    type="url" 
+                    placeholder="https://instagram.com/namaakun"
+                    icon="o-link"
+                />
+
+                <x-input 
+                    wire:model="youtube_url" 
+                    label="YouTube" 
+                    type="url" 
+                    placeholder="https://youtube.com/@namaakun"
+                    icon="o-link"
+                />
+
+                <x-input 
+                    wire:model="twitter_url" 
+                    label="Twitter/X" 
+                    type="url" 
+                    placeholder="https://twitter.com/namaakun"
+                    icon="o-link"
                 />
             </div>
+        </x-card>
 
-            <flux:text class="mt-2 text-sm">
-                Tip: Anda bisa mendapatkan koordinat dari Google Maps dengan klik kanan pada lokasi dan pilih koordinat.
-            </flux:text>
-        </div>
+        {{-- Lokasi --}}
+        <x-card title="Lokasi" subtitle="Koordinat lokasi untuk Google Maps (opsional)" separator shadow>
+            <div class="space-y-4">
+                <div class="grid grid-cols-1 gap-4 md:grid-cols-2">
+                    <x-input 
+                        wire:model="latitude" 
+                        label="Latitude" 
+                        type="text" 
+                        placeholder="Contoh: -6.200000"
+                        icon="o-map-pin"
+                    />
+
+                    <x-input 
+                        wire:model="longitude" 
+                        label="Longitude" 
+                        type="text" 
+                        placeholder="Contoh: 106.816666"
+                        icon="o-map-pin"
+                    />
+                </div>
+
+                <x-alert icon="o-information-circle" class="bg-base-200 border-base-300">
+                    Tip: Anda bisa mendapatkan koordinat dari Google Maps dengan klik kanan pada lokasi dan pilih koordinat.
+                </x-alert>
+            </div>
+        </x-card>
 
         {{-- Submit Button --}}
         <div class="flex items-center justify-end gap-4 pt-6">
-            <flux:button 
-                variant="primary" 
+            <x-button 
+                label="Simpan Profil"
+                class="btn-primary" 
                 type="submit" 
-                wire:loading.attr="disabled"
-            >
-                <span wire:loading.remove wire:target="save">Simpan Profil</span>
-                <span wire:loading wire:target="save">Menyimpan...</span>
-            </flux:button>
+                spinner="save"
+            />
         </div>
     </form>
+</div>
 </div>

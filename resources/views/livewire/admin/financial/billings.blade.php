@@ -8,7 +8,7 @@ use App\Models\StudentBilling;
 use App\Models\AcademicYear;
 use App\Models\Classroom;
 use Livewire\Attributes\Layout;
-use Livewire\Volt\Component;
+use Livewire\Component;
 use Livewire\WithPagination;
 
 new #[Layout('components.admin.layouts.app')] class extends Component {

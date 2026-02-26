@@ -6,7 +6,7 @@ use App\Models\StudentFeeDiscount;
 use App\Models\User;
 use App\Models\FeeCategory;
 use Livewire\Attributes\Layout;
-use Livewire\Volt\Component;
+use Livewire\Component;
 use Livewire\WithPagination;
 
 new #[Layout('components.admin.layouts.app')] class extends Component {

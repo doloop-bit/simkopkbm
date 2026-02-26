@@ -5,7 +5,7 @@ declare(strict_types=1);
 use App\Models\FeeCategory;
 use App\Models\Level;
 use Livewire\Attributes\Layout;
-use Livewire\Volt\Component;
+use Livewire\Component;
 use Livewire\WithPagination;
 
 new #[Layout('components.admin.layouts.app')] class extends Component {

@@ -7,7 +7,7 @@ use App\Models\AcademicYear;
 use App\Models\Level;
 use App\Models\StudentProfile;
 use Livewire\Attributes\Layout;
-use Livewire\Volt\Component;
+use Livewire\Component;
 use Illuminate\Support\Facades\DB;
 
 new #[Layout('components.admin.layouts.app')] class extends Component {

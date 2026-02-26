@@ -4,7 +4,7 @@ declare(strict_types=1);
 
 use App\Models\Level;
 use Livewire\Attributes\Layout;
-use Livewire\Volt\Component;
+use Livewire\Component;
 
 new #[Layout('components.admin.layouts.app')] class extends Component {
     public string $name = '';
@@ -81,92 +81,100 @@ new #[Layout('components.admin.layouts.app')] class extends Component {
 }; ?>
 
 <div class="p-6">
-    <div class="flex items-center justify-between mb-6">
-        <div>
-            <flux:heading size="xl" level="1">Jenjang Pendidikan</flux:heading>
-            <flux:subheading>Atur jenjang SPP dan skema pengajaran (Guru Kelas vs Mata Pelajaran).</flux:subheading>
-        </div>
-
-        <flux:button variant="primary" icon="plus" wire:click="createNew" wire:loading.attr="disabled">Tambah Jenjang</flux:button>
-    </div>
+    <x-header title="Jenjang Pendidikan" subtitle="Atur jenjang SPP dan skema pengajaran (Guru Kelas vs Mata Pelajaran)." separator>
+        <x-slot:actions>
+            <x-button label="Tambah Jenjang" icon="o-plus" class="btn-primary" wire:click="createNew" wire:loading.attr="disabled" @click="$dispatch('open-modal', 'level-modal')" />
+        </x-slot:actions>
+    </x-header>
 
     <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
         @foreach ($levels as $level)
-            <div wire:key="{{ $level->id }}" class="p-6 border rounded-xl border-zinc-200 dark:border-zinc-700 bg-white dark:bg-zinc-900 shadow-sm flex flex-col justify-between">
-                <div>
-                    <div class="flex items-start justify-between">
-                        <div>
-                            <flux:heading size="lg">{{ $level->name }}</flux:heading>
-                            <flux:text class="text-xs font-bold text-blue-600 uppercase">
-                                {{ match($level->education_level) {
-                                    'paud' => 'PAUD',
-                                    'sd' => 'Paket A',
-                                    'smp' => 'Paket B',
-                                    'sma' => 'Paket C',
-                                    default => 'Lainnya',
-                                } }}
-                            </flux:text>
+            <x-card wire:key="{{ $level->id }}" class="shadow-sm border border-base-200">
+                <div class="flex items-start justify-between">
+                    <div>
+                        <h3 class="text-lg font-bold">{{ $level->name }}</h3>
+                        <div class="text-[10px] font-bold text-primary uppercase tracking-widest mt-1">
+                            {{ match($level->education_level) {
+                                'paud' => 'PAUD',
+                                'sd' => 'Paket A',
+                                'smp' => 'Paket B',
+                                'sma' => 'Paket C',
+                                default => 'Lainnya',
+                            } }}
                         </div>
-                        <flux:badge variant="{{ $level->type === 'class_teacher' ? 'success' : 'info' }}" size="sm">
-                            {{ $level->type === 'class_teacher' ? 'Guru Kelas' : 'Guru Mapel' }}
-                        </flux:badge>
                     </div>
-                    <flux:text class="mt-2 text-sm">
-                        {{ $level->type === 'class_teacher' ? 'Satu guru mengampu semua mata pelajaran.' : 'Satu mata pelajaran diampu oleh satu guru spesialis.' }}
-                    </flux:text>
-                    
-
+                    <x-badge 
+                        :label="$level->type === 'class_teacher' ? 'Guru Kelas' : 'Guru Mapel'" 
+                        class="{{ $level->type === 'class_teacher' ? 'badge-success' : 'badge-info' }} badge-sm" 
+                    />
                 </div>
 
-                <div class="mt-6 flex justify-end gap-2">
-                    <flux:button size="sm" variant="ghost" icon="pencil-square" wire:click="edit({{ $level->id }})" wire:loading.attr="disabled" />
-                    <flux:button size="sm" variant="ghost" icon="trash" class="text-red-500" wire:confirm="Yakin ingin menghapus jenjang ini?" wire:click="delete({{ $level->id }})" />
+                <div class="mt-4 text-xs opacity-60">
+                    {{ $level->type === 'class_teacher' ? 'Satu guru mengampu semua mata pelajaran.' : 'Satu mata pelajaran diampu oleh satu guru spesialis.' }}
                 </div>
-            </div>
+
+                <x-slot:actions>
+                    <x-button icon="o-pencil-square" wire:click="edit({{ $level->id }})" ghost sm wire:loading.attr="disabled" @click="$dispatch('open-modal', 'level-modal')" />
+                    <x-button 
+                        icon="o-trash" 
+                        class="text-error" 
+                        wire:confirm="Yakin ingin menghapus jenjang ini?" 
+                        wire:click="delete({{ $level->id }})" 
+                        ghost sm 
+                    />
+                </x-slot:actions>
+            </x-card>
         @endforeach
     </div>
 
-    <flux:modal name="level-modal" class="max-w-md" @open-level-modal.window="$flux.modal('level-modal').show()" x-on:level-saved.window="$flux.modal('level-modal').close()">
-        <form wire:submit="save" class="space-y-6">
-            <div>
-                <flux:heading size="lg">{{ $editing ? 'Edit Jenjang' : 'Tambah Jenjang Baru' }}</flux:heading>
-                <flux:subheading>Lengkapi detail jenjang pendidikan di bawah ini.</flux:subheading>
-            </div>
+    <x-modal id="level-modal" class="backdrop-blur" persistent>
+        <x-header :title="$editing ? 'Edit Jenjang' : 'Tambah Jenjang Baru'" subtitle="Lengkapi detail jenjang pendidikan di bawah ini." separator />
 
-            <flux:input wire:model="name" label="Nama Jenjang (Contoh: PAUD Al-Ishlah, Paket B Utama)" required />
+        <form wire:submit="save">
+            <div class="space-y-4">
+                <x-input wire:model="name" label="Nama Jenjang (Contoh: PAUD Al-Ishlah, Paket B Utama)" required />
 
-            <flux:select wire:model.live="education_level" label="Tingkat Pendidikan" required>
-                <option value="paud">PAUD / TK</option>
-                <option value="sd">SD / Paket A</option>
-                <option value="smp">SMP / Paket B</option>
-                <option value="sma">SMA / Paket C</option>
-            </flux:select>
+                <x-select 
+                    wire:model.live="education_level" 
+                    label="Tingkat Pendidikan" 
+                    :options="[
+                        ['id' => 'paud', 'name' => 'PAUD / TK'],
+                        ['id' => 'sd', 'name' => 'SD / Paket A'],
+                        ['id' => 'smp', 'name' => 'SMP / Paket B'],
+                        ['id' => 'sma', 'name' => 'SMA / Paket C'],
+                    ]" 
+                    required 
+                />
 
-            <flux:radio.group wire:model="type" label="Skema Pengajaran" class="flex flex-col gap-2">
-                <flux:radio value="class_teacher" label="Sistem Guru Kelas" />
-                <flux:radio value="subject_teacher" label="Sistem Guru Mata Pelajaran" />
-            </flux:radio.group>
-
-            @if(!empty($phase_map))
-                <div class="p-4 rounded-lg bg-zinc-50 dark:bg-zinc-800 border border-zinc-200 dark:border-zinc-700">
-                    <flux:heading size="sm" class="mb-2">Preview Tingkat Kelas (Kurikulum Merdeka)</flux:heading>
-                    <div class="grid grid-cols-2 gap-2">
-                        @foreach($phase_map as $grade => $phase)
-                            <div class="text-xs flex justify-between">
-                                <span class="text-zinc-500">Tingkat {{ $grade }}</span>
-                                <span class="font-bold">Fase {{ $phase }}</span>
-                            </div>
-                        @endforeach
-                    </div>
+                <div class="space-y-2">
+                    <div class="text-sm font-medium">Skema Pengajaran</div>
+                    <x-radio 
+                        wire:model="type" 
+                        :options="[
+                            ['id' => 'class_teacher', 'label' => 'Sistem Guru Kelas'],
+                            ['id' => 'subject_teacher', 'label' => 'Sistem Guru Mata Pelajaran'],
+                        ]"
+                    />
                 </div>
-            @endif
 
-            <div class="flex justify-end gap-2">
-                <flux:modal.close>
-                    <flux:button variant="ghost">Batal</flux:button>
-                </flux:modal.close>
-                <flux:button type="submit" variant="primary">Simpan</flux:button>
+                @if(!empty($phase_map))
+                    <x-alert title="Preview Tingkat Kelas (Kurikulum Merdeka)" icon="o-information-circle" class="bg-base-200 shadow-inner">
+                        <div class="grid grid-cols-2 gap-x-4 gap-y-1 mt-2">
+                            @foreach($phase_map as $grade => $phase)
+                                <div class="text-[10px] flex justify-between">
+                                    <span class="opacity-50">Tingkat {{ $grade }}</span>
+                                    <span class="font-bold">Fase {{ $phase }}</span>
+                                </div>
+                            @endforeach
+                        </div>
+                    </x-alert>
+                @endif
             </div>
+
+            <x-slot:actions>
+                <x-button label="Batal" @click="$dispatch('close-modal', 'level-modal')" />
+                <x-button label="Simpan" type="submit" class="btn-primary" spinner="save" />
+            </x-slot:actions>
         </form>
-    </flux:modal>
+    </x-modal>
 </div>

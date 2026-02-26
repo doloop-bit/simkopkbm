@@ -10,7 +10,7 @@ use App\Models\BudgetPlan;
 use App\Models\BudgetPlanItem;
 use App\Models\AcademicYear;
 use Livewire\Attributes\Layout;
-use Livewire\Volt\Component;
+use Livewire\Component;
 use Illuminate\Support\Facades\DB;
 
 new #[Layout('components.admin.layouts.app')] class extends Component {
@@ -197,82 +197,69 @@ new #[Layout('components.admin.layouts.app')] class extends Component {
 
 <div class="p-6">
     <div class="mb-6 space-y-4">
-        <div>
-            <flux:heading size="xl" level="1">Transaksi Keuangan</flux:heading>
-            <flux:subheading>Catat Pemasukan (Pembayaran Siswa) dan Pengeluaran (Realisasi RAB).</flux:subheading>
-        </div>
+        <x-header title="Transaksi Keuangan" subtitle="Catat Pemasukan (Pembayaran Siswa) and Pengeluaran (Realisasi RAB)." separator />
         
-        <div class="bg-blue-50 dark:bg-blue-900/30 text-blue-800 dark:text-blue-300 p-4 rounded-lg flex gap-3 text-sm items-start shadow-sm border border-blue-100 dark:border-blue-800">
-            <flux:icon icon="information-circle" class="size-5 shrink-0 mt-0.5" />
-            <div>
-                <strong class="block mb-1">Tips Alur Keuangan:</strong>
-                <ol class="list-decimal pl-4 space-y-1">
-                    <li>Buat <strong class="font-medium">Kategori Biaya</strong> (SPP, Pendaftaran, dll).</li>
-                    <li>Generate <strong class="font-medium">Tagihan Siswa</strong> untuk menagih biaya ke siswa (opsional, karena transaksi ini juga dapat membuat tagihan secara otomatis).</li>
-                    <li>Berikan <strong class="font-medium">Potongan & Beasiswa</strong> jika diperlukan.</li>
-                    <li>Gunakan halaman ini untuk <strong class="font-medium">Input Transaksi</strong> (menerima uang atau mengeluarkan uang).</li>
-                </ol>
-            </div>
-        </div>
+        <x-alert title="Tips Alur Keuangan" icon="o-information-circle" class="bg-blue-50 dark:bg-blue-900/30 text-blue-800 dark:text-blue-300 border-blue-100 dark:border-blue-800">
+            <ol class="list-decimal pl-4 space-y-1 text-sm">
+                <li>Buat <strong class="font-medium">Kategori Biaya</strong> (SPP, Pendaftaran, dll).</li>
+                <li>Generate <strong class="font-medium">Tagihan Siswa</strong> untuk menagih biaya ke siswa (opsional, karena transaksi ini juga dapat membuat tagihan secara otomatis).</li>
+                <li>Berikan <strong class="font-medium">Potongan & Beasiswa</strong> jika diperlukan.</li>
+                <li>Gunakan halaman ini untuk <strong class="font-medium">Input Transaksi</strong> (menerima uang atau mengeluarkan uang).</li>
+            </ol>
+        </x-alert>
     </div>
 
     <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
         <div class="lg:col-span-1 space-y-6">
-            <div class="border rounded-lg p-5 bg-white dark:bg-zinc-900 shadow-sm">
-                <flux:heading level="2" size="lg" class="mb-4">Jenis Transaksi</flux:heading>
-                
-                <div class="flex gap-4 p-1 bg-zinc-100 dark:bg-zinc-800 rounded-lg">
+            <x-card title="Jenis Transaksi" shadow>
+                <div class="flex gap-4 p-1 bg-base-200 rounded-lg">
                     <button 
                         wire:click="$set('type', 'income')"
-                        class="flex-1 py-2 text-sm font-medium rounded-md transition-colors {{ $type === 'income' ? 'bg-white dark:bg-zinc-700 shadow flex items-center justify-center text-emerald-600 dark:text-emerald-400' : 'text-zinc-500 hover:text-zinc-700 dark:hover:text-zinc-300 flex items-center justify-center' }}"
+                        class="flex-1 py-2 text-sm font-medium rounded-md transition-all {{ $type === 'income' ? 'bg-base-100 shadow flex items-center justify-center text-success' : 'text-base-content/50 hover:text-base-content flex items-center justify-center' }}"
                     >
-                        <flux:icon icon="arrow-down-tray" variant="micro" class="mr-2" />
+                        <x-icon name="o-arrow-down-tray" class="mr-2 size-4" />
                         Pemasukan
                     </button>
                     <button 
                         wire:click="$set('type', 'expense')"
-                        class="flex-1 py-2 text-sm font-medium rounded-md transition-colors {{ $type === 'expense' ? 'bg-white dark:bg-zinc-700 shadow flex items-center justify-center text-red-600 dark:text-red-400' : 'text-zinc-500 hover:text-zinc-700 dark:hover:text-zinc-300 flex items-center justify-center' }}"
+                        class="flex-1 py-2 text-sm font-medium rounded-md transition-all {{ $type === 'expense' ? 'bg-base-100 shadow flex items-center justify-center text-error' : 'text-base-content/50 hover:text-base-content flex items-center justify-center' }}"
                     >
-                        <flux:icon icon="arrow-up-tray" variant="micro" class="mr-2" />
+                        <x-icon name="o-arrow-up-tray" class="mr-2 size-4" />
                         Pengeluaran
                     </button>
                 </div>
-            </div>
+            </x-card>
 
             @if($type === 'income')
-                <div class="border rounded-lg p-5 bg-white dark:bg-zinc-900 shadow-sm">
-                    <flux:heading level="2" size="lg" class="mb-4">Detail Pemasukan</flux:heading>
-                    
+                <x-card title="Detail Pemasukan" shadow>
                     <div class="space-y-4">
-                        <flux:select wire:model.live="fee_category_id" label="Kategori Biaya" placeholder="Pilih Kategori">
-                            @foreach($feeCategories as $category)
-                                <option value="{{ $category->id }}">{{ $category->name }}</option>
-                            @endforeach
-                        </flux:select>
+                        <x-select 
+                            wire:model.live="fee_category_id" 
+                            label="Kategori Biaya" 
+                            placeholder="Pilih Kategori" 
+                            :options="$feeCategories"
+                        />
                         
                         <div class="relative">
-                            <flux:input 
+                            <x-input 
                                 wire:model.live.debounce.300ms="student_search" 
                                 label="Cari Siswa"
                                 placeholder="Ketik nama siswa..." 
-                                icon="user" 
+                                icon="o-user" 
+                                clearable
+                                @clear="$wire.set('student_id', null); $wire.set('student_search', ''); $wire.checkExistingBilling()"
                             />
-                            @if($student_id)
-                                <button wire:click="$set('student_id', null); $set('student_search', ''); checkExistingBilling()" class="absolute right-2 top-[34px] p-1 text-zinc-400 hover:text-zinc-600">
-                                    <flux:icon icon="x-mark" variant="micro" />
-                                </button>
-                            @endif
                         </div>
 
                         @if(count($students) > 0)
-                            <div class="border rounded-md divide-y bg-white dark:bg-zinc-800 shadow-lg absolute z-10 w-full lg:w-[calc(33.333%-1rem)]">
+                            <div class="border rounded-md divide-y bg-base-100 shadow-lg absolute z-20 w-full lg:w-[calc(100%-3rem)] mt-1">
                                 @foreach($students as $student)
                                     <button 
                                         wire:click="selectStudent({{ $student->id }})"
-                                        class="w-full text-left px-4 py-2 hover:bg-zinc-100 dark:hover:bg-zinc-700 transition"
+                                        class="w-full text-left px-4 py-2 hover:bg-base-200 transition"
                                     >
-                                        <div class="font-medium dark:text-white">{{ $student->name }}</div>
-                                        <div class="text-xs text-zinc-500">{{ $student->email }}</div>
+                                        <div class="font-medium">{{ $student->name }}</div>
+                                        <div class="text-xs opacity-50">{{ $student->email }}</div>
                                     </button>
                                 @endforeach
                             </div>
@@ -280,147 +267,145 @@ new #[Layout('components.admin.layouts.app')] class extends Component {
 
                         @if($student_id && $fee_category_id)
                             @if($selectedBilling)
-                                <div class="mt-4 p-3 border border-emerald-200 bg-emerald-50 dark:bg-emerald-900/20 dark:border-emerald-800 rounded-lg">
+                                <div class="mt-4 p-3 border border-success/30 bg-success/10 rounded-lg">
                                     <div class="flex justify-between items-start mb-2">
-                                        <div class="text-sm font-medium text-emerald-800 dark:text-emerald-300">Tagihan Ditemukan</div>
-                                        <flux:badge size="sm" :variant="$selectedBilling->status === 'partial' ? 'warning' : 'danger'">
-                                            {{ strtoupper($selectedBilling->status) }}
-                                        </flux:badge>
+                                        <div class="text-sm font-medium text-success">Tagihan Ditemukan</div>
+                                        <x-badge 
+                                            :label="strtoupper($selectedBilling->status)" 
+                                            class="{{ $selectedBilling->status === 'partial' ? 'badge-warning' : 'badge-error' }} badge-sm" 
+                                        />
                                     </div>
                                     <div class="flex justify-between text-sm">
-                                        <span class="text-zinc-600 dark:text-zinc-400">Total Biaya:</span>
-                                        <span class="font-medium text-zinc-900 dark:text-zinc-100">Rp {{ number_format($selectedBilling->amount, 0, ',', '.') }}</span>
+                                        <span class="opacity-70">Total Biaya:</span>
+                                        <span class="font-medium">Rp {{ number_format($selectedBilling->amount, 0, ',', '.') }}</span>
                                     </div>
                                     <div class="flex justify-between text-sm">
-                                        <span class="text-zinc-600 dark:text-zinc-400">Telah Dibayar:</span>
-                                        <span class="font-medium text-zinc-900 dark:text-zinc-100">Rp {{ number_format($selectedBilling->paid_amount, 0, ',', '.') }}</span>
+                                        <span class="opacity-70">Telah Dibayar:</span>
+                                        <span class="font-medium">Rp {{ number_format($selectedBilling->paid_amount, 0, ',', '.') }}</span>
                                     </div>
-                                    <div class="flex justify-between text-sm mt-1 pt-1 border-t border-emerald-200 dark:border-emerald-800 font-bold">
-                                        <span class="text-emerald-800 dark:text-emerald-300">Sisa Tagihan:</span>
-                                        <span class="text-emerald-800 dark:text-emerald-300">Rp {{ number_format($selectedBilling->amount - $selectedBilling->paid_amount, 0, ',', '.') }}</span>
+                                    <div class="flex justify-between text-sm mt-1 pt-1 border-t border-success/30 font-bold">
+                                        <span class="text-success">Sisa Tagihan:</span>
+                                        <span class="text-success">Rp {{ number_format($selectedBilling->amount - $selectedBilling->paid_amount, 0, ',', '.') }}</span>
                                     </div>
                                 </div>
                             @else
-                                <div class="mt-4 p-3 border border-zinc-200 bg-zinc-50 dark:bg-zinc-800 dark:border-zinc-700 rounded-lg">
-                                    <div class="text-sm font-medium mb-1 text-zinc-800 dark:text-zinc-300 flex items-center gap-1.5">
-                                        <flux:icon icon="information-circle" class="size-4 text-blue-500" />
-                                        Tagihan Baru
-                                    </div>
-                                    <div class="text-xs text-zinc-500 leading-relaxed">
+                                <x-alert title="Tagihan Baru" icon="o-information-circle" class="bg-base-200 border-base-300">
+                                    <div class="text-xs opacity-70 leading-relaxed">
                                         Tidak ada tagihan tertunggak untuk kategori ini. Menyimpan transaksi akan otomatis membuatkan tagihan Lunas untuk siswa ini.
                                     </div>
-                                </div>
+                                </x-alert>
                             @endif
                         @endif
                     </div>
-                </div>
+                </x-card>
             @endif
 
             @if($type === 'expense')
-                <div class="border rounded-lg p-5 bg-white dark:bg-zinc-900 shadow-sm">
-                    <flux:heading level="2" size="lg" class="mb-4">Detail RAB</flux:heading>
-                    
+                <x-card title="Detail RAB" shadow>
                     <div class="space-y-4">
-                        <flux:select wire:model.live="budget_plan_id" label="RAB Aktif" placeholder="Pilih RAB">
-                            @foreach($activeBudgetPlans as $plan)
-                                <option value="{{ $plan->id }}">{{ $plan->title }} ({{ $plan->level->name ?? 'Semua' }})</option>
-                            @endforeach
-                        </flux:select>
+                        <x-select 
+                            wire:model.live="budget_plan_id" 
+                            label="RAB Aktif" 
+                            placeholder="Pilih RAB" 
+                            :options="$activeBudgetPlans->map(fn($p) => ['id' => $p->id, 'name' => $p->title . ' (' . ($p->level->name ?? 'Semua') . ')'])"
+                        />
                         
                         @if($budget_plan_id)
-                            <flux:select wire:model.live="budget_plan_item_id" label="Item Anggaran" placeholder="Pilih Item">
-                                @foreach($budgetItems as $item)
-                                    <option value="{{ $item->id }}">{{ $item->name }} (Anggaran: Rp {{ number_format($item->total, 0, ',', '.') }})</option>
-                                @endforeach
-                            </flux:select>
+                            <x-select 
+                                wire:model.live="budget_plan_item_id" 
+                                label="Item Anggaran" 
+                                placeholder="Pilih Item" 
+                                :options="$budgetItems->map(fn($i) => ['id' => $i->id, 'name' => $i->name . ' (Anggaran: Rp ' . number_format($i->total, 0, ',', '.') . ')'])"
+                            />
                         @endif
                     </div>
-                </div>
+                </x-card>
             @endif
         </div>
 
         <div class="lg:col-span-2 space-y-6">
             @if(($type === 'income' && $student_id && $fee_category_id) || ($type === 'expense' && $budget_plan_id && $budget_plan_item_id))
-                <div class="border rounded-lg p-6 bg-white dark:bg-zinc-900 shadow-sm {{ $type === 'income' ? 'border-emerald-500/30 bg-emerald-50/30 dark:bg-emerald-900/10' : 'border-red-500/30 bg-red-50/30 dark:bg-red-900/10' }}">
-                    <flux:heading level="2" size="lg" class="mb-6">Form {{ $type === 'income' ? 'Pemasukan' : 'Pengeluaran' }}</flux:heading>
+                <x-card shadow class="{{ $type === 'income' ? 'border-success/30 bg-success/5' : 'border-error/30 bg-error/5' }}">
+                    <x-header :title="'Form ' . ($type === 'income' ? 'Pemasukan' : 'Pengeluaran')" separator />
                     
                     <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
-                        <flux:input wire:model="pay_amount" type="number" label="Nominal (Rp)" icon="currency-dollar" />
-                        <flux:select wire:model="payment_method" label="Metode Pembayaran">
-                            <option value="cash">Tunai (Cash)</option>
-                            <option value="transfer">Transfer Bank</option>
-                            <option value="other">Lainnya</option>
-                        </flux:select>
-                        <flux:input wire:model="payment_date" type="date" label="Tanggal Transaksi" />
-                        <flux:input wire:model="reference_number" label="Ref Transaksi (Optional)" placeholder="No. Slip/Ref" />
+                        <x-input wire:model="pay_amount" type="number" label="Nominal (Rp)" icon="o-currency-dollar" />
+                        <x-select 
+                            wire:model="payment_method" 
+                            label="Metode Pembayaran" 
+                            :options="[
+                                ['id' => 'cash', 'name' => 'Tunai (Cash)'],
+                                ['id' => 'transfer', 'name' => 'Transfer Bank'],
+                                ['id' => 'other', 'name' => 'Lainnya']
+                            ]"
+                        />
+                        <x-input wire:model="payment_date" type="date" label="Tanggal Transaksi" />
+                        <x-input wire:model="reference_number" label="Ref Transaksi (Optional)" placeholder="No. Slip/Ref" />
                     </div>
 
                     <div class="mt-6">
-                        <flux:textarea wire:model="notes" label="Catatan Tambahan" rows="2" />
+                        <x-textarea wire:model="notes" label="Catatan Tambahan" rows="2" />
                     </div>
 
-                    <div class="mt-8 flex justify-end">
-                        <flux:button variant="primary" icon="check" wire:click="recordTransaction">
-                            Simpan {{ $type === 'income' ? 'Pemasukan' : 'Pengeluaran' }}
-                        </flux:button>
-                    </div>
-                </div>
+                    <x-slot:actions>
+                        <x-button 
+                            :label="'Simpan ' . ($type === 'income' ? 'Pemasukan' : 'Pengeluaran')" 
+                            icon="o-check" 
+                            class="btn-primary" 
+                            wire:click="recordTransaction" 
+                            spinner="recordTransaction"
+                        />
+                    </x-slot:actions>
+                </x-card>
             @else
-                <div class="border border-dashed rounded-lg p-12 text-center text-zinc-500 bg-zinc-50 dark:bg-zinc-900/50 flex flex-col items-center justify-center">
-                    <flux:icon icon="document-text" class="size-12 mb-3 text-zinc-300 dark:text-zinc-600" />
+                <div class="border border-dashed border-base-300 rounded-lg p-12 text-center opacity-50 bg-base-200/50 flex flex-col items-center justify-center h-full min-h-[300px]">
+                    <x-icon name="o-document-text" class="size-12 mb-3" />
                     <p>Lengkapi detail {{ $type === 'income' ? 'Pemasukan' : 'RAB Pengeluaran' }} di sebelah kiri untuk mengisi form transaksi.</p>
                 </div>
             @endif
 
-            <div class="border rounded-lg bg-white dark:bg-zinc-900 overflow-hidden shadow-sm">
-                <div class="p-4 border-b bg-zinc-50 dark:bg-zinc-800">
-                    <flux:heading level="2" size="md">Riwayat Transaksi Terbaru</flux:heading>
-                </div>
-                <div class="overflow-x-auto">
-                    <table class="w-full text-sm text-left border-collapse">
-                        <thead class="bg-zinc-50 dark:bg-zinc-800">
-                            <tr>
-                                <th class="px-4 py-3 font-medium text-zinc-700 dark:text-zinc-300 border-b">Tanggal</th>
-                                <th class="px-4 py-3 font-medium text-zinc-700 dark:text-zinc-300 border-b">Jenis</th>
-                                <th class="px-4 py-3 font-medium text-zinc-700 dark:text-zinc-300 border-b">Keterangan</th>
-                                <th class="px-4 py-3 font-medium text-zinc-700 dark:text-zinc-300 border-b text-right">Nominal</th>
-                            </tr>
-                        </thead>
-                        <tbody class="divide-y divide-zinc-200 dark:divide-zinc-700">
-                            @forelse($recentTransactions as $tx)
-                                <tr wire:key="tx-{{ $tx->id }}" class="hover:bg-zinc-50 dark:hover:bg-zinc-800/50">
-                                    <td class="px-4 py-3 text-zinc-500 whitespace-nowrap">{{ $tx->payment_date->format('d/m/Y') }}</td>
-                                    <td class="px-4 py-3">
-                                        @if($tx->type === 'income')
-                                            <flux:badge size="sm" variant="success" icon="arrow-down-right">Pemasukan</flux:badge>
-                                        @else
-                                            <flux:badge size="sm" variant="danger" icon="arrow-up-right">Pengeluaran</flux:badge>
-                                        @endif
-                                    </td>
-                                    <td class="px-4 py-3">
-                                        @if($tx->type === 'income')
-                                            <div class="font-medium dark:text-zinc-200">{{ $tx->billing?->student?->name ?? 'Siswa Tidak Diketahui' }}</div>
-                                            <div class="text-xs text-zinc-500">{{ $tx->billing?->feeCategory?->name ?? 'Tarif' }}</div>
-                                        @else
-                                            <div class="font-medium dark:text-zinc-200">{{ $tx->budgetItem?->name ?? 'RAB Item' }}</div>
-                                            <div class="text-xs text-zinc-500">{{ $tx->budgetPlan?->title ?? 'RAB Terpadu' }}</div>
-                                        @endif
-                                    </td>
-                                    <td class="px-4 py-3 text-right font-mono font-medium {{ $tx->type === 'income' ? 'text-emerald-600 dark:text-emerald-400' : 'text-red-600 dark:text-red-400' }}">
-                                        {{ $tx->type === 'income' ? '+' : '-' }} Rp {{ number_format($tx->amount, 0, ',', '.') }}
-                                    </td>
-                                </tr>
-                            @empty
-                                <tr>
-                                    <td colspan="4" class="px-4 py-8 text-center text-zinc-500">
-                                        Belum ada transaksi tercatat.
-                                    </td>
-                                </tr>
-                            @endforelse
-                        </tbody>
-                    </table>
-                </div>
-            </div>
+            <x-card title="Riwayat Transaksi Terbaru" separator shadow>
+                <x-table :headers="[
+                    ['key' => 'payment_date', 'label' => 'Tanggal'],
+                    ['key' => 'type_label', 'label' => 'Jenis'],
+                    ['key' => 'description', 'label' => 'Keterangan'],
+                    ['key' => 'amount', 'label' => 'Nominal', 'class' => 'text-right']
+                ]" :rows="$recentTransactions" no-hover>
+                    @scope('cell_payment_date', $tx)
+                        <span class="opacity-70">{{ $tx->payment_date->format('d/m/Y') }}</span>
+                    @endscope
+
+                    @scope('cell_type_label', $tx)
+                        @if($tx->type === 'income')
+                            <x-badge label="Pemasukan" class="badge-success badge-sm" icon="o-arrow-down-right" />
+                        @else
+                            <x-badge label="Pengeluaran" class="badge-error badge-sm" icon="o-arrow-up-right" />
+                        @endif
+                    @endscope
+
+                    @scope('cell_description', $tx)
+                        @if($tx->type === 'income')
+                            <div class="font-medium">{{ $tx->billing?->student?->name ?? 'Siswa Tidak Diketahui' }}</div>
+                            <div class="text-xs opacity-50">{{ $tx->billing?->feeCategory?->name ?? 'Tarif' }}</div>
+                        @else
+                            <div class="font-medium">{{ $tx->budgetItem?->name ?? 'RAB Item' }}</div>
+                            <div class="text-xs opacity-50">{{ $tx->budgetPlan?->title ?? 'RAB Terpadu' }}</div>
+                        @endif
+                    @endscope
+
+                    @scope('cell_amount', $tx)
+                        <div class="font-mono font-bold font-medium {{ $tx->type === 'income' ? 'text-success' : 'text-error' }}">
+                            {{ $tx->type === 'income' ? '+' : '-' }} Rp {{ number_format($tx->amount, 0, ',', '.') }}
+                        </div>
+                    @endscope
+                </x-table>
+                
+                @if($recentTransactions->isEmpty())
+                    <div class="py-8 text-center opacity-50 text-sm">
+                        Belum ada transaksi tercatat.
+                    </div>
+                @endif
+            </x-card>
         </div>
     </div>
 </div>

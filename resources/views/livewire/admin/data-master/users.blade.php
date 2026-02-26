@@ -4,7 +4,7 @@ use App\Models\User;
 use App\Models\Level;
 use Illuminate\Validation\Rule;
 use Illuminate\Support\Facades\Hash;
-use Livewire\Volt\Component;
+use Livewire\Component;
 use Livewire\WithPagination;
 
 new class extends Component {

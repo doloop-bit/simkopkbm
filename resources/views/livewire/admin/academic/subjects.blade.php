@@ -7,7 +7,7 @@ use App\Models\SubjectTp;
 use App\Models\Level;
 use App\Models\LearningAchievement;
 use Livewire\Attributes\Layout;
-use Livewire\Volt\Component;
+use Livewire\Component;
 use Livewire\WithPagination;
 
 new #[Layout('components.admin.layouts.app')] class extends Component {

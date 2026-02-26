@@ -2,7 +2,7 @@
 
 use App\Models\TeacherAssignment;
 use Livewire\Attributes\Layout;
-use Livewire\Volt\Component;
+use Livewire\Component;
 
 new #[Layout('components.teacher.layouts.app')] class extends Component {
     public function with(): array

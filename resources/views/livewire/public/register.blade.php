@@ -5,7 +5,7 @@ declare(strict_types=1);
 use App\Models\{Registration, Level, AcademicYear};
 use Livewire\Attributes\Layout;
 use Livewire\Attributes\Validate;
-use Livewire\Volt\Component;
+use Livewire\Component;
 use Livewire\WithFileUploads;
 use Illuminate\Support\Facades\RateLimiter;
 use Illuminate\Http\Request;

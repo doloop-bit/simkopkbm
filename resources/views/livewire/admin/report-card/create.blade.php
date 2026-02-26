@@ -8,7 +8,7 @@ use App\Models\Classroom;
 use App\Models\ReportCard;
 use App\Traits\Assessments\HandlesReportCardGeneration;
 use Livewire\Attributes\Layout;
-use Livewire\Volt\Component;
+use Livewire\Component;
 
 new #[Layout('components.admin.layouts.app')] class extends Component {
     use HandlesReportCardGeneration;

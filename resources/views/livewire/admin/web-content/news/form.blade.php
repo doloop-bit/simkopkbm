@@ -4,7 +4,7 @@ use App\Models\NewsArticle;
 use App\Services\CacheService;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Str;
-use Livewire\Volt\Component;
+use Livewire\Component;
 use Livewire\WithFileUploads;
 
 new class extends Component
@@ -151,167 +151,140 @@ new class extends Component
     }
 }; ?>
 
-<div>
-    <div class="mb-6">
-        <flux:heading size="xl">{{ $article ? 'Edit Berita' : 'Tambah Berita' }}</flux:heading>
-        <flux:subheading>{{ $article ? 'Perbarui artikel berita' : 'Buat artikel berita baru' }}</flux:subheading>
-    </div>
+<div class="p-6">
+    <x-header title="{{ $article ? 'Edit Berita' : 'Tambah Berita' }}" subtitle="{{ $article ? 'Perbarui artikel berita' : 'Buat artikel berita baru' }}" separator />
 
     @if (session()->has('message'))
-        <flux:callout color="green" icon="check-circle" class="mb-6">
+        <x-alert title="Sukses" icon="o-check-circle" class="alert-success mb-6">
             {{ session('message') }}
-        </flux:callout>
+        </x-alert>
     @endif
 
     <form wire:submit="save" class="space-y-8">
         {{-- Basic Information --}}
-        <div class="space-y-4">
-            <flux:heading size="lg">Informasi Dasar</flux:heading>
-            <flux:subheading class="mb-4">Informasi utama artikel</flux:subheading>
-
-            <flux:input 
-                wire:model="title" 
-                label="Judul Artikel" 
-                type="text" 
-                required 
-                placeholder="Masukkan judul artikel"
-            />
-
-            <div class="grid grid-cols-1 gap-4 md:grid-cols-2">
-                <flux:input 
-                    wire:model="publishedAt" 
-                    label="Tanggal Publikasi" 
-                    type="date" 
+        <x-card title="Informasi Dasar" subtitle="Informasi utama artikel" separator shadow>
+            <div class="space-y-4">
+                <x-input 
+                    wire:model="title" 
+                    label="Judul Artikel" 
+                    type="text" 
                     required 
+                    placeholder="Masukkan judul artikel"
                 />
 
-                <flux:select wire:model="status" label="Status" required>
-                    <option value="draft">Draft</option>
-                    <option value="published">Dipublikasikan</option>
-                </flux:select>
+                <div class="grid grid-cols-1 gap-4 md:grid-cols-2">
+                    <x-input 
+                        wire:model="publishedAt" 
+                        label="Tanggal Publikasi" 
+                        type="date" 
+                        required 
+                    />
+
+                    <x-select 
+                        wire:model="status" 
+                        label="Status" 
+                        :options="[['id' => 'draft', 'name' => 'Draft'], ['id' => 'published', 'name' => 'Dipublikasikan']]"
+                        required 
+                    />
+                </div>
+
+                <x-textarea 
+                    wire:model="excerpt" 
+                    label="Ringkasan (Opsional)" 
+                    rows="3" 
+                    placeholder="Ringkasan singkat artikel. Jika kosong, akan dibuat otomatis dari konten."
+                />
             </div>
-
-            <flux:textarea 
-                wire:model="excerpt" 
-                label="Ringkasan (Opsional)" 
-                rows="3" 
-                placeholder="Ringkasan singkat artikel. Jika kosong, akan dibuat otomatis dari konten."
-            />
-        </div>
-
-        <flux:separator />
+        </x-card>
 
         {{-- Featured Image --}}
-        <div class="space-y-4">
-            <flux:heading size="lg">Gambar Unggulan</flux:heading>
-            <flux:subheading class="mb-4">Upload gambar utama artikel (maksimal 5MB, format: JPEG, PNG, WebP)</flux:subheading>
-
-            @if ($currentFeaturedImagePath)
-                <div class="flex items-start gap-4">
-                    <img 
-                        src="{{ Storage::url($currentFeaturedImagePath) }}" 
-                        alt="Gambar Unggulan" 
-                        class="h-48 w-auto rounded-lg border object-cover"
-                    >
-                    <div class="flex flex-col gap-2">
-                        <flux:text>Gambar saat ini</flux:text>
-                        <flux:button 
-                            wire:click="removeFeaturedImage" 
-                            variant="danger" 
-                            size="sm"
-                            type="button"
-                            wire:confirm="Apakah Anda yakin ingin menghapus gambar unggulan?"
+        <x-card title="Gambar Unggulan" subtitle="Upload gambar utama artikel (maksimal 5MB, format: JPEG, PNG, WebP)" separator shadow>
+            <div class="space-y-6">
+                @if ($currentFeaturedImagePath)
+                    <div class="flex items-start gap-4 p-4 bg-base-200 rounded-lg">
+                        <img 
+                            src="{{ Storage::url($currentFeaturedImagePath) }}" 
+                            alt="Gambar Unggulan" 
+                            class="h-48 w-auto rounded-lg border border-base-300 object-cover bg-white"
                         >
-                            Hapus Gambar
-                        </flux:button>
+                        <div class="flex flex-col gap-2">
+                            <span class="text-sm font-medium">Gambar saat ini</span>
+                            <x-button 
+                                wire:click="removeFeaturedImage" 
+                                label="Hapus Gambar"
+                                icon="o-trash"
+                                class="btn-error btn-sm"
+                                wire:confirm="Apakah Anda yakin ingin menghapus gambar unggulan?"
+                            />
+                        </div>
                     </div>
-                </div>
-            @endif
+                @endif
 
-            <div>
-                <flux:input 
+                <x-file 
                     wire:model="featuredImage" 
                     label="Upload Gambar Baru" 
-                    type="file" 
                     accept="image/jpeg,image/jpg,image/png,image/webp"
-                />
-                @if ($featuredImage)
-                    <flux:text class="mt-2 text-sm">
-                        File dipilih: {{ $featuredImage->getClientOriginalName() }}
-                    </flux:text>
-                @endif
+                    crop-after-change
+                >
+                    @if ($featuredImage)
+                        <div class="text-sm mt-2">
+                            File dipilih: <span class="font-medium">{{ $featuredImage->getClientOriginalName() }}</span>
+                        </div>
+                    @endif
+                </x-file>
             </div>
-
-            <div wire:loading wire:target="featuredImage" class="text-sm text-zinc-600 dark:text-zinc-400">
-                Mengunggah file...
-            </div>
-        </div>
-
-        <flux:separator />
+        </x-card>
 
         {{-- Content --}}
-        <div class="space-y-4">
-            <flux:heading size="lg">Konten Artikel</flux:heading>
-            <flux:subheading class="mb-4">Tulis konten artikel lengkap</flux:subheading>
-
-            <div>
-                <flux:textarea 
+        <x-card title="Konten Artikel" subtitle="Tulis konten artikel lengkap" separator shadow>
+            <div class="space-y-4">
+                <x-textarea 
                     wire:model="content" 
                     label="Konten" 
                     rows="20" 
                     required 
                     placeholder="Tulis konten artikel di sini..."
                 />
-                <flux:text class="mt-2 text-sm text-zinc-600 dark:text-zinc-400">
-                    Tip: Untuk editor yang lebih canggih dengan formatting, Anda dapat mengintegrasikan TinyMCE atau CKEditor.
-                </flux:text>
+                <x-alert icon="o-information-circle" class="bg-base-200 border-base-300">
+                    Tip: Gunakan Markdown atau HTML sederhana untuk memformat konten.
+                </x-alert>
             </div>
-        </div>
-
-        <flux:separator />
+        </x-card>
 
         {{-- SEO Metadata --}}
-        <div class="space-y-4">
-            <flux:heading size="lg">SEO (Opsional)</flux:heading>
-            <flux:subheading class="mb-4">Optimasi untuk mesin pencari</flux:subheading>
+        <x-card title="SEO (Opsional)" subtitle="Optimasi untuk mesin pencari" separator shadow>
+            <div class="space-y-4">
+                <x-input 
+                    wire:model="metaTitle" 
+                    label="Judul SEO" 
+                    type="text" 
+                    placeholder="Jika kosong, akan menggunakan judul artikel"
+                    hint="Disarankan 50-60 karakter"
+                />
 
-            <flux:input 
-                wire:model="metaTitle" 
-                label="Judul SEO" 
-                type="text" 
-                placeholder="Jika kosong, akan menggunakan judul artikel"
-            />
-
-            <flux:textarea 
-                wire:model="metaDescription" 
-                label="Deskripsi SEO" 
-                rows="3" 
-                placeholder="Jika kosong, akan dibuat otomatis dari konten"
-            />
-
-            <flux:text class="text-sm text-zinc-600 dark:text-zinc-400">
-                Judul SEO sebaiknya 50-60 karakter. Deskripsi SEO sebaiknya 150-160 karakter.
-            </flux:text>
-        </div>
+                <x-textarea 
+                    wire:model="metaDescription" 
+                    label="Deskripsi SEO" 
+                    rows="3" 
+                    placeholder="Jika kosong, akan dibuat otomatis dari konten"
+                    hint="Disarankan 150-160 karakter"
+                />
+            </div>
+        </x-card>
 
         {{-- Submit Buttons --}}
-        <div class="flex items-center justify-end gap-4 border-t pt-6">
-            <flux:button 
-                variant="ghost" 
-                href="{{ route('admin.news.index') }}"
-                wire:navigate
-                type="button"
-            >
-                Batal
-            </flux:button>
-            <flux:button 
-                variant="primary" 
+        <div class="flex items-center justify-end gap-3 pt-6">
+            <x-button 
+                label="Batal"
+                link="{{ route('admin.news.index') }}"
+                ghost
+            />
+            <x-button 
+                label="{{ $article ? 'Perbarui Artikel' : 'Simpan Artikel' }}"
+                class="btn-primary" 
                 type="submit" 
-                wire:loading.attr="disabled"
-            >
-                <span wire:loading.remove wire:target="save">{{ $article ? 'Perbarui Artikel' : 'Simpan Artikel' }}</span>
-                <span wire:loading wire:target="save">Menyimpan...</span>
-            </flux:button>
+                spinner="save"
+            />
         </div>
     </form>
 </div>

@@ -1,130 +1,51 @@
-<flux:sidebar sticky collapsible class="border-e border-zinc-200 bg-zinc-50 dark:border-zinc-700 dark:bg-zinc-900">
-    <flux:sidebar.header>
-        <flux:sidebar.brand :name="config('app.name')" href="{{ route('dashboard') }}" wire:navigate.hover>
-            <x-slot name="logo"
-                class="flex aspect-square size-10 items-center justify-center rounded-lg bg-accent-content text-accent-foreground">
-                <x-global.app-logo-icon class="size-7 fill-current text-white dark:text-black" />
-            </x-slot>
-        </flux:sidebar.brand>
-        <flux:sidebar.collapse
-            class="in-data-flux-sidebar-on-desktop:not-in-data-flux-sidebar-collapsed-desktop:-mr-2" />
-    </flux:sidebar.header>
+<div class="px-5 py-6">
+    <a href="{{ route('dashboard') }}" class="flex items-center gap-3 no-underline" wire:navigate>
+        <x-global.app-logo-icon class="size-8 fill-primary" />
+        <span class="text-xl font-bold text-base-content">{{ config('app.name') }}</span>
+    </a>
+</div>
 
-    <flux:sidebar.nav>
-        <!-- Dashboard -->
-        <flux:sidebar.item icon="home" :href="route('dashboard')" :current="request()->routeIs('dashboard')"
-            wire:navigate.hover class="mb-3">
-            {{ __('Dashboard') }}
-        </flux:sidebar.item>
+<x-menu activate-by-route>
+    <x-menu-item title="Dashboard" icon="o-home" :link="route('dashboard')" />
 
-        @if(auth()->user()->isAdmin())
-            <!-- Data Master -->
-            <flux:sidebar.group expandable icon="book-open" :heading="__('Data Master')" class="grid">
-                <flux:sidebar.item icon="users" :href="route('students.index')"
-                    :current="request()->routeIs('students.index')" wire:navigate.hover>
-                    {{ __('Siswa') }}
-                </flux:sidebar.item>
-                <flux:sidebar.item icon="arrows-right-left" :href="route('students.class-placement')"
-                    :current="request()->routeIs('students.class-placement')" wire:navigate.hover>
-                    {{ __('Penempatan Kelas') }}
-                </flux:sidebar.item>
-                <flux:sidebar.item icon="briefcase" :href="route('ptk.index')" :current="request()->routeIs('ptk.index')"
-                    wire:navigate.hover>
-                    {{ __('PTK') }}
-                </flux:sidebar.item>
-                <flux:sidebar.item icon="user-circle" :href="route('users.index')" :current="request()->routeIs('users.index')"
-                    wire:navigate.hover>
-                    {{ __('Pengguna') }}
-                </flux:sidebar.item>
-                <flux:sidebar.item icon="user-plus" :href="route('admin.registrations.index')" :current="request()->routeIs('admin.registrations.*')"
-                    wire:navigate.hover>
-                    {{ __('Pendaftaran') }}
-                </flux:sidebar.item>
-            </flux:sidebar.group>
+    @if(auth()->user()->isAdmin())
+        <x-menu-sub title="Data Master" icon="o-book-open">
+            <x-menu-item title="Siswa" icon="o-users" :link="route('students.index')" />
+            <x-menu-item title="Penempatan Kelas" icon="o-arrows-right-left" :link="route('students.class-placement')" />
+            <x-menu-item title="PTK" icon="o-briefcase" :link="route('ptk.index')" />
+            <x-menu-item title="Pengguna" icon="o-user-circle" :link="route('users.index')" />
+            <x-menu-item title="Pendaftaran" icon="o-user-plus" :link="route('admin.registrations.index')" />
+        </x-menu-sub>
+
+        <x-menu-sub title="Akademik" icon="o-academic-cap">
+            <x-menu-item title="Tahun Ajaran" icon="o-calendar" :link="route('academic.years')" />
+            <x-menu-item title="Jenjang" icon="o-academic-cap" :link="route('academic.levels')" />
+            <x-menu-item title="Kelas" icon="o-building-office" :link="route('academic.classrooms')" />
+            <x-menu-item title="Mata Pelajaran" icon="o-book-open" :link="route('academic.subjects')" />
+            <x-menu-item title="Penugasan Guru" icon="o-user-group" :link="route('academic.assignments')" />
+            <x-menu-item title="Presensi" icon="o-check-badge" :link="route('academic.attendance')" />
+            <x-menu-item title="Ekstrakurikuler" icon="o-trophy" :link="route('academic.extracurriculars')" />
+        </x-menu-sub>
+    @endif
+
+    <x-menu-sub title="Penilaian & Raport" icon="o-pencil-square">
+        @if(auth()->user()->isAdmin() || auth()->user()->teachesPaudLevel())
+            <x-menu-item title="Penilaian PAUD" icon="o-clipboard-document-check" :link="route('admin.assessments.competency')" />
         @endif
+        <x-menu-item title="Raport Kesetaraan" icon="o-document-chart-bar" :link="route('admin.report-card.grading')" />
+    </x-menu-sub>
 
-        @if(auth()->user()->isAdmin())
-            <!-- Akademik -->
-            <flux:sidebar.group expandable icon="academic-cap" :heading="__('Akademik')" class="grid">
-                <flux:sidebar.item icon="calendar" :href="route('academic.years')"
-                    :current="request()->routeIs('academic.years')" wire:navigate.hover>
-                    {{ __('Tahun Ajaran') }}
-                </flux:sidebar.item>
-                <flux:sidebar.item icon="academic-cap" :href="route('academic.levels')"
-                    :current="request()->routeIs('academic.levels')" wire:navigate.hover>
-                    {{ __('Jenjang') }}
-                </flux:sidebar.item>
-                <flux:sidebar.item icon="building-office" :href="route('academic.classrooms')"
-                    :current="request()->routeIs('academic.classrooms')" wire:navigate.hover>
-                    {{ __('Kelas') }}
-                </flux:sidebar.item>
-                <flux:sidebar.item icon="book-open" :href="route('academic.subjects')"
-                    :current="request()->routeIs('academic.subjects')" wire:navigate.hover>
-                    {{ __('Mata Pelajaran') }}
-                </flux:sidebar.item>
-                <flux:sidebar.item icon="user-group" :href="route('academic.assignments')"
-                    :current="request()->routeIs('academic.assignments')" wire:navigate.hover>
-                    {{ __('Penugasan Guru') }}
-                </flux:sidebar.item>
-                <flux:sidebar.item icon="check-badge" :href="route('academic.attendance')"
-                    :current="request()->routeIs('academic.attendance')" wire:navigate.hover>
-                    {{ __('Presensi') }}
-                </flux:sidebar.item>
-                <flux:sidebar.item icon="trophy" :href="route('academic.extracurriculars')"
-                    :current="request()->routeIs('academic.extracurriculars')" wire:navigate.hover>
-                    {{ __('Ekstrakurikuler') }}
-                </flux:sidebar.item>
-            </flux:sidebar.group>
-        @endif
+    @if(auth()->user()->isAdmin())
+        <x-menu-sub title="Keuangan" icon="o-banknotes">
+            <x-menu-item title="Transaksi Keuangan" icon="o-wallet" :link="route('financial.transactions')" />
+            <x-menu-item title="RAB / Anggaran" icon="o-document-currency-dollar" :link="route('financial.budget-plans')" />
+        </x-menu-sub>
 
-        <!-- Penilaian & Raport -->
-        <flux:sidebar.group expandable icon="pencil-square" :heading="__('Penilaian & Raport')" class="grid">
-            @if(auth()->user()->isAdmin() || auth()->user()->teachesPaudLevel())
-                <flux:sidebar.item icon="clipboard-document-check" :href="route('admin.assessments.competency')"
-                    :current="request()->routeIs('admin.assessments.competency')" wire:navigate.hover>
-                    {{ __('Penilaian PAUD') }}
-                </flux:sidebar.item>
-            @endif
+        <x-menu-item title="Konten Web" icon="o-globe-alt" :link="route('admin.school-profile.edit')" />
+        <x-menu-item title="Laporan" icon="o-chart-bar" :link="route('reports')" />
+    @endif
+</x-menu>
 
-
-            <flux:sidebar.item icon="document-chart-bar" :href="route('admin.report-card.grading')"
-                :current="request()->routeIs('admin.report-card.*') || request()->routeIs('admin.assessments.grading')" wire:navigate.hover>
-                {{ __('Raport Kesetaraan') }}
-            </flux:sidebar.item>
-        </flux:sidebar.group>
-
-
-        @if(auth()->user()->isAdmin())
-            <!-- Keuangan -->
-            <flux:sidebar.group expandable icon="banknotes" :heading="__('Keuangan')" class="grid">
-                <flux:sidebar.item icon="wallet" :href="route('financial.transactions')"
-                    :current="request()->routeIs('financial.transactions') || request()->routeIs('financial.billings') || request()->routeIs('financial.discounts') || request()->routeIs('financial.categories')" wire:navigate.hover>
-                    {{ __('Transaksi Keuangan') }}
-                </flux:sidebar.item>
-                <flux:sidebar.item icon="document-currency-dollar" :href="route('financial.budget-plans')"
-                    :current="request()->routeIs('financial.budget-plans') || request()->routeIs('financial.budget-categories') || request()->routeIs('financial.standard-items')" wire:navigate.hover>
-                    {{ __('RAB / Anggaran') }}
-                </flux:sidebar.item>
-            </flux:sidebar.group>
-
-
-            <!-- Konten Web - Moved to horizontal header navigation -->
-            <flux:sidebar.item icon="globe-alt" :href="route('admin.school-profile.edit')"
-                :current="request()->routeIs('admin.school-profile.*') || request()->routeIs('admin.news.*') || request()->routeIs('admin.gallery.*') || request()->routeIs('admin.programs.*') || request()->routeIs('admin.contact-inquiries.*')"
-                wire:navigate.hover>
-                {{ __('Konten Web') }}
-            </flux:sidebar.item>
-
-
-            <!-- Laporan -->
-            <flux:sidebar.item icon="chart-bar" :href="route('reports')" :current="request()->routeIs('reports')"
-                wire:navigate.hover class="mt-3">
-                {{ __('Laporan') }}
-            </flux:sidebar.item>
-        @endif
-    </flux:sidebar.nav>
-
-    <flux:spacer />
-
-    <x-admin.desktop-user-menu class="hidden lg:block" :name="auth()->user()->name" />
-</flux:sidebar>
+<x-slot:sidebar-footer>
+    <x-admin.desktop-user-menu />
+</x-slot:sidebar-footer>

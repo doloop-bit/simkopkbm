@@ -4,7 +4,7 @@ use App\Models\GalleryPhoto;
 use App\Services\{ImageOptimizationService, CacheService};
 use Illuminate\Support\Facades\Storage;
 use Livewire\Attributes\Layout;
-use Livewire\Volt\Component;
+use Livewire\Component;
 use Livewire\WithFileUploads;
 
 new #[Layout('components.admin.layouts.app')] class extends Component
@@ -234,48 +234,39 @@ new #[Layout('components.admin.layouts.app')] class extends Component
     }
 }; ?>
 
-<div>
-    <div class="mb-6">
-        <flux:heading size="xl">Galeri Foto</flux:heading>
-        <flux:subheading>Kelola foto-foto sekolah</flux:subheading>
-    </div>
+<div class="p-6">
+    <x-header title="Galeri Foto" subtitle="Kelola foto-foto sekolah" separator>
+        <x-slot:actions>
+             <x-button label="Upload Foto Baru" icon="o-plus" class="btn-primary" @click="$refs.uploadForm.scrollIntoView({behavior: 'smooth'})" />
+        </x-slot:actions>
+    </x-header>
 
     @if (session()->has('message'))
-        <flux:callout color="green" icon="check-circle" class="mb-6">
+        <x-alert title="Sukses" icon="o-check-circle" class="alert-success mb-6">
             {{ session('message') }}
-        </flux:callout>
+        </x-alert>
     @endif
 
     {{-- Upload Form --}}
-    <div class="mb-8 rounded-lg border border-zinc-200 bg-white p-6 dark:border-zinc-700 dark:bg-zinc-800">
-        <flux:heading size="lg" class="mb-4">Upload Foto Baru</flux:heading>
-
-        <form wire:submit="uploadPhotos" class="space-y-4">
-            <div>
-                <flux:input 
-                    wire:model="photos" 
-                    label="Pilih Foto" 
-                    type="file" 
-                    accept="image/jpeg,image/jpg,image/png,image/webp"
-                    multiple
-                    required
-                />
-                <flux:text class="mt-2 text-sm text-zinc-600 dark:text-zinc-400">
-                    Maksimal 5MB per file. Format: JPEG, PNG, WebP. Anda dapat memilih beberapa file sekaligus.
-                </flux:text>
+    <x-card id="upload-form" x-ref="uploadForm" title="Upload Foto Baru" subtitle="Pilih satu atau beberapa foto untuk ditambahkan ke galeri" separator shadow class="mb-8 border border-base-200">
+        <form wire:submit="uploadPhotos" class="space-y-6">
+            <x-file 
+                wire:model="photos" 
+                label="Pilih Foto" 
+                accept="image/jpeg,image/jpg,image/png,image/webp"
+                multiple
+                required
+            >
+                <span class="text-xs opacity-70">Maksimal 5MB per file. Format: JPEG, PNG, WebP. Anda dapat memilih beberapa file sekaligus.</span>
                 @if (count($photos) > 0)
-                    <flux:text class="mt-2 text-sm font-medium">
+                     <div class="text-sm font-medium mt-2">
                         {{ count($photos) }} file dipilih
-                    </flux:text>
+                    </div>
                 @endif
-            </div>
-
-            <div wire:loading wire:target="photos" class="text-sm text-zinc-600 dark:text-zinc-400">
-                Memuat file...
-            </div>
+            </x-file>
 
             <div class="grid grid-cols-1 gap-4 md:grid-cols-2">
-                <flux:input 
+                <x-input 
                     wire:model="category" 
                     label="Kategori" 
                     type="text" 
@@ -289,7 +280,7 @@ new #[Layout('components.admin.layouts.app')] class extends Component
                     @endforeach
                 </datalist>
 
-                <flux:input 
+                <x-input 
                     wire:model="caption" 
                     label="Keterangan (Opsional)" 
                     type="text" 
@@ -297,162 +288,136 @@ new #[Layout('components.admin.layouts.app')] class extends Component
                 />
             </div>
 
-            <div class="flex justify-end">
-                <flux:button 
-                    variant="primary" 
+            <x-slot:actions>
+                <x-button 
+                    label="Upload Foto"
+                    class="btn-primary" 
                     type="submit" 
-                    wire:loading.attr="disabled"
-                    wire:target="uploadPhotos,photos"
-                >
-                    <span wire:loading.remove wire:target="uploadPhotos">Upload Foto</span>
-                    <span wire:loading wire:target="uploadPhotos">Mengunggah...</span>
-                </flux:button>
-            </div>
+                    spinner="uploadPhotos"
+                />
+            </x-slot:actions>
         </form>
-    </div>
+    </x-card>
 
-    {{-- Filter --}}
-    <div class="mb-6 flex items-center gap-4">
-        <flux:text class="font-medium">Filter Kategori:</flux:text>
-        <flux:select wire:model.live="filterCategory" class="w-64">
-            <option value="all">Semua Kategori</option>
-            @foreach ($availableCategories as $cat)
-                <option value="{{ $cat }}">{{ $cat }}</option>
-            @endforeach
-        </flux:select>
+    {{-- Filter & Layout Controls --}}
+    <div class="mb-8 flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+        <div class="flex items-center gap-4">
+            <span class="font-bold whitespace-nowrap">Filter Kategori:</span>
+            <x-select 
+                wire:model.live="filterCategory" 
+                class="w-full sm:w-64"
+                :options="collect([['id' => 'all', 'name' => 'Semua Kategori']])->merge(collect($availableCategories)->map(fn($c) => ['id' => $c, 'name' => $c]))"
+                option-label="name"
+                option-value="id"
+            />
+        </div>
     </div>
 
     {{-- Photo Grid --}}
     @if ($galleryPhotos->isEmpty())
-        <div class="rounded-lg border border-zinc-200 bg-white p-12 text-center dark:border-zinc-700 dark:bg-zinc-800">
-            <flux:text class="text-zinc-500 dark:text-zinc-400">
+        <x-card class="p-12 text-center" shadow>
+            <x-icon name="o-photo" class="size-16 mb-4 opacity-10" />
+            <p class="text-base-content/50">
                 Belum ada foto di galeri. Upload foto pertama Anda!
-            </flux:text>
-        </div>
+            </p>
+        </x-card>
     @else
         <div class="grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
-            @foreach ($galleryPhotos as $photo)
-                <div class="group relative overflow-hidden rounded-lg border border-zinc-200 bg-white dark:border-zinc-700 dark:bg-zinc-800">
-                    {{-- Photo --}}
-                    <div class="aspect-square overflow-hidden bg-zinc-100 dark:bg-zinc-900">
+            @foreach ($galleryPhotos as $index => $photo)
+                <x-card wire:key="photo-{{ $photo->id }}" class="group overflow-hidden border border-base-200 hover:shadow-lg transition-all" no-separator padding="p-0">
+                    {{-- Photo Container --}}
+                    <div class="aspect-square relative overflow-hidden bg-base-200">
                         <img 
                             src="{{ Storage::url($photo->thumbnail_path) }}" 
                             alt="{{ $photo->caption ?? 'Gallery Photo' }}"
-                            class="h-full w-full object-cover transition-transform duration-300 group-hover:scale-110"
+                            class="h-full w-full object-cover transition-transform duration-500 group-hover:scale-110"
                         >
+                        
+                        {{-- Quick Badges Overlay --}}
+                        <div class="absolute top-2 left-2 flex flex-col gap-1">
+                            <x-badge :label="$photo->category" class="badge-neutral badge-sm shadow-sm" />
+                            @if ($photo->is_published)
+                                <x-badge label="Live" class="badge-success badge-xs shadow-sm" />
+                            @else
+                                <x-badge label="Draft" class="badge-ghost badge-xs shadow-sm backdrop-blur-md" />
+                            @endif
+                        </div>
+
+                        {{-- Order Helper Overlay --}}
+                        <div class="absolute top-2 right-2 flex gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
+                            <x-button 
+                                wire:click="moveUp({{ $photo->id }})" 
+                                icon="o-chevron-left"
+                                class="btn-xs btn-circle btn-neutral shadow-lg"
+                                tooltip="Pindah ke kiri"
+                            />
+                            <x-button 
+                                wire:click="moveDown({{ $photo->id }})" 
+                                icon="o-chevron-right"
+                                class="btn-xs btn-circle btn-neutral shadow-lg"
+                                tooltip="Pindah ke kanan"
+                            />
+                        </div>
                     </div>
 
                     {{-- Info & Actions --}}
-                    <div class="p-4">
+                    <div class="p-4 bg-base-100">
                         @if ($editingPhotoId === $photo->id)
                             {{-- Edit Mode --}}
-                            <div class="space-y-3">
-                                <flux:input 
+                            <div class="space-y-4">
+                                <x-input 
                                     wire:model="editCategory" 
                                     label="Kategori" 
-                                    type="text" 
                                     size="sm"
                                 />
-                                <flux:input 
+                                <x-input 
                                     wire:model="editCaption" 
                                     label="Keterangan" 
-                                    type="text" 
                                     size="sm"
                                 />
                                 <div class="flex gap-2">
-                                    <flux:button 
-                                        wire:click="saveEdit" 
-                                        variant="primary" 
-                                        size="sm"
-                                        class="flex-1"
-                                    >
-                                        Simpan
-                                    </flux:button>
-                                    <flux:button 
-                                        wire:click="cancelEdit" 
-                                        variant="ghost" 
-                                        size="sm"
-                                        class="flex-1"
-                                    >
-                                        Batal
-                                    </flux:button>
+                                    <x-button label="Simpan" wire:click="saveEdit" class="btn-primary btn-sm flex-1" spinner="saveEdit" />
+                                    <x-button label="Batal" wire:click="cancelEdit" class="btn-ghost btn-sm flex-1" />
                                 </div>
                             </div>
                         @else
                             {{-- View Mode --}}
-                            <div class="mb-3 min-h-[4rem]">
-                                <flux:badge color="zinc" size="sm" class="mb-2">
-                                    {{ $photo->category }}
-                                </flux:badge>
+                            <div class="mb-4 min-h-[3rem]">
                                 @if ($photo->caption)
-                                    <flux:text class="text-sm">{{ $photo->caption }}</flux:text>
+                                    <p class="text-sm font-medium line-clamp-2 leading-tight">{{ $photo->caption }}</p>
                                 @else
-                                    <flux:text class="text-sm italic text-zinc-400">Tanpa keterangan</flux:text>
-                                @endif
-                            </div>
-
-                            {{-- Status Badge --}}
-                            <div class="mb-3">
-                                @if ($photo->is_published)
-                                    <flux:badge color="green" size="sm">Dipublikasikan</flux:badge>
-                                @else
-                                    <flux:badge color="zinc" size="sm">Draft</flux:badge>
+                                    <p class="text-sm italic opacity-40">Tanpa keterangan</p>
                                 @endif
                             </div>
 
                             {{-- Action Buttons --}}
-                            <div class="flex flex-wrap gap-2">
-                                {{-- Reorder Buttons --}}
+                            <div class="flex items-center justify-between border-t border-base-200 pt-3">
                                 <div class="flex gap-1">
-                                    <flux:button 
-                                        wire:click="moveUp({{ $photo->id }})" 
-                                        variant="ghost" 
-                                        size="sm"
-                                        title="Pindah ke atas"
-                                    >
-                                        ↑
-                                    </flux:button>
-                                    <flux:button 
-                                        wire:click="moveDown({{ $photo->id }})" 
-                                        variant="ghost" 
-                                        size="sm"
-                                        title="Pindah ke bawah"
-                                    >
-                                        ↓
-                                    </flux:button>
+                                    <x-button 
+                                        wire:click="startEdit({{ $photo->id }})" 
+                                        icon="o-pencil"
+                                        class="btn-xs btn-ghost btn-square"
+                                        tooltip="Edit"
+                                    />
+                                    <x-button 
+                                        wire:click="togglePublish({{ $photo->id }})" 
+                                        icon="{{ $photo->is_published ? 'o-eye-slash' : 'o-eye' }}"
+                                        class="btn-xs btn-ghost btn-square"
+                                        tooltip="{{ $photo->is_published ? 'Tarik dari publikasi' : 'Publikasikan' }}"
+                                    />
                                 </div>
-
-                                {{-- Edit Button --}}
-                                <flux:button 
-                                    wire:click="startEdit({{ $photo->id }})" 
-                                    variant="ghost" 
-                                    size="sm"
-                                >
-                                    Edit
-                                </flux:button>
-
-                                {{-- Toggle Publish --}}
-                                <flux:button 
-                                    wire:click="togglePublish({{ $photo->id }})" 
-                                    variant="ghost" 
-                                    size="sm"
-                                >
-                                    {{ $photo->is_published ? 'Sembunyikan' : 'Publikasikan' }}
-                                </flux:button>
-
-                                {{-- Delete Button --}}
-                                <flux:button 
+                                
+                                <x-button 
                                     wire:click="deletePhoto({{ $photo->id }})" 
-                                    variant="danger" 
-                                    size="sm"
-                                    wire:confirm="Apakah Anda yakin ingin menghapus foto ini? Semua versi gambar akan dihapus."
-                                >
-                                    Hapus
-                                </flux:button>
+                                    icon="o-trash"
+                                    class="btn-xs btn-ghost btn-square text-error"
+                                    wire:confirm="Yakin ingin menghapus foto ini? Semua versi gambar akan ikut terhapus."
+                                    tooltip="Hapus Permanen"
+                                />
                             </div>
                         @endif
                     </div>
-                </div>
+                </x-card>
             @endforeach
         </div>
     @endif

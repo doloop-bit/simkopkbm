@@ -1,6 +1,6 @@
 <?php
 
-use Livewire\Volt\Component;
+use Livewire\Component;
 use App\Models\BudgetPlan;
 use App\Models\BudgetPlanItem;
 use App\Models\BudgetCategory;
@@ -319,142 +319,121 @@ new class extends Component {
 }; ?>
 
 <div class="flex flex-col gap-6">
-    <div class="flex flex-col md:flex-row gap-4 items-center justify-between">
-        <div>
-            <flux:heading size="xl">RAB / Rencana Anggaran Biaya</flux:heading>
-            <flux:subheading>Kelola pengajuan dan persetujuan anggaran.</flux:subheading>
-        </div>
-        @if(Auth::user()->isTreasurer() || Auth::user()->isHeadmaster() || Auth::user()->isAdmin())
-            <flux:button variant="primary" icon="plus" wire:click="createNew">Buat RAB Baru</flux:button>
-        @endif
-    </div>
+    <x-header title="RAB / Rencana Anggaran Biaya" subtitle="Kelola pengajuan dan persetujuan anggaran." separator>
+        <x-slot:actions>
+            @if(Auth::user()->isTreasurer() || Auth::user()->isHeadmaster() || Auth::user()->isAdmin())
+                <x-button label="Buat RAB Baru" icon="o-plus" class="btn-primary" wire:click="createNew" />
+            @endif
+        </x-slot:actions>
+    </x-header>
 
     <!-- Filters -->
-    <div class="flex flex-col md:flex-row gap-4 mb-6 items-center justify-between">
+    <div class="flex flex-col md:flex-row gap-4 items-center justify-between">
         <div class="flex gap-2 w-full md:w-auto">
-            <flux:input wire:model.live="search" icon="magnifying-glass" placeholder="Cari RAB..." class="w-full md:w-64" />
+            <x-input wire:model.live="search" icon="o-magnifying-glass" placeholder="Cari RAB..." class="w-full md:w-64" />
             
             @if(Auth::user()->isAdmin() || Auth::user()->isYayasan())
-                <flux:select wire:model.live="level_filter" placeholder="Semua Jenjang" class="w-full md:w-48">
-                    <option value="">Semua Jenjang</option>
-                    @foreach($levels as $level)
-                        <option value="{{ $level->id }}">{{ $level->name }}</option>
-                    @endforeach
-                </flux:select>
+                <x-select 
+                    wire:model.live="level_filter" 
+                    placeholder="Semua Jenjang" 
+                    :options="$levels" 
+                    class="w-full md:w-48" 
+                />
             @endif
         </div>
     </div>
 
     <!-- List -->
-    <div class="overflow-x-auto">
-        <table class="min-w-full divide-y divide-zinc-200 dark:divide-zinc-700">
-            <thead>
-                <tr>
-                    <th class="px-4 py-3 text-left text-xs font-medium text-zinc-500 uppercase tracking-wider">Judul</th>
-                    <th class="px-4 py-3 text-left text-xs font-medium text-zinc-500 uppercase tracking-wider">Jenjang</th>
-                    <th class="px-4 py-3 text-left text-xs font-medium text-zinc-500 uppercase tracking-wider">Tahun Ajaran</th>
-                    <th class="px-4 py-3 text-right text-xs font-medium text-zinc-500 uppercase tracking-wider">Total Anggaran</th>
-                    <th class="px-4 py-3 text-center text-xs font-medium text-zinc-500 uppercase tracking-wider">Status</th>
-                    <th class="px-4 py-3 text-right text-xs font-medium text-zinc-500 uppercase tracking-wider">Aksi</th>
-                </tr>
-            </thead>
-            <tbody class="divide-y divide-zinc-200 dark:divide-zinc-700">
-                @foreach($plans as $plan)
-                    <tr wire:key="plan-{{ $plan->id }}" class="hover:bg-zinc-50 dark:hover:bg-zinc-800">
-                        <td class="px-4 py-3 whitespace-nowrap text-sm font-medium text-zinc-900 dark:text-zinc-100">{{ $plan->title }}</td>
-                        <td class="px-4 py-3 whitespace-nowrap text-sm text-zinc-500">{{ $plan->level->name }}</td>
-                        <td class="px-4 py-3 whitespace-nowrap text-sm text-zinc-500">{{ $plan->academicYear->name }}</td>
-                        <td class="px-4 py-3 whitespace-nowrap text-sm text-right font-bold text-zinc-900 dark:text-zinc-100">
-                            Rp {{ number_format($plan->total_amount, 0, ',', '.') }}
-                        </td>
-                        <td class="px-4 py-3 whitespace-nowrap text-center">
-                            @php
-                                $variant = match($plan->status) {
-                                    'draft' => 'zinc',
-                                    'submitted' => 'warning',
-                                    'approved' => 'success',
-                                    'transferred' => 'info',
-                                    'rejected' => 'danger',
-                                };
-                            @endphp
-                            <flux:badge variant="{{ $variant }}" size="sm">{{ ucfirst($plan->status) }}</flux:badge>
-                        </td>
-                        <td class="px-4 py-3 text-right space-x-2">
-                            <!-- View/Edit -->
-                            <flux:button size="sm" variant="ghost" icon="eye" wire:click="edit({{ $plan->id }})" wire:target="edit({{ $plan->id }})" />
+    <x-card shadow>
+        <x-table :headers="[
+            ['key' => 'title', 'label' => 'Judul'],
+            ['key' => 'level.name', 'label' => 'Jenjang'],
+            ['key' => 'academicYear.name', 'label' => 'Tahun Ajaran'],
+            ['key' => 'total_amount', 'label' => 'Total Anggaran', 'class' => 'text-right font-bold'],
+            ['key' => 'status', 'label' => 'Status', 'class' => 'text-center'],
+            ['key' => 'actions', 'label' => 'Aksi', 'class' => 'text-right']
+        ]" :rows="$plans" with-pagination>
+            @scope('cell_total_amount', $plan)
+                Rp {{ number_format($plan->total_amount, 0, ',', '.') }}
+            @endscope
 
-                            <!-- Preview PDF -->
-                            <flux:button size="sm" variant="ghost" icon="printer" wire:click="exportPdf({{ $plan->id }})" wire:target="exportPdf({{ $plan->id }})" />
-                            
-                            <!-- Delete (Draft Only) -->
-                            @if($plan->status === 'draft' || Auth::user()->isAdmin())
-                                <flux:button size="sm" variant="ghost" icon="trash" class="text-red-500" wire:confirm="Hapus RAB ini?" wire:click="delete({{ $plan->id }})" wire:target="delete({{ $plan->id }})" />
-                            @endif
-                            
-                            <!-- Approval Actions (Yayasan) -->
-                            @if((Auth::user()->isYayasan() || Auth::user()->isAdmin()) && $plan->status === 'submitted')
-                                <flux:button size="sm" variant="primary" icon="check" wire:click="updateStatus({{ $plan->id }}, 'approved')" wire:target="updateStatus({{ $plan->id }}, 'approved')" />
-                                <flux:button size="sm" variant="danger" icon="x-mark" wire:click="updateStatus({{ $plan->id }}, 'rejected')" wire:target="updateStatus({{ $plan->id }}, 'rejected')" />
-                            @endif
-                            
-                            <!-- Transfer Action (Yayasan) -->
-                            @if((Auth::user()->isYayasan() || Auth::user()->isAdmin()) && $plan->status === 'approved')
-                                <flux:button size="sm" variant="primary" icon="banknotes" wire:click="updateStatus({{ $plan->id }}, 'transferred')" wire:target="updateStatus({{ $plan->id }}, 'transferred')" title="Tandai Sudah Transfer" />
-                            @endif
-                        </td>
-                    </tr>
-                @endforeach
-            </tbody>
-        </table>
-    </div>
-    
-    <div class="mt-4">
-        {{ $plans->links() }}
-    </div>
+            @scope('cell_status', $plan)
+                @php
+                    $color = match($plan->status) {
+                        'draft' => 'badge-ghost',
+                        'submitted' => 'badge-warning',
+                        'approved' => 'badge-success',
+                        'transferred' => 'badge-info',
+                        'rejected' => 'badge-error',
+                    };
+                @endphp
+                <x-badge :label="ucfirst($plan->status)" class="{{ $color }} badge-sm" />
+            @endscope
+
+            @scope('cell_actions', $plan)
+                <div class="flex justify-end gap-1">
+                    <!-- View/Edit -->
+                    <x-button icon="o-eye" wire:click="edit({{ $plan->id }})" ghost sm />
+
+                    <!-- Preview PDF -->
+                    <x-button icon="o-printer" wire:click="exportPdf({{ $plan->id }})" ghost sm />
+                    
+                    <!-- Delete (Draft Only) -->
+                    @if($plan->status === 'draft' || Auth::user()->isAdmin())
+                        <x-button 
+                            icon="o-trash" 
+                            class="text-error" 
+                            wire:confirm="Hapus RAB ini?" 
+                            wire:click="delete({{ $plan->id }})" 
+                            ghost sm 
+                        />
+                    @endif
+                    
+                    <!-- Approval Actions (Yayasan) -->
+                    @if((Auth::user()->isYayasan() || Auth::user()->isAdmin()) && $plan->status === 'submitted')
+                        <x-button icon="o-check" class="btn-success btn-sm" wire:click="updateStatus({{ $plan->id }}, 'approved')" />
+                        <x-button icon="o-x-mark" class="btn-error btn-sm" wire:click="updateStatus({{ $plan->id }}, 'rejected')" />
+                    @endif
+                    
+                    <!-- Transfer Action (Yayasan) -->
+                    @if((Auth::user()->isYayasan() || Auth::user()->isAdmin()) && $plan->status === 'approved')
+                        <x-button label="Transfer" icon="o-banknotes" class="btn-primary btn-sm" wire:click="updateStatus({{ $plan->id }}, 'transferred')" title="Tandai Sudah Transfer" />
+                    @endif
+                </div>
+            @endscope
+        </x-table>
+    </x-card>
 
     <!-- RAB Modal (Large) -->
-    <flux:modal name="plan-modal" class="w-full max-w-6xl max-h-[95vh] overflow-y-auto" @open-plan-modal.window="$flux.modal('plan-modal').show()" x-on:plan-saved.window="$flux.modal('plan-modal').close()">
+    <x-modal id="plan-modal" class="backdrop-blur" persistent>
+        <x-header :title="$editing ? 'Edit RAB' : 'Buat RAB Baru'" subtitle="Anggaran diajukan oleh Bendahara/Kepsek untuk disetujui Yayasan." separator />
+
         <div class="space-y-6">
-            <div>
-                <flux:heading size="lg">{{ $editing ? 'Edit RAB' : 'Buat RAB Baru' }}</flux:heading>
-                <flux:subheading>Anggaran diajukan oleh Bendahara/Kepsek untuk disetujui Yayasan.</flux:subheading>
-            </div>
-
             <div class="grid grid-cols-1 md:grid-cols-3 gap-4 items-start">
-                <flux:select wire:model="academic_year_id" label="Tahun Ajaran" placeholder="Pilih Tahun Ajaran">
-                    @foreach($years as $year)
-                        <option value="{{ $year->id }}">{{ $year->name }}</option>
-                    @endforeach
-                </flux:select>
-
-                <flux:select wire:model="level_id" label="Jenjang / Level" placeholder="Pilih Jenjang">
-                    @foreach($levels as $level)
-                        <option value="{{ $level->id }}">{{ $level->name }}</option>
-                    @endforeach
-                </flux:select>
-                
-                <flux:input wire:model="title" label="Judul RAB" placeholder="Contoh: RAB Operasional Januari 2026" />
+                <x-select wire:model="academic_year_id" label="Tahun Ajaran" placeholder="Pilih Tahun Ajaran" :options="$years" />
+                <x-select wire:model="level_id" label="Jenjang / Level" placeholder="Pilih Jenjang" :options="$levels" />
+                <x-input wire:model="title" label="Judul RAB" placeholder="Contoh: RAB Operasional Januari 2026" />
             </div>
 
             <!-- Items Table -->
-            <div class="border rounded-lg bg-zinc-50 dark:bg-zinc-800/50 p-1">
-                <table class="min-w-full divide-y divide-zinc-200">
-                    <thead class="bg-zinc-50 dark:bg-zinc-800">
+            <div class="border rounded-lg bg-base-200 p-0.5 overflow-x-auto">
+                <table class="table table-sm">
+                    <thead>
                         <tr>
-                            <th class="px-3 py-2 text-left text-xs font-medium text-zinc-500 uppercase">Item Standar / Baru</th>
-                            <th class="px-3 py-2 text-left text-xs font-medium text-zinc-500 uppercase w-32">Kategori</th>
-                            <th class="px-3 py-2 text-center text-xs font-medium text-zinc-500 uppercase w-28">Qty</th>
-                            <th class="px-3 py-2 text-center text-xs font-medium text-zinc-500 uppercase w-24">Satuan</th>
-                            <th class="px-3 py-2 text-right text-xs font-medium text-zinc-500 uppercase w-40">Harga Satuan</th>
-                            <th class="px-3 py-2 text-right text-xs font-medium text-zinc-500 uppercase w-40">Total</th>
-                            <th class="px-3 py-2 w-10"></th>
+                            <th class="bg-base-300">Item Standar / Baru</th>
+                            <th class="bg-base-300 w-32">Kategori</th>
+                            <th class="bg-base-300 text-center w-28">Qty</th>
+                            <th class="bg-base-300 text-center w-24">Satuan</th>
+                            <th class="bg-base-300 text-right w-40">Harga Satuan</th>
+                            <th class="bg-base-300 text-right w-40">Total</th>
+                            <th class="bg-base-300 w-10"></th>
                         </tr>
                     </thead>
-                    <tbody class="divide-y divide-zinc-200 dark:divide-zinc-700 bg-white dark:bg-zinc-900">
+                    <tbody class="bg-base-100">
                         @foreach($formItems as $index => $item)
                         <tr wire:key="item-{{ $index }}">
-                            <td class="px-3 py-2">
-                                <div class="relative items-select" 
+                            <td>
+                                <div class="relative" 
                                     x-data="{ 
                                         open: false, 
                                         search: @entangle('itemSearches.' . $index),
@@ -478,101 +457,93 @@ new class extends Component {
                                     }"
                                     x-on:click.away="open = false"
                                 >
-                                    <flux:input 
+                                    <x-input 
                                         x-model="search" 
                                         x-on:focus="open = true"
                                         x-on:input="open = true"
                                         placeholder="Cari atau ketik nama baru..."
-                                        size="sm"
+                                        sm
                                     />
                                     
                                     <div x-show="open" 
-                                        class="absolute z-50 w-full mt-1 bg-white dark:bg-zinc-800 border rounded shadow-lg max-h-60 overflow-auto"
+                                        class="absolute z-50 w-full mt-1 bg-base-100 border border-base-300 rounded shadow-lg max-h-60 overflow-auto"
                                         x-transition
                                         style="display: none;"
                                     >
                                         <template x-for="opt in filteredOptions" :key="opt.id">
                                             <div x-on:click="select(opt)" 
-                                                class="px-3 py-2 hover:bg-zinc-100 dark:hover:bg-zinc-700 cursor-pointer text-sm"
+                                                class="px-3 py-2 hover:bg-base-200 cursor-pointer text-sm"
                                                 x-text="opt.name">
                                             </div>
                                         </template>
                                         
                                         <div x-show="search && search.length > 1 && !exactMatch" 
                                             x-on:click="create()"
-                                            class="px-3 py-2 hover:bg-zinc-100 dark:hover:bg-zinc-700 cursor-pointer text-sm border-t font-medium text-emerald-600 dark:text-emerald-400 flex items-center gap-2"
+                                            class="px-3 py-2 hover:bg-base-200 cursor-pointer text-sm border-t font-medium text-emerald-600 flex items-center gap-2"
                                         >
-                                            <flux:icon name="plus" size="xs" />
+                                            <x-icon name="o-plus" class="size-3" />
                                             <span>Tambah "<span x-text="search"></span>"</span>
-                                        </div>
-                                        
-                                        <div x-show="search && filteredOptions.length === 0 && !exactMatch" 
-                                            class="p-4 text-zinc-400 italic text-xs text-center">
-                                            Tekan "Tambah" di atas untuk item baru
                                         </div>
                                     </div>
                                 </div>
                             </td>
-                            <td class="px-3 py-2 text-xs text-zinc-500">{{ $item['category_name'] }}</td>
-                            <td class="px-3 py-2 text-center">
-                                <flux:input type="number" wire:model.live.debounce.1000ms="formItems.{{ $index }}.quantity" class="text-center w-28 mx-auto" min="1" />
+                            <td class="text-xs opacity-50">{{ $item['category_name'] }}</td>
+                            <td class="text-center">
+                                <x-input type="number" wire:model.live.debounce.1000ms="formItems.{{ $index }}.quantity" class="text-center w-28 mx-auto" min="1" sm />
                             </td>
-                            <td class="px-3 py-2 text-center">
-                                <flux:input wire:model="formItems.{{ $index }}.unit" placeholder="Satuan" class="text-center w-16 mx-auto" />
+                            <td class="text-center">
+                                <x-input wire:model="formItems.{{ $index }}.unit" placeholder="Satuan" class="text-center w-16 mx-auto" sm />
                             </td>
-                            <td class="px-3 py-2">
-                                <flux:input type="number" wire:model.live.debounce.1300ms="formItems.{{ $index }}.amount" class="text-right w-32 ml-auto" min="0" />
+                            <td>
+                                <x-input type="number" wire:model.live.debounce.1300ms="formItems.{{ $index }}.amount" class="text-right w-32 ml-auto" min="0" sm />
                             </td>
-                            <td class="px-3 py-2 text-right font-medium">
+                            <td class="text-right font-medium">
                                 <div wire:loading.remove wire:target="formItems.{{ $index }}.quantity, formItems.{{ $index }}.amount">
                                     Rp {{ number_format($item['total'], 0, ',', '.') }}
                                 </div>
                                 <div wire:loading wire:target="formItems.{{ $index }}.quantity, formItems.{{ $index }}.amount">
-                                    <div class="flex justify-end">
-                                        <div class="animate-spin h-4 w-4 border-2 border-zinc-300 border-t-zinc-600 rounded-full"></div>
-                                    </div>
+                                    <span class="loading loading-spinner loading-xs text-info"></span>
                                 </div>
                             </td>
-                            <td class="px-3 py-2 text-center">
-                                <button type="button" wire:click="removeItemRow({{ $index }})" class="text-red-500 hover:text-red-700">
-                                    <flux:icon name="trash" class="size-4" />
-                                </button>
+                            <td class="text-center">
+                                <x-button icon="o-trash" class="text-error" wire:click="removeItemRow({{ $index }})" ghost sm />
                             </td>
                         </tr>
                         @endforeach
                     </tbody>
-                    <tfoot class="bg-zinc-50 dark:bg-zinc-800 font-bold">
+                    <tfoot class="bg-base-300 font-bold">
                         <tr>
-                            <td colspan="5" class="px-4 py-3 text-right">Total Anggaran</td>
-                            <td class="px-4 py-3 text-right">Rp {{ number_format($this->totalAmount, 0, ',', '.') }}</td>
+                            <td colspan="5" class="text-right">Total Anggaran</td>
+                            <td class="text-right">Rp {{ number_format($this->totalAmount, 0, ',', '.') }}</td>
                             <td></td>
                         </tr>
                     </tfoot>
                 </table>
-                <div class="p-2 bg-zinc-50 dark:bg-zinc-800 border-t">
-                    <flux:button size="sm" icon="plus" wire:click="addItemRow">Tambah Baris</flux:button>
+                <div class="p-2 bg-base-200 border-t border-base-300">
+                    <x-button label="Tambah Baris" icon="o-plus" wire:click="addItemRow" sm />
                 </div>
             </div>
 
-            <flux:textarea wire:model="notes" label="Catatan" placeholder="Catatan tambahan..." />
+            <x-textarea wire:model="notes" label="Catatan" placeholder="Catatan tambahan..." />
             
-            <div class="flex justify-between items-center pt-4 border-t">
-                <div>
-                    @if($editing && ($editing->status === 'submitted' && (Auth::user()->isYayasan() || Auth::user()->isAdmin())))
-                        <div class="flex gap-2">
-                            <flux:button variant="primary" wire:click="updateStatus({{ $editing->id }}, 'approved')">Setujui (Approve)</flux:button>
-                            <flux:button variant="danger" wire:click="updateStatus({{ $editing->id }}, 'rejected')">Tolak (Reject)</flux:button>
-                        </div>
-                    @endif
+            <x-slot:actions>
+                <div class="flex flex-wrap justify-between items-center w-full gap-4">
+                    <div class="flex gap-2">
+                        @if($editing && ($editing->status === 'submitted' && (Auth::user()->isYayasan() || Auth::user()->isAdmin())))
+                            <x-button label="Setujui (Approve)" class="btn-primary" wire:click="updateStatus({{ $editing->id }}, 'approved')" />
+                            <x-button label="Tolak (Reject)" class="btn-error" wire:click="updateStatus({{ $editing->id }}, 'rejected')" />
+                        @endif
+                    </div>
+                    <div class="flex gap-2">
+                        <x-button label="Tutup" @click="$dispatch('close-modal', 'plan-modal')" />
+                        @if(!$editing || $editing->status === 'draft' || $editing->status === 'rejected')
+                            <x-button label="Simpan Draft" class="btn-outline btn-primary" wire:click="save('draft')" spinner="save" />
+                            <x-button label="Simpan & Ajukan" class="btn-primary" wire:click="save('submit')" spinner="save" />
+                        @endif
+                    </div>
                 </div>
-                <div class="flex gap-2">
-                    <flux:button variant="ghost" x-on:click="$flux.modal('plan-modal').close()">Tutup</flux:button>
-                    @if(!$editing || $editing->status === 'draft' || $editing->status === 'rejected')
-                        <flux:button variant="subtle" wire:click="save('draft')">Simpan Draft</flux:button>
-                        <flux:button variant="primary" wire:click="save('submit')">Simpan & Ajukan</flux:button>
-                    @endif
-                </div>
-            </div>
+            </x-slot:actions>
         </div>
-</flux:modal>
+    </x-modal>
+</div>
 </div>

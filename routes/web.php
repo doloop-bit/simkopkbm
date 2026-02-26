@@ -25,12 +25,12 @@ require __DIR__.'/teacher.php';
 require __DIR__.'/users.php';
 require __DIR__.'/registrations.php';
 
-\Livewire\Volt\Volt::route('/test-modal', 'test-modal')
+Route::livewire('/test-modal', 'test-modal')
     ->middleware(['auth', 'verified']);
 
-Route::get('/test-at', function() {
+Route::get('/test-at', function () {
     return view('test-at');
 })->middleware(['auth', 'verified']);
 
-\Livewire\Volt\Volt::route('/dev/tools', 'dev-tools')
+Route::livewire('/dev/tools', 'dev-tools')
     ->name('dev.tools');

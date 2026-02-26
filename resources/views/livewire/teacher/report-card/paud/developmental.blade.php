@@ -8,7 +8,7 @@ use App\Models\AcademicYear;
 use App\Models\DevelopmentalAspect;
 use App\Models\DevelopmentalAssessment;
 use Livewire\Attributes\Layout;
-use Livewire\Volt\Component;
+use Livewire\Component;
 use Illuminate\Support\Facades\DB;
 
 new #[Layout('components.teacher.layouts.app')] class extends Component {

@@ -1,39 +1,16 @@
-<flux:dropdown position="bottom" align="start">
-    <flux:sidebar.profile
-        {{ $attributes->only('name') }}
-        :initials="auth()->user()->initials()"
-        icon:trailing="chevrons-up-down"
-        data-test="sidebar-menu-button"
-    />
+<x-dropdown right top transition class="w-full">
+    <x-slot:label>
+        <x-list-item :item="auth()->user()" value="name" sub-value="email" no-separator no-hover class="!p-0">
+            <x-slot:actions>
+                <x-icon name="o-chevron-up-down" class="size-4" />
+            </x-slot:actions>
+        </x-list-item>
+    </x-slot:label>
 
-    <flux:menu>
-        <div class="flex items-center gap-2 px-1 py-1.5 text-start text-sm">
-            <flux:avatar
-                :name="auth()->user()->name"
-                :initials="auth()->user()->initials()"
-            />
-            <div class="grid flex-1 text-start text-sm leading-tight">
-                <flux:heading class="truncate">{{ auth()->user()->name }}</flux:heading>
-                <flux:text class="truncate">{{ auth()->user()->email }}</flux:text>
-            </div>
-        </div>
-        <flux:menu.separator />
-        <flux:menu.radio.group>
-            <flux:menu.item :href="route('profile.edit')" wire:navigate>
-                {{ __('Settings') }}
-            </flux:menu.item>
-            <form method="POST" action="{{ route('logout') }}" class="w-full">
-                @csrf
-                <flux:menu.item
-                    as="button"
-                    type="submit"
-                    icon="arrow-right-start-on-rectangle"
-                    class="w-full cursor-pointer"
-                    data-test="logout-button"
-                >
-                    {{ __('Log Out') }}
-                </flux:menu.item>
-            </form>
-        </flux:menu.radio.group>
-    </flux:menu>
-</flux:dropdown>
+    <x-menu-item title="Settings" icon="o-cog-6-tooth" :link="route('profile.edit')" />
+    <x-menu-separator />
+    <form method="POST" action="{{ route('logout') }}">
+        @csrf
+        <x-menu-item title="Log Out" icon="o-power" onclick="this.closest('form').submit(); return false;" />
+    </form>
+</x-dropdown>

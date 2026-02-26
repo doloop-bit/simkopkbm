@@ -5,7 +5,7 @@ declare(strict_types=1);
 use App\Traits\Assessments\HandlesDailyAttendance;
 use App\Models\Classroom;
 use Livewire\Attributes\Layout;
-use Livewire\Volt\Component;
+use Livewire\Component;
 
 new #[Layout('components.admin.layouts.app')] class extends Component {
     use HandlesDailyAttendance;

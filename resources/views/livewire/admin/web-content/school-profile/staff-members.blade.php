@@ -3,7 +3,7 @@
 use App\Models\SchoolProfile;
 use App\Models\StaffMember;
 use Illuminate\Support\Facades\Storage;
-use Livewire\Volt\Component;
+use Livewire\Component;
 use Livewire\WithFileUploads;
 
 new class extends Component {
@@ -229,211 +229,185 @@ new class extends Component {
     }
 }; ?>
 
-<div>
-    <flux:heading size="xl">Struktur Organisasi</flux:heading>
-    <flux:subheading>Kelola anggota struktur organisasi sekolah</flux:subheading>
+<div class="p-6">
+    <x-header title="Struktur Organisasi" subtitle="Kelola anggota struktur organisasi sekolah" separator>
+        <x-slot:actions>
+            @if (!$showForm && $profile)
+                <x-button label="Tambah Anggota" icon="o-plus" class="btn-primary" wire:click="showAddForm" />
+            @endif
+        </x-slot:actions>
+    </x-header>
 
     @if (session()->has('message'))
-        <flux:callout color="green" icon="check-circle" class="mt-6">
+        <x-alert title="Sukses" icon="o-check-circle" class="alert-success mb-6">
             {{ session('message') }}
-        </flux:callout>
+        </x-alert>
     @endif
 
     @if (session()->has('error'))
-        <flux:callout color="red" icon="exclamation-triangle" class="mt-6">
+        <x-alert title="Error" icon="o-exclamation-triangle" class="alert-error mb-6">
             {{ session('error') }}
-        </flux:callout>
+        </x-alert>
     @endif
 
     @if (!$profile)
-        <flux:callout color="yellow" icon="exclamation-triangle" class="mt-6">
+        <x-alert title="Profil Belum Ada" icon="o-exclamation-triangle" class="alert-warning mb-6">
             Profil sekolah belum dibuat. Silakan buat profil sekolah terlebih dahulu di halaman Profil Sekolah.
-        </flux:callout>
+        </x-alert>
     @else
-        {{-- Add Button --}}
-        @if (!$showForm)
-            <div class="mt-6">
-                <flux:button wire:click="showAddForm" variant="primary">
-                    Tambah Anggota
-                </flux:button>
-            </div>
-        @endif
-
         {{-- Add/Edit Form --}}
         @if ($showForm)
-            <form wire:submit="save" class="mt-6 space-y-6 rounded-lg border border-zinc-200 bg-white p-6 dark:border-zinc-700 dark:bg-zinc-800">
-                <flux:heading size="lg">
-                    {{ $editingId ? 'Edit Anggota' : 'Tambah Anggota Baru' }}
-                </flux:heading>
+            <x-card title="{{ $editingId ? 'Edit Anggota' : 'Tambah Anggota Baru' }}" separator shadow class="mb-8 border border-base-200">
+                <form wire:submit="save" class="space-y-6">
+                    <x-input 
+                        wire:model="name" 
+                        label="Nama Lengkap" 
+                        type="text" 
+                        required 
+                        placeholder="Contoh: Dr. Ahmad Suryadi, M.Pd"
+                    />
 
-                <flux:input 
-                    wire:model="name" 
-                    label="Nama Lengkap" 
-                    type="text" 
-                    required 
-                    placeholder="Contoh: Dr. Ahmad Suryadi, M.Pd"
-                />
+                    <x-input 
+                        wire:model="position" 
+                        label="Jabatan" 
+                        type="text" 
+                        required 
+                        placeholder="Contoh: Kepala Sekolah"
+                    />
 
-                <flux:input 
-                    wire:model="position" 
-                    label="Jabatan" 
-                    type="text" 
-                    required 
-                    placeholder="Contoh: Kepala Sekolah"
-                />
-
-                {{-- Photo Upload --}}
-                <div class="space-y-4">
-                    @if ($currentPhotoPath && !$photo)
-                        <div class="flex items-start gap-4">
-                            <img 
-                                src="{{ Storage::url($currentPhotoPath) }}" 
-                                alt="Foto {{ $name }}" 
-                                class="h-32 w-32 rounded-lg border object-cover"
-                            >
-                            <div class="flex flex-col gap-2">
-                                <flux:text>Foto saat ini</flux:text>
-                                <flux:button 
-                                    wire:click="removePhoto" 
-                                    variant="danger" 
-                                    size="sm"
-                                    type="button"
-                                    wire:confirm="Apakah Anda yakin ingin menghapus foto?"
+                    {{-- Photo Upload --}}
+                    <div class="space-y-4">
+                        @if ($currentPhotoPath && !$photo)
+                            <div class="flex items-start gap-4 p-4 bg-base-200 rounded-lg">
+                                <img 
+                                    src="{{ Storage::url($currentPhotoPath) }}" 
+                                    alt="Foto {{ $name }}" 
+                                    class="h-32 w-32 rounded-lg border border-base-300 object-cover"
                                 >
-                                    Hapus Foto
-                                </flux:button>
+                                <div class="flex flex-col gap-2">
+                                    <span class="text-sm font-medium">Foto saat ini</span>
+                                    <x-button 
+                                        wire:click="removePhoto" 
+                                        label="Hapus Foto"
+                                        icon="o-trash"
+                                        class="btn-error btn-sm"
+                                        wire:confirm="Apakah Anda yakin ingin menghapus foto?"
+                                    />
+                                </div>
                             </div>
-                        </div>
-                    @endif
+                        @endif
 
-                    <div>
-                        <flux:input 
+                        <x-file 
                             wire:model="photo" 
                             label="Foto" 
-                            type="file" 
                             accept="image/jpeg,image/jpg,image/png,image/webp"
+                            crop-after-change
+                        >
+                            <span class="text-xs opacity-70">Format: JPEG, PNG, WebP. Maksimal 5MB. Opsional.</span>
+                            @if ($photo)
+                                <div class="text-sm mt-2">
+                                    File dipilih: <span class="font-medium">{{ $photo->getClientOriginalName() }}</span>
+                                </div>
+                            @endif
+                        </x-file>
+                    </div>
+
+                    {{-- Form Actions --}}
+                    <x-slot:actions>
+                        <x-button label="Batal" wire:click="cancelEdit" ghost />
+                        <x-button 
+                            label="{{ $editingId ? 'Perbarui' : 'Simpan' }}"
+                            class="btn-primary" 
+                            type="submit" 
+                            spinner="save"
                         />
-                        <flux:text class="mt-1 text-sm">
-                            Format: JPEG, PNG, WebP. Maksimal 5MB. Opsional.
-                        </flux:text>
-                        @if ($photo)
-                            <flux:text class="mt-2 text-sm">
-                                File dipilih: {{ $photo->getClientOriginalName() }}
-                            </flux:text>
-                        @endif
-                    </div>
-
-                    <div wire:loading wire:target="photo" class="text-sm text-zinc-600 dark:text-zinc-400">
-                        Mengunggah file...
-                    </div>
-                </div>
-
-                {{-- Form Actions --}}
-                <div class="flex items-center justify-end gap-4">
-                    <flux:button 
-                        wire:click="cancelEdit" 
-                        variant="ghost" 
-                        type="button"
-                    >
-                        Batal
-                    </flux:button>
-                    <flux:button 
-                        variant="primary" 
-                        type="submit" 
-                        wire:loading.attr="disabled"
-                    >
-                        <span wire:loading.remove wire:target="save">
-                            {{ $editingId ? 'Perbarui' : 'Simpan' }}
-                        </span>
-                        <span wire:loading wire:target="save">Menyimpan...</span>
-                    </flux:button>
-                </div>
-            </form>
+                    </x-slot:actions>
+                </form>
+            </x-card>
         @endif
 
         {{-- Staff Members List --}}
         @if (count($staffMembers) > 0)
-            <div class="mt-6 space-y-4">
-                <flux:heading size="lg">Daftar Anggota</flux:heading>
+            <div class="space-y-4">
+                <h3 class="text-lg font-bold">Daftar Anggota</h3>
                 
-                <div class="space-y-3">
+                <div class="grid grid-cols-1 gap-4">
                     @foreach ($staffMembers as $index => $staff)
-                        <div class="flex items-center gap-4 rounded-lg border border-zinc-200 bg-white p-4 dark:border-zinc-700 dark:bg-zinc-800">
-                            {{-- Photo --}}
-                            <div class="flex-shrink-0">
-                                @if ($staff['photo_path'])
-                                    <img 
-                                        src="{{ Storage::url($staff['photo_path']) }}" 
-                                        alt="Foto {{ $staff['name'] }}" 
-                                        class="h-20 w-20 rounded-lg border object-cover"
-                                    >
-                                @else
-                                    <div class="flex h-20 w-20 items-center justify-center rounded-lg border bg-zinc-100 dark:bg-zinc-700">
-                                        <flux:icon.user class="h-10 w-10 text-zinc-400" />
+                        <x-card wire:key="staff-{{ $staff['id'] }}" shadow class="border border-base-200 hover:shadow-md transition-all">
+                            <div class="flex flex-col sm:flex-row items-center sm:items-start gap-4">
+                                {{-- Photo --}}
+                                <div class="flex-shrink-0">
+                                    @if ($staff['photo_path'])
+                                        <img 
+                                            src="{{ Storage::url($staff['photo_path']) }}" 
+                                            alt="Foto {{ $staff['name'] }}" 
+                                            class="h-24 w-24 sm:h-20 sm:w-20 rounded-full border border-base-300 object-cover"
+                                        >
+                                    @else
+                                        <div class="flex h-24 w-24 sm:h-20 sm:w-20 items-center justify-center rounded-full border border-base-200 bg-base-200">
+                                            <x-icon name="o-user" class="h-10 w-10 opacity-30" />
+                                        </div>
+                                    @endif
+                                </div>
+
+                                {{-- Info --}}
+                                <div class="flex-1 text-center sm:text-left">
+                                    <h4 class="font-bold text-lg">{{ $staff['name'] }}</h4>
+                                    <p class="text-sm opacity-70">{{ $staff['position'] }}</p>
+                                    <div class="mt-2 text-xs flex items-center justify-center sm:justify-start gap-2">
+                                        <x-badge label="Urutan: {{ $staff['order'] }}" class="badge-ghost badge-xs" />
                                     </div>
-                                @endif
-                            </div>
-
-                            {{-- Info --}}
-                            <div class="flex-1">
-                                <flux:heading size="base">{{ $staff['name'] }}</flux:heading>
-                                <flux:text class="text-sm">{{ $staff['position'] }}</flux:text>
-                                <flux:text class="mt-1 text-xs text-zinc-500">
-                                    Urutan: {{ $staff['order'] }}
-                                </flux:text>
-                            </div>
-
-                            {{-- Actions --}}
-                            <div class="flex flex-col gap-2 sm:flex-row">
-                                {{-- Ordering Buttons --}}
-                                <div class="flex gap-1">
-                                    <flux:button 
-                                        wire:click="moveUp({{ $staff['id'] }})" 
-                                        variant="ghost" 
-                                        size="sm"
-                                        :disabled="$index === 0"
-                                        title="Pindah ke atas"
-                                    >
-                                        <flux:icon.chevron-up class="h-4 w-4" />
-                                    </flux:button>
-                                    <flux:button 
-                                        wire:click="moveDown({{ $staff['id'] }})" 
-                                        variant="ghost" 
-                                        size="sm"
-                                        :disabled="$index === count($staffMembers) - 1"
-                                        title="Pindah ke bawah"
-                                    >
-                                        <flux:icon.chevron-down class="h-4 w-4" />
-                                    </flux:button>
                                 </div>
 
-                                {{-- Edit & Delete Buttons --}}
-                                <div class="flex gap-2">
-                                    <flux:button 
-                                        wire:click="edit({{ $staff['id'] }})" 
-                                        variant="ghost" 
-                                        size="sm"
-                                    >
-                                        Edit
-                                    </flux:button>
-                                    <flux:button 
-                                        wire:click="delete({{ $staff['id'] }})" 
-                                        variant="danger" 
-                                        size="sm"
-                                        wire:confirm="Apakah Anda yakin ingin menghapus anggota ini?"
-                                    >
-                                        Hapus
-                                    </flux:button>
+                                {{-- Actions --}}
+                                <div class="flex flex-row sm:flex-col justify-end gap-1 w-full sm:w-auto mt-4 sm:mt-0 pt-4 sm:pt-0 border-t sm:border-t-0 border-base-200">
+                                    {{-- Ordering Buttons --}}
+                                    <div class="flex gap-1 justify-center">
+                                        <x-button 
+                                            wire:click="moveUp({{ $staff['id'] }})" 
+                                            icon="o-chevron-up"
+                                            class="btn-xs btn-ghost btn-circle"
+                                            :disabled="$index === 0"
+                                            tooltip="Pindah ke atas"
+                                        />
+                                        <x-button 
+                                            wire:click="moveDown({{ $staff['id'] }})" 
+                                            icon="o-chevron-down"
+                                            class="btn-xs btn-ghost btn-circle"
+                                            :disabled="$index === count($staffMembers) - 1"
+                                            tooltip="Pindah ke bawah"
+                                        />
+                                    </div>
+
+                                    {{-- Edit & Delete Buttons --}}
+                                    <div class="flex gap-1 justify-center">
+                                        <x-button 
+                                            wire:click="edit({{ $staff['id'] }})" 
+                                            icon="o-pencil"
+                                            class="btn-sm btn-ghost"
+                                            tooltip="Edit"
+                                        />
+                                        <x-button 
+                                            wire:click="delete({{ $staff['id'] }})" 
+                                            icon="o-trash"
+                                            class="btn-sm btn-ghost text-error"
+                                            wire:confirm="Apakah Anda yakin ingin menghapus anggota ini?"
+                                            tooltip="Hapus"
+                                        />
+                                    </div>
                                 </div>
                             </div>
-                        </div>
+                        </x-card>
                     @endforeach
                 </div>
             </div>
         @else
-            <flux:callout color="zinc" icon="information-circle" class="mt-6">
-                Belum ada anggota struktur organisasi. Klik tombol "Tambah Anggota" untuk menambahkan anggota baru.
-            </flux:callout>
+            <x-card class="mt-8 p-12 text-center" shadow>
+                <x-icon name="o-user-group" class="size-12 mb-3 opacity-20" />
+                <p class="text-base-content/50">
+                    Belum ada anggota struktur organisasi. Klik tombol "Tambah Anggota" untuk menambahkan anggota baru.
+                </p>
+            </x-card>
         @endif
     @endif
 </div>

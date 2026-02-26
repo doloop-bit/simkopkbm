@@ -1,140 +1,130 @@
-<flux:modal name="detail-modal" class="max-w-4xl">
+<x-modal id="detail-modal" class="backdrop-blur" persistent>
     @if($viewing)
         @php $viewProfile = $viewing->latestProfile?->profileable; @endphp
         <div class="space-y-6">
-            <div class="flex items-start justify-between">
-                <div>
-                    <flux:heading size="lg">Detail Siswa</flux:heading>
-                    <flux:subheading>Informasi lengkap data siswa</flux:subheading>
-                </div>
-            </div>
+            <x-header title="Detail Siswa" subtitle="Informasi lengkap data siswa" separator />
 
-            <div class="flex items-start gap-6 pb-6 border-b border-zinc-200 dark:border-zinc-700">
+            <div class="flex items-start gap-6 pb-6 border-b border-base-200">
                 <div class="flex-shrink-0">
-                    @if($viewProfile?->photo)
-                        <img src="/storage/{{ $viewProfile->photo }}"
-                            class="w-32 h-32 rounded-lg object-cover border-2 border-zinc-200 dark:border-zinc-700"
-                            alt="{{ $viewing->name }}" />
-                    @else
-                        <div class="w-32 h-32 rounded-lg bg-zinc-100 dark:bg-zinc-800 flex items-center justify-center">
-                            <flux:icon icon="user" class="w-16 h-16 text-zinc-400" />
-                        </div>
-                    @endif
+                    <x-avatar 
+                        image="{{ $viewProfile?->photo ? '/storage/'.$viewProfile->photo : null }}" 
+                        fallback="o-user" 
+                        class="!w-32 !h-32 rounded-lg"
+                    />
                 </div>
 
                 <div class="flex-1 space-y-2">
                     <div>
-                        <flux:heading size="xl">{{ $viewing->name }}</flux:heading>
-                        <flux:text class="text-zinc-600 dark:text-zinc-400">{{ $viewing->email }}</flux:text>
+                        <h2 class="text-2xl font-bold">{{ $viewing->name }}</h2>
+                        <div class="text-sm opacity-60">{{ $viewing->email }}</div>
                     </div>
 
                     <div class="flex gap-2 items-center">
                         @if($viewProfile?->classroom)
-                            <flux:badge variant="primary">{{ $viewProfile->classroom->name }}</flux:badge>
+                            <x-badge :label="$viewProfile->classroom->name" class="badge-primary" />
                         @else
-                            <flux:badge variant="danger">Belum ada kelas</flux:badge>
+                            <x-badge label="Belum ada kelas" class="badge-error" />
                         @endif
 
-                        <flux:badge variant="neutral">
-                            {{ ucfirst(str_replace('_', ' ', $viewProfile?->status ?? 'baru')) }}
-                        </flux:badge>
+                        <x-badge 
+                            :label="ucfirst(str_replace('_', ' ', $viewProfile?->status ?? 'baru'))" 
+                            class="badge-neutral" 
+                        />
                     </div>
                 </div>
             </div>
 
-            <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-6 h-[40vh] overflow-y-auto pr-2 custom-scrollbar">
                 <div class="space-y-4">
-                    <flux:heading size="md" class="border-b pb-2">Identitas Siswa</flux:heading>
+                    <div class="font-bold border-b pb-2 text-sm opacity-70">Identitas Siswa</div>
 
                     <div class="space-y-3">
                         <div>
-                            <flux:text size="xs" class="text-zinc-500 dark:text-zinc-400">NIS</flux:text>
-                            <flux:text>{{ $viewProfile?->nis ?? '-' }}</flux:text>
+                            <div class="text-[10px] uppercase tracking-widest opacity-50 font-bold">NIS</div>
+                            <div class="text-sm">{{ $viewProfile?->nis ?? '-' }}</div>
                         </div>
 
                         <div>
-                            <flux:text size="xs" class="text-zinc-500 dark:text-zinc-400">NISN</flux:text>
-                            <flux:text>{{ $viewProfile?->nisn ?? '-' }}</flux:text>
+                            <div class="text-[10px] uppercase tracking-widest opacity-50 font-bold">NISN</div>
+                            <div class="text-sm">{{ $viewProfile?->nisn ?? '-' }}</div>
                         </div>
 
                         <div>
-                            <flux:text size="xs" class="text-zinc-500 dark:text-zinc-400">NIK Siswa</flux:text>
-                            <flux:text>{{ $viewProfile?->nik ?? '-' }}</flux:text>
+                            <div class="text-[10px] uppercase tracking-widest opacity-50 font-bold">NIK Siswa</div>
+                            <div class="text-sm">{{ $viewProfile?->nik ?? '-' }}</div>
                         </div>
 
                         <div class="grid grid-cols-2 gap-3">
                             <div>
-                                <flux:text size="xs" class="text-zinc-500 dark:text-zinc-400">No. KK</flux:text>
-                                <flux:text>{{ $viewProfile?->no_kk ?? '-' }}</flux:text>
+                                <div class="text-[10px] uppercase tracking-widest opacity-50 font-bold">No. KK</div>
+                                <div class="text-sm">{{ $viewProfile?->no_kk ?? '-' }}</div>
                             </div>
                             <div>
-                                <flux:text size="xs" class="text-zinc-500 dark:text-zinc-400">No. Akta</flux:text>
-                                <flux:text>{{ $viewProfile?->no_akta ?? '-' }}</flux:text>
+                                <div class="text-[10px] uppercase tracking-widest opacity-50 font-bold">No. Akta</div>
+                                <div class="text-sm">{{ $viewProfile?->no_akta ?? '-' }}</div>
                             </div>
                         </div>
 
                         <div>
-                            <flux:text size="xs" class="text-zinc-500 dark:text-zinc-400">Tempat, Tanggal Lahir
-                            </flux:text>
-                            <flux:text>
+                            <div class="text-[10px] uppercase tracking-widest opacity-50 font-bold">Tempat, Tanggal Lahir</div>
+                            <div class="text-sm">
                                 {{ $viewProfile?->pob ?? '-' }}{{ $viewProfile?->dob ? ', ' . $viewProfile->dob->format('d F Y') : '' }}
-                            </flux:text>
+                            </div>
                         </div>
 
                         <div>
-                            <flux:text size="xs" class="text-zinc-500 dark:text-zinc-400">No. Telepon</flux:text>
-                            <flux:text>{{ $viewProfile?->phone ?? '-' }}</flux:text>
+                            <div class="text-[10px] uppercase tracking-widest opacity-50 font-bold">No. Telepon</div>
+                            <div class="text-sm">{{ $viewProfile?->phone ?? '-' }}</div>
                         </div>
 
                         <div>
-                            <flux:text size="xs" class="text-zinc-500 dark:text-zinc-400">Alamat</flux:text>
-                            <flux:text>{{ $viewProfile?->address ?? '-' }}</flux:text>
+                            <div class="text-[10px] uppercase tracking-widest opacity-50 font-bold">Alamat</div>
+                            <div class="text-sm">{{ $viewProfile?->address ?? '-' }}</div>
                         </div>
 
                         <div class="grid grid-cols-2 gap-3">
                             <div>
-                                <flux:text size="xs" class="text-zinc-500 dark:text-zinc-400">Anak Ke-</flux:text>
-                                <flux:text>{{ $viewProfile?->birth_order ?? '-' }}</flux:text>
+                                <div class="text-[10px] uppercase tracking-widest opacity-50 font-bold">Anak Ke-</div>
+                                <div class="text-sm">{{ $viewProfile?->birth_order ?? '-' }}</div>
                             </div>
                             <div>
-                                <flux:text size="xs" class="text-zinc-500 dark:text-zinc-400">Dari ... Bersaudara
-                                </flux:text>
-                                <flux:text>{{ $viewProfile?->total_siblings ?? '-' }}</flux:text>
+                                <div class="text-[10px] uppercase tracking-widest opacity-50 font-bold">Dari ... Bersaudara</div>
+                                <div class="text-sm">{{ $viewProfile?->total_siblings ?? '-' }}</div>
                             </div>
                         </div>
 
                         <div>
-                            <flux:text size="xs" class="text-zinc-500 dark:text-zinc-400">Asal Sekolah</flux:text>
-                            <flux:text>{{ $viewProfile?->previous_school ?? '-' }}</flux:text>
+                            <div class="text-[10px] uppercase tracking-widest opacity-50 font-bold">Asal Sekolah</div>
+                            <div class="text-sm">{{ $viewProfile?->previous_school ?? '-' }}</div>
                         </div>
                     </div>
                 </div>
 
                 <div class="space-y-4">
-                    <flux:heading size="md" class="border-b pb-2">Data Orang Tua / Wali</flux:heading>
+                    <div class="font-bold border-b pb-2 text-sm opacity-70">Data Orang Tua / Wali</div>
 
                     <div class="space-y-3">
                         <div>
-                            <flux:text size="xs" class="text-zinc-500 dark:text-zinc-400">Nama Ayah</flux:text>
-                            <flux:text>{{ $viewProfile?->father_name ?? '-' }} (NIK: {{ $viewProfile?->nik_ayah ?? '-' }})</flux:text>
+                            <div class="text-[10px] uppercase tracking-widest opacity-50 font-bold">Nama Ayah</div>
+                            <div class="text-sm">{{ $viewProfile?->father_name ?? '-' }} (NIK: {{ $viewProfile?->nik_ayah ?? '-' }})</div>
                         </div>
                         
                         <div>
-                            <flux:text size="xs" class="text-zinc-500 dark:text-zinc-400">Nama Ibu</flux:text>
-                            <flux:text>{{ $viewProfile?->mother_name ?? '-' }} (NIK: {{ $viewProfile?->nik_ibu ?? '-' }})</flux:text>
+                            <div class="text-[10px] uppercase tracking-widest opacity-50 font-bold">Nama Ibu</div>
+                            <div class="text-sm">{{ $viewProfile?->mother_name ?? '-' }} (NIK: {{ $viewProfile?->nik_ibu ?? '-' }})</div>
                         </div>
 
                         <div class="pt-4 space-y-3">
-                            <flux:heading size="sm">Kontak Wali</flux:heading>
+                            <div class="font-bold text-xs opacity-70 uppercase tracking-widest">Kontak Wali</div>
 
                             <div>
-                                <flux:text size="xs" class="text-zinc-500 dark:text-zinc-400">Nama Wali</flux:text>
-                                <flux:text>{{ $viewProfile?->guardian_name ?? '-' }}</flux:text>
+                                <div class="text-[10px] uppercase tracking-widest opacity-50 font-bold">Nama Wali</div>
+                                <div class="text-sm">{{ $viewProfile?->guardian_name ?? '-' }}</div>
                             </div>
 
                             <div>
-                                <flux:text size="xs" class="text-zinc-500 dark:text-zinc-400">No. Telp Wali</flux:text>
-                                <flux:text>{{ $viewProfile?->guardian_phone ?? '-' }}</flux:text>
+                                <div class="text-[10px] uppercase tracking-widest opacity-50 font-bold">No. Telp Wali</div>
+                                <div class="text-sm">{{ $viewProfile?->guardian_phone ?? '-' }}</div>
                             </div>
                         </div>
                     </div>
@@ -151,27 +141,27 @@
             @endphp
 
             @if($periodicRecords && $periodicRecords->count() > 0)
-                <div class="pt-6 border-t border-zinc-200 dark:border-zinc-700">
-                    <flux:heading size="md" class="mb-4">Data Periodik Terbaru</flux:heading>
+                <div class="pt-6 border-t border-base-200">
+                    <div class="font-bold mb-4 text-sm opacity-70 italic">Data Periodik Terbaru</div>
 
                     <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
                         @foreach($periodicRecords as $record)
-                            <div class="p-4 bg-zinc-50 dark:bg-zinc-800 rounded-lg">
-                                <div class="text-xs text-zinc-500 dark:text-zinc-400 mb-2">
-                                    {{ $record->academicYear->name }} - Semester {{ $record->semester }}
+                            <div class="p-4 bg-base-200 rounded-lg shadow-inner">
+                                <div class="text-[10px] opacity-50 font-bold mb-2 uppercase tracking-widest">
+                                    {{ $record->academicYear->name }} - Sem {{ $record->semester }}
                                 </div>
                                 <div class="space-y-2">
-                                    <div class="flex justify-between">
-                                        <span class="text-sm text-zinc-600 dark:text-zinc-400">Berat:</span>
-                                        <span class="font-medium">{{ $record->weight }} kg</span>
+                                    <div class="flex justify-between text-sm">
+                                        <span class="opacity-60">Berat:</span>
+                                        <span class="font-mono font-bold">{{ $record->weight }} kg</span>
                                     </div>
-                                    <div class="flex justify-between">
-                                        <span class="text-sm text-zinc-600 dark:text-zinc-400">Tinggi:</span>
-                                        <span class="font-medium">{{ $record->height }} cm</span>
+                                    <div class="flex justify-between text-sm">
+                                        <span class="opacity-60">Tinggi:</span>
+                                        <span class="font-mono font-bold">{{ $record->height }} cm</span>
                                     </div>
-                                    <div class="flex justify-between">
-                                        <span class="text-sm text-zinc-600 dark:text-zinc-400">Ling. Kepala:</span>
-                                        <span class="font-medium">{{ $record->head_circumference }} cm</span>
+                                    <div class="flex justify-between text-sm">
+                                        <span class="opacity-60">Ling. Kepala:</span>
+                                        <span class="font-mono font-bold">{{ $record->head_circumference }} cm</span>
                                     </div>
                                 </div>
                             </div>
@@ -180,15 +170,10 @@
                 </div>
             @endif
 
-            <div class="flex justify-end gap-2 pt-4 border-t border-zinc-200 dark:border-zinc-700">
-                <flux:modal.close>
-                    <flux:button variant="ghost">Tutup</flux:button>
-                </flux:modal.close>
-                <flux:button variant="primary" icon="pencil-square" wire:click="edit({{ $viewing->id }})"
-                    x-on:click="$flux.modal('detail-modal').close(); $flux.modal('student-modal').show()">
-                    Edit Data
-                </flux:button>
-            </div>
+            <x-slot:actions>
+                <x-button label="Tutup" @click="$dispatch('close-modal', 'detail-modal')" />
+                <x-button label="Edit Data" icon="o-pencil-square" wire:click="edit({{ $viewing->id }})" @click="$dispatch('close-modal', 'detail-modal'); $dispatch('open-modal', 'student-modal')" class="btn-primary" />
+            </x-slot:actions>
         </div>
     @endif
-</flux:modal>
+</x-modal>

@@ -9,7 +9,7 @@ use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Storage;
 use Livewire\Attributes\Layout;
-use Livewire\Volt\Component;
+use Livewire\Component;
 use Livewire\WithFileUploads;
 use Livewire\WithPagination;
 
@@ -484,168 +484,116 @@ new #[Layout('components.admin.layouts.app')] class extends Component {
 
 <div class="p-6">
     @if (session('success'))
-        <div x-data="{ show: true }" x-show="show"
-            class="mb-6 p-4 bg-green-50 dark:bg-green-900/20 border border-green-200 dark:border-green-800 rounded-lg">
-            <div class="flex items-center gap-3">
-                <flux:icon icon="check-circle" class="w-5 h-5 text-green-600 dark:text-green-400" />
-                <span class="text-green-800 dark:text-green-200">{{ session('success') }}</span>
-            </div>
-        </div>
+        <x-alert title="Sukses" icon="o-check-circle" class="alert-success mb-6">
+            {{ session('success') }}
+        </x-alert>
     @endif
 
     @if (session('error'))
-        <div x-data="{ show: true }" x-show="show"
-            class="mb-6 p-4 bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded-lg">
-            <div class="flex items-center gap-3">
-                <flux:icon icon="exclamation-circle" class="w-5 h-5 text-red-600 dark:text-red-400" />
-                <span class="text-red-800 dark:text-red-200">{{ session('error') }}</span>
-            </div>
-        </div>
+        <x-alert title="Gagal" icon="o-exclamation-circle" class="alert-error mb-6">
+            {{ session('error') }}
+        </x-alert>
     @endif
 
-    <div class="flex items-center justify-between mb-6">
-        <div>
-            <flux:heading size="xl" level="1">Manajemen Siswa</flux:heading>
-            <flux:subheading>Kelola data murid, profil, dan penempatan kelas.</flux:subheading>
-        </div>
-
-        <div class="flex gap-2">
-            <flux:input wire:model.live.debounce.300ms="search" placeholder="Cari siswa..." icon="magnifying-glass"
-                class="w-64" />
-
-            <flux:modal.trigger name="import-modal">
-                <flux:button variant="outline" icon="arrow-up-tray">Import</flux:button>
-            </flux:modal.trigger>
-
-            <flux:modal.trigger name="student-modal">
-                <flux:button variant="primary" icon="plus" wire:click="createNew">Tambah Siswa</flux:button>
-            </flux:modal.trigger>
-        </div>
-    </div>
+    <x-header title="Manajemen Siswa" subtitle="Kelola data murid, profil, dan penempatan kelas.">
+        <x-slot:actions>
+            <x-input wire:model.live.debounce.300ms="search" placeholder="Cari siswa..." icon="o-magnifying-glass" class="w-64" clearable />
+            <x-button label="Import" icon="o-arrow-up-tray" @click="$dispatch('open-modal', 'import-modal')" />
+            <x-button label="Tambah Siswa" icon="o-plus" wire:click="createNew" @click="$dispatch('open-modal', 'student-modal')" class="btn-primary" />
+        </x-slot:actions>
+    </x-header>
 
     <div
         class="overflow-hidden border rounded-xl border-zinc-200 dark:border-zinc-700 bg-white dark:bg-zinc-900 shadow-sm">
-        <div
-            class="p-4 border-b border-zinc-200 dark:border-zinc-700 flex flex-col md:flex-row gap-4 items-center justify-between bg-zinc-50/50 dark:bg-zinc-800/50">
+        <div class="p-4 border-b border-base-200 flex flex-col md:flex-row gap-4 items-center justify-between bg-base-200/50">
             <div class="flex flex-1 gap-3 w-full md:w-auto">
-                <flux:select wire:model.live="filter_level_id" placeholder="Pilih Tingkat" class="max-w-[200px]">
-                    <option value="">Semua Tingkat</option>
-                    @foreach ($levels as $level)
-                        <option value="{{ $level->id }}">{{ $level->name }}</option>
-                    @endforeach
-                </flux:select>
-                <flux:select wire:model.live="filter_classroom_id" placeholder="Semua Kelas" class="max-w-[200px]">
-                    <option value="">Semua Kelas</option>
-                    @foreach ($filter_classrooms as $room)
-                        <option value="{{ $room->id }}">{{ $room->name }}</option>
-                    @endforeach
-                </flux:select>
+                <x-select 
+                    wire:model.live="filter_level_id" 
+                    placeholder="Semua Tingkat" 
+                    :options="$levels"
+                    class="max-w-[200px]"
+                />
+                <x-select 
+                    wire:model.live="filter_classroom_id" 
+                    placeholder="Semua Kelas" 
+                    :options="$filter_classrooms"
+                    class="max-w-[200px]"
+                />
             </div>
 
             <div class="flex gap-2 w-full md:w-auto justify-end">
-                <flux:button wire:click="export" icon="arrow-down-tray" variant="outline">Export XLSX</flux:button>
+                <x-button wire:click="export" icon="o-arrow-down-tray" label="Export XLSX" outline />
             </div>
         </div>
 
-        <table class="w-full text-sm text-left border-collapse">
-            <thead class="bg-zinc-50 dark:bg-zinc-800/50">
+        <table class="table">
+            <thead>
                 <tr>
-                    <th
-                        class="px-4 py-3 font-semibold text-zinc-900 dark:text-zinc-100 border-b border-zinc-200 dark:border-zinc-700">
-                        <button wire:click="sortBy('name')"
-                            class="flex items-center gap-1 hover:text-primary-600 transition-colors">
-                            Siswa
-                            @if ($sortField === 'name')
-                                <flux:icon :icon="$sortDirection === 'asc' ? 'chevron-up' : 'chevron-down'"
-                                    class="w-3 h-3" />
-                            @endif
-                        </button>
+                    <th class="bg-base-200">
+                        <x-button label="Siswa" wire:click="sortBy('name')" ghost sm class="!px-0" />
+                        @if ($sortField === 'name')
+                            <x-icon :name="$sortDirection === 'asc' ? 'o-chevron-up' : 'o-chevron-down'" class="size-3" />
+                        @endif
                     </th>
-                    <th
-                        class="px-4 py-3 font-semibold text-zinc-900 dark:text-zinc-100 border-b border-zinc-200 dark:border-zinc-700">
-                        NIS/NISN
-                    </th>
-                    <th
-                        class="px-4 py-3 font-semibold text-zinc-900 dark:text-zinc-100 border-b border-zinc-200 dark:border-zinc-700">
-                        Kelas
-                    </th>
-                    <th
-                        class="px-4 py-3 font-semibold text-zinc-900 dark:text-zinc-100 border-b border-zinc-200 dark:border-zinc-700">
-                        Orang Tua/Wali
-                    </th>
-                    <th
-                        class="px-4 py-3 font-semibold text-zinc-900 dark:text-zinc-100 border-b border-zinc-200 dark:border-zinc-700 text-right">
-                        Aksi
-                    </th>
+                    <th class="bg-base-200">NIS/NISN</th>
+                    <th class="bg-base-200">Kelas</th>
+                    <th class="bg-base-200">Orang Tua/Wali</th>
+                    <th class="bg-base-200 text-right">Aksi</th>
                 </tr>
             </thead>
-            <tbody class="divide-y divide-zinc-200 dark:divide-zinc-700">
+            <tbody>
                 @forelse ($students as $student)
                     @php $profile = $student->latestProfile?->profileable; @endphp
-                    <tr wire:key="{{ $student->id }}"
-                        class="hover:bg-zinc-50/80 dark:hover:bg-zinc-800/30 transition-colors group">
-                        <td class="px-4 py-4">
-                            <button type="button"
-                                class="flex items-center gap-3 cursor-pointer text-left focus:outline-none"
-                                wire:click="viewDetails({{ $student->id }})"
-                                x-on:click="$flux.modal('detail-modal').show()">
-                                @if ($profile?->photo && Storage::disk('public')->exists($profile->photo))
-                                    <flux:avatar src="/storage/{{ $profile->photo }}" size="sm"
-                                        class="group-hover:ring-1 ring-primary-500/20 transition-all" />
-                                @else
-                                    <div
-                                        class="group-hover:ring-1 flex aspect-square size-8 items-center justify-center rounded-lg bg-zinc-100 text-zinc-400 group-hover:bg-primary-50 group-hover:text-primary-600 transition-all dark:bg-zinc-800 dark:text-zinc-500 dark:group-hover:bg-primary-900/20 dark:group-hover:text-primary-400">
-                                        <flux:icon icon="user" variant="mini" class="size-5" />
-                                    </div>
-                                @endif
+                    <tr wire:key="{{ $student->id }}" class="hover">
+                        <td>
+                            <div class="flex items-center gap-3 cursor-pointer" wire:click="viewDetails({{ $student->id }})">
+                                <x-avatar 
+                                    image="{{ ($profile?->photo && Storage::disk('public')->exists($profile->photo)) ? '/storage/'.$profile->photo : null }}" 
+                                    fallback="o-user" 
+                                    class="!w-10 !h-10"
+                                />
                                 <div class="flex flex-col">
-                                    <span
-                                        class="font-semibold text-zinc-900 dark:text-white group-hover:text-primary-600 dark:group-hover:text-primary-400 transition-colors">{{ $student->name }}</span>
-                                    <span class="text-xs text-zinc-500">{{ $student->email ?? '-' }}</span>
+                                    <span class="font-bold">{{ $student->name }}</span>
+                                    <span class="text-xs opacity-60">{{ $student->email ?? '-' }}</span>
                                 </div>
-                            </button>
+                            </div>
                         </td>
-                        <td class="px-4 py-4 text-zinc-600 dark:text-zinc-400">
+                        <td>
                             <div class="flex flex-col">
                                 <span class="text-sm font-medium">{{ $profile?->nis ?? '-' }}</span>
-                                <span class="text-[10px] uppercase tracking-wider opacity-60">NISN:
-                                    {{ $profile?->nisn ?? '-' }}</span>
+                                <span class="text-[10px] uppercase tracking-wider opacity-60">NISN: {{ $profile?->nisn ?? '-' }}</span>
                             </div>
                         </td>
-                        <td class="px-4 py-4">
+                        <td>
                             @if ($profile?->classroom)
-                                <flux:badge size="sm" variant="neutral"
-                                    class="bg-zinc-100 dark:bg-zinc-800 border-zinc-200 dark:border-zinc-700">
-                                    {{ $profile->classroom->name }}
-                                </flux:badge>
+                                <x-badge :label="$profile->classroom->name" class="badge-neutral badge-sm" />
                             @else
-                                <span class="text-xs text-red-500 italic">Belum ada kelas</span>
+                                <span class="text-xs text-error italic">Belum ada kelas</span>
                             @endif
                         </td>
-                        <td class="px-4 py-4 text-zinc-600 dark:text-zinc-400">
-                            <div class="flex flex-col">
-                                <span
-                                    class="text-sm font-medium">{{ $profile?->father_name ?: ($profile?->mother_name ?: ($profile?->guardian_name ?: '-')) }}</span>
-                                <span
-                                    class="text-xs opacity-75">{{ $profile?->guardian_phone ?: ($profile?->phone ?: '-') }}</span>
+                        <td>
+                            <div class="flex flex-col text-sm">
+                                <span class="font-medium">{{ $profile?->father_name ?: ($profile?->mother_name ?: ($profile?->guardian_name ?: '-')) }}</span>
+                                <span class="text-xs opacity-60">{{ $profile?->guardian_phone ?: ($profile?->phone ?: '-') }}</span>
                             </div>
                         </td>
-                        <td class="px-4 py-4 text-right space-x-1">
-                            <flux:button size="sm" variant="ghost" icon="chart-bar"
-                                wire:click="openPeriodic({{ $student->id }})"
-                                x-on:click="$flux.modal('periodic-modal').show()" tooltip="Data Periodik" />
-                            <flux:button size="sm" variant="ghost" icon="pencil-square"
-                                wire:click="edit({{ $student->id }})"
-                                x-on:click="$flux.modal('student-modal').show()" tooltip="Edit Siswa" />
-                            <flux:button size="sm" variant="ghost" icon="trash"
-                                class="text-red-500 hover:bg-red-50 dark:hover:bg-red-900/20"
-                                wire:confirm="Yakin ingin menghapus siswa ini?"
-                                wire:click="delete({{ $student->id }})" tooltip="Hapus Siswa" />
+                        <td class="text-right">
+                            <div class="flex justify-end gap-1">
+                                <x-button icon="o-chart-bar" wire:click="openPeriodic({{ $student->id }})" ghost sm tooltip="Data Periodik" />
+                                <x-button icon="o-pencil-square" wire:click="edit({{ $student->id }})" ghost sm tooltip="Edit Siswa" />
+                                <x-button 
+                                    icon="o-trash" 
+                                    wire:confirm="Yakin ingin menghapus siswa ini?"
+                                    wire:click="delete({{ $student->id }})"
+                                    ghost sm class="text-error" 
+                                    tooltip="Hapus Siswa" 
+                                />
+                            </div>
                         </td>
                     </tr>
                 @empty
                     <tr>
-                        <td colspan="5" class="px-4 py-8 text-center text-zinc-500 dark:text-zinc-400 italic">
+                        <td colspan="5" class="py-8 text-center opacity-50 italic">
                             Belum ada data siswa ditemukan.
                         </td>
                     </tr>
@@ -658,124 +606,100 @@ new #[Layout('components.admin.layouts.app')] class extends Component {
         {{ $students->links() }}
     </div>
 
-    <flux:modal name="student-modal" class="max-w-3xl"
-        x-on:student-saved.window="$flux.modal('student-modal').close()">
-        <form wire:submit="save" class="space-y-8">
-            <div class="flex items-start justify-between">
-                <div>
-                    <flux:heading size="lg">{{ $editing ? 'Edit Profil Siswa' : 'Tambah Siswa Baru' }}
-                    </flux:heading>
-                    <flux:subheading>Lengkapi data identitas dan akademik siswa.</flux:subheading>
-                </div>
-
-                <div class="flex flex-col items-center gap-2">
-                    <div class="relative group">
-                        @if ($photo)
-                            <img src="{{ $photo->temporaryUrl() }}"
-                                class="w-24 h-24 rounded-lg object-cover border-2 border-primary-500" />
-                        @elseif ($existingPhoto)
-                            <img src="/storage/{{ $existingPhoto }}" class="w-24 h-24 rounded-lg object-cover" />
-                        @else
-                            <div
-                                class="w-24 h-24 rounded-lg bg-zinc-100 dark:bg-zinc-800 flex items-center justify-center text-zinc-400">
-                                <flux:icon icon="user" class="w-12 h-12" />
-                            </div>
-                        @endif
-
-                        <label
-                            class="absolute inset-0 flex items-center justify-center bg-black/50 text-white opacity-0 group-hover:opacity-100 transition-opacity rounded-lg cursor-pointer">
-                            <flux:icon icon="camera" class="w-6 h-6" />
-                            <input type="file" wire:model="photo" class="hidden" accept="image/*" />
-                        </label>
-                    </div>
-                    <flux:text size="xs">Foto Profil (Max 1MB)</flux:text>
-                    @error('photo')
-                        <span class="text-xs text-red-500">{{ $message }}</span>
-                    @enderror
-                </div>
+    <x-modal id="student-modal" class="backdrop-blur" persistent>
+        <div class="mb-5 flex items-start justify-between">
+            <div>
+                <x-header :title="$editing ? 'Edit Profil Siswa' : 'Tambah Siswa Baru'" subtitle="Lengkapi data identitas dan akademik siswa." separator />
             </div>
 
-            <div class="space-y-6">
-                <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
-                    <div class="space-y-4">
-                        <flux:heading size="md" class="border-b pb-1">Identitas Siswa</flux:heading>
+            <div class="flex flex-col items-center gap-2">
+                <div class="relative group">
+                    <x-file wire:model="photo" accept="image/*" crop-after-change hidden />
+                    <div class="cursor-pointer" onclick="document.querySelector('input[type=file]').click()">
+                        <x-avatar 
+                            image="{{ $photo ? $photo->temporaryUrl() : ($existingPhoto ? '/storage/'.$existingPhoto : null) }}" 
+                            fallback="o-camera" 
+                            class="!w-24 !h-24 rounded-lg"
+                        />
+                    </div>
+                </div>
+                <div class="text-[10px] opacity-60">Foto Profil (Max 1MB)</div>
+            </div>
+        </div>
 
-                        <flux:input wire:model="name" label="Nama Lengkap" />
-                        <flux:input wire:model="email" label="Email" type="email" />
+        <form wire:submit="save">
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-6 h-[60vh] overflow-y-auto pr-2 custom-scrollbar">
+                <div class="space-y-4">
+                    <div class="font-bold border-b pb-1 text-sm opacity-70 italic">Identitas Siswa</div>
 
-                        <div class="grid grid-cols-2 gap-3">
-                            <flux:input wire:model="nis" label="NIS" />
-                            <flux:input wire:model="nisn" label="NISN" />
-                        </div>
+                    <x-input wire:model="name" label="Nama Lengkap" />
+                    <x-input wire:model="email" label="Email" type="email" />
 
-                        <flux:input wire:model="nik" label="NIK Siswa" placeholder="16 digit NIK" />
-
-                        <div class="grid grid-cols-2 gap-3">
-                            <flux:input wire:model="no_kk" label="No. Kartu Keluarga" />
-                            <flux:input wire:model="no_akta" label="No. Akta Kelahiran" />
-                        </div>
-
-                        <div class="grid grid-cols-2 gap-3">
-                            <flux:input wire:model="pob" label="Tempat Lahir" />
-                            <flux:input wire:model="dob" label="Tanggal Lahir" type="date" />
-                        </div>
-
-                        <flux:input wire:model="phone" label="No. Telepon / WA" />
-
-                        <flux:select wire:model="classroom_id" label="Kelas">
-                            <option value="">Pilih Kelas</option>
-                            @foreach ($classrooms as $room)
-                                <option value="{{ $room->id }}">{{ $room->name }}
-                                    ({{ $room->academicYear->name }})</option>
-                            @endforeach
-                        </flux:select>
-
-                        <flux:textarea wire:model="address" label="Alamat" resize="none" rows="3" />
-
-                        <div class="grid grid-cols-2 gap-3">
-                            <flux:input type="number" wire:model="birth_order" label="Anak Ke-" />
-                            <flux:input type="number" wire:model="total_siblings" label="Dari ... Bersaudara" />
-                        </div>
-
-                        <flux:input wire:model="previous_school" label="Asal Sekolah" />
-
-                        <flux:select wire:model="status" label="Status Siswa">
-                            <option value="baru">Baru</option>
-                            <option value="mutasi">Mutasi / Pindahan</option>
-                            <option value="naik_kelas">Naik Kelas</option>
-                            <option value="lulus">Lulus</option>
-                            <option value="keluar">Keluar</option>
-                        </flux:select>
+                    <div class="grid grid-cols-2 gap-3">
+                        <x-input wire:model="nis" label="NIS" />
+                        <x-input wire:model="nisn" label="NISN" />
                     </div>
 
-                    <div class="space-y-4">
-                        <flux:heading size="md" class="border-b pb-1">Data Orang Tua / Wali</flux:heading>
+                    <x-input wire:model="nik" label="NIK Siswa" placeholder="16 digit NIK" />
 
-                        <flux:input wire:model="father_name" label="Nama Ayah" />
-                        <flux:input wire:model="nik_ayah" label="NIK Ayah" />
-                        <flux:input wire:model="mother_name" label="Nama Ibu" />
-                        <flux:input wire:model="nik_ibu" label="NIK Ibu" />
+                    <div class="grid grid-cols-2 gap-3">
+                        <x-input wire:model="no_kk" label="No. Kartu Keluarga" />
+                        <x-input wire:model="no_akta" label="No. Akta Kelahiran" />
+                    </div>
 
-                        <div class="pt-4 space-y-4">
-                            <flux:heading size="sm">Kontak Wali (Jika Ada)</flux:heading>
-                            <flux:input wire:model="guardian_name" label="Nama Wali" />
-                            <flux:input wire:model="guardian_phone" label="No. Telp Wali" />
-                        </div>
+                    <div class="grid grid-cols-2 gap-3">
+                        <x-input wire:model="pob" label="Tempat Lahir" />
+                        <x-input wire:model="dob" label="Tanggal Lahir" type="date" />
+                    </div>
+
+                    <x-input wire:model="phone" label="No. Telepon / WA" />
+
+                    <x-select wire:model="classroom_id" label="Kelas" :options="$classrooms" placeholder="Pilih Kelas" />
+
+                    <x-textarea wire:model="address" label="Alamat" rows="3" />
+
+                    <div class="grid grid-cols-2 gap-3">
+                        <x-input type="number" wire:model="birth_order" label="Anak Ke-" />
+                        <x-input type="number" wire:model="total_siblings" label="Dari ... Bersaudara" />
+                    </div>
+
+                    <x-input wire:model="previous_school" label="Asal Sekolah" />
+
+                    <x-select 
+                        wire:model="status" 
+                        label="Status Siswa" 
+                        :options="[
+                            ['id' => 'baru', 'name' => 'Baru'],
+                            ['id' => 'mutasi', 'name' => 'Mutasi / Pindahan'],
+                            ['id' => 'naik_kelas', 'name' => 'Naik Kelas'],
+                            ['id' => 'lulus', 'name' => 'Lulus'],
+                            ['id' => 'keluar', 'name' => 'Keluar'],
+                        ]"
+                    />
+                </div>
+
+                <div class="space-y-4">
+                    <div class="font-bold border-b pb-1 text-sm opacity-70 italic">Data Orang Tua / Wali</div>
+
+                    <x-input wire:model="father_name" label="Nama Ayah" />
+                    <x-input wire:model="nik_ayah" label="NIK Ayah" />
+                    <x-input wire:model="mother_name" label="Nama Ibu" />
+                    <x-input wire:model="nik_ibu" label="NIK Ibu" />
+
+                    <div class="pt-4 space-y-4">
+                        <div class="font-bold text-xs opacity-70 uppercase tracking-widest">Kontak Wali (Jika Ada)</div>
+                        <x-input wire:model="guardian_name" label="Nama Wali" />
+                        <x-input wire:model="guardian_phone" label="No. Telp Wali" />
                     </div>
                 </div>
             </div>
 
-            <div class="flex justify-end gap-2">
-                <flux:modal.close>
-                    <flux:button variant="ghost">Batal</flux:button>
-                </flux:modal.close>
-                <flux:button type="submit" variant="primary" wire:loading.attr="disabled">
-                    <span wire:loading.remove>Simpan</span>
-                    <span wire:loading>Menyimpan...</span>
-                </flux:button>
-            </div>
+            <x-slot:actions>
+                <x-button label="Batal" @click="$dispatch('close-modal', 'student-modal')" />
+                <x-button label="Simpan" type="submit" class="btn-primary" spinner="save" />
+            </x-slot:actions>
         </form>
-    </flux:modal>
+    </x-modal>
 
     {{-- Modals --}}
     @include('livewire.admin.data-master.students.partials.import-modal')

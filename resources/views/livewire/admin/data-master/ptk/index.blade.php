@@ -8,7 +8,7 @@ use App\Models\TeacherProfile;
 use App\Models\StaffProfile;
 use App\Models\Level;
 use Livewire\Attributes\Layout;
-use Livewire\Volt\Component;
+use Livewire\Component;
 use Livewire\WithPagination;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Hash;

@@ -3,7 +3,7 @@
 use App\Models\NewsArticle;
 use App\Services\CacheService;
 use Illuminate\Support\Facades\Storage;
-use Livewire\Volt\Component;
+use Livewire\Component;
 use Livewire\WithPagination;
 
 new class extends Component {
@@ -58,145 +58,108 @@ new class extends Component {
     }
 }; ?>
 
-<div>
-    <div class="mb-6 flex items-center justify-between">
-        <div>
-            <flux:heading size="xl">Berita</flux:heading>
-            <flux:subheading>Kelola artikel berita dan pengumuman</flux:subheading>
-        </div>
-        <flux:button variant="primary" href="{{ route('admin.news.create') }}" wire:navigate>
-            Tambah Berita
-        </flux:button>
-    </div>
+<div class="p-6">
+    <x-header title="Berita" subtitle="Kelola artikel berita dan pengumuman" separator>
+        <x-slot:actions>
+            <x-button label="Tambah Berita" icon="o-plus" link="{{ route('admin.news.create') }}" wire:navigate class="btn-primary" />
+        </x-slot:actions>
+    </x-header>
 
     @if (session()->has('message'))
-        <flux:callout color="green" icon="check-circle" class="mb-6">
+        <x-alert title="Sukses" icon="o-check-circle" class="alert-success mb-6">
             {{ session('message') }}
-        </flux:callout>
+        </x-alert>
     @endif
 
     {{-- Search and Filter --}}
-    <div class="mb-6 flex flex-col gap-4 sm:flex-row">
-        <div class="flex-1">
-            <flux:input 
-                wire:model.live.debounce.300ms="search" 
-                type="text" 
-                placeholder="Cari artikel..."
-                icon="magnifying-glass"
-            />
+    <x-card class="mb-6 bg-base-100 border border-base-200" shadow>
+        <div class="flex flex-col gap-4 sm:flex-row items-end">
+            <div class="flex-1">
+                <x-input 
+                    wire:model.live.debounce.300ms="search" 
+                    label="Cari Artikel"
+                    placeholder="Judul atau isi..."
+                    icon="o-magnifying-glass"
+                    inline
+                    clearable
+                />
+            </div>
+            <div class="w-full sm:w-48">
+                <x-select 
+                    wire:model.live="statusFilter"
+                    label="Status"
+                    :options="[
+                        ['id' => 'all', 'name' => 'Semua Status'],
+                        ['id' => 'draft', 'name' => 'Draft'],
+                        ['id' => 'published', 'name' => 'Dipublikasikan'],
+                    ]"
+                    inline
+                />
+            </div>
         </div>
-        <div class="w-full sm:w-48">
-            <flux:select wire:model.live="statusFilter">
-                <option value="all">Semua Status</option>
-                <option value="draft">Draft</option>
-                <option value="published">Dipublikasikan</option>
-            </flux:select>
-        </div>
-    </div>
+    </x-card>
 
     {{-- Articles Table --}}
     @if ($articles->count() > 0)
-        <div class="overflow-hidden rounded-lg border border-zinc-200 bg-white dark:border-zinc-700 dark:bg-zinc-800">
-            <div class="overflow-x-auto">
-                <table class="w-full">
-                    <thead class="border-b border-zinc-200 bg-zinc-50 dark:border-zinc-700 dark:bg-zinc-900">
-                        <tr>
-                            <th class="px-6 py-3 text-left text-xs font-medium uppercase tracking-wider text-zinc-700 dark:text-zinc-300">
-                                Judul
-                            </th>
-                            <th class="px-6 py-3 text-left text-xs font-medium uppercase tracking-wider text-zinc-700 dark:text-zinc-300">
-                                Penulis
-                            </th>
-                            <th class="px-6 py-3 text-left text-xs font-medium uppercase tracking-wider text-zinc-700 dark:text-zinc-300">
-                                Status
-                            </th>
-                            <th class="px-6 py-3 text-left text-xs font-medium uppercase tracking-wider text-zinc-700 dark:text-zinc-300">
-                                Tanggal Publikasi
-                            </th>
-                            <th class="px-6 py-3 text-right text-xs font-medium uppercase tracking-wider text-zinc-700 dark:text-zinc-300">
-                                Aksi
-                            </th>
-                        </tr>
-                    </thead>
-                    <tbody class="divide-y divide-zinc-200 dark:divide-zinc-700">
-                        @foreach ($articles as $article)
-                            <tr class="hover:bg-zinc-50 dark:hover:bg-zinc-900">
-                                <td class="px-6 py-4">
-                                    <div class="flex items-center gap-3">
-                                        @if ($article->featured_image_path)
-                                            <img 
-                                                src="{{ Storage::url($article->featured_image_path) }}" 
-                                                alt="{{ $article->title }}" 
-                                                class="h-12 w-12 rounded object-cover"
-                                            >
-                                        @else
-                                            <div class="flex h-12 w-12 items-center justify-center rounded bg-zinc-100 dark:bg-zinc-700">
-                                                <flux:icon.newspaper class="h-6 w-6 text-zinc-400" />
-                                            </div>
-                                        @endif
-                                        <div class="flex-1">
-                                            <flux:text class="font-medium">{{ $article->title }}</flux:text>
-                                            @if ($article->excerpt)
-                                                <flux:text class="mt-1 text-xs text-zinc-500">
-                                                    {{ Str::limit($article->excerpt, 60) }}
-                                                </flux:text>
-                                            @endif
-                                        </div>
-                                    </div>
-                                </td>
-                                <td class="px-6 py-4">
-                                    <flux:text class="text-sm">{{ $article->author->name }}</flux:text>
-                                </td>
-                                <td class="px-6 py-4">
-                                    @if ($article->status === 'published')
-                                        <flux:badge color="green" size="sm">Dipublikasikan</flux:badge>
-                                    @else
-                                        <flux:badge color="zinc" size="sm">Draft</flux:badge>
-                                    @endif
-                                </td>
-                                <td class="px-6 py-4">
-                                    <flux:text class="text-sm">
-                                        {{ $article->published_at ? $article->published_at->format('d M Y') : '-' }}
-                                    </flux:text>
-                                </td>
-                                <td class="px-6 py-4">
-                                    <div class="flex items-center justify-end gap-2">
-                                        <flux:button 
-                                            variant="ghost" 
-                                            size="sm"
-                                            href="{{ route('admin.news.edit', $article->id) }}"
-                                            wire:navigate
-                                        >
-                                            Edit
-                                        </flux:button>
-                                        <flux:button 
-                                            variant="danger" 
-                                            size="sm"
-                                            wire:click="deleteArticle({{ $article->id }})"
-                                            wire:confirm="Apakah Anda yakin ingin menghapus artikel ini?"
-                                        >
-                                            Hapus
-                                        </flux:button>
-                                    </div>
-                                </td>
-                            </tr>
-                        @endforeach
-                    </tbody>
-                </table>
-            </div>
-        </div>
+        <x-card shadow class="border border-base-200 overflow-hidden" no-separator padding="p-0">
+            <x-table :rows="$articles" :headers="[['key' => 'title', 'label' => 'Artikel'], ['key' => 'author.name', 'label' => 'Penulis'], ['key' => 'status', 'label' => 'Status'], ['key' => 'published_at', 'label' => 'Tanggal', 'class' => 'text-center'], ['key' => 'actions', 'label' => '', 'sortable' => false]]" with-pagination>
+                @scope('cell_title', $article)
+                    <div class="flex items-center gap-3 py-1">
+                        @if ($article->featured_image_path)
+                            <img 
+                                src="{{ Storage::url($article->featured_image_path) }}" 
+                                alt="{{ $article->title }}" 
+                                class="h-12 w-16 rounded object-cover shadow-sm"
+                            >
+                        @else
+                            <div class="flex h-12 w-16 items-center justify-center rounded bg-base-200">
+                                <x-icon name="o-newspaper" class="size-6 opacity-30" />
+                            </div>
+                        @endif
+                        <div class="flex flex-col">
+                            <span class="font-bold text-base leading-tight">{{ $article->title }}</span>
+                            <span class="text-xs opacity-50">{{ Str::limit($article->excerpt, 60) }}</span>
+                        </div>
+                    </div>
+                @endscope
 
-        {{-- Pagination --}}
-        <div class="mt-6">
-            {{ $articles->links() }}
-        </div>
+                @scope('cell_status', $article)
+                    @if ($article->status === 'published')
+                        <x-badge label="Live" class="badge-success badge-sm shadow-sm" />
+                    @else
+                        <x-badge label="Draft" class="badge-ghost badge-sm border-base-300" />
+                    @endif
+                @endscope
+
+                @scope('cell_published_at', $article)
+                    <span class="text-sm opacity-60">
+                        {{ $article->published_at ? $article->published_at->format('d M Y') : '-' }}
+                    </span>
+                @endscope
+
+                @scope('cell_actions', $article)
+                    <div class="flex justify-end gap-1">
+                        <x-button icon="o-pencil" link="{{ route('admin.news.edit', $article->id) }}" wire:navigate class="btn-sm btn-ghost" tooltip="Edit" />
+                        <x-button 
+                            icon="o-trash" 
+                            wire:click="deleteArticle({{ $article->id }})"
+                            wire:confirm="Hapus artikel ini?"
+                            class="btn-sm btn-ghost text-error"
+                            tooltip="Hapus"
+                        />
+                    </div>
+                @endscope
+            </x-table>
+        </x-card>
     @else
-        <flux:callout color="zinc" icon="information-circle">
-            @if ($search || $statusFilter !== 'all')
-                Tidak ada artikel yang sesuai dengan pencarian atau filter Anda.
-            @else
-                Belum ada artikel berita. Klik tombol "Tambah Berita" untuk membuat artikel baru.
-            @endif
-        </flux:callout>
+        <x-card class="p-16 text-center" shadow>
+            <x-icon name="o-newspaper" class="size-16 mb-4 opacity-10 mx-auto" />
+            <h3 class="font-bold text-xl opacity-50 mb-2">
+                {{ ($search || $statusFilter !== 'all') ? 'Tidak ada hasil' : 'Belum ada berita' }}
+            </h3>
+            <p class="opacity-40">
+                {{ ($search || $statusFilter !== 'all') ? 'Coba ubah kata kunci atau filter Anda.' : 'Klik tombol "Tambah Berita" untuk membuat artikel pertama.' }}
+            </p>
+        </x-card>
     @endif
 </div>

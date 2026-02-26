@@ -4,7 +4,7 @@ declare(strict_types=1);
 
 use App\Models\AcademicYear;
 use Livewire\Attributes\Layout;
-use Livewire\Volt\Component;
+use Livewire\Component;
 use Livewire\WithPagination;
 
 new #[Layout('components.admin.layouts.app')] class extends Component {
@@ -78,52 +78,56 @@ new #[Layout('components.admin.layouts.app')] class extends Component {
 }; ?>
 
 <div class="p-6">
-    <div class="flex items-center justify-between mb-6">
-        <div>
-            <flux:heading size="xl" level="1">Tahun Ajaran</flux:heading>
-            <flux:subheading>Kelola tahun akademik sekolah Anda di sini.</flux:subheading>
-        </div>
+    <x-header title="Tahun Ajaran" subtitle="Kelola tahun akademik sekolah Anda di sini." separator>
+        <x-slot:actions>
+            <x-button label="Tambah Tahun Ajaran" icon="o-plus" class="btn-primary" wire:click="$set('editing', null)" @click="$dispatch('open-modal', 'academic-year-modal')" />
+        </x-slot:actions>
+    </x-header>
 
-        <flux:modal.trigger name="academic-year-modal">
-            <flux:button variant="primary" icon="plus" wire:click="$set('editing', null)">Tambah Tahun Ajaran</flux:button>
-        </flux:modal.trigger>
-    </div>
-
-    <div class="overflow-hidden border rounded-lg border-zinc-200 dark:border-zinc-700">
-        <table class="w-full text-sm text-left border-collapse">
-            <thead class="bg-zinc-50 dark:bg-zinc-800">
+    <div class="bg-base-100 rounded-lg shadow-sm border border-base-200">
+        <table class="table">
+            <thead>
                 <tr>
-                    <th class="px-4 py-3 font-medium text-zinc-700 dark:text-zinc-300 border-b border-zinc-200 dark:border-zinc-700">Nama</th>
-                    <th class="px-4 py-3 font-medium text-zinc-700 dark:text-zinc-300 border-b border-zinc-200 dark:border-zinc-700">Rentang Waktu</th>
-                    <th class="px-4 py-3 font-medium text-zinc-700 dark:text-zinc-300 border-b border-zinc-200 dark:border-zinc-700">Status</th>
-                    <th class="px-4 py-3 font-medium text-zinc-700 dark:text-zinc-300 border-b border-zinc-200 dark:border-zinc-700 text-right">Aksi</th>
+                    <th class="bg-base-200">Nama</th>
+                    <th class="bg-base-200">Rentang Waktu</th>
+                    <th class="bg-base-200">Status</th>
+                    <th class="bg-base-200 text-right">Aksi</th>
                 </tr>
             </thead>
-            <tbody class="divide-y divide-zinc-200 dark:divide-zinc-700">
+            <tbody>
                 @foreach ($years as $year)
-                    <tr wire:key="{{ $year->id }}" class="hover:bg-zinc-50 dark:hover:bg-zinc-800/50">
-                        <td class="px-4 py-3">
+                    <tr wire:key="{{ $year->id }}" class="hover">
+                        <td>
                             <div class="flex items-center gap-2">
-                                <span class="font-medium text-zinc-900 dark:text-white">{{ $year->name }}</span>
+                                <span class="font-bold">{{ $year->name }}</span>
                                 @if($year->is_active)
-                                    <flux:badge variant="success" size="sm">Aktif</flux:badge>
+                                    <x-badge label="Aktif" class="badge-success badge-sm" />
                                 @endif
                             </div>
                         </td>
-                        <td class="px-4 py-3 text-zinc-600 dark:text-zinc-400">
+                        <td class="opacity-70">
                             {{ $year->start_date->format('d M Y') }} - {{ $year->end_date->format('d M Y') }}
                         </td>
-                        <td class="px-4 py-3">
-                            <flux:badge variant="{{ $year->status === 'open' ? 'neutral' : 'warning' }}" size="sm">
-                                {{ $year->status === 'open' ? 'Terbuka' : 'Ditutup' }}
-                            </flux:badge>
+                        <td>
+                            <x-badge 
+                                :label="$year->status === 'open' ? 'Terbuka' : 'Ditutup'" 
+                                class="{{ $year->status === 'open' ? 'badge-neutral' : 'badge-warning' }} badge-sm" 
+                            />
                         </td>
-                        <td class="px-4 py-3 text-right space-x-2">
-                            @if(!$year->is_active)
-                                <flux:button size="sm" variant="ghost" wire:click="setActive({{ $year->id }})">Set Aktif</flux:button>
-                            @endif
-                            <flux:button size="sm" variant="ghost" icon="pencil-square" wire:click="edit({{ $year->id }})" />
-                            <flux:button size="sm" variant="ghost" icon="trash" class="text-red-500" wire:confirm="Yakin ingin menghapus ini?" wire:click="delete({{ $year->id }})" />
+                        <td class="text-right">
+                            <div class="flex justify-end gap-1">
+                                @if(!$year->is_active)
+                                    <x-button label="Set Aktif" wire:click="setActive({{ $year->id }})" ghost sm />
+                                @endif
+                                <x-button icon="o-pencil-square" wire:click="edit({{ $year->id }})" ghost sm />
+                                <x-button 
+                                    icon="o-trash" 
+                                    class="text-error" 
+                                    wire:confirm="Yakin ingin menghapus ini?" 
+                                    wire:click="delete({{ $year->id }})" 
+                                    ghost sm 
+                                />
+                            </div>
                         </td>
                     </tr>
                 @endforeach
@@ -135,33 +139,34 @@ new #[Layout('components.admin.layouts.app')] class extends Component {
         {{ $years->links() }}
     </div>
 
-    <flux:modal name="academic-year-modal" class="max-w-md">
-        <form wire:submit="save" class="space-y-6">
-            <div>
-                <flux:heading size="lg">{{ $editing ? 'Edit Tahun Ajaran' : 'Tambah Tahun Ajaran Baru' }}</flux:heading>
-                <flux:subheading>Masukkan detail tahun ajaran di bawah ini.</flux:subheading>
+    <x-modal id="academic-year-modal" class="backdrop-blur" persistent>
+        <x-header :title="$editing ? 'Edit Tahun Ajaran' : 'Tambah Tahun Ajaran Baru'" subtitle="Masukkan detail tahun ajaran di bawah ini." separator />
+
+        <form wire:submit="save">
+            <div class="space-y-4">
+                <x-input wire:model="name" label="Nama (Contoh: 2024/2025)" required />
+
+                <div class="grid grid-cols-2 gap-4">
+                    <x-input wire:model="start_date" type="date" label="Tanggal Mulai" required />
+                    <x-input wire:model="end_date" type="date" label="Tanggal Selesai" required />
+                </div>
+
+                <x-select 
+                    wire:model="status" 
+                    label="Status" 
+                    :options="[
+                        ['id' => 'open', 'name' => 'Terbuka'],
+                        ['id' => 'closed', 'name' => 'Ditutup'],
+                    ]" 
+                />
+
+                <x-checkbox wire:model="is_active" label="Jadikan Tahun Aktif" />
             </div>
 
-            <flux:input wire:model="name" label="Nama (Contoh: 2024/2025)" required />
-
-            <div class="grid grid-cols-2 gap-4">
-                <flux:input wire:model="start_date" type="date" label="Tanggal Mulai" required />
-                <flux:input wire:model="end_date" type="date" label="Tanggal Selesai" required />
-            </div>
-
-            <flux:select wire:model="status" label="Status Opsional">
-                <option value="open">Terbuka</option>
-                <option value="closed">Ditutup</option>
-            </flux:select>
-
-            <flux:checkbox wire:model="is_active" label="Jadikan Tahun Aktif" />
-
-            <div class="flex justify-end gap-2">
-                <flux:modal.close>
-                    <flux:button variant="ghost">Batal</flux:button>
-                </flux:modal.close>
-                <flux:button type="submit" variant="primary">Simpan</flux:button>
-            </div>
+            <x-slot:actions>
+                <x-button label="Batal" @click="$dispatch('close-modal', 'academic-year-modal')" />
+                <x-button label="Simpan" type="submit" class="btn-primary" spinner="save" />
+            </x-slot:actions>
         </form>
-    </flux:modal>
+    </x-modal>
 </div>
