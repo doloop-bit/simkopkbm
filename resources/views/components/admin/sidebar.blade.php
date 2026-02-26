@@ -45,7 +45,3 @@
         <x-menu-item title="Laporan" icon="o-chart-bar" :link="route('reports')" />
     @endif
 </x-menu>
-
-<x-slot:sidebar-footer>
-    <x-admin.desktop-user-menu />
-</x-slot:sidebar-footer>

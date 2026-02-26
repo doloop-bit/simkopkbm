@@ -19,6 +19,9 @@
         {{-- Sidebar --}}
         <x-slot:sidebar drawer="main-drawer" collapsible class="bg-base-200">
             <x-admin.sidebar />
+            <x-slot:sidebar-footer>
+                <x-admin.desktop-user-menu />
+            </x-slot:sidebar-footer>
         </x-slot:sidebar>
 
         {{-- Content --}}
