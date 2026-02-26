@@ -6,12 +6,12 @@
 <html lang="{{ str_replace('_', '-', app()->getLocale()) }}">
 <head>
     <meta name="csrf-token" content="{{ csrf_token() }}">
-    
+
     @php
         $title = $title ? $title . ' - ' . config('app.name', 'Laravel') : config('app.name', 'Laravel');
     @endphp
-    
-    
+
+
     @include('partials.head')
 </head>
 <body class="min-h-screen bg-white font-sans antialiased dark:bg-zinc-900">
@@ -19,9 +19,12 @@
         {{-- Sidebar --}}
         <x-slot:sidebar drawer="main-drawer" collapsible class="bg-base-200">
             <x-admin.sidebar />
-            <x-slot:sidebar-footer>
+
+            {{-- User & Settings at the bottom --}}
+            <div class="mt-auto px-2 pb-2">
+                <x-menu-separator />
                 <x-admin.desktop-user-menu />
-            </x-slot:sidebar-footer>
+            </div>
         </x-slot:sidebar>
 
         {{-- Content --}}
