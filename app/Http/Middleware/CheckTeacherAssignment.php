@@ -28,29 +28,29 @@ class CheckTeacherAssignment
 
         // Check based on type
         if ($type === 'classroom' && $classroomId) {
-            if (!$user->hasAccessToClassroom($classroomId)) {
+            if (! $user->hasAccessToClassroom($classroomId)) {
                 abort(403, 'Anda tidak memiliki akses ke kelas ini.');
             }
         }
 
         if ($type === 'subject' && $subjectId) {
-            if (!$user->hasAccessToSubject($subjectId)) {
+            if (! $user->hasAccessToSubject($subjectId)) {
                 abort(403, 'Anda tidak memiliki akses ke mata pelajaran ini.');
             }
         }
 
         if ($type === 'any' && ($classroomId || $subjectId)) {
             $hasAccess = false;
-            
+
             if ($classroomId && $user->hasAccessToClassroom($classroomId)) {
                 $hasAccess = true;
             }
-            
+
             if ($subjectId && $user->hasAccessToSubject($subjectId)) {
                 $hasAccess = true;
             }
 
-            if (!$hasAccess) {
+            if (! $hasAccess) {
                 abort(403, 'Anda tidak memiliki akses ke data ini.');
             }
         }

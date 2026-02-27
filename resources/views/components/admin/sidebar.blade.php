@@ -1,7 +1,9 @@
-<div class="px-5 py-6">
-    <a href="{{ route('dashboard') }}" class="flex items-center gap-3 no-underline" wire:navigate>
-        <x-global.app-logo-icon class="size-8 fill-primary" />
-        <span class="text-xl font-bold text-base-content">{{ config('app.name') }}</span>
+<div class="px-5 py-6 overflow-hidden">
+    <a href="{{ route('dashboard') }}" class="flex items-center gap-3 no-underline min-w-0" wire:navigate>
+        <div class="shrink-0 flex items-center justify-center">
+            <x-global.app-logo-icon class="size-8 fill-primary block aspect-square object-contain" />
+        </div>
+        <span class="text-xl font-bold text-base-content whitespace-nowrap overflow-hidden">{{ config('app.name') }}</span>
     </a>
 </div>
 

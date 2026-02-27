@@ -1,4 +1,4 @@
-<x-modal id="periodic-modal" class="backdrop-blur">
+<x-modal wire:model="periodicModal" class="backdrop-blur">
     <x-header title="Data Periodik Siswa" subtitle="Input data berat badan, tinggi, dan lingkar kepala." separator />
 
     <form wire:submit.prevent="savePeriodic({{ $editing?->latestProfile?->profileable_id ?? 0 }})" class="space-y-6">
@@ -28,7 +28,7 @@
         </div>
 
         <x-slot:actions>
-            <x-button label="Batal" @click="$dispatch('close-modal', 'periodic-modal')" />
+            <x-button label="Batal" @click="$set('periodicModal', false)" />
             <x-button label="Simpan Data" type="submit" class="btn-primary" spinner="savePeriodic" />
         </x-slot:actions>
     </form>

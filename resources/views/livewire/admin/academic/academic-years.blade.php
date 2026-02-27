@@ -15,6 +15,7 @@ new #[Layout('components.admin.layouts.app')] class extends Component {
     public string $end_date = '';
     public bool $is_active = false;
     public string $status = 'open';
+    public bool $yearModal = false;
 
     public ?AcademicYear $editing = null;
 
@@ -26,6 +27,12 @@ new #[Layout('components.admin.layouts.app')] class extends Component {
             'end_date' => ['required', 'date', 'after:start_date'],
             'status' => ['required', 'in:open,closed'],
         ];
+    }
+
+    public function createNew(): void
+    {
+        $this->reset(['name', 'start_date', 'end_date', 'is_active', 'status', 'editing']);
+        $this->yearModal = true;
     }
 
     public function save(): void
@@ -43,7 +50,7 @@ new #[Layout('components.admin.layouts.app')] class extends Component {
         }
 
         $this->reset(['name', 'start_date', 'end_date', 'is_active', 'status', 'editing']);
-        $this->dispatch('close-modal', 'academic-year-modal');
+        $this->yearModal = false;
     }
 
     public function edit(AcademicYear $year): void
@@ -55,7 +62,7 @@ new #[Layout('components.admin.layouts.app')] class extends Component {
         $this->is_active = $year->is_active;
         $this->status = $year->status;
 
-        $this->dispatch('open-modal', 'academic-year-modal');
+        $this->yearModal = true;
     }
 
     public function setActive(AcademicYear $year): void
@@ -80,7 +87,7 @@ new #[Layout('components.admin.layouts.app')] class extends Component {
 <div class="p-6">
     <x-header title="Tahun Ajaran" subtitle="Kelola tahun akademik sekolah Anda di sini." separator>
         <x-slot:actions>
-            <x-button label="Tambah Tahun Ajaran" icon="o-plus" class="btn-primary" wire:click="$set('editing', null)" @click="$dispatch('open-modal', 'academic-year-modal')" />
+            <x-button label="Tambah Tahun Ajaran" icon="o-plus" class="btn-primary" wire:click="createNew" />
         </x-slot:actions>
     </x-header>
 
@@ -139,7 +146,7 @@ new #[Layout('components.admin.layouts.app')] class extends Component {
         {{ $years->links() }}
     </div>
 
-    <x-modal id="academic-year-modal" class="backdrop-blur" persistent>
+    <x-modal wire:model="yearModal" class="backdrop-blur" persistent>
         <x-header :title="$editing ? 'Edit Tahun Ajaran' : 'Tambah Tahun Ajaran Baru'" subtitle="Masukkan detail tahun ajaran di bawah ini." separator />
 
         <form wire:submit="save">
@@ -164,7 +171,7 @@ new #[Layout('components.admin.layouts.app')] class extends Component {
             </div>
 
             <x-slot:actions>
-                <x-button label="Batal" @click="$dispatch('close-modal', 'academic-year-modal')" />
+                <x-button label="Batal" @click="$set('yearModal', false)" />
                 <x-button label="Simpan" type="submit" class="btn-primary" spinner="save" />
             </x-slot:actions>
         </form>

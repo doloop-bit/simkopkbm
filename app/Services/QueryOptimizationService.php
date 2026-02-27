@@ -18,7 +18,7 @@ class QueryOptimizationService
                 Log::warning('Slow Query Detected', [
                     'sql' => $query->sql,
                     'bindings' => $query->bindings,
-                    'time' => $query->time . 'ms',
+                    'time' => $query->time.'ms',
                     'connection' => $query->connectionName,
                 ]);
             }
@@ -30,8 +30,8 @@ class QueryOptimizationService
      */
     public static function explainQuery(string $sql, array $bindings = []): array
     {
-        $explainSql = "EXPLAIN " . $sql;
-        
+        $explainSql = 'EXPLAIN '.$sql;
+
         return DB::select($explainSql, $bindings);
     }
 
@@ -49,7 +49,7 @@ class QueryOptimizationService
     public static function getTableStats(string $table): array
     {
         $stats = DB::select("SHOW TABLE STATUS LIKE '{$table}'");
-        
+
         return $stats ? (array) $stats[0] : [];
     }
 
@@ -72,23 +72,23 @@ class QueryOptimizationService
                     ORDER BY na.published_at DESC
                     LIMIT ?
                 ",
-                'indexes_used' => ['news_published_date_idx', 'author_id']
+                'indexes_used' => ['news_published_date_idx', 'author_id'],
             ],
-            
+
             'active_programs_ordered' => [
                 'description' => 'Get active programs ordered by display order',
-                'query' => "
+                'query' => '
                     SELECT id, name, slug, description, level, image_path, `order`
                     FROM programs
                     WHERE is_active = 1
                     ORDER BY `order` ASC
-                ",
-                'indexes_used' => ['programs_active_order_idx']
+                ',
+                'indexes_used' => ['programs_active_order_idx'],
             ],
-            
+
             'published_gallery_photos' => [
                 'description' => 'Get published gallery photos with category filter',
-                'query' => "
+                'query' => '
                     SELECT id, title, caption, category, thumbnail_path, 
                            thumbnail_webp_path, web_path, web_webp_path
                     FROM gallery_photos
@@ -96,31 +96,31 @@ class QueryOptimizationService
                       AND (? IS NULL OR category = ?)
                     ORDER BY `order` ASC, created_at DESC
                     LIMIT ?
-                ",
-                'indexes_used' => ['gallery_published_category_order_idx', 'gallery_published_order_idx']
+                ',
+                'indexes_used' => ['gallery_published_category_order_idx', 'gallery_published_order_idx'],
             ],
-            
+
             'staff_by_school_profile' => [
                 'description' => 'Get staff members for a school profile',
-                'query' => "
+                'query' => '
                     SELECT id, name, position, photo_path, `order`
                     FROM staff_members
                     WHERE school_profile_id = ?
                     ORDER BY `order` ASC
-                ",
-                'indexes_used' => ['staff_profile_order_idx']
+                ',
+                'indexes_used' => ['staff_profile_order_idx'],
             ],
-            
+
             'facilities_by_school_profile' => [
                 'description' => 'Get facilities for a school profile',
-                'query' => "
+                'query' => '
                     SELECT id, name, description, image_path, `order`
                     FROM facilities
                     WHERE school_profile_id = ?
                     ORDER BY `order` ASC
-                ",
-                'indexes_used' => ['facilities_profile_order_idx']
-            ]
+                ',
+                'indexes_used' => ['facilities_profile_order_idx'],
+            ],
         ];
     }
 
@@ -139,21 +139,21 @@ class QueryOptimizationService
         ];
 
         $results = [];
-        
+
         foreach ($requiredIndexes as $table => $indexes) {
             $existingIndexes = collect(self::analyzeTableIndexes($table))
                 ->pluck('Key_name')
                 ->toArray();
-            
+
             $missingIndexes = array_diff($indexes, $existingIndexes);
-            
+
             $results[$table] = [
                 'existing' => $existingIndexes,
                 'missing' => $missingIndexes,
-                'status' => empty($missingIndexes) ? 'OK' : 'MISSING_INDEXES'
+                'status' => empty($missingIndexes) ? 'OK' : 'MISSING_INDEXES',
             ];
         }
-        
+
         return $results;
     }
 }

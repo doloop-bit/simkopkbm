@@ -11,6 +11,7 @@ new #[Layout('components.admin.layouts.app')] class extends Component {
     public string $type = 'class_teacher';
     public string $education_level = 'sd';
     public array $phase_map = [];
+    public bool $levelModal = false;
 
     public ?Level $editing = null;
 
@@ -19,7 +20,7 @@ new #[Layout('components.admin.layouts.app')] class extends Component {
         $this->reset(['name', 'type', 'education_level', 'phase_map', 'editing']);
         $this->updatedEducationLevel();
         $this->resetValidation();
-        $this->dispatch('open-level-modal');
+        $this->levelModal = true;
     }
 
     public function updatedEducationLevel(): void
@@ -54,7 +55,7 @@ new #[Layout('components.admin.layouts.app')] class extends Component {
         }
 
         $this->reset(['name', 'type', 'education_level', 'phase_map', 'editing']);
-        $this->dispatch('level-saved');
+        $this->levelModal = false;
     }
 
     public function edit(Level $level): void
@@ -64,7 +65,7 @@ new #[Layout('components.admin.layouts.app')] class extends Component {
         $this->type = $level->type;
         $this->education_level = $level->education_level ?? 'sd';
         $this->phase_map = $level->phase_map ?? [];
-        $this->dispatch('open-level-modal');
+        $this->levelModal = true;
     }
 
     public function delete(Level $level): void
@@ -83,7 +84,7 @@ new #[Layout('components.admin.layouts.app')] class extends Component {
 <div class="p-6">
     <x-header title="Jenjang Pendidikan" subtitle="Atur jenjang SPP dan skema pengajaran (Guru Kelas vs Mata Pelajaran)." separator>
         <x-slot:actions>
-            <x-button label="Tambah Jenjang" icon="o-plus" class="btn-primary" wire:click="createNew" wire:loading.attr="disabled" @click="$dispatch('open-modal', 'level-modal')" />
+            <x-button label="Tambah Jenjang" icon="o-plus" class="btn-primary" wire:click="createNew" wire:loading.attr="disabled" />
         </x-slot:actions>
     </x-header>
 
@@ -114,7 +115,7 @@ new #[Layout('components.admin.layouts.app')] class extends Component {
                 </div>
 
                 <x-slot:actions>
-                    <x-button icon="o-pencil-square" wire:click="edit({{ $level->id }})" ghost sm wire:loading.attr="disabled" @click="$dispatch('open-modal', 'level-modal')" />
+                    <x-button icon="o-pencil-square" wire:click="edit({{ $level->id }})" ghost sm wire:loading.attr="disabled" />
                     <x-button 
                         icon="o-trash" 
                         class="text-error" 
@@ -127,7 +128,7 @@ new #[Layout('components.admin.layouts.app')] class extends Component {
         @endforeach
     </div>
 
-    <x-modal id="level-modal" class="backdrop-blur" persistent>
+    <x-modal wire:model="levelModal" class="backdrop-blur" persistent>
         <x-header :title="$editing ? 'Edit Jenjang' : 'Tambah Jenjang Baru'" subtitle="Lengkapi detail jenjang pendidikan di bawah ini." separator />
 
         <form wire:submit="save">
@@ -172,7 +173,7 @@ new #[Layout('components.admin.layouts.app')] class extends Component {
             </div>
 
             <x-slot:actions>
-                <x-button label="Batal" @click="$dispatch('close-modal', 'level-modal')" />
+                <x-button label="Batal" @click="$set('levelModal', false)" />
                 <x-button label="Simpan" type="submit" class="btn-primary" spinner="save" />
             </x-slot:actions>
         </form>

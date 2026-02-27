@@ -18,8 +18,7 @@
         "livewire/blaze": "1.0.0-beta.1",
         "livewire/livewire": "^4.2",
         "maatwebsite/excel": "^3.1",
-        "robsontenorio/mary": "^2.7",
-        "tallstackui/tallstackui": "^2.15"
+        "robsontenorio/mary": "*"
     },
     "require-dev": {
         "fakerphp/faker": "^1.23",

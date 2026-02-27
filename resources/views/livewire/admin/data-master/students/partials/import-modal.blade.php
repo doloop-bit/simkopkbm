@@ -1,4 +1,4 @@
-<x-modal id="import-modal" class="backdrop-blur">
+<x-modal wire:model="importModal" class="backdrop-blur">
     <x-header title="Import Data Siswa" subtitle="Upload file Excel untuk menambah data siswa secara massal." separator />
 
     <form wire:submit="import" class="space-y-6">
@@ -30,7 +30,7 @@
         @endif
 
         <x-slot:actions>
-            <x-button label="Batal" wire:click="clearImport" @click="$dispatch('close-modal', 'import-modal')" />
+            <x-button label="Batal" wire:click="clearImport" @click="$set('importModal', false)" />
             <x-button label="Proses Import" type="submit" class="btn-primary" spinner="import" />
         </x-slot:actions>
     </form>

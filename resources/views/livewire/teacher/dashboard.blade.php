@@ -24,128 +24,129 @@ new #[Layout('components.teacher.layouts.app')] class extends Component {
     }
 }; ?>
 
-<div class="p-6 space-y-6">
+<div class="p-6 flex flex-col gap-6">
     {{-- Header --}}
-    <div>
-        <flux:heading size="xl" level="1">{{ __('Dashboard Guru') }}</flux:heading>
-        <flux:subheading>{{ __('Selamat datang, ') . auth()->user()->name }}</flux:subheading>
-    </div>
+    <x-header title="Dashboard Guru" subtitle="Selamat datang, {{ auth()->user()->name }}" separator />
 
     {{-- Summary Cards --}}
     <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
-        <div class="p-6 bg-white dark:bg-zinc-800 rounded-xl border border-zinc-200 dark:border-zinc-700 shadow-sm">
-            <div class="flex items-center gap-4">
-                <div class="p-3 bg-blue-100 dark:bg-blue-900/30 rounded-lg">
-                    <flux:icon icon="building-office" class="w-6 h-6 text-blue-600 dark:text-blue-400" />
-                </div>
-                <div>
-                    <p class="text-sm text-zinc-600 dark:text-zinc-400">{{ __('Kelas Diampu') }}</p>
-                    <p class="text-2xl font-bold text-zinc-900 dark:text-white">{{ $classroomCount }}</p>
-                </div>
-            </div>
-        </div>
+        <x-stat
+            title="Kelas Diampu"
+            value="{{ $classroomCount }}"
+            icon="o-building-office"
+            class="bg-base-100 shadow-sm"
+            color="text-primary"
+        />
 
-        <div class="p-6 bg-white dark:bg-zinc-800 rounded-xl border border-zinc-200 dark:border-zinc-700 shadow-sm">
-            <div class="flex items-center gap-4">
-                <div class="p-3 bg-green-100 dark:bg-green-900/30 rounded-lg">
-                    <flux:icon icon="book-open" class="w-6 h-6 text-green-600 dark:text-green-400" />
-                </div>
-                <div>
-                    <p class="text-sm text-zinc-600 dark:text-zinc-400">{{ __('Mata Pelajaran') }}</p>
-                    <p class="text-2xl font-bold text-zinc-900 dark:text-white">{{ $subjectCount }}</p>
-                </div>
-            </div>
-        </div>
+        <x-stat
+            title="Mata Pelajaran"
+            value="{{ $subjectCount }}"
+            icon="o-book-open"
+            class="bg-base-100 shadow-sm"
+            color="text-success"
+        />
 
-        <div class="p-6 bg-white dark:bg-zinc-800 rounded-xl border border-zinc-200 dark:border-zinc-700 shadow-sm">
-            <div class="flex items-center gap-4">
-                <div class="p-3 bg-purple-100 dark:bg-purple-900/30 rounded-lg">
-                    <flux:icon icon="clipboard-document-check" class="w-6 h-6 text-purple-600 dark:text-purple-400" />
-                </div>
-                <div>
-                    <p class="text-sm text-zinc-600 dark:text-zinc-400">{{ __('Total Penugasan') }}</p>
-                    <p class="text-2xl font-bold text-zinc-900 dark:text-white">{{ $assignments->count() }}</p>
-                </div>
-            </div>
-        </div>
+        <x-stat
+            title="Total Penugasan"
+            value="{{ $assignments->count() }}"
+            icon="o-clipboard-document-check"
+            class="bg-base-100 shadow-sm"
+            color="text-secondary"
+        />
     </div>
 
     {{-- Assignments List --}}
-    <div class="bg-white dark:bg-zinc-800 rounded-xl border border-zinc-200 dark:border-zinc-700 shadow-sm overflow-hidden">
-        <div class="p-6 border-b border-zinc-200 dark:border-zinc-700">
-            <flux:heading size="lg">{{ __('Penugasan Saya') }}</flux:heading>
-        </div>
+    <x-card title="Penugasan Saya" separator shadow>
+        <x-table :headers="[
+            ['key' => 'academicYear.name', 'label' => 'Tahun Ajaran'],
+            ['key' => 'classroom_name', 'label' => 'Kelas'],
+            ['key' => 'subject.name', 'label' => 'Mata Pelajaran'],
+            ['key' => 'type_label', 'label' => 'Tipe']
+        ]" :rows="$assignments">
+            @scope('cell_academicYear.name', $assignment)
+                <div class="flex items-center gap-2">
+                    {{ $assignment->academicYear->name }}
+                    @if($assignment->academicYear->is_active)
+                        <x-badge label="Aktif" class="badge-success badge-sm" />
+                    @endif
+                </div>
+            @endscope
 
-        <div class="overflow-x-auto">
-            <table class="w-full text-sm text-left border-collapse">
-                <thead class="bg-zinc-50 dark:bg-zinc-900">
-                    <tr>
-                        <th class="px-6 py-3 font-medium text-zinc-700 dark:text-zinc-300">{{ __('Tahun Ajaran') }}</th>
-                        <th class="px-6 py-3 font-medium text-zinc-700 dark:text-zinc-300">{{ __('Kelas') }}</th>
-                        <th class="px-6 py-3 font-medium text-zinc-700 dark:text-zinc-300">{{ __('Mata Pelajaran') }}</th>
-                        <th class="px-6 py-3 font-medium text-zinc-700 dark:text-zinc-300">{{ __('Tipe') }}</th>
-                    </tr>
-                </thead>
-                <tbody class="divide-y divide-zinc-200 dark:divide-zinc-700">
-                    @forelse ($assignments as $assignment)
-                        <tr class="hover:bg-zinc-50 dark:hover:bg-zinc-900/50">
-                            <td class="px-6 py-4 text-zinc-900 dark:text-white">
-                                {{ $assignment->academicYear->name }}
-                                @if($assignment->academicYear->is_active)
-                                    <flux:badge size="sm" color="green" class="ml-2">Aktif</flux:badge>
-                                @endif
-                            </td>
-                            <td class="px-6 py-4 text-zinc-900 dark:text-white">
-                                {{ $assignment->classroom->name }}
-                                <span class="text-xs text-zinc-500">({{ $assignment->classroom->level->name }})</span>
-                            </td>
-                            <td class="px-6 py-4 text-zinc-600 dark:text-zinc-400">
-                                {{ $assignment->subject?->name ?? '-' }}
-                            </td>
-                            <td class="px-6 py-4">
-                                <flux:badge size="sm" variant="outline">
-                                    {{ match($assignment->type) {
-                                        'class_teacher' => 'Guru Kelas',
-                                        'subject_teacher' => 'Guru Mapel',
-                                        'homeroom' => 'Wali Kelas',
-                                        default => $assignment->type
-                                    } }}
-                                </flux:badge>
-                            </td>
-                        </tr>
-                    @empty
-                        <tr>
-                            <td colspan="4" class="px-6 py-12 text-center text-zinc-500 dark:text-zinc-400">
-                                <flux:icon icon="inbox" class="w-12 h-12 mx-auto mb-2 opacity-20" />
-                                <p>{{ __('Belum ada penugasan.') }}</p>
-                            </td>
-                        </tr>
-                    @endforelse
-                </tbody>
-            </table>
-        </div>
-    </div>
+            @scope('cell_classroom_name', $assignment)
+                <div class="flex flex-col">
+                    <span class="font-bold">{{ $assignment->classroom->name }}</span>
+                    <span class="text-[10px] uppercase opacity-60">{{ $assignment->classroom->level->name }}</span>
+                </div>
+            @endscope
+
+            @scope('cell_subject.name', $assignment)
+                {{ $assignment->subject?->name ?? '-' }}
+            @endscope
+
+            @scope('cell_type_label', $assignment)
+                <x-badge 
+                    :label="match($assignment->type) {
+                        'class_teacher' => 'Guru Kelas',
+                        'subject_teacher' => 'Guru Mapel',
+                        'homeroom' => 'Wali Kelas',
+                        default => $assignment->type
+                    }" 
+                    outline
+                    class="badge-sm"
+                />
+            @endscope
+        </x-table>
+
+        @if($assignments->isEmpty())
+            <div class="py-12 text-center opacity-30 flex flex-col items-center">
+                <x-icon name="o-inbox" class="size-12 mb-2" />
+                <p>Belum ada penugasan.</p>
+            </div>
+        @endif
+    </x-card>
 
     {{-- Quick Actions --}}
     <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-        <a href="{{ route('teacher.students.index') }}" wire:navigate class="p-4 bg-white dark:bg-zinc-800 rounded-lg border border-zinc-200 dark:border-zinc-700 hover:border-blue-500 dark:hover:border-blue-500 transition-colors">
-            <flux:icon icon="users" class="w-8 h-8 text-blue-600 mb-2" />
-            <p class="font-medium text-zinc-900 dark:text-white">{{ __('Daftar Siswa') }}</p>
-            <p class="text-xs text-zinc-500">{{ __('Lihat siswa yang Anda ampu') }}</p>
+        <a href="{{ route('teacher.students.index') }}" wire:navigate>
+            <x-card class="hover:bg-base-200 transition-colors" shadow sm>
+                <div class="flex items-center gap-4">
+                    <div class="p-3 bg-primary/10 rounded-xl">
+                        <x-icon name="o-users" class="size-8 text-primary" />
+                    </div>
+                    <div>
+                        <p class="font-bold">Daftar Siswa</p>
+                        <p class="text-[10px] opacity-60">Lihat siswa yang Anda ampu</p>
+                    </div>
+                </div>
+            </x-card>
         </a>
 
-        <a href="{{ route('teacher.assessments.grading') }}" wire:navigate class="p-4 bg-white dark:bg-zinc-800 rounded-lg border border-zinc-200 dark:border-zinc-700 hover:border-green-500 dark:hover:border-green-500 transition-colors">
-            <flux:icon icon="pencil-square" class="w-8 h-8 text-green-600 mb-2" />
-            <p class="font-medium text-zinc-900 dark:text-white">{{ __('Input Nilai & TP') }}</p>
-            <p class="text-xs text-zinc-500">{{ __('Input penilaian rapor dan TP kompetensi') }}</p>
+        <a href="{{ route('teacher.assessments.grading') }}" wire:navigate>
+            <x-card class="hover:bg-base-200 transition-colors" shadow sm>
+                <div class="flex items-center gap-4">
+                    <div class="p-3 bg-success/10 rounded-xl">
+                        <x-icon name="o-pencil-square" class="size-8 text-success" />
+                    </div>
+                    <div>
+                        <p class="font-bold">Input Nilai & TP</p>
+                        <p class="text-[10px] opacity-60">Input penilaian rapor dan TP</p>
+                    </div>
+                </div>
+            </x-card>
         </a>
 
-
-
-        <a href="{{ route('teacher.report-cards') }}" wire:navigate class="p-4 bg-white dark:bg-zinc-800 rounded-lg border border-zinc-200 dark:border-zinc-700 hover:border-orange-500 dark:hover:border-orange-500 transition-colors">
-            <flux:icon icon="document-text" class="w-8 h-8 text-orange-600 mb-2" />
-            <p class="font-medium text-zinc-900 dark:text-white">{{ __('Lihat Rapor') }}</p>
-            <p class="text-xs text-zinc-500">{{ __('Lihat rapor siswa') }}</p>
+        <a href="{{ route('teacher.report-cards') }}" wire:navigate>
+            <x-card class="hover:bg-base-200 transition-colors" shadow sm>
+                <div class="flex items-center gap-4">
+                    <div class="p-3 bg-warning/10 rounded-xl">
+                        <x-icon name="o-document-text" class="size-8 text-warning" />
+                    </div>
+                    <div>
+                        <p class="font-bold">Lihat Rapor</p>
+                        <p class="text-[10px] opacity-60">Lihat rapor siswa</p>
+                    </div>
+                </div>
+            </x-card>
         </a>
     </div>
 </div>

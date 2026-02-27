@@ -82,13 +82,13 @@ new #[Layout('components.admin.layouts.app')] class extends Component {
 
 ### **Frontend**
 
-| Technology   | Version    | Purpose              | Notes                                 |
-| ------------ | ---------- | -------------------- | ------------------------------------- |
-| Tailwind CSS | **4.1.11** | Styling              | v4 with new config syntax             |
-| Flux UI      | **2.10.2** | Primary UI Library   | **FREE version** (limited components) |
-| TallStack UI | **2.15.1** | Secondary UI Library | Supplements Flux limitations          |
-| Alpine.js    | **3.x**    | JavaScript           | Included via Livewire                 |
-| Vite         | **7.x**    | Asset Bundling       | -                                     |
+| Technology   | Version | Purpose            | Notes                                 |
+| ------------ | ------- | ------------------ | ------------------------------------- |
+| Tailwind CSS | **4.x** | Styling            | v4 with new config syntax             |
+| Mary UI      | **2.x** | Primary UI Library | Based on DaisyUI                      |
+| DaisyUI      | **5.x** | CSS Components     | Used by Mary UI                       |
+| Alpine.js    | **3.x** | JavaScript         | Included via Livewire                 |
+| Vite         | **6.x** | Asset Bundling     | -                                     |
 
 ### **Database**
 
@@ -116,105 +116,82 @@ new #[Layout('components.admin.layouts.app')] class extends Component {
 
 ## 🎨 UI Library Guide
 
-### **Component Hierarchy**
+### **Component Library**
 
-This project uses **TWO UI libraries**. Follow this priority:
+This project uses **Mary UI** as the primary component library. It is built on top of **DaisyUI** and provides a rich set of reactive components for Livewire.
 
-```
-1. Flux UI (Primary)     → Use first if component available
-2. TallStack UI (Secondary) → Use when Flux doesn't have the component
-3. Custom Blade (Last Resort) → Only if neither has what you need
-```
-
-### **Flux UI Free - Available Components**
-
-> Flux Free has limited components. Available ones include:
+### **Mary UI - Core Components**
 
 ```blade
+{{-- Header & Layout --}}
+<x-header title="Page Title" subtitle="Description text" separator>
+    <x-slot:actions>
+        <x-button label="Add New" icon="o-plus" class="btn-primary" />
+    </x-slot:actions>
+</x-header>
+
+{{-- Cards --}}
+<x-card title="Card Title" shadow separator>
+    Content here
+</x-card>
+
 {{-- Buttons --}}
-<flux:button variant="primary" icon="check">Save</flux:button>
-<flux:button variant="danger" icon="trash">Delete</flux:button>
-<flux:button variant="ghost">Cancel</flux:button>
+<x-button label="Save" icon="o-check" class="btn-primary" />
+<x-button label="Delete" icon="o-trash" class="btn-error" />
 
 {{-- Form Inputs --}}
-<flux:input wire:model="name" label="Name" />
-<flux:select wire:model="option" label="Option">
-    <option value="">Select...</option>
-</flux:select>
-<flux:textarea wire:model="description" label="Description" rows="3" />
+<x-input label="Name" wire:model="name" />
+<x-select label="Option" :options="$options" wire:model="option" />
+<x-textarea label="Description" wire:model="description" hint="Max 255 chars" />
+<x-choices label="Multiple select" wire:model="selected_ids" :options="$users" />
 
-{{-- Typography --}}
-<flux:heading size="xl" level="1">Page Title</flux:heading>
-<flux:subheading>Description text</flux:subheading>
+{{-- Tables --}}
+<x-table :headers="$headers" :rows="$rows" striped with-pagination />
 
-{{-- Icons --}}
-<flux:icon icon="check" class="w-5 h-5" />
+{{-- Feedback --}}
+<x-badge label="Active" class="badge-success" />
+<x-icon name="o-check-circle" class="text-success" />
 
 {{-- Modals --}}
-<flux:modal wire:model="showModal">
-    <flux:modal.header>Title</flux:modal.header>
-    <flux:modal.body>Content</flux:modal.body>
-</flux:modal>
+<x-modal wire:model="showModal" title="Modal Title">
+    <div>Modal content</div>
+    <x-slot:actions>
+        <x-button label="Cancel" @click="$wire.showModal = false" />
+        <x-button label="Confirm" class="btn-primary" />
+    </x-slot:actions>
+</x-modal>
 
-{{-- Toast notifications (from PHP) --}}
-\Flux::toast('Message here');
+{{-- Toast notifications (using Trait) --}}
+$this->success('Saved successfully.');
+$this->error('Something went wrong.');
 ```
 
-### **TallStack UI - Secondary Library**
+### **Iconography**
 
-> TallStack UI v2.15 is installed as a complement to Flux Free.  
-> 📖 **Full documentation:** https://tallstackui.com/docs
-
-**Available Components Include:**
-
-- **Form:** Date Picker, Time Picker, Color Picker, PIN Input, Range, Upload, Select (searchable)
-- **UI:** Table, Card, Avatar, Badge, Alert, Banner, Dropdown, Tooltip, Stats
-- **Navigation:** Tabs, Steps/Wizard, Slide, Drawer
-- **Feedback:** Rating, Progress, Loading, Reactions
-- **Utility:** Clipboard, Floating, Errors
-
-**Usage Pattern:**
+We use **Heroicons** via Mary UI's `x-icon` component. Use the `o-*` prefix for outline icons (Solid icons are also available with `s-*`).
 
 ```blade
-{{-- TallStack components use x-ts- prefix --}}
-<x-ts-date-picker wire:model="date" label="Date" />
-<x-ts-table :headers="$headers" :rows="$rows" />
-<x-ts-card>Content here</x-ts-card>
-<x-ts-badge text="Active" color="green" />
+<x-icon name="o-user" class="w-5 h-5" />
 ```
-
-### **When to Use Which**
-
-| Need                                   | First Choice  | Fallback        |
-| -------------------------------------- | ------------- | --------------- |
-| Button, Input, Select, Modal, Textarea | **Flux**      | -               |
-| Date/Time Picker, Searchable Select    | **TallStack** | -               |
-| Table, Card, Badge, Avatar, Stats      | **TallStack** | Custom Tailwind |
-| Toast/Notification                     | **Flux**      | TallStack       |
-| Tabs, Steps, Wizard                    | **TallStack** | -               |
 
 ### **Page Structure Template**
 
 ```blade
 <div class="p-6">
-    {{-- Header --}}
-    <div class="flex items-center justify-between mb-6">
-        <div>
-            <flux:heading size="xl" level="1">Page Title</flux:heading>
-            <flux:subheading>Page description.</flux:subheading>
+    <x-header title="Page Title" subtitle="Page description." separator>
+        <x-slot:actions>
+            <x-button label="Add New" icon="o-plus" class="btn-primary" spinner />
+        </x-slot:actions>
+    </x-header>
+
+    <x-card shadow>
+        {{-- Filters/Content --}}
+        <div class="grid grid-cols-1 md:grid-cols-4 gap-4 mb-6">
+            <x-input label="Search" wire:model.live="search" icon="o-magnifying-glass" />
         </div>
-        <flux:button variant="primary" icon="plus">Add New</flux:button>
-    </div>
 
-    {{-- Filters --}}
-    <div class="grid grid-cols-1 md:grid-cols-4 gap-4 mb-6">
-        {{-- Filter inputs --}}
-    </div>
-
-    {{-- Content --}}
-    <div class="border rounded-lg bg-white dark:bg-zinc-900 overflow-hidden">
-        {{-- Table or content --}}
-    </div>
+        <x-table :headers="$headers" :rows="$rows" striped />
+    </x-card>
 </div>
 ```
 
@@ -386,7 +363,7 @@ new #[Layout('components.admin.layouts.app')] class extends Component {
     public function save(): void
     {
         // Validate and save
-        \Flux::toast('Saved successfully.');
+        $this->success('Saved successfully.');
     }
 
     // Computed data for view
@@ -401,7 +378,7 @@ new #[Layout('components.admin.layouts.app')] class extends Component {
 <div class="p-6">
     {{-- View content --}}
 </div>
-````
+```
 
 ### **Loading Related Data Pattern**
 
@@ -420,7 +397,7 @@ public function loadStudents(): void
     }
 
     $this->students = User::where('role', 'siswa')
-        ->whereHas('profiles.profileable', fn($q) =>
+        ->whereHas('latestProfile.profileable', fn($q) =>
             $q->where('classroom_id', $this->classroom_id)
         )
         ->get();
@@ -441,7 +418,7 @@ public function save(): void
         }
     });
 
-    \Flux::toast('Data saved successfully.');
+    $this->success('Data saved successfully.');
 }
 ```
 

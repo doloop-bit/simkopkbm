@@ -2,20 +2,24 @@
 
 namespace App\Traits\Assessments;
 
-use App\Models\User;
+use App\Models\AcademicYear;
 use App\Models\Attendance;
 use App\Models\AttendanceItem;
 use App\Models\Classroom;
 use App\Models\Subject;
-use App\Models\AcademicYear;
+use App\Models\User;
 use Illuminate\Support\Facades\DB;
 
 trait HandlesDailyAttendance
 {
     public ?int $academic_year_id = null;
+
     public ?int $classroom_id = null;
+
     public ?int $subject_id = null;
+
     public string $date = '';
+
     public string $notes = '';
 
     public array $attendance_data = []; // [student_id => status]
@@ -60,13 +64,14 @@ trait HandlesDailyAttendance
 
     public function loadAttendance(): void
     {
-        if (!$this->classroom_id || !$this->date) {
+        if (! $this->classroom_id || ! $this->date) {
             $this->attendance_data = [];
+
             return;
         }
 
         // Security check
-        $this->ensureAccessToClassroom((int)$this->classroom_id);
+        $this->ensureAccessToClassroom((int) $this->classroom_id);
 
         $attendance = Attendance::where([
             'classroom_id' => $this->classroom_id,
@@ -80,7 +85,7 @@ trait HandlesDailyAttendance
         } else {
             $this->notes = '';
             $this->attendance_data = [];
-            
+
             // Default to present for all students in classroom
             $students = User::where('role', 'siswa')
                 ->whereHas('profiles', function ($q) {
@@ -98,11 +103,11 @@ trait HandlesDailyAttendance
     public function save(): void
     {
         try {
-            if (!$this->classroom_id || !$this->date || !$this->academic_year_id) {
+            if (! $this->classroom_id || ! $this->date || ! $this->academic_year_id) {
                 return;
             }
 
-            $this->ensureAccessToClassroom((int)$this->classroom_id);
+            $this->ensureAccessToClassroom((int) $this->classroom_id);
 
             DB::transaction(function () {
                 $attendance = Attendance::updateOrCreate(
@@ -141,16 +146,17 @@ trait HandlesDailyAttendance
 
     // Abstract methods for access control & data scope
     abstract protected function ensureAccessToClassroom(int $classroomId): void;
+
     abstract protected function getAllowedClassrooms();
 
     public function with(): array
     {
         $students = [];
         if ($this->classroom_id) {
-             // Re-verify access in render loop just in case
-             // Note: ensureAccessToClassroom usually aborts, but here we just return empty if invalid to prevent crash
-             // But let's assume classroom_id is valid from getAllowedClassrooms or updatedClassroomId hook.
-             
+            // Re-verify access in render loop just in case
+            // Note: ensureAccessToClassroom usually aborts, but here we just return empty if invalid to prevent crash
+            // But let's assume classroom_id is valid from getAllowedClassrooms or updatedClassroomId hook.
+
             $students = User::where('role', 'siswa')
                 ->whereHas('profiles', function ($q) {
                     $q->whereHasMorph('profileable', [\App\Models\StudentProfile::class], function ($q) {

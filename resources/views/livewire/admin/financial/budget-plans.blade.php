@@ -10,8 +10,10 @@ use App\Models\AcademicYear;
 use Livewire\WithPagination;
 use Illuminate\Support\Facades\Auth;
 
+use Mary\Traits\Toast;
+
 new class extends Component {
-    use WithPagination;
+    use WithPagination, Toast;
 
     public $search = '';
     public $level_filter = '';
@@ -29,6 +31,7 @@ new class extends Component {
 
     // Master Data Cache
     public $standardItems = [];
+    public bool $planModal = false;
     
     public function mount()
     {
@@ -63,9 +66,8 @@ new class extends Component {
         
         if (!$user->can('create', BudgetPlan::class) && !$user->managed_level_id && !$user->isAdmin()) {
              // Basic check if user has no level assigned and is not admin
-             // Ideally use Policy, but for now simple check
              if (!$user->managed_level_id && !$user->isAdmin()) {
-                 $this->dispatch('notify', variant: 'danger', message: 'Anda tidak memiliki akses untuk membuat RAB.');
+                 $this->error('Anda tidak memiliki akses untuk membuat RAB.');
                  return;
              }
         }
@@ -76,7 +78,7 @@ new class extends Component {
         $this->formItems = [];
         $this->itemSearches = [''];
         $this->addItemRow(); // Start with 1 empty row
-        $this->dispatch('open-plan-modal');
+        $this->planModal = true;
     }
 
     public function edit(BudgetPlan $plan): void
@@ -108,8 +110,7 @@ new class extends Component {
         })->toArray();
 
         $this->itemSearches = collect($this->formItems)->pluck('name')->toArray();
-
-        $this->dispatch('open-plan-modal');
+        $this->planModal = true;
     }
 
     public function addItemRow(): void
@@ -197,7 +198,7 @@ new class extends Component {
                 'status' => $action === 'submit' ? 'submitted' : 'draft',
             ]);
             
-            // Sync Items (Delete all and recreate is easiest for now, or careful sync)
+            // Sync Items
             $plan->items()->delete();
         } else {
             $plan = BudgetPlan::create([
@@ -247,21 +248,19 @@ new class extends Component {
                 }
             } catch (\Exception $e) {
                 \Illuminate\Support\Facades\Log::error('WA Notification Error: ' . $e->getMessage());
-                // Don't block the UI flow, just log
             }
         }
 
-        $this->dispatch('plan-saved');
-        $this->dispatch('notify', variant: 'success', message: 'RAB berhasil disimpan.');
+        $this->planModal = false;
+        $this->success('RAB berhasil disimpan.');
     }
     
     // Workflow Actions
     public function updateStatus(BudgetPlan $plan, string $status): void
     {
-        // Authorization Check
         $user = Auth::user();
         if (!$user->isYayasan() && !$user->isAdmin()) {
-             $this->dispatch('notify', variant: 'danger', message: 'Unauthorized action.');
+             $this->error('Unauthorized action.');
              return;
         }
         
@@ -279,17 +278,17 @@ new class extends Component {
         }
         
         $plan->update($updateData);
-        $this->dispatch('plan-saved'); // Refresh list
-        $this->dispatch('notify', variant: 'success', message: "Status RAB diperbarui menjadi " . ucfirst($status));
+        $this->success("Status RAB diperbarui menjadi " . ucfirst($status));
     }
 
     public function delete(BudgetPlan $plan): void
     {
         if ($plan->status !== 'draft' && !Auth::user()->isAdmin()) {
-             $this->dispatch('notify', variant: 'danger', message: 'Hanya draft yang dapat dihapus.');
+             $this->error('Hanya draft yang dapat dihapus.');
              return;
         }
         $plan->delete();
+        $this->success('RAB berhasil dihapus.');
     }
 
     public function createSubItem($index, $name): void
@@ -405,7 +404,7 @@ new class extends Component {
     </x-card>
 
     <!-- RAB Modal (Large) -->
-    <x-modal id="plan-modal" class="backdrop-blur" persistent>
+    <x-modal wire:model="planModal" class="backdrop-blur" persistent>
         <x-header :title="$editing ? 'Edit RAB' : 'Buat RAB Baru'" subtitle="Anggaran diajukan oleh Bendahara/Kepsek untuk disetujui Yayasan." separator />
 
         <div class="space-y-6">
@@ -535,7 +534,7 @@ new class extends Component {
                         @endif
                     </div>
                     <div class="flex gap-2">
-                        <x-button label="Tutup" @click="$dispatch('close-modal', 'plan-modal')" />
+                        <x-button label="Tutup" @click="$set('planModal', false)" />
                         @if(!$editing || $editing->status === 'draft' || $editing->status === 'rejected')
                             <x-button label="Simpan Draft" class="btn-outline btn-primary" wire:click="save('draft')" spinner="save" />
                             <x-button label="Simpan & Ajukan" class="btn-primary" wire:click="save('submit')" spinner="save" />

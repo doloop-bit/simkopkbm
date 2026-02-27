@@ -2,12 +2,12 @@
 
 namespace App\Exports;
 
-use App\Models\User;
 use App\Models\StudentProfile;
+use App\Models\User;
+use Maatwebsite\Excel\Concerns\Exportable;
 use Maatwebsite\Excel\Concerns\FromQuery;
 use Maatwebsite\Excel\Concerns\WithHeadings;
 use Maatwebsite\Excel\Concerns\WithMapping;
-use Maatwebsite\Excel\Concerns\Exportable;
 
 class StudentsExport implements FromQuery, WithHeadings, WithMapping
 {
@@ -23,11 +23,11 @@ class StudentsExport implements FromQuery, WithHeadings, WithMapping
     {
         return User::where('role', 'siswa')
             ->with(['latestProfile.profileable.classroom.level'])
-            ->when($this->search, fn($q) => $q->where('name', 'like', "%{$this->search}%")
+            ->when($this->search, fn ($q) => $q->where('name', 'like', "%{$this->search}%")
                 ->orWhere('email', 'like', "%{$this->search}%")
-                ->orWhereHas('latestProfile', fn($pq) => $pq->whereHasMorph('profileable', [StudentProfile::class], fn($sq) => $sq->where('nis', 'like', "%{$this->search}%")->orWhere('nisn', 'like', "%{$this->search}%"))))
-            ->when($this->filter_classroom_id, fn($q) => $q->whereHas('latestProfile', fn($pq) => $pq->whereHasMorph('profileable', [StudentProfile::class], fn($sq) => $sq->where('classroom_id', $this->filter_classroom_id))))
-            ->when($this->filter_level_id, fn($q) => $q->whereHas('latestProfile', fn($pq) => $pq->whereHasMorph('profileable', [StudentProfile::class], fn($sq) => $sq->whereHas('classroom', fn($cq) => $cq->where('level_id', $this->filter_level_id)))))
+                ->orWhereHas('latestProfile', fn ($pq) => $pq->whereHasMorph('profileable', [StudentProfile::class], fn ($sq) => $sq->where('nis', 'like', "%{$this->search}%")->orWhere('nisn', 'like', "%{$this->search}%"))))
+            ->when($this->filter_classroom_id, fn ($q) => $q->whereHas('latestProfile', fn ($pq) => $pq->whereHasMorph('profileable', [StudentProfile::class], fn ($sq) => $sq->where('classroom_id', $this->filter_classroom_id))))
+            ->when($this->filter_level_id, fn ($q) => $q->whereHas('latestProfile', fn ($pq) => $pq->whereHasMorph('profileable', [StudentProfile::class], fn ($sq) => $sq->whereHas('classroom', fn ($cq) => $cq->where('level_id', $this->filter_level_id)))))
             ->orderBy('name');
     }
 
@@ -51,7 +51,7 @@ class StudentsExport implements FromQuery, WithHeadings, WithMapping
     public function map($user): array
     {
         $profile = $user->latestProfile?->profileable;
-        
+
         return [
             $user->name,
             $user->email,

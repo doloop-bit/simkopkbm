@@ -11,7 +11,11 @@ use Livewire\Attributes\Layout;
 use Livewire\Component;
 use Illuminate\Support\Facades\DB;
 
+use Mary\Traits\Toast;
+
 new #[Layout('components.admin.layouts.app')] class extends Component {
+    use Toast;
+
     public ?int $academic_year_id = null;
     public ?int $classroom_id = null;
     public ?int $subject_id = null;
@@ -112,7 +116,7 @@ new #[Layout('components.admin.layouts.app')] class extends Component {
             }
         });
 
-        \Flux::toast('Penilaian kompetensi berhasil disimpan.');
+        $this->success('Penilaian kompetensi berhasil disimpan.');
     }
 
     public function with(): array
@@ -138,104 +142,94 @@ new #[Layout('components.admin.layouts.app')] class extends Component {
     }
 }; ?>
 
-<div class="p-6">
-    <div class="flex items-center justify-between mb-6">
-        <div>
-            <flux:heading size="xl" level="1">Penilaian Capaian Pembelajaran (PAUD)</flux:heading>
-            <flux:subheading>Input penilaian perkembangan anak berbasis Kurikulum Merdeka (BB/MB/BSH/SB).</flux:subheading>
-        </div>
-    </div>
+<div class="p-6 flex flex-col gap-6">
+    <x-header title="Penilaian Capaian Pembelajaran (PAUD)" subtitle="Input penilaian perkembangan anak berbasis Kurikulum Merdeka (BB/MB/BSH/SB)." separator />
 
-    <div class="grid grid-cols-1 md:grid-cols-4 gap-4 mb-6">
-        <flux:select wire:model.live="academic_year_id" label="Tahun Ajaran">
-            @foreach($years as $year)
-                <option value="{{ $year->id }}">{{ $year->name }}</option>
-            @endforeach
-        </flux:select>
-
-        <flux:select wire:model.live="semester" label="Semester">
-            <option value="1">Semester 1</option>
-            <option value="2">Semester 2</option>
-        </flux:select>
-
-        <flux:select wire:model.live="classroom_id" label="Kelas">
-            <option value="">Pilih Kelas</option>
-            @foreach($classrooms as $room)
-                <option value="{{ $room->id }}">{{ $room->name }}</option>
-            @endforeach
-        </flux:select>
-
-        <flux:select wire:model.live="subject_id" label="Mata Pelajaran">
-            <option value="">Pilih Mata Pelajaran</option>
-            @foreach($subjects as $subject)
-                <option value="{{ $subject->id }}">{{ $subject->name }}</option>
-            @endforeach
-        </flux:select>
+    <div class="grid grid-cols-1 md:grid-cols-4 gap-4">
+        <x-select wire:model.live="academic_year_id" label="Tahun Ajaran" :options="$years" />
+        <x-select 
+            wire:model.live="semester" 
+            label="Semester" 
+            :options="[
+                ['id' => '1', 'name' => 'Semester 1'],
+                ['id' => '2', 'name' => 'Semester 2'],
+            ]" 
+        />
+        <x-select 
+            wire:model.live="classroom_id" 
+            label="Kelas" 
+            placeholder="Pilih Kelas"
+            :options="$classrooms"
+        />
+        <x-select 
+            wire:model.live="subject_id" 
+            label="Mata Pelajaran" 
+            placeholder="Pilih Mata Pelajaran"
+            :options="$subjects"
+        />
     </div>
 
     <!-- Competency Level Legend -->
-    <div class="flex flex-wrap gap-4 mb-4 text-sm">
+    <div class="flex flex-wrap gap-4 text-xs">
         <div class="flex items-center gap-2">
-            <span class="w-3 h-3 rounded-full bg-red-500"></span>
-            <span class="text-zinc-600 dark:text-zinc-400">BB - Belum Berkembang</span>
+            <span class="w-2 h-2 rounded-full bg-error"></span>
+            <span class="opacity-70 text-[10px] uppercase tracking-wider">BB - Belum Berkembang</span>
         </div>
         <div class="flex items-center gap-2">
-            <span class="w-3 h-3 rounded-full bg-yellow-500"></span>
-            <span class="text-zinc-600 dark:text-zinc-400">MB - Mulai Berkembang</span>
+            <span class="w-2 h-2 rounded-full bg-warning"></span>
+            <span class="opacity-70 text-[10px] uppercase tracking-wider">MB - Mulai Berkembang</span>
         </div>
         <div class="flex items-center gap-2">
-            <span class="w-3 h-3 rounded-full bg-blue-500"></span>
-            <span class="text-zinc-600 dark:text-zinc-400">BSH - Berkembang Sesuai Harapan</span>
+            <span class="w-2 h-2 rounded-full bg-primary"></span>
+            <span class="opacity-70 text-[10px] uppercase tracking-wider">BSH - Berkembang Sesuai Harapan</span>
         </div>
         <div class="flex items-center gap-2">
-            <span class="w-3 h-3 rounded-full bg-green-500"></span>
-            <span class="text-zinc-600 dark:text-zinc-400">SB - Sangat Berkembang</span>
+            <span class="w-2 h-2 rounded-full bg-success"></span>
+            <span class="opacity-70 text-[10px] uppercase tracking-wider">SB - Sangat Berkembang</span>
         </div>
     </div>
 
     @if($classroom_id && $subject_id)
-        <div class="border rounded-lg bg-white dark:bg-zinc-900 overflow-hidden">
-            <table class="w-full text-sm text-left border-collapse">
-                <thead class="bg-zinc-50 dark:bg-zinc-800">
-                    <tr>
-                        <th class="px-4 py-3 font-medium text-zinc-700 dark:text-zinc-300 border-b w-48">Nama Siswa</th>
-                        <th class="px-4 py-3 font-medium text-zinc-700 dark:text-zinc-300 border-b w-32 text-center">Capaian</th>
-                        <th class="px-4 py-3 font-medium text-zinc-700 dark:text-zinc-300 border-b">Deskripsi Capaian</th>
-                    </tr>
-                </thead>
-                <tbody class="divide-y divide-zinc-200 dark:divide-zinc-700">
-                    @foreach($students as $student)
-                        <tr wire:key="{{ $student->id }}">
-                            <td class="px-4 py-3 text-zinc-900 dark:text-white font-medium">
-                                {{ $student->name }}
-                            </td>
-                            <td class="px-4 py-3">
-                                <flux:select wire:model="assessments_data.{{ $student->id }}.level" class="text-center">
-                                    <option value="BB">BB</option>
-                                    <option value="MB">MB</option>
-                                    <option value="BSH">BSH</option>
-                                    <option value="SB">SB</option>
-                                </flux:select>
-                            </td>
-                            <td class="px-4 py-3">
-                                <flux:textarea 
-                                    wire:model="assessments_data.{{ $student->id }}.description" 
-                                    rows="2"
-                                    placeholder="Tuliskan deskripsi capaian pembelajaran siswa..."
-                                />
-                            </td>
-                        </tr>
-                    @endforeach
-                </tbody>
-            </table>
+        <x-card shadow>
+            <x-table :headers="[
+                ['key' => 'name', 'label' => 'Nama Siswa'],
+                ['key' => 'level', 'label' => 'Capaian', 'class' => 'text-center w-32'],
+                ['key' => 'description', 'label' => 'Deskripsi Capaian']
+            ]" :rows="$students">
+                @scope('cell_name', $student)
+                    <span class="font-medium">{{ $student->name }}</span>
+                @endscope
 
-            <div class="p-4 bg-zinc-50 dark:bg-zinc-800 border-t flex justify-end">
-                <flux:button variant="primary" icon="check" wire:click="save">Simpan Penilaian</flux:button>
-            </div>
-        </div>
+                @scope('cell_level', $student)
+                    <x-select 
+                        wire:model="assessments_data.{{ $student->id }}.level" 
+                        sm
+                        :options="[
+                            ['id' => 'BB', 'name' => 'BB'],
+                            ['id' => 'MB', 'name' => 'MB'],
+                            ['id' => 'BSH', 'name' => 'BSH'],
+                            ['id' => 'SB', 'name' => 'SB'],
+                        ]" 
+                    />
+                @endscope
+
+                @scope('cell_description', $student)
+                    <x-textarea 
+                        wire:model="assessments_data.{{ $student->id }}.description" 
+                        rows="2"
+                        placeholder="Tuliskan deskripsi..."
+                        sm
+                    />
+                @endscope
+            </x-table>
+
+            <x-slot:actions>
+                <x-button label="Simpan Penilaian" icon="o-check" class="btn-primary" wire:click="save" spinner="save" />
+            </x-slot:actions>
+        </x-card>
     @else
-        <div class="flex flex-col items-center justify-center py-12 text-zinc-500 border-2 border-dashed rounded-xl">
-            <flux:icon icon="pencil-square" class="w-12 h-12 mb-2 opacity-20" />
+        <div class="flex flex-col items-center justify-center py-12 text-base-content/30 border-2 border-dashed rounded-xl bg-base-200/50">
+            <x-icon name="o-pencil-square" class="size-12 mb-2 opacity-20" />
             <p>Silakan pilih kelas dan mata pelajaran untuk memulai penilaian.</p>
         </div>
     @endif

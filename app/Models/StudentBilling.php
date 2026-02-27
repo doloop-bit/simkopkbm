@@ -7,15 +7,15 @@ use Illuminate\Database\Eloquent\Model;
 class StudentBilling extends Model
 {
     protected $fillable = [
-        'student_id', 
-        'fee_category_id', 
-        'academic_year_id', 
-        'month', 
-        'amount', 
-        'paid_amount', 
-        'due_date', 
-        'status', 
-        'notes'
+        'student_id',
+        'fee_category_id',
+        'academic_year_id',
+        'month',
+        'amount',
+        'paid_amount',
+        'due_date',
+        'status',
+        'notes',
     ];
 
     protected function casts(): array

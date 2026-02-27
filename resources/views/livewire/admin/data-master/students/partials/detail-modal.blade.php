@@ -1,4 +1,4 @@
-<x-modal id="detail-modal" class="backdrop-blur" persistent>
+<x-modal wire:model="detailModal" class="backdrop-blur">
     @if($viewing)
         @php $viewProfile = $viewing->latestProfile?->profileable; @endphp
         <div class="space-y-6">
@@ -171,8 +171,8 @@
             @endif
 
             <x-slot:actions>
-                <x-button label="Tutup" @click="$dispatch('close-modal', 'detail-modal')" />
-                <x-button label="Edit Data" icon="o-pencil-square" wire:click="edit({{ $viewing->id }})" @click="$dispatch('close-modal', 'detail-modal'); $dispatch('open-modal', 'student-modal')" class="btn-primary" />
+                <x-button label="Tutup" @click="$set('detailModal', false)" />
+                <x-button label="Edit Data" icon="o-pencil-square" wire:click="edit({{ $viewing->id }})" @click="$set('detailModal', false)" class="btn-primary" />
             </x-slot:actions>
         </div>
     @endif

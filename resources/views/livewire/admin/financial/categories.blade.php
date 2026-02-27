@@ -7,9 +7,10 @@ use App\Models\Level;
 use Livewire\Attributes\Layout;
 use Livewire\Component;
 use Livewire\WithPagination;
+use Mary\Traits\Toast;
 
 new #[Layout('components.admin.layouts.app')] class extends Component {
-    use WithPagination;
+    use WithPagination, Toast;
 
     public string $name = '';
     public string $code = '';
@@ -18,6 +19,9 @@ new #[Layout('components.admin.layouts.app')] class extends Component {
     public ?int $level_id = null;
 
     public ?FeeCategory $editing = null;
+    public bool $categoryModal = false;
+    public bool $deleteModal = false;
+    public ?int $deletingId = null;
 
     public function rules(): array
     {
@@ -28,6 +32,23 @@ new #[Layout('components.admin.layouts.app')] class extends Component {
             'default_amount' => 'required|numeric|min:0',
             'level_id' => 'nullable|exists:levels,id',
         ];
+    }
+
+    public function create(): void
+    {
+        $this->reset(['name', 'code', 'description', 'default_amount', 'level_id', 'editing']);
+        $this->categoryModal = true;
+    }
+
+    public function edit(FeeCategory $category): void
+    {
+        $this->editing = $category;
+        $this->name = $category->name;
+        $this->code = $category->code;
+        $this->description = $category->description ?? '';
+        $this->default_amount = (float) $category->default_amount;
+        $this->level_id = $category->level_id;
+        $this->categoryModal = true;
     }
 
     public function save(): void
@@ -42,7 +63,7 @@ new #[Layout('components.admin.layouts.app')] class extends Component {
                 'default_amount' => $this->default_amount,
                 'level_id' => $this->level_id ?: null,
             ]);
-            \Flux::toast('Kategori biaya berhasil diperbarui.');
+            $this->success('Kategori biaya berhasil diperbarui.');
         } else {
             FeeCategory::create([
                 'name' => $this->name,
@@ -51,32 +72,33 @@ new #[Layout('components.admin.layouts.app')] class extends Component {
                 'default_amount' => $this->default_amount,
                 'level_id' => $this->level_id ?: null,
             ]);
-            \Flux::toast('Kategori biaya berhasil ditambahkan.');
+            $this->success('Kategori biaya berhasil ditambahkan.');
         }
 
+        $this->categoryModal = false;
         $this->reset(['name', 'code', 'description', 'default_amount', 'level_id', 'editing']);
-        $this->dispatch('close-modal');
     }
 
-    public function edit(FeeCategory $category): void
+    public function confirmDelete(int $id): void
     {
-        $this->editing = $category;
-        $this->name = $category->name;
-        $this->code = $category->code;
-        $this->description = $category->description ?? '';
-        $this->default_amount = (float) $category->default_amount;
-        $this->level_id = $category->level_id;
+        $this->deletingId = $id;
+        $this->deleteModal = true;
     }
 
-    public function delete(FeeCategory $category): void
+    public function delete(): void
     {
+        $category = FeeCategory::find($this->deletingId);
+        if (!$category) return;
+
         if ($category->billings()->exists()) {
-            \Flux::toast('Kategori tidak bisa dihapus karena sudah digunakan dalam penagihan.', variant: 'danger');
+            $this->error('Kategori tidak bisa dihapus karena sudah digunakan dalam penagihan.');
+            $this->deleteModal = false;
             return;
         }
 
         $category->delete();
-        \Flux::toast('Kategori biaya berhasil dihapus.');
+        $this->success('Kategori biaya berhasil dihapus.');
+        $this->deleteModal = false;
     }
 
     public function with(): array
@@ -89,105 +111,86 @@ new #[Layout('components.admin.layouts.app')] class extends Component {
 }; ?>
 
 <div class="p-6">
-    <div class="flex items-center justify-between mb-6">
-        <div>
-            <flux:heading size="xl" level="1">Kategori Biaya</flux:heading>
-            <flux:subheading>Daftar jenis biaya sekolah (SPP, Gedung, dll).</flux:subheading>
-        </div>
-        <flux:modal.trigger name="add-category">
-            <flux:button variant="primary" icon="plus">Tambah Kategori</flux:button>
-        </flux:modal.trigger>
-    </div>
+    <x-header title="Kategori Biaya" subtitle="Daftar jenis biaya sekolah (SPP, Gedung, dll)." separator>
+        <x-slot:actions>
+            <x-button label="Tambah Kategori" icon="o-plus" class="btn-primary" wire:click="create" />
+        </x-slot:actions>
+    </x-header>
 
-    <div class="border rounded-lg bg-white dark:bg-zinc-900 overflow-hidden">
-        <table class="w-full text-sm text-left border-collapse">
-            <thead class="bg-zinc-50 dark:bg-zinc-800">
+    <div class="overflow-x-auto border rounded-xl border-zinc-200 dark:border-zinc-700 bg-white dark:bg-zinc-900 shadow-sm">
+        <table class="table">
+            <thead>
                 <tr>
-                    <th class="px-4 py-3 font-medium text-zinc-700 dark:text-zinc-300 border-b">Kode</th>
-                    <th class="px-4 py-3 font-medium text-zinc-700 dark:text-zinc-300 border-b">Nama Kategori</th>
-                    <th class="px-4 py-3 font-medium text-zinc-700 dark:text-zinc-300 border-b">Jenjang</th>
-                    <th class="px-4 py-3 font-medium text-zinc-700 dark:text-zinc-300 border-b">Nominal Default</th>
-                    <th class="px-4 py-3 font-medium text-zinc-700 dark:text-zinc-300 border-b text-right">Aksi</th>
+                    <th class="bg-base-200">Kode</th>
+                    <th class="bg-base-200">Nama Kategori</th>
+                    <th class="bg-base-200 text-center">Jenjang</th>
+                    <th class="bg-base-200 text-right">Nominal Default</th>
+                    <th class="bg-base-200 text-right">Aksi</th>
                 </tr>
             </thead>
-            <tbody class="divide-y divide-zinc-200 dark:divide-zinc-700">
+            <tbody>
                 @foreach($categories as $category)
-                    <tr wire:key="{{ $category->id }}">
-                        <td class="px-4 py-3 text-zinc-900 dark:text-white font-mono text-xs">
+                    <tr class="hover" wire:key="{{ $category->id }}">
+                        <td class="font-mono text-xs opacity-70">
                             {{ $category->code }}
                         </td>
-                        <td class="px-4 py-3">
-                            <div class="font-medium text-zinc-900 dark:text-white">{{ $category->name }}</div>
-                            <div class="text-xs text-zinc-500">{{ $category->description }}</div>
+                        <td>
+                            <div class="flex flex-col">
+                                <span class="font-bold">{{ $category->name }}</span>
+                                @if($category->description)
+                                    <span class="text-xs opacity-60">{{ $category->description }}</span>
+                                @endif
+                            </div>
                         </td>
-                        <td class="px-4 py-3 text-zinc-600 dark:text-zinc-400">
+                        <td class="text-center opacity-70">
                             {{ $category->level ? $category->level->name : 'Semua Jenjang' }}
                         </td>
-                        <td class="px-4 py-3 text-zinc-900 dark:text-white">
+                        <td class="text-right font-mono">
                             Rp {{ number_format($category->default_amount, 0, ',', '.') }}
                         </td>
-                        <td class="px-4 py-3 text-right">
-                            <div class="flex justify-end gap-2">
-                                <flux:modal.trigger name="add-category">
-                                    <flux:button variant="ghost" icon="pencil-square" size="sm" wire:click="edit({{ $category->id }})" />
-                                </flux:modal.trigger>
-                                <flux:modal.trigger name="delete-category-{{ $category->id }}">
-                                    <flux:button variant="ghost" icon="trash" size="sm" />
-                                </flux:modal.trigger>
+                        <td class="text-right">
+                            <div class="flex justify-end gap-1">
+                                <x-button icon="o-pencil-square" wire:click="edit({{ $category->id }})" ghost sm />
+                                <x-button icon="o-trash" class="text-error" wire:click="confirmDelete({{ $category->id }})" ghost sm />
                             </div>
-                            
-                            <!-- Delete Confirmation Modal -->
-                            <flux:modal name="delete-category-{{ $category->id }}" class="md:w-[400px]">
-                                <form wire:submit="delete({{ $category->id }})" class="space-y-6">
-                                    <div>
-                                        <flux:heading size="lg">Hapus Kategori Biaya?</flux:heading>
-                                        <flux:subheading>Apakah Anda yakin ingin menghapus kategori biaya <span class="font-bold">"{{ $category->name }}"</span>? Aksi ini tidak dapat dibatalkan.</flux:subheading>
-                                    </div>
-                                    <div class="flex gap-2">
-                                        <flux:spacer />
-                                        <flux:modal.close>
-                                            <flux:button variant="ghost">Batal</flux:button>
-                                        </flux:modal.close>
-                                        <flux:button type="submit" variant="danger">Hapus</flux:button>
-                                    </div>
-                                </form>
-                            </flux:modal>
                         </td>
                     </tr>
                 @endforeach
             </tbody>
         </table>
-        <div class="p-4 border-t">
-            {{ $categories->links() }}
-        </div>
     </div>
 
-    <flux:modal name="add-category" class="md:w-[450px]">
-        <div class="space-y-6">
-            <div>
-                <flux:heading size="lg">{{ $editing ? 'Edit Kategori' : 'Tambah Kategori' }}</flux:heading>
-                <flux:subheading>Deskripsikan kategori biaya baru.</flux:subheading>
-            </div>
+    <div class="mt-4">
+        {{ $categories->links() }}
+    </div>
 
-            <flux:input wire:model="code" label="Kode Kategori" placeholder="Contoh: SPP-10" />
-            <flux:input wire:model="name" label="Nama Kategori" placeholder="Contoh: SPP Kelas 10" />
+    {{-- Add/Edit Modal --}}
+    <x-modal wire:model="categoryModal" class="backdrop-blur">
+        <x-header :title="$editing ? 'Edit Kategori' : 'Tambah Kategori'" subtitle="Deskripsikan kategori biaya baru." separator />
+
+        <div class="grid grid-cols-1 gap-4 text-left">
+            <x-input wire:model="code" label="Kode Kategori" placeholder="Contoh: SPP-10" />
+            <x-input wire:model="name" label="Nama Kategori" placeholder="Contoh: SPP Kelas 10" />
             
-            <flux:select wire:model="level_id" label="Jenjang (Opsional)">
-                <option value="">Semua Jenjang</option>
-                @foreach($levels as $lvl)
-                    <option value="{{ $lvl->id }}">{{ $lvl->name }}</option>
-                @endforeach
-            </flux:select>
+            <x-select wire:model="level_id" label="Jenjang (Opsional)" placeholder="Semua Jenjang" :options="$levels" />
 
-            <flux:input wire:model="default_amount" type="number" label="Nominal Default" icon="banknotes" />
-            <flux:textarea wire:model="description" label="Deskripsi" rows="2" />
-
-            <div class="flex justify-end gap-2">
-                <flux:modal.close>
-                    <flux:button variant="ghost">Batal</flux:button>
-                </flux:modal.close>
-                <flux:button variant="primary" wire:click="save">Simpan</flux:button>
-            </div>
+            <x-input wire:model="default_amount" type="number" label="Nominal Default" icon="o-banknotes" />
+            <x-textarea wire:model="description" label="Deskripsi" rows="2" />
         </div>
-    </flux:modal>
+
+        <x-slot:actions>
+            <x-button label="Batal" @click="$set('categoryModal', false)" />
+            <x-button label="Simpan" class="btn-primary" wire:click="save" spinner="save" />
+        </x-slot:actions>
+    </x-modal>
+
+    {{-- Delete Confirmation Modal --}}
+    <x-modal wire:model="deleteModal" class="backdrop-blur">
+        <x-header title="Hapus Kategori Biaya?" subtitle="Apakah Anda yakin ingin menghapus kategori biaya ini? Aksi ini tidak dapat dibatalkan." separator />
+        
+        <x-slot:actions>
+            <x-button label="Batal" @click="$set('deleteModal', false)" />
+            <x-button label="Hapus" class="btn-error" wire:click="delete" spinner="delete" />
+        </x-slot:actions>
+    </x-modal>
 </div>

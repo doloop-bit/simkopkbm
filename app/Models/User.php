@@ -114,8 +114,9 @@ class User extends Authenticatable
 
         // Access via homeroom (class_teacher) assignment
         $subject = Subject::find($subjectId);
-        if (!$subject)
+        if (! $subject) {
             return false;
+        }
 
         $classroomIdsAsHomeroom = $this->teacherAssignments()
             ->whereIn('type', ['class_teacher', 'homeroom'])
@@ -203,7 +204,7 @@ class User extends Authenticatable
         return Str::of($this->name)
             ->explode(' ')
             ->take(2)
-            ->map(fn($word) => Str::substr($word, 0, 1))
+            ->map(fn ($word) => Str::substr($word, 0, 1))
             ->implode('');
     }
 

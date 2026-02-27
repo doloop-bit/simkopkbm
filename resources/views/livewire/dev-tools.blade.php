@@ -7,15 +7,18 @@ use App\Models\Profile;
 use Illuminate\Support\Facades\Schema;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Storage;
+use Mary\Traits\Toast;
 
 new class extends Component {
+    use Toast;
+
     public string $secret = '';
 
     public function deleteAllStudents()
     {
         // Pengecekan keamanan sederhana
         if ($this->secret !== 'atiati') {
-            $this->addError('secret', 'Password salah!');
+            $this->error('Password salah!');
             return;
         }
 
@@ -54,7 +57,7 @@ new class extends Component {
             Schema::enableForeignKeyConstraints();
         });
 
-        session()->flash('success', 'Seluruh data siswa (User, Profil, & Data Periodik) berhasil dihapus bersih.');
+        $this->success('Seluruh data siswa (User, Profil, & Data Periodik) berhasil dihapus bersih.');
 
         $this->reset('secret');
     }
@@ -68,42 +71,34 @@ new class extends Component {
 };
 ?>
 
-<div
-    class="max-w-xl p-6 mx-auto mt-10 space-y-6 bg-white border border-gray-100 rounded-lg shadow-sm dark:bg-zinc-900 dark:border-zinc-800">
-    <div>
-        <h2 class="text-2xl font-bold text-gray-900 dark:text-white">🚀 Demo Tools - Hati-hati!</h2>
-        <p class="text-sm text-gray-500 dark:text-gray-400">Gunakan fitur ini hanya selama masa testing untuk reset data
-            secara cepat.</p>
-    </div>
+<div class="h-screen flex items-center justify-center p-6">
+    <x-card shadow class="max-w-xl w-full">
+        <x-header title="🚀 Demo Tools" subtitle="Gunakan fitur ini hanya selama masa testing untuk reset data secara cepat." separator>
+            <x-slot:actions>
+                <x-badge label="HATI-HATI!" class="badge-error font-black shadow-sm" />
+            </x-slot:actions>
+        </x-header>
 
-    @if (session()->has('success'))
-        <div class="p-4 mb-4 text-sm text-green-800 bg-green-100 rounded-lg dark:bg-green-900/30 dark:text-green-400">
-            {{ session('success') }}
+        <div class="flex flex-col gap-6">
+            <x-input 
+                label="Password Rahasia" 
+                type="password" 
+                wire:model="secret" 
+                placeholder="Masukkan password testing" 
+                icon="o-key"
+                password-reveal
+            />
+
+            <div class="pt-4 border-t border-base-300 flex flex-col gap-3">
+                <x-button 
+                    label="Kosongkan Tabel Siswa (Truncate)" 
+                    icon="o-trash" 
+                    class="btn-error btn-outline" 
+                    wire:click="deleteAllStudents"
+                    wire:confirm="Yakin ingin MENGHAPUS SEMUA data Siswa hasil import?"
+                    spinner
+                />
+            </div>
         </div>
-    @endif
-
-    <div class="space-y-4">
-        <!-- Menggunakan Flux UI agar konsisten dengan project -->
-        <flux:input label="Password Rahasia" type="password" wire:model="secret" id="secret"
-            placeholder="Masukkan password testing" viewable />
-
-        <div class="pt-4 space-y-3 border-t border-gray-100 dark:border-zinc-800">
-            <!-- Tombol Hapus Siswa menggunakan Flux -->
-            <flux:button wire:click="deleteAllStudents" variant="danger" class="w-full"
-                wire:confirm="Yakin ingin MENGHAPUS SEMUA data Siswa hasil import?">
-                Kosongkan Tabel Siswa (Truncate)
-            </flux:button>
-
-            <!-- Tambahkan tombol untuk data lain di sini ke depannya -->
-            <!--
-            <button
-                wire:click="deleteOtherData"
-                class="flex justify-center w-full px-4 py-2 text-sm font-medium text-white bg-orange-600 border border-transparent rounded-md shadow-sm hover:bg-orange-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-orange-500"
-                wire:confirm="Yakin ingin menghapus data buku?"
-            >
-                Hapus Data Buku
-            </button>
-            -->
-        </div>
-    </div>
+    </x-card>
 </div>

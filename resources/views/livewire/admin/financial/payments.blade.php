@@ -8,8 +8,11 @@ use App\Models\Transaction;
 use Livewire\Attributes\Layout;
 use Livewire\Component;
 use Illuminate\Support\Facades\DB;
+use Mary\Traits\Toast;
 
 new #[Layout('components.admin.layouts.app')] class extends Component {
+    use Toast;
+
     public ?int $student_id = null;
     public string $search = '';
     
@@ -70,9 +73,8 @@ new #[Layout('components.admin.layouts.app')] class extends Component {
             ]);
         });
 
-        \Flux::toast('Pembayaran berhasil dicatat.');
-        $this->reset(['selectedBilling', 'pay_amount', 'reference_number', 'notes']);
-        $this->dispatch('close-modal');
+        $this->success('Pembayaran berhasil dicatat.');
+        $this->reset(['selectedBilling', 'pay_amount', 'reference_number', 'notes', 'student_id', 'search']);
     }
 
     public function with(): array
@@ -107,32 +109,27 @@ new #[Layout('components.admin.layouts.app')] class extends Component {
 }; ?>
 
 <div class="p-6">
-    <div class="flex items-center justify-between mb-6">
-        <div>
-            <flux:heading size="xl" level="1">Transaksi Pembayaran</flux:heading>
-            <flux:subheading>Catat pembayaran biaya sekolah dari siswa.</flux:subheading>
-        </div>
-    </div>
+    <x-header title="Transaksi Pembayaran" subtitle="Catat pembayaran biaya sekolah dari siswa." separator />
 
     <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
         <div class="lg:col-span-1 space-y-6">
-            <div class="border rounded-lg p-4 bg-white dark:bg-zinc-900 shadow-sm">
-                <flux:heading level="2" size="lg" class="mb-4">Cari Siswa</flux:heading>
+            <div class="border rounded-xl p-4 bg-white dark:bg-zinc-900 shadow-sm border-zinc-200 dark:border-zinc-700">
+                <h2 class="text-lg font-bold mb-4">Cari Siswa</h2>
                 <div class="relative">
-                    <flux:input 
+                    <x-input 
                         wire:model.live.debounce.300ms="search" 
                         placeholder="Ketik nama siswa..." 
-                        icon="user" 
+                        icon="o-user" 
                     />
-                    @if($student_id)
-                        <button wire:click="$set('student_id', null); $set('search', '')" class="absolute right-2 top-1/2 -translate-y-1/2 p-1 text-zinc-400 hover:text-zinc-600">
-                            <flux:icon icon="x-mark" variant="micro" />
+                    @if($student_id || $search)
+                        <button wire:click="$set('student_id', null); $set('search', '')" class="absolute right-2 top-11 -translate-y-1/2 p-2 text-zinc-400 hover:text-zinc-600">
+                            <x-icon name="o-x-mark" class="w-4 h-4" />
                         </button>
                     @endif
                 </div>
 
                 @if(count($students) > 0)
-                    <div class="mt-2 border rounded-md divide-y bg-white dark:bg-zinc-800 shadow-lg absolute z-10 w-[calc(100%-2rem)]">
+                    <div class="mt-2 border rounded-xl divide-y bg-white dark:bg-zinc-800 shadow-lg absolute z-10 w-[calc(100%-2rem)] border-zinc-200 dark:border-zinc-700">
                         @foreach($students as $student)
                             <button 
                                 wire:click="selectStudent({{ $student->id }})"
@@ -147,23 +144,21 @@ new #[Layout('components.admin.layouts.app')] class extends Component {
             </div>
 
             @if($student_id)
-                <div class="border rounded-lg p-4 bg-white dark:bg-zinc-900 shadow-sm">
-                    <flux:heading level="2" size="lg" class="mb-4">Tagihan Belum Lunas</flux:heading>
-                    <div class="space-y-3">
+                <div class="border rounded-xl p-4 bg-white dark:bg-zinc-900 shadow-sm border-zinc-200 dark:border-zinc-700">
+                    <h2 class="text-lg font-bold mb-4">Tagihan Belum Lunas</h2>
+                    <div class="space-y-3 text-left">
                         @forelse($billings as $billing)
-                            <div class="p-3 border rounded-lg hover:border-zinc-400 dark:hover:border-zinc-500 cursor-pointer transition" wire:click="selectBilling({{ $billing->id }})">
+                            <div class="p-3 border rounded-xl hover:bg-zinc-50 dark:hover:bg-zinc-800 cursor-pointer transition border-zinc-200 dark:border-zinc-700 {{ $selectedBilling?->id === $billing->id ? 'bg-primary/10 border-primary/30' : 'bg-white dark:bg-zinc-900' }}" wire:click="selectBilling({{ $billing->id }})">
                                 <div class="flex justify-between items-start">
                                     <div>
                                         <div class="font-bold dark:text-white">{{ $billing->feeCategory?->name ?? 'Kategori Dihapus' }}</div>
                                         <div class="text-xs text-zinc-500">{{ $billing->month ?? 'Sekali Bayar' }}</div>
                                     </div>
-                                    <flux:badge size="sm" :variant="$billing->status === 'partial' ? 'warning' : 'danger'">
-                                        {{ strtoupper($billing->status) }}
-                                    </flux:badge>
+                                    <x-badge :value="strtoupper($billing->status)" class="{{ $billing->status === 'partial' ? 'badge-warning' : 'badge-error' }} badge-sm" />
                                 </div>
                                 <div class="mt-2 flex justify-between items-end">
                                     <div class="text-xs text-zinc-500">Sisa:</div>
-                                    <div class="font-mono text-zinc-900 dark:text-white">Rp {{ number_format($billing->amount - $billing->paid_amount, 0, ',', '.') }}</div>
+                                    <div class="font-mono text-zinc-900 dark:text-white font-bold">Rp {{ number_format($billing->amount - $billing->paid_amount, 0, ',', '.') }}</div>
                                 </div>
                             </div>
                         @empty
@@ -176,10 +171,10 @@ new #[Layout('components.admin.layouts.app')] class extends Component {
 
         <div class="lg:col-span-2 space-y-6">
             @if($selectedBilling)
-                <div class="border rounded-lg p-6 bg-white dark:bg-zinc-900 shadow-sm border-primary/20 bg-primary/5">
-                    <flux:heading level="2" size="lg" class="mb-6">Form Pembayaran</flux:heading>
+                <div class="border rounded-xl p-6 shadow-sm border-primary/20 bg-primary/5 dark:bg-primary/10">
+                    <h2 class="text-lg font-bold mb-6">Form Pembayaran</h2>
                     
-                    <div class="grid grid-cols-2 gap-6 mb-6">
+                    <div class="grid grid-cols-2 gap-6 mb-6 text-left">
                         <div class="space-y-1">
                             <div class="text-xs text-zinc-500 uppercase tracking-wider">Siswa</div>
                             <div class="font-bold text-lg dark:text-white">{{ $selectedBilling->student?->name ?? 'Siswa Dihapus' }}</div>
@@ -190,47 +185,43 @@ new #[Layout('components.admin.layouts.app')] class extends Component {
                         </div>
                     </div>
 
-                    <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
-                        <flux:input wire:model="pay_amount" type="number" label="Nominal Pembayaran" icon="banknotes" />
-                        <flux:select wire:model="payment_method" label="Metode Pembayaran">
-                            <option value="cash">Tunai (Cash)</option>
-                            <option value="transfer">Transfer Bank</option>
-                            <option value="other">Lainnya</option>
-                        </flux:select>
-                        <flux:input wire:model="payment_date" type="date" label="Tanggal Pembayaran" />
-                        <flux:input wire:model="reference_number" label="Ref Transaksi (Optional)" placeholder="No. Slip/Ref" />
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-6 text-left">
+                        <x-input wire:model="pay_amount" type="number" label="Nominal Pembayaran" icon="o-banknotes" />
+                        <x-select wire:model="payment_method" label="Metode Pembayaran" :options="[['id' => 'cash', 'name' => 'Tunai (Cash)'], ['id' => 'transfer', 'name' => 'Transfer Bank'], ['id' => 'other', 'name' => 'Lainnya']]" />
+                        <x-input wire:model="payment_date" type="date" label="Tanggal Pembayaran" />
+                        <x-input wire:model="reference_number" label="Ref Transaksi (Optional)" placeholder="No. Slip/Ref" />
                     </div>
 
-                    <div class="mt-6">
-                        <flux:textarea wire:model="notes" label="Catatan" rows="2" />
+                    <div class="mt-6 text-left">
+                        <x-textarea wire:model="notes" label="Catatan" rows="2" />
                     </div>
 
                     <div class="mt-8 flex justify-end">
-                        <flux:button variant="primary" icon="check" wire:click="recordPayment">Simpan Pembayaran</flux:button>
+                        <x-button label="Simpan Pembayaran" icon="o-check" class="btn-primary" wire:click="recordPayment" spinner="recordPayment" />
                     </div>
                 </div>
             @endif
 
-            <div class="border rounded-lg bg-white dark:bg-zinc-900 overflow-hidden shadow-sm">
-                <div class="p-4 border-b bg-zinc-50 dark:bg-zinc-800">
-                    <flux:heading level="2" size="md">Transaksi Terakhir</flux:heading>
+            <div class="border rounded-xl bg-white dark:bg-zinc-900 overflow-hidden shadow-sm border-zinc-200 dark:border-zinc-700">
+                <div class="p-4 border-b bg-zinc-50 dark:bg-zinc-800 border-zinc-200 dark:border-zinc-700">
+                    <h2 class="text-md font-bold">Transaksi Terakhir</h2>
                 </div>
-                <table class="w-full text-sm text-left border-collapse">
-                    <thead class="bg-zinc-50 dark:bg-zinc-800">
+                <table class="table">
+                    <thead>
                         <tr>
-                            <th class="px-4 py-3 font-medium text-zinc-700 dark:text-zinc-300 border-b">Tanggal</th>
-                            <th class="px-4 py-3 font-medium text-zinc-700 dark:text-zinc-300 border-b">Siswa</th>
-                            <th class="px-4 py-3 font-medium text-zinc-700 dark:text-zinc-300 border-b">Biaya</th>
-                            <th class="px-4 py-3 font-medium text-zinc-700 dark:text-zinc-300 border-b text-right">Nominal</th>
+                            <th class="bg-base-200">Tanggal</th>
+                            <th class="bg-base-200">Siswa</th>
+                            <th class="bg-base-200">Biaya</th>
+                            <th class="bg-base-200 text-right">Nominal</th>
                         </tr>
                     </thead>
-                    <tbody class="divide-y divide-zinc-200 dark:divide-zinc-700">
+                    <tbody>
                         @foreach($recentTransactions as $tx)
-                            <tr wire:key="tx-{{ $tx->id }}">
-                                <td class="px-4 py-3 text-zinc-500">{{ $tx->payment_date->format('d/m/Y') }}</td>
-                                <td class="px-4 py-3 font-medium dark:text-white">{{ $tx->billing?->student?->name ?? 'Siswa Dihapus' }}</td>
-                                <td class="px-4 py-3 text-zinc-600 dark:text-zinc-400">{{ $tx->billing?->feeCategory?->name ?? 'Kategori Dihapus' }}</td>
-                                <td class="px-4 py-3 text-right font-mono text-success">
+                            <tr class="hover" wire:key="tx-{{ $tx->id }}">
+                                <td class="text-zinc-500 whitespace-nowrap">{{ $tx->payment_date->format('d/m/Y') }}</td>
+                                <td class="font-medium dark:text-white">{{ $tx->billing?->student?->name ?? 'Siswa Dihapus' }}</td>
+                                <td class="text-zinc-600 dark:text-zinc-400">{{ $tx->billing?->feeCategory?->name ?? 'Kategori Dihapus' }}</td>
+                                <td class="text-right font-mono text-success font-bold">
                                     Rp {{ number_format($tx->amount, 0, ',', '.') }}
                                 </td>
                             </tr>

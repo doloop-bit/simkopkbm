@@ -22,13 +22,13 @@ new #[Layout('components.admin.layouts.app')] class extends Component {
     public ?int $filterLevelId = null;
 
     public ?ExtracurricularActivity $editing = null;
-    public bool $isModalOpen = false;
+    public bool $activityModal = false;
 
     public function createNew(): void
     {
         $this->reset(['name', 'instructor', 'description', 'level_id', 'is_active', 'editing']);
         $this->resetValidation();
-        $this->dispatch('open-activity-modal');
+        $this->activityModal = true;
     }
 
     public function updatingSearch(): void
@@ -67,14 +67,14 @@ new #[Layout('components.admin.layouts.app')] class extends Component {
 
         if ($this->editing) {
             $this->editing->update($validated);
-            \Flux::toast('Ekstrakurikuler berhasil diperbarui.');
+            session()->flash('success', 'Ekstrakurikuler berhasil diperbarui.');
         } else {
             ExtracurricularActivity::create($validated);
-            \Flux::toast('Ekstrakurikuler berhasil ditambahkan.');
+            session()->flash('success', 'Ekstrakurikuler berhasil ditambahkan.');
         }
 
         $this->reset(['name', 'instructor', 'description', 'level_id', 'is_active', 'editing']);
-        $this->dispatch('activity-saved');
+        $this->activityModal = false;
     }
 
 
@@ -87,19 +87,19 @@ new #[Layout('components.admin.layouts.app')] class extends Component {
         $this->level_id = $activity->level_id;
         $this->is_active = $activity->is_active;
 
-        $this->dispatch('open-activity-modal');
+        $this->activityModal = true;
     }
 
     public function delete(ExtracurricularActivity $activity): void
     {
         $activity->delete();
-        \Flux::toast('Ekstrakurikuler berhasil dihapus.');
+        session()->flash('success', 'Ekstrakurikuler berhasil dihapus.');
     }
 
     public function toggleStatus(ExtracurricularActivity $activity): void
     {
         $activity->update(['is_active' => !$activity->is_active]);
-        \Flux::toast('Status berhasil diubah.');
+        session()->flash('success', 'Status berhasil diubah.');
     }
 
     public function with(): array
@@ -119,71 +119,77 @@ new #[Layout('components.admin.layouts.app')] class extends Component {
 }; ?>
 
 <div class="p-6">
-    <div class="flex items-center justify-between mb-6">
-        <div>
-            <flux:heading size="xl" level="1">Ekstrakurikuler</flux:heading>
-            <flux:subheading>Kelola daftar kegiatan ekstrakurikuler untuk siswa.</flux:subheading>
-        </div>
-
-        <flux:button variant="primary" icon="plus" wire:click="createNew" wire:loading.attr="disabled">Tambah Ekskul</flux:button>
-    </div>
+    <x-header title="Ekstrakurikuler" subtitle="Kelola daftar kegiatan ekstrakurikuler untuk siswa." separator>
+        <x-slot:actions>
+             <x-button label="Tambah Ekskul" icon="o-plus" class="btn-primary" wire:click="createNew" wire:loading.attr="disabled" />
+        </x-slot:actions>
+    </x-header>
 
     <div class="flex flex-col md:flex-row gap-4 mb-6 items-center justify-between">
         <div class="flex flex-col md:flex-row flex-1 gap-4 w-full">
-            <flux:input wire:model.live.debounce.300ms="search" placeholder="Cari nama ekskul atau pembina..." icon="magnifying-glass" class="w-full md:w-80" />
+            <x-input wire:model.live.debounce.300ms="search" placeholder="Cari nama ekskul atau pembina..." icon="o-magnifying-glass" class="w-full md:w-80" />
             
-            <flux:select wire:model.live="filterLevelId" placeholder="Semua Jenjang" class="w-full md:w-64">
-                <option value="">Semua Jenjang</option>
-                @foreach($levels as $level)
-                    <option value="{{ $level->id }}">{{ $level->name }}</option>
-                @endforeach
-            </flux:select>
+            <x-select wire:model.live="filterLevelId" placeholder="Semua Jenjang" class="w-full md:w-64" :options="$levels" />
         </div>
     </div>
 
-    <div class="overflow-hidden border rounded-lg border-zinc-200 dark:border-zinc-700">
-        <table class="w-full text-sm text-left border-collapse">
-            <thead class="bg-zinc-50 dark:bg-zinc-800">
+    @if (session('success'))
+        <x-alert title="Berhasil" icon="o-check-circle" class="alert-success mb-6" dismissible>
+            {{ session('success') }}
+        </x-alert>
+    @endif
+
+    <div class="bg-base-100 rounded-xl shadow-sm border border-base-200 overflow-hidden">
+        <table class="table">
+            <thead>
                 <tr>
-                    <th class="px-4 py-3 font-medium text-zinc-700 dark:text-zinc-300 border-b border-zinc-200 dark:border-zinc-700">Jenjang</th>
-                    <th class="px-4 py-3 font-medium text-zinc-700 dark:text-zinc-300 border-b border-zinc-200 dark:border-zinc-700">Nama Kegiatan</th>
-                    <th class="px-4 py-3 font-medium text-zinc-700 dark:text-zinc-300 border-b border-zinc-200 dark:border-zinc-700">Pembina</th>
-                    <th class="px-4 py-3 font-medium text-zinc-700 dark:text-zinc-300 border-b border-zinc-200 dark:border-zinc-700">Status</th>
-                    <th class="px-4 py-3 font-medium text-zinc-700 dark:text-zinc-300 border-b border-zinc-200 dark:border-zinc-700 text-right">Aksi</th>
+                    <th class="bg-base-200">Jenjang</th>
+                    <th class="bg-base-200">Nama Kegiatan</th>
+                    <th class="bg-base-200">Pembina</th>
+                    <th class="bg-base-200">Status</th>
+                    <th class="bg-base-200 text-right">Aksi</th>
                 </tr>
             </thead>
-            <tbody class="divide-y divide-zinc-200 dark:divide-zinc-700">
+            <tbody>
                 @forelse ($activities as $activity)
-                    <tr wire:key="{{ $activity->id }}" class="hover:bg-zinc-50 dark:hover:bg-zinc-800/50">
-                        <td class="px-4 py-3">
-                            <flux:badge size="sm" variant="neutral">{{ $activity->level?->name ?? '-' }}</flux:badge>
+                    <tr wire:key="{{ $activity->id }}" class="hover">
+                        <td>
+                            <x-badge :label="$activity->level?->name ?? '-'" class="badge-neutral badge-sm" />
                         </td>
-                        <td class="px-4 py-3">
-                            <div class="font-medium text-zinc-900 dark:text-white">{{ $activity->name }}</div>
+                        <td>
+                            <div class="font-bold">{{ $activity->name }}</div>
                             @if($activity->description)
-                                <div class="text-xs text-zinc-500 line-clamp-1">{{ $activity->description }}</div>
+                                <div class="text-xs opacity-60 line-clamp-1">{{ $activity->description }}</div>
                             @endif
                         </td>
-                        <td class="px-4 py-3 text-zinc-600 dark:text-zinc-400">
+                        <td class="opacity-70 text-sm">
                             {{ $activity->instructor ?: '-' }}
                         </td>
-                        <td class="px-4 py-3">
+                        <td>
                             <button wire:click="toggleStatus({{ $activity->id }})" class="focus:outline-none">
                                 @if($activity->is_active)
-                                    <flux:badge size="sm" color="green">Aktif</flux:badge>
+                                    <x-badge label="Aktif" class="badge-success badge-sm" />
                                 @else
-                                    <flux:badge size="sm" color="red">Non-aktif</flux:badge>
+                                    <x-badge label="Non-aktif" class="badge-error badge-sm" />
                                 @endif
                             </button>
                         </td>
-                        <td class="px-4 py-3 text-right space-x-2">
-                            <flux:button size="sm" variant="ghost" icon="pencil-square" wire:click="edit({{ $activity->id }})" wire:loading.attr="disabled" />
-                            <flux:button size="sm" variant="ghost" icon="trash" class="text-red-500" wire:confirm="Yakin ingin menghapus ekstrakurikuler ini?" wire:click="delete({{ $activity->id }})" />
+                        <td class="text-right">
+                            <div class="flex justify-end gap-1">
+                                <x-button icon="o-pencil-square" wire:click="edit({{ $activity->id }})" ghost sm wire:loading.attr="disabled" />
+                                <x-button 
+                                    icon="o-trash" 
+                                    class="text-error" 
+                                    wire:confirm="Yakin ingin menghapus ekstrakurikuler ini?" 
+                                    wire:click="delete({{ $activity->id }})" 
+                                    ghost sm 
+                                />
+                            </div>
                         </td>
                     </tr>
                 @empty
                     <tr>
-                        <td colspan="5" class="px-4 py-8 text-center text-zinc-500">
+                        <td colspan="5" class="text-center py-12 opacity-40">
                             Belum ada data ekstrakurikuler.
                         </td>
                     </tr>
@@ -197,36 +203,26 @@ new #[Layout('components.admin.layouts.app')] class extends Component {
     </div>
 
     {{-- Activity Create/Edit Modal --}}
-    <flux:modal name="activity-modal" class="max-w-md" @open-activity-modal.window="$flux.modal('activity-modal').show()" x-on:activity-saved.window="$flux.modal('activity-modal').close()">
-        <form wire:submit="save" class="space-y-6">
-            <div>
-                <flux:heading size="lg">{{ $editing ? 'Edit Ekstrakurikuler' : 'Tambah Ekstrakurikuler' }}</flux:heading>
-                <flux:subheading>Lengkapi detail kegiatan di bawah ini.</flux:subheading>
+    <x-modal wire:model="activityModal" class="backdrop-blur">
+        <x-header :title="$editing ? 'Edit Ekstrakurikuler' : 'Tambah Ekstrakurikuler'" subtitle="Lengkapi detail kegiatan di bawah ini." separator />
+
+        <form wire:submit="save">
+            <div class="space-y-4">
+                <x-select wire:model="level_id" label="Jenjang" :options="$levels" placeholder="Pilih Jenjang" required />
+
+                <x-input wire:model="name" label="Nama Kegiatan" required placeholder="e.g. Futsal, Pramuka" />
+                
+                <x-input wire:model="instructor" label="Pembina / Pelatih" placeholder="e.g. Pak Budi Santoso" />
+
+                <x-textarea wire:model="description" label="Keterangan (Opsional)" rows="3" placeholder="Deskripsi singkat kegiatan..." />
+
+                <x-checkbox wire:model="is_active" label="Kegiatan ini aktif" />
             </div>
 
-            <flux:select wire:model="level_id" label="Jenjang">
-                <option value="">Pilih Jenjang</option>
-                @foreach($levels as $level)
-                    <option value="{{ $level->id }}">{{ $level->name }}</option>
-                @endforeach
-            </flux:select>
-
-            <flux:input wire:model="name" label="Nama Kegiatan" required placeholder="e.g. Futsal, Pramuka" />
-            
-            <flux:input wire:model="instructor" label="Pembina / Pelatih" placeholder="e.g. Pak Budi Santoso" />
-
-            <flux:textarea wire:model="description" label="Keterangan (Opsional)" rows="3" placeholder="Deskripsi singkat kegiatan..." />
-
-            <div class="flex items-center gap-3">
-                <flux:checkbox wire:model="is_active" label="Kegiatan ini aktif" />
-            </div>
-
-            <div class="flex justify-end gap-2">
-                <flux:modal.close>
-                    <flux:button variant="ghost">Batal</flux:button>
-                </flux:modal.close>
-                <flux:button type="submit" variant="primary">Simpan</flux:button>
-            </div>
+            <x-slot:actions>
+                <x-button label="Batal" @click="$set('activityModal', false)" />
+                <x-button label="Simpan" type="submit" class="btn-primary" spinner="save" />
+            </x-slot:actions>
         </form>
-    </flux:modal>
+    </x-modal>
 </div>

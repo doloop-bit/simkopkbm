@@ -13,7 +13,11 @@ use Livewire\Attributes\Layout;
 use Livewire\Component;
 use Illuminate\Support\Facades\DB;
 
+use Mary\Traits\Toast;
+
 new #[Layout('components.admin.layouts.app')] class extends Component {
+    use Toast;
+
     // General Form
     public string $type = 'income'; // 'income' or 'expense'
     public float $pay_amount = 0;
@@ -137,7 +141,7 @@ new #[Layout('components.admin.layouts.app')] class extends Component {
                 ]);
             });
 
-            \Flux::toast('Pemasukan berhasil dicatat.');
+            $this->success('Pemasukan berhasil dicatat.');
         } else {
             $this->validate([
                 'budget_plan_id' => 'required',
@@ -156,7 +160,7 @@ new #[Layout('components.admin.layouts.app')] class extends Component {
                 'notes' => $this->notes,
             ]);
 
-            \Flux::toast('Pengeluaran berhasil dicatat.');
+            $this->success('Pengeluaran berhasil dicatat.');
         }
 
         $this->reset(['selectedBilling', 'student_id', 'student_search', 'fee_category_id', 'budget_plan_item_id', 'pay_amount', 'reference_number', 'notes']);
@@ -394,7 +398,7 @@ new #[Layout('components.admin.layouts.app')] class extends Component {
                     @endscope
 
                     @scope('cell_amount', $tx)
-                        <div class="font-mono font-bold font-medium {{ $tx->type === 'income' ? 'text-success' : 'text-error' }}">
+                        <div class="font-mono font-bold {{ $tx->type === 'income' ? 'text-success' : 'text-error' }}">
                             {{ $tx->type === 'income' ? '+' : '-' }} Rp {{ number_format($tx->amount, 0, ',', '.') }}
                         </div>
                     @endscope

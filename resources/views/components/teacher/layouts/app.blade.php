@@ -14,20 +14,30 @@
     @include('partials.head')
 </head>
 <body class="min-h-screen bg-white font-sans antialiased dark:bg-zinc-900">
-    <x-teacher.sidebar />
-    <x-admin.header />
+    <x-main full-width>
+        {{-- Sidebar --}}
+        <x-slot:sidebar drawer="main-drawer" collapsible class="bg-base-200">
+            <x-teacher.sidebar />
+            <x-slot:sidebar-footer>
+                <x-admin.desktop-user-menu />
+            </x-slot:sidebar-footer>
+        </x-slot:sidebar>
 
-    @if(request()->routeIs('teacher.report-cards') || request()->routeIs('teacher.assessments.grading') || request()->routeIs('teacher.assessments.attendance') || request()->routeIs('teacher.assessments.extracurricular'))
-        <x-teacher.report-card-nav />
-    @endif
+        {{-- Content --}}
+        <x-slot:content>
+            <x-admin.header />
 
-    <flux:main class="pb-20 md:pb-0"> {{-- Add padding-bottom for mobile nav --}}
-        {{ $slot }}
-    </flux:main>
+            @if(request()->routeIs('teacher.report-cards') || request()->routeIs('teacher.assessments.grading') || request()->routeIs('teacher.assessments.attendance') || request()->routeIs('teacher.assessments.extracurricular'))
+                <x-teacher.report-card-nav />
+            @endif
+
+            <div class="pb-20 md:pb-0">
+                {{ $slot }}
+            </div>
+        </x-slot:content>
+    </x-main>
 
     <x-teacher.bottom-nav />
-
-    @fluxScripts
-    @tallStackUiScript
+    <x-toast />
 </body>
 </html>

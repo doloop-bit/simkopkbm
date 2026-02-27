@@ -4,7 +4,6 @@ namespace Database\Factories;
 
 use App\Models\AcademicYear;
 use App\Models\Classroom;
-use App\Models\ReportCard;
 use App\Models\User;
 use Illuminate\Database\Eloquent\Factories\Factory;
 

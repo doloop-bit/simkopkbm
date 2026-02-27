@@ -18,6 +18,7 @@ new #[Layout('components.admin.layouts.app')] class extends Component {
     public ?int $level_id = null;
     public ?int $class_level = null;
     public ?int $homeroom_teacher_id = null;
+    public bool $classroomModal = false;
 
     public ?Classroom $editing = null;
     public array $classLevelOptions = [];
@@ -26,7 +27,7 @@ new #[Layout('components.admin.layouts.app')] class extends Component {
     {
         $this->reset(['name', 'class_level', 'homeroom_teacher_id', 'editing', 'classLevelOptions']);
         $this->resetValidation();
-        $this->dispatch('open-classroom-modal');
+        $this->classroomModal = true;
     }
 
     public function mount(): void
@@ -90,7 +91,7 @@ new #[Layout('components.admin.layouts.app')] class extends Component {
         }
 
         $this->reset(['name', 'class_level', 'homeroom_teacher_id', 'editing', 'classLevelOptions']);
-        $this->dispatch('classroom-saved');
+        $this->classroomModal = false;
     }
 
     public function edit(Classroom $classroom): void
@@ -103,7 +104,7 @@ new #[Layout('components.admin.layouts.app')] class extends Component {
         $this->homeroom_teacher_id = $classroom->homeroom_teacher_id;
 
         $this->loadClassLevelOptions();
-        $this->dispatch('open-classroom-modal');
+        $this->classroomModal = true;
     }
 
     public function delete(Classroom $classroom): void
@@ -129,7 +130,7 @@ new #[Layout('components.admin.layouts.app')] class extends Component {
     <x-header title="Manajemen Kelas" subtitle="Kelola rombongan belajar dan wali kelas." separator>
         <x-slot:actions>
             <x-select wire:model.live="academic_year_id" :options="$years" placeholder="Semua Tahun" class="w-48" />
-            <x-button label="Tambah Kelas" icon="o-plus" class="btn-primary" wire:click="createNew" wire:loading.attr="disabled" @click="$dispatch('open-modal', 'classroom-modal')" />
+            <x-button label="Tambah Kelas" icon="o-plus" class="btn-primary" wire:click="createNew" wire:loading.attr="disabled" />
         </x-slot:actions>
     </x-header>
 
@@ -163,7 +164,7 @@ new #[Layout('components.admin.layouts.app')] class extends Component {
                         <td class="opacity-70">{{ $classroom->homeroomTeacher?->name ?? 'Belum Ditentukan' }}</td>
                         <td class="text-right">
                             <div class="flex justify-end gap-1">
-                                <x-button icon="o-pencil-square" wire:click="edit({{ $classroom->id }})" ghost sm wire:loading.attr="disabled" @click="$dispatch('open-modal', 'classroom-modal')" />
+                                <x-button icon="o-pencil-square" wire:click="edit({{ $classroom->id }})" ghost sm wire:loading.attr="disabled" />
                                 <x-button 
                                     icon="o-trash" 
                                     class="text-error" 
@@ -183,7 +184,7 @@ new #[Layout('components.admin.layouts.app')] class extends Component {
         {{ $classrooms->links() }}
     </div>
 
-    <x-modal id="classroom-modal" class="backdrop-blur" persistent>
+    <x-modal wire:model="classroomModal" class="backdrop-blur" persistent>
         <x-header :title="$editing ? 'Edit Kelas' : 'Tambah Kelas Baru'" subtitle="Lengkapi detail rombongan belajar di bawah ini." separator />
 
         <form wire:submit="save">
@@ -200,7 +201,7 @@ new #[Layout('components.admin.layouts.app')] class extends Component {
             </div>
 
             <x-slot:actions>
-                <x-button label="Batal" @click="$dispatch('close-modal', 'classroom-modal')" />
+                <x-button label="Batal" @click="$set('classroomModal', false)" />
                 <x-button label="Simpan" type="submit" class="btn-primary" spinner="save" />
             </x-slot:actions>
         </form>

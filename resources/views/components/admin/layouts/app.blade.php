@@ -47,6 +47,6 @@
         </x-slot:content>
     </x-main>
 
-    {{-- Mary UI scripts included automatically via layout components --}}
+    <x-toast />
 </body>
 </html>

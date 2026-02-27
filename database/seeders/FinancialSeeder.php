@@ -3,8 +3,6 @@
 namespace Database\Seeders;
 
 use App\Models\BudgetCategory;
-use App\Models\BudgetPlan;
-use App\Models\BudgetPlanItem;
 use App\Models\FeeCategory;
 use App\Models\Level;
 use App\Models\StandardBudgetItem;
@@ -36,13 +34,14 @@ class FinancialSeeder extends Seeder
         $levels = Level::all();
         if ($levels->isEmpty()) {
             $this->command->warn('No levels found! Please run DummySeeder first.');
+
             return;
         }
 
         // 3. Create Treasurer and Headmaster for each level
         foreach ($levels as $level) {
             $levelSlug = Str::slug($level->name);
-            
+
             // Treasurer
             User::firstOrCreate(
                 ['email' => "bendahara.{$levelSlug}@sekolah.com"],
@@ -74,13 +73,13 @@ class FinancialSeeder extends Seeder
                     'name' => "SPP Bulan {$level->name}",
                     'level_id' => $level->id,
                     'description' => "Sumbangan Pembinaan Pendidikan untuk {$level->name}",
-                    'default_amount' => match($level->education_level) {
+                    'default_amount' => match ($level->education_level) {
                         'paud' => 150000,
                         'sd' => 250000,
                         'smp' => 350000,
                         'sma' => 450000,
                         default => 200000,
-                    }
+                    },
                 ]
             );
         }
@@ -95,7 +94,7 @@ class FinancialSeeder extends Seeder
                     ['name' => 'Tinta Printer Epson', 'unit' => 'Botol', 'price' => 120000],
                     ['name' => 'Map Plastik', 'unit' => 'Lusin', 'price' => 25000],
                     ['name' => 'Pulpen Standard', 'unit' => 'Pak', 'price' => 30000],
-                ]
+                ],
             ],
             'OPS' => [
                 'name' => 'Operasional & Kegiatan',
@@ -104,7 +103,7 @@ class FinancialSeeder extends Seeder
                     ['name' => 'Air Mineral Gelas', 'unit' => 'Dus', 'price' => 25000],
                     ['name' => 'Spanduk Kegiatan', 'unit' => 'Meter', 'price' => 35000],
                     ['name' => 'Transportasi Dinas', 'unit' => 'Orang', 'price' => 100000],
-                ]
+                ],
             ],
             'GAJI' => [
                 'name' => 'Belanja Pegawai/Honor',
@@ -112,7 +111,7 @@ class FinancialSeeder extends Seeder
                     ['name' => 'Honor Guru Tetap', 'unit' => 'Bulan', 'price' => 2500000],
                     ['name' => 'Honor Guru Ekstra', 'unit' => 'Jam', 'price' => 50000],
                     ['name' => 'Tunjangan Wali Kelas', 'unit' => 'Bulan', 'price' => 200000],
-                ]
+                ],
             ],
         ];
 

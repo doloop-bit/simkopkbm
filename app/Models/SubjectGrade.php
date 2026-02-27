@@ -53,13 +53,19 @@ class SubjectGrade extends Model
      */
     public function getBestTpsAttribute()
     {
-        if (empty($this->best_tp_ids)) return collect();
+        if (empty($this->best_tp_ids)) {
+            return collect();
+        }
+
         return SubjectTp::whereIn('id', $this->best_tp_ids)->get();
     }
 
     public function getImprovementTpsAttribute()
     {
-        if (empty($this->improvement_tp_ids)) return collect();
+        if (empty($this->improvement_tp_ids)) {
+            return collect();
+        }
+
         return SubjectTp::whereIn('id', $this->improvement_tp_ids)->get();
     }
 }

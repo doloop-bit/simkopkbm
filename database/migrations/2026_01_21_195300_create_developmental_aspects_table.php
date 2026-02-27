@@ -19,7 +19,7 @@ return new class extends Migration
                 'kognitif',
                 'bahasa',
                 'sosial_emosional',
-                'seni'
+                'seni',
             ])->comment('Jenis aspek perkembangan PAUD');
             $table->string('name')->comment('Nama aspek perkembangan');
             $table->text('description')->nullable()->comment('Deskripsi aspek');

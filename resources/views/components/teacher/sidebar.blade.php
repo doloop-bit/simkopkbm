@@ -1,41 +1,37 @@
-<flux:sidebar sticky collapsible class="border-e border-zinc-200 bg-zinc-50 dark:border-zinc-700 dark:bg-zinc-900">
-    <flux:sidebar.header>
-        <flux:sidebar.brand :name="config('app.name')" href="{{ route('teacher.dashboard') }}" wire:navigate.hover>
-            <x-slot name="logo"
-                class="flex aspect-square size-10 items-center justify-center rounded-lg bg-accent-content text-accent-foreground">
-                <x-global.app-logo-icon class="size-7 fill-current text-white dark:text-black" />
-            </x-slot>
-        </flux:sidebar.brand>
-        <flux:sidebar.collapse
-            class="in-data-flux-sidebar-on-desktop:not-in-data-flux-sidebar-collapsed-desktop:-mr-2" />
-    </flux:sidebar.header>
+<div class="flex flex-col h-full bg-base-200">
+    <div class="px-6 py-8 overflow-hidden">
+        <a href="{{ route('teacher.dashboard') }}" wire:navigate class="flex items-center gap-3 group px-1 min-w-0">
+            <div class="flex aspect-square size-10 items-center justify-center rounded-xl bg-primary text-primary-content shadow-lg group-hover:scale-105 transition-transform shrink-0 overflow-hidden">
+                <x-global.app-logo-icon class="size-6 fill-current object-contain" />
+            </div>
+            <div class="flex flex-col overflow-hidden">
+                <span class="text-sm font-black tracking-tight whitespace-nowrap overflow-hidden leading-none uppercase">{{ config('app.name') }}</span>
+                <span class="text-[9px] font-bold uppercase tracking-widest opacity-50 whitespace-nowrap overflow-hidden">Portal Guru</span>
+            </div>
+        </a>
+    </div>
 
-    <flux:sidebar.nav>
-        {{-- Dashboard --}}
-        <flux:sidebar.item icon="home" :href="route('teacher.dashboard')"
-            :current="request()->routeIs('teacher.dashboard')" wire:navigate.hover>
-            {{ __('Dashboard') }}
-        </flux:sidebar.item>
+    <x-menu activate-by-route class="flex-1 px-4 py-6">
+        <x-menu-item 
+            title="Dashboard" 
+            icon="o-home" 
+            link="{{ route('teacher.dashboard') }}" 
+        />
 
-
-        {{-- Penilaian & Raport --}}
-        <flux:sidebar.group expandable icon="pencil-square" :heading="__('Penilaian & Raport')" class="grid">
-            <flux:sidebar.item icon="document-chart-bar" :href="route('teacher.assessments.grading')"
-                :current="request()->routeIs('teacher.assessments.grading') || request()->routeIs('teacher.assessments.attendance') || request()->routeIs('teacher.assessments.extracurricular') || request()->routeIs('teacher.report-cards')"
-                wire:navigate.hover>
-                {{ __('Raport Kesetaraan') }}
-            </flux:sidebar.item>
+        <x-menu-sub title="Penilaian & Raport" icon="o-pencil-square">
+            <x-menu-item 
+                title="Raport Kesetaraan" 
+                icon="o-document-chart-bar" 
+                link="{{ route('teacher.assessments.grading') }}" 
+            />
 
             @if(auth()->user()->teachesPaudLevel())
-                <flux:sidebar.item icon="face-smile" :href="route('teacher.assessments.paud')"
-                    :current="request()->routeIs('teacher.assessments.paud')" wire:navigate.hover>
-                    {{ __('Nilai PAUD') }}
-                </flux:sidebar.item>
+                <x-menu-item 
+                    title="Nilai PAUD" 
+                    icon="o-face-smile" 
+                    link="{{ route('teacher.assessments.paud') }}" 
+                />
             @endif
-        </flux:sidebar.group>
-    </flux:sidebar.nav>
-
-    <flux:spacer />
-
-    <x-admin.desktop-user-menu class="hidden lg:block" :name="auth()->user()->name" />
-</flux:sidebar>
+        </x-menu-sub>
+    </x-menu>
+</div>

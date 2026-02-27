@@ -17,6 +17,10 @@ new #[Layout('components.admin.layouts.app')] class extends Component {
     use WithFileUploads, WithPagination;
 
     public string $search = '';
+    public bool $studentModal = false;
+    public bool $importModal = false;
+    public bool $periodicModal = false;
+    public bool $detailModal = false;
     public string $sortField = 'created_at';
     public string $sortDirection = 'desc';
     public ?int $filter_classroom_id = null;
@@ -207,6 +211,7 @@ new #[Layout('components.admin.layouts.app')] class extends Component {
 
         session()->flash('success', 'Data siswa berhasil disimpan!');
         $this->dispatch('student-saved');
+        $this->studentModal = false;
     }
 
     public function edit(User $user): void
@@ -238,13 +243,13 @@ new #[Layout('components.admin.layouts.app')] class extends Component {
         $this->no_kk = $profile?->no_kk ?? '';
         $this->no_akta = $profile?->no_akta ?? '';
 
-        $this->dispatch('open-modal', 'student-modal');
+        $this->studentModal = true;
     }
 
     public function viewDetails(User $user): void
     {
         $this->viewing = $user;
-        $this->dispatch('open-modal', 'detail-modal');
+        $this->detailModal = true;
     }
 
     public function openPeriodic(User $user): void
@@ -272,7 +277,7 @@ new #[Layout('components.admin.layouts.app')] class extends Component {
             }
         }
 
-        $this->dispatch('open-modal', 'periodic-modal');
+        $this->periodicModal = true;
     }
 
     public function updatedSemester(): void
@@ -319,6 +324,7 @@ new #[Layout('components.admin.layouts.app')] class extends Component {
     {
         $this->reset(['name', 'email', 'nis', 'nisn', 'phone', 'address', 'dob', 'pob', 'classroom_id', 'photo', 'father_name', 'mother_name', 'guardian_name', 'guardian_phone', 'birth_order', 'total_siblings', 'previous_school', 'status', 'nik', 'nik_ayah', 'nik_ibu', 'no_kk', 'no_akta', 'editing', 'existingPhoto']);
         $this->resetValidation();
+        $this->studentModal = true;
     }
 
     public function savePeriodic(int $studentProfileId): void
@@ -498,27 +504,29 @@ new #[Layout('components.admin.layouts.app')] class extends Component {
     <x-header title="Manajemen Siswa" subtitle="Kelola data murid, profil, dan penempatan kelas.">
         <x-slot:actions>
             <x-input wire:model.live.debounce.300ms="search" placeholder="Cari siswa..." icon="o-magnifying-glass" class="w-64" clearable />
-            <x-button label="Import" icon="o-arrow-up-tray" @click="$dispatch('open-modal', 'import-modal')" />
-            <x-button label="Tambah Siswa" icon="o-plus" wire:click="createNew" @click="$dispatch('open-modal', 'student-modal')" class="btn-primary" />
+            <x-button label="Import" icon="o-arrow-up-tray" wire:click="$set('importModal', true)" />
+            <x-button label="Tambah Siswa" icon="o-plus" wire:click="createNew" class="btn-primary" />
         </x-slot:actions>
     </x-header>
 
     <div
-        class="overflow-hidden border rounded-xl border-zinc-200 dark:border-zinc-700 bg-white dark:bg-zinc-900 shadow-sm">
+        class="border rounded-xl border-zinc-200 dark:border-zinc-700 bg-white dark:bg-zinc-900 shadow-sm">
         <div class="p-4 border-b border-base-200 flex flex-col md:flex-row gap-4 items-center justify-between bg-base-200/50">
             <div class="flex flex-1 gap-3 w-full md:w-auto">
-                <x-select 
-                    wire:model.live="filter_level_id" 
-                    placeholder="Semua Tingkat" 
-                    :options="$levels"
-                    class="max-w-[200px]"
-                />
-                <x-select 
-                    wire:model.live="filter_classroom_id" 
-                    placeholder="Semua Kelas" 
-                    :options="$filter_classrooms"
-                    class="max-w-[200px]"
-                />
+                <div class="w-full md:w-48">
+                    <x-select 
+                        wire:model.live="filter_level_id" 
+                        placeholder="Semua Tingkat"
+                        :options="$levels"
+                    />
+                </div>
+                <div class="w-full md:w-48">
+                    <x-select 
+                        wire:model.live="filter_classroom_id" 
+                        placeholder="Semua Kelas"
+                        :options="$filter_classrooms"
+                    />
+                </div>
             </div>
 
             <div class="flex gap-2 w-full md:w-auto justify-end">
@@ -606,7 +614,7 @@ new #[Layout('components.admin.layouts.app')] class extends Component {
         {{ $students->links() }}
     </div>
 
-    <x-modal id="student-modal" class="backdrop-blur" persistent>
+    <x-modal wire:model="studentModal" class="backdrop-blur">
         <div class="mb-5 flex items-start justify-between">
             <div>
                 <x-header :title="$editing ? 'Edit Profil Siswa' : 'Tambah Siswa Baru'" subtitle="Lengkapi data identitas dan akademik siswa." separator />
@@ -695,7 +703,7 @@ new #[Layout('components.admin.layouts.app')] class extends Component {
             </div>
 
             <x-slot:actions>
-                <x-button label="Batal" @click="$dispatch('close-modal', 'student-modal')" />
+                <x-button label="Batal" wire:click="$set('studentModal', false)" />
                 <x-button label="Simpan" type="submit" class="btn-primary" spinner="save" />
             </x-slot:actions>
         </form>

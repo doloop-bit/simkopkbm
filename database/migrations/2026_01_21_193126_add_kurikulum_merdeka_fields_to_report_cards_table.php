@@ -17,13 +17,13 @@ return new class extends Migration
                 ->default('conventional')
                 ->after('semester')
                 ->comment('Tipe kurikulum: conventional (lama) atau merdeka');
-            
+
             // Add character notes for Kurikulum Merdeka
             $table->text('character_notes')
                 ->nullable()
                 ->after('principal_notes')
                 ->comment('Catatan perkembangan karakter siswa');
-            
+
             // Keep existing fields for backward compatibility
             // scores (JSON) - untuk conventional
             // gpa (decimal) - untuk conventional

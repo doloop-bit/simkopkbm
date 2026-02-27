@@ -2,7 +2,6 @@
 
 namespace Database\Seeders;
 
-use App\Models\Level;
 use App\Models\Subject;
 use Illuminate\Database\Seeder;
 
@@ -14,7 +13,7 @@ class SubjectSeeder extends Seeder
     public function run(): void
     {
         // Mata pelajaran berdasarkan Fase Kurikulum Merdeka
-        
+
         $phases = [
             'Fondasi' => [ // PAUD
                 ['name' => 'Nilai Agama & Budi Pekerti', 'code' => 'NABP-FONDASI'],
@@ -44,7 +43,7 @@ class SubjectSeeder extends Seeder
                 ['name' => 'Bahasa Inggris', 'code' => 'BING-B'],
                 ['name' => 'Bahasa Jawa', 'code' => 'BJAW-B'],
             ],
-            'C' => [ // SD Kelas 5-6 
+            'C' => [ // SD Kelas 5-6
                 ['name' => 'Pendidikan Agama Islam', 'code' => 'PAI-C'],
                 ['name' => 'Pendidikan Pancasila', 'code' => 'PPKN-C'],
                 ['name' => 'Bahasa Indonesia', 'code' => 'BIND-C'],

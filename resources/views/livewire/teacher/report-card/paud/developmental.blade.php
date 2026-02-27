@@ -11,7 +11,11 @@ use Livewire\Attributes\Layout;
 use Livewire\Component;
 use Illuminate\Support\Facades\DB;
 
+use Mary\Traits\Toast;
+
 new #[Layout('components.teacher.layouts.app')] class extends Component {
+    use Toast;
+
     public ?int $academic_year_id = null;
     public ?int $classroom_id = null;
     public ?int $student_id = null;
@@ -85,7 +89,7 @@ new #[Layout('components.teacher.layouts.app')] class extends Component {
         // Verify teacher has access
         $teacher = auth()->user();
         if (!$teacher->hasAccessToClassroom($this->classroom_id)) {
-            \Flux::toast(variant: 'danger', text: 'Anda tidak memiliki akses untuk menyimpan penilaian ini.');
+            $this->error('Anda tidak memiliki akses untuk menyimpan penilaian ini.');
             return;
         }
 
@@ -108,7 +112,7 @@ new #[Layout('components.teacher.layouts.app')] class extends Component {
             }
         });
 
-        \Flux::toast('Penilaian perkembangan anak berhasil disimpan.');
+        $this->success('Penilaian perkembangan anak berhasil disimpan.');
     }
 
     public function with(): array
@@ -145,54 +149,44 @@ new #[Layout('components.teacher.layouts.app')] class extends Component {
     }
 }; ?>
 
-<div class="p-6">
-    <div class="flex items-center justify-between mb-6">
-        <div>
-            <flux:heading size="xl" level="1">Penilaian PAUD</flux:heading>
-            <flux:subheading>Input penilaian perkembangan anak (6 aspek perkembangan).</flux:subheading>
-        </div>
-    </div>
+<div class="p-6 flex flex-col gap-6">
+    <x-header title="Penilaian PAUD" subtitle="Input penilaian perkembangan anak (6 aspek perkembangan)." separator />
 
-    <div class="grid grid-cols-1 md:grid-cols-4 gap-4 mb-6">
-        <flux:select wire:model.live="academic_year_id" label="Tahun Ajaran">
-            @foreach($years as $year)
-                <option value="{{ $year->id }}">{{ $year->name }}</option>
-            @endforeach
-        </flux:select>
-
-        <flux:select wire:model.live="semester" label="Semester">
-            <option value="1">Semester 1</option>
-            <option value="2">Semester 2</option>
-        </flux:select>
-
-        <flux:select wire:model.live="classroom_id" label="Kelas">
-            <option value="">Pilih Kelas</option>
-            @foreach($classrooms as $room)
-                <option value="{{ $room->id }}">{{ $room->name }}</option>
-            @endforeach
-        </flux:select>
-
-        <flux:select wire:model.live="student_id" label="Anak">
-            <option value="">Pilih Anak</option>
-            @foreach($students as $student)
-                <option value="{{ $student->id }}">{{ $student->name }}</option>
-            @endforeach
-        </flux:select>
+    <div class="grid grid-cols-1 md:grid-cols-4 gap-4">
+        <x-select wire:model.live="academic_year_id" label="Tahun Ajaran" :options="$years" />
+        <x-select 
+            wire:model.live="semester" 
+            label="Semester" 
+            :options="[
+                ['id' => '1', 'name' => 'Semester 1'],
+                ['id' => '2', 'name' => 'Semester 2'],
+            ]" 
+        />
+        <x-select 
+            wire:model.live="classroom_id" 
+            label="Kelas" 
+            placeholder="Pilih Kelas"
+            :options="$classrooms"
+        />
+        <x-select 
+            wire:model.live="student_id" 
+            label="Anak" 
+            placeholder="Pilih Anak"
+            :options="$students"
+        />
     </div>
 
     <!-- Student Info Card -->
     @if($selectedStudent)
-        <div class="mb-6 p-4 rounded-lg bg-gradient-to-r from-pink-50 to-purple-50 dark:from-pink-900/20 dark:to-purple-900/20 border border-pink-200 dark:border-pink-800">
-            <div class="flex items-center gap-4">
-                <div class="flex-shrink-0">
-                    <div class="w-12 h-12 rounded-full bg-pink-500 flex items-center justify-center text-white font-bold text-lg">
-                        {{ substr($selectedStudent->name, 0, 1) }}
-                    </div>
+        <div class="p-4 rounded-xl bg-primary/5 border border-primary/20 flex items-center gap-4">
+            <div class="avatar placeholder">
+                <div class="bg-primary text-primary-content rounded-full w-12">
+                    <span class="text-xl font-bold">{{ substr($selectedStudent->name, 0, 1) }}</span>
                 </div>
-                <div class="flex-1">
-                    <h3 class="text-lg font-semibold text-zinc-900 dark:text-white">{{ $selectedStudent->name }}</h3>
-                    <p class="text-sm text-zinc-600 dark:text-zinc-400">Laporan Perkembangan Semester {{ $semester }}</p>
-                </div>
+            </div>
+            <div class="flex flex-col">
+                <h3 class="text-lg font-black tracking-tight">{{ $selectedStudent->name }}</h3>
+                <p class="text-xs opacity-60 font-medium uppercase tracking-widest">Laporan Perkembangan Semester {{ $semester }}</p>
             </div>
         </div>
     @endif
@@ -200,59 +194,51 @@ new #[Layout('components.teacher.layouts.app')] class extends Component {
     @if($student_id)
         @php
             $aspectTypeLabels = [
-                'nilai_agama' => ['label' => 'Nilai Agama dan Budi Pekerti', 'color' => 'from-purple-500 to-indigo-500', 'icon' => 'heart'],
-                'fisik_motorik' => ['label' => 'Fisik-Motorik', 'color' => 'from-green-500 to-emerald-500', 'icon' => 'hand-raised'],
-                'kognitif' => ['label' => 'Kognitif', 'color' => 'from-blue-500 to-cyan-500', 'icon' => 'light-bulb'],
-                'bahasa' => ['label' => 'Bahasa', 'color' => 'from-orange-500 to-amber-500', 'icon' => 'chat-bubble-left-right'],
-                'sosial_emosional' => ['label' => 'Sosial-Emosional', 'color' => 'from-pink-500 to-rose-500', 'icon' => 'users'],
-                'seni' => ['label' => 'Seni', 'color' => 'from-violet-500 to-purple-500', 'icon' => 'paint-brush'],
+                'nilai_agama' => ['label' => 'Nilai Agama dan Budi Pekerti', 'color' => 'bg-purple-500', 'icon' => 'o-heart'],
+                'fisik_motorik' => ['label' => 'Fisik-Motorik', 'color' => 'bg-green-500', 'icon' => 'o-hand-raised'],
+                'kognitif' => ['label' => 'Kognitif', 'color' => 'bg-blue-500', 'icon' => 'o-light-bulb'],
+                'bahasa' => ['label' => 'Bahasa', 'color' => 'bg-orange-500', 'icon' => 'o-chat-bubble-left-right'],
+                'sosial_emosional' => ['label' => 'Sosial-Emosional', 'color' => 'bg-pink-500', 'icon' => 'o-users'],
+                'seni' => ['label' => 'Seni', 'color' => 'bg-indigo-500', 'icon' => 'o-paint-brush'],
             ];
         @endphp
 
         <div class="space-y-6">
             @foreach($aspectsByType as $aspectType => $aspects)
                 @php
-                    $typeInfo = $aspectTypeLabels[$aspectType] ?? ['label' => $aspectType, 'color' => 'from-gray-500 to-gray-600', 'icon' => 'document'];
+                    $typeInfo = $aspectTypeLabels[$aspectType] ?? ['label' => $aspectType, 'color' => 'bg-gray-500', 'icon' => 'o-document-text'];
                 @endphp
-                <div class="border rounded-lg bg-white dark:bg-zinc-900 overflow-hidden">
+                <x-card shadow class="overflow-hidden border-0 p-0!">
                     <!-- Aspect Type Header -->
-                    <div class="p-4 bg-gradient-to-r {{ $typeInfo['color'] }} text-white">
-                        <div class="flex items-center gap-3">
-                            <flux:icon icon="{{ $typeInfo['icon'] }}" class="w-6 h-6" />
-                            <h3 class="text-lg font-semibold">{{ $typeInfo['label'] }}</h3>
-                        </div>
+                    <div class="p-4 {{ $typeInfo['color'] }} text-white flex items-center gap-3">
+                        <x-icon name="{{ $typeInfo['icon'] }}" class="size-6" />
+                        <h3 class="text-lg font-bold">{{ $typeInfo['label'] }}</h3>
                     </div>
 
                     <!-- Aspects -->
-                    <div class="divide-y divide-zinc-200 dark:divide-zinc-700">
+                    <div class="p-4 space-y-4">
                         @foreach($aspects as $aspect)
-                            <div class="p-4" wire:key="aspect-{{ $aspect->id }}">
-                                <label class="block text-sm font-medium text-zinc-900 dark:text-white mb-2">
-                                    {{ $aspect->name }}
-                                </label>
-                                @if($aspect->description)
-                                    <p class="text-xs text-zinc-500 dark:text-zinc-400 mb-2">{{ $aspect->description }}</p>
-                                @endif
-                                <flux:textarea 
+                            <div wire:key="aspect-{{ $aspect->id }}">
+                                <x-textarea 
                                     wire:model="assessments_data.{{ $aspect->id }}" 
-                                    rows="3"
+                                    label="{{ $aspect->name }}" 
+                                    hint="{{ $aspect->description }}"
+                                    rows="4"
                                     placeholder="Tuliskan deskripsi perkembangan anak pada aspek ini..."
                                 />
                             </div>
                         @endforeach
                     </div>
-                </div>
+                </x-card>
             @endforeach
 
-            <div class="flex justify-end">
-                <flux:button variant="primary" icon="check" wire:click="save">
-                    Simpan Penilaian Perkembangan
-                </flux:button>
+            <div class="flex justify-end sticky bottom-6 z-10">
+                <x-button label="Simpan Penilaian Perkembangan" icon="o-check" class="btn-primary shadow-xl" wire:click="save" spinner="save" />
             </div>
         </div>
     @else
-        <div class="flex flex-col items-center justify-center py-12 text-zinc-500 border-2 border-dashed rounded-xl">
-            <flux:icon icon="face-smile" class="w-12 h-12 mb-2 opacity-20" />
+        <div class="flex flex-col items-center justify-center py-20 text-base-content/30 border-2 border-dashed rounded-xl bg-base-200/50">
+            <x-icon name="o-face-smile" class="size-16 mb-2 opacity-20" />
             <p>Silakan pilih kelas dan anak untuk memulai penilaian perkembangan.</p>
         </div>
     @endif

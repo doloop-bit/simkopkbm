@@ -21,6 +21,10 @@ new #[Layout('components.admin.layouts.app')] class extends Component {
     public string $search = '';
     public ?string $filterPhase = null; // Replaces filterLevelId
     
+    // Modals
+    public bool $subjectModal = false;
+    public bool $tpModal = false;
+
     // TP Management
     public ?Subject $managingSubject = null;
     public $subjectTps = [];
@@ -55,6 +59,13 @@ new #[Layout('components.admin.layouts.app')] class extends Component {
             'phase' => ['required', 'string', 'in:Fondasi,A,B,C,D,E,F'],
         ];
     }
+    
+    public function createNew(): void
+    {
+        $this->reset(['name', 'code', 'phase', 'editing']);
+        $this->subjectModal = true;
+    }
+
     public function save(): void
     {
         $validated = $this->validate();
@@ -66,8 +77,8 @@ new #[Layout('components.admin.layouts.app')] class extends Component {
         }
 
         $this->reset(['name', 'code', 'phase', 'editing']);
-        $this->dispatch('subject-saved');
-        $this->modal('subject-modal')->close();
+        $this->subjectModal = false;
+        session()->flash('success', 'Mata pelajaran berhasil disimpan.');
     }
 
     public function edit(Subject $subject): void
@@ -77,12 +88,13 @@ new #[Layout('components.admin.layouts.app')] class extends Component {
         $this->code = $subject->code;
         $this->phase = $subject->phase;
 
-        $this->modal('subject-modal')->show();
+        $this->subjectModal = true;
     }
 
     public function delete(Subject $subject): void
     {
         $subject->delete();
+        session()->flash('success', 'Mata pelajaran berhasil dihapus.');
     }
 
     public function manageTps(Subject $subject): void
@@ -95,7 +107,7 @@ new #[Layout('components.admin.layouts.app')] class extends Component {
 
         $this->loadTps();
 
-        $this->modal('tp-modal')->show();
+        $this->tpModal = true;
     }
 
     public function loadTps(): void
@@ -131,7 +143,7 @@ new #[Layout('components.admin.layouts.app')] class extends Component {
             'description' => $this->selectedCpDescription,
         ]);
 
-        \Flux::toast('Deskripsi CP berhasil diperbarui.');
+        session()->flash('success', 'Deskripsi CP berhasil diperbarui.');
     }
 
     public function saveTp(): void
@@ -142,7 +154,7 @@ new #[Layout('components.admin.layouts.app')] class extends Component {
         ]);
 
         if (!$this->selectedCpId) {
-            \Flux::toast(variant: 'danger', text: 'CP tidak ditemukan.');
+            session()->flash('error', 'CP tidak ditemukan.');
             return;
         }
 
@@ -161,7 +173,7 @@ new #[Layout('components.admin.layouts.app')] class extends Component {
 
         $this->cancelEditTp();
         $this->loadTps();
-        \Flux::toast('TP berhasil disimpan.');
+        session()->flash('success', 'TP berhasil disimpan.');
     }
 
     public function editTp($id): void
@@ -176,7 +188,7 @@ new #[Layout('components.admin.layouts.app')] class extends Component {
     {
         SubjectTp::find($id)?->delete();
         $this->loadTps();
-        \Flux::toast('TP berhasil dihapus.');
+        session()->flash('success', 'TP berhasil dihapus.');
     }
 
     public function cancelEditTp(): void
@@ -204,75 +216,73 @@ new #[Layout('components.admin.layouts.app')] class extends Component {
 }; ?>
 
 <div class="p-6">
-    <div class="flex items-center justify-between mb-6">
-        <div>
-            <flux:heading size="xl" level="1">Mata Pelajaran</flux:heading>
-            <flux:subheading>Daftar mata pelajaran yang tersedia di semua jenjang.</flux:subheading>
-        </div>
-
-        <flux:modal.trigger name="subject-modal">
-            <flux:button variant="primary" icon="plus" wire:click="$set('editing', null)">Tambah Mapel</flux:button>
-        </flux:modal.trigger>
-    </div>
+    <x-header title="Mata Pelajaran" subtitle="Daftar mata pelajaran yang tersedia di semua jenjang." separator>
+        <x-slot:actions>
+             <x-button label="Tambah Mapel" icon="o-plus" class="btn-primary" wire:click="createNew" />
+        </x-slot:actions>
+    </x-header>
 
     <div class="flex flex-col md:flex-row gap-4 mb-6 items-center justify-between">
         <div class="flex flex-col md:flex-row flex-1 gap-4 w-full">
-            <flux:input wire:model.live.debounce.300ms="search" placeholder="Cari kode atau nama mapel..." icon="magnifying-glass" class="w-full md:w-80" />
+            <x-input wire:model.live.debounce.300ms="search" placeholder="Cari kode atau nama mapel..." icon="o-magnifying-glass" class="w-full md:w-80" />
             
-            <flux:select wire:model.live="filterPhase" placeholder="Semua Fase" class="w-full md:w-64">
-                <option value="">Semua Fase</option>
-                @foreach($phases as $p)
-                    <option value="{{ $p }}">Fase {{ $p }}</option>
-                @endforeach
-            </flux:select>
+            <x-select wire:model.live="filterPhase" placeholder="Semua Fase" class="w-full md:w-64" :options="collect($phases)->map(fn($p) => ['id' => $p, 'name' => 'Fase ' . $p])->toArray()" />
         </div>
     </div>
 
-    <div class="overflow-hidden border rounded-lg border-zinc-200 dark:border-zinc-700">
-        <table class="w-full text-sm text-left border-collapse">
-            <thead class="bg-zinc-50 dark:bg-zinc-800">
+    @if (session('success'))
+        <x-alert title="Berhasil" icon="o-check-circle" class="alert-success mb-6" dismissible>
+            {{ session('success') }}
+        </x-alert>
+    @endif
+
+    <div class="overflow-hidden border rounded-xl border-zinc-200 dark:border-zinc-700 bg-white dark:bg-zinc-900 shadow-sm">
+        <table class="table">
+            <thead>
                 <tr>
-                    <th class="px-4 py-3 font-medium text-zinc-700 dark:text-zinc-300 border-b border-zinc-200 dark:border-zinc-700">Kode</th>
-                    <th class="px-4 py-3 font-medium text-zinc-700 dark:text-zinc-300 border-b border-zinc-200 dark:border-zinc-700">Nama</th>
-                    <th class="px-4 py-3 font-medium text-zinc-700 dark:text-zinc-300 border-b border-zinc-200 dark:border-zinc-700">Jenis/Fase</th>
-                    <th class="px-4 py-3 font-medium text-zinc-700 dark:text-zinc-300 border-b border-zinc-200 dark:border-zinc-700 text-center">CP / TP</th>
-                    <th class="px-4 py-3 font-medium text-zinc-700 dark:text-zinc-300 border-b border-zinc-200 dark:border-zinc-700 text-right">Aksi</th>
+                    <th class="bg-base-200">Kode</th>
+                    <th class="bg-base-200">Nama</th>
+                    <th class="bg-base-200">Jenis/Fase</th>
+                    <th class="bg-base-200 text-center">CP / TP</th>
+                    <th class="bg-base-200 text-right">Aksi</th>
                 </tr>
             </thead>
-            <tbody class="divide-y divide-zinc-200 dark:divide-zinc-700">
+            <tbody>
                 @foreach ($subjects as $subject)
-                    <tr wire:key="{{ $subject->id }}" class="hover:bg-zinc-50 dark:hover:bg-zinc-800/50">
-                        <td class="px-4 py-3 font-mono text-zinc-600 dark:text-zinc-400">
+                    <tr wire:key="{{ $subject->id }}" class="hover">
+                        <td class="font-mono opacity-60">
                             {{ $subject->code }}
                         </td>
-                        <td class="px-4 py-3 font-medium text-zinc-900 dark:text-white">
+                        <td class="font-bold">
                             {{ $subject->name }}
                         </td>
-                        <td class="px-4 py-3">
+                        <td>
                             @if($subject->phase)
-                                <flux:badge size="sm" variant="neutral">Fase {{ $subject->phase }}</flux:badge>
+                                <x-badge :label="'Fase ' . $subject->phase" class="badge-neutral badge-sm" />
                             @else
-                                <span class="text-zinc-400 text-sm">Umum</span>
+                                <span class="opacity-30 text-xs">Umum</span>
                             @endif
                         </td>
-                        <td class="px-4 py-3 text-center">
+                        <td class="text-center">
                             @if($subject->phase)
                                 @php
                                     $tpCount = $subject->tpsForPhase($subject->phase)->count();
                                 @endphp
-                                <div class="flex items-center justify-center gap-2 text-xs">
-                                    <span class="text-zinc-500">{{ $tpCount }} TP</span>
+                                <div class="text-xs opacity-60">
+                                    {{ $tpCount }} TP
                                 </div>
                             @else
-                                <span class="text-zinc-400 text-xs">-</span>
+                                <span class="opacity-20 text-xs">-</span>
                             @endif
                         </td>
-                        <td class="px-4 py-3 text-right space-x-2">
-                            <flux:button size="sm" variant="ghost" icon="pencil-square" wire:click="edit({{ $subject->id }})" x-on:click="$flux.modal('subject-modal').show()" />
-                            @if($subject->phase)
-                                <flux:button size="sm" variant="ghost" icon="list-bullet" wire:click="manageTps({{ $subject->id }})" x-on:click="$flux.modal('tp-modal').show()" tooltip="Kelola CP & TP" />
-                            @endif
-                            <flux:button size="sm" variant="ghost" icon="trash" class="text-red-500" wire:confirm="Yakin ingin menghapus mapel ini?" wire:click="delete({{ $subject->id }})" />
+                        <td class="text-right">
+                            <div class="flex justify-end gap-1">
+                                <x-button icon="o-pencil-square" wire:click="edit({{ $subject->id }})" ghost sm />
+                                @if($subject->phase)
+                                    <x-button icon="o-list-bullet" wire:click="manageTps({{ $subject->id }})" ghost sm tooltip="Kelola CP & TP" />
+                                @endif
+                                <x-button icon="o-trash" class="text-error" wire:confirm="Yakin ingin menghapus mapel ini?" wire:click="delete({{ $subject->id }})" ghost sm />
+                            </div>
                         </td>
                     </tr>
                 @endforeach
@@ -285,125 +295,102 @@ new #[Layout('components.admin.layouts.app')] class extends Component {
     </div>
 
     {{-- Subject Create/Edit Modal --}}
-    <flux:modal name="subject-modal" class="max-w-md" x-on:subject-saved.window="$flux.modal('subject-modal').close()">
-        <form wire:submit="save" class="space-y-6">
-            <div>
-                <flux:heading size="lg">{{ $editing ? 'Edit Mata Pelajaran' : 'Tambah Mata Pelajaran' }}</flux:heading>
-                <flux:subheading>Lengkapi detail mata pelajaran di bawah ini.</flux:subheading>
+    <x-modal wire:model="subjectModal" class="backdrop-blur">
+        <x-header :title="$editing ? 'Edit Mata Pelajaran' : 'Tambah Mata Pelajaran'" subtitle="Lengkapi detail mata pelajaran di bawah ini." separator />
+        
+        <form wire:submit="save">
+            <div class="grid grid-cols-1 gap-4">
+                <x-input wire:model="code" label="Kode Mapel (e.g. MAT-A, INDO-P1)" required />
+                <x-input wire:model="name" label="Nama Mata Pelajaran" required />
+
+                <x-select wire:model="phase" label="Fase (Kurikulum Merdeka)" required :options="collect($phases)->map(fn($p) => ['id' => $p, 'name' => 'Fase ' . $p])->toArray()" placeholder="Pilih Fase" />
             </div>
 
-            <flux:input wire:model="code" label="Kode Mapel (e.g. MAT-A, INDO-P1)" required />
-            <flux:input wire:model="name" label="Nama Mata Pelajaran" required />
-
-            <flux:select wire:model="phase" label="Fase (Kurikulum Merdeka)" required>
-                <option value="">Pilih Fase</option>
-                @foreach($phases as $p)
-                    <option value="{{ $p }}">Fase {{ $p }}</option>
-                @endforeach
-            </flux:select>
-
-            <div class="flex justify-end gap-2">
-                <flux:modal.close>
-                    <flux:button variant="ghost">Batal</flux:button>
-                </flux:modal.close>
-                <flux:button type="submit" variant="primary">Simpan</flux:button>
-            </div>
+            <x-slot:actions>
+                <x-button label="Batal" @click="$set('subjectModal', false)" />
+                <x-button label="Simpan" type="submit" class="btn-primary" spinner="save" />
+            </x-slot:actions>
         </form>
-
-    </flux:modal>
+    </x-modal>
 
     {{-- TP Management Modal --}}
-    <flux:modal name="tp-modal" class="max-w-3xl">
-        <div class="space-y-6">
-            <div>
-                <flux:heading size="lg">Kelola CP & Tujuan Pembelajaran (TP)</flux:heading>
-                <flux:subheading>
-                    Mata Pelajaran: <strong>{{ $managingSubject?->name }}</strong>
-                    @if($managingSubject?->phase)
-                        — Fase {{ $managingSubject->phase }}
-                    @endif
-                </flux:subheading>
-            </div>
+    <x-modal wire:model="tpModal" class="backdrop-blur max-w-4xl">
+        @if($managingSubject)
+            <x-header title="Kelola CP & Tujuan Pembelajaran (TP)" separator>
+                <x-slot:subtitle>
+                    Mapel: <strong>{{ $managingSubject->name }}</strong> — Fase {{ $managingSubject->phase }}
+                </x-slot:subtitle>
+            </x-header>
 
-            @if($selectedCpId)
-                {{-- CP Description --}}
-                <div class="p-4 rounded-lg border border-blue-200 bg-blue-50 dark:bg-blue-950/30 dark:border-blue-900">
-                    <div class="flex items-start justify-between gap-4">
-                        <div class="flex-1">
-                            <label class="block text-xs font-semibold text-blue-600 dark:text-blue-400 mb-1">
-                                Capaian Pembelajaran (CP)
-                            </label>
-                            <flux:textarea
-                                wire:model="selectedCpDescription"
-                                rows="2"
-                                class="text-sm"
-                                placeholder="Deskripsi Capaian Pembelajaran..."
-                            />
-                        </div>
-                        <flux:button size="sm" variant="ghost" icon="check" wire:click="updateCpDescription" tooltip="Simpan CP" class="mt-5" />
-                    </div>
-                </div>
-
-                {{-- Add TP Form --}}
-                <div class="p-4 border rounded-lg bg-zinc-50 dark:bg-zinc-800">
-                    <form wire:submit="saveTp" class="grid gap-4">
-                        <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
-                            <flux:input wire:model="tpCode" label="Kode TP (Opsional)" placeholder="e.g. TP.1" />
-                            <div class="md:col-span-2">
-                                 <flux:input wire:model="tpDescription" label="Deskripsi TP" placeholder="Peserta didik mampu..." required />
+            <div class="space-y-6 max-h-[60vh] overflow-y-auto pr-2 custom-scrollbar">
+                @if($selectedCpId)
+                    {{-- CP Description --}}
+                    <div class="p-4 rounded-xl border border-blue-200 bg-blue-50 dark:bg-blue-900/10 dark:border-blue-800">
+                        <div class="flex items-start gap-4">
+                            <div class="flex-1">
+                                <label class="block text-[10px] font-bold uppercase tracking-wider text-blue-600 mb-1">Capaian Pembelajaran (CP)</label>
+                                <x-textarea wire:model="selectedCpDescription" rows="2" class="text-sm border-none shadow-none bg-transparent focus:ring-0" />
                             </div>
+                            <x-button icon="o-check" wire:click="updateCpDescription" class="btn-primary btn-sm mt-5" />
                         </div>
-                        <div class="flex justify-end gap-2">
-                            @if($editingTpId)
-                                <flux:button variant="ghost" size="sm" wire:click="cancelEditTp">Batal</flux:button>
-                            @endif
-                            <flux:button type="submit" variant="primary" size="sm" icon="plus">{{ $editingTpId ? 'Update TP' : 'Tambah TP' }}</flux:button>
-                        </div>
-                    </form>
-                </div>
+                    </div>
 
-                {{-- TP List --}}
-                <div class="overflow-hidden border rounded-lg border-zinc-200 dark:border-zinc-700">
-                    <table class="w-full text-sm text-left border-collapse">
-                        <thead class="bg-zinc-50 dark:bg-zinc-800">
-                            <tr>
-                                <th class="px-4 py-2 font-medium border-b w-24">Kode</th>
-                                <th class="px-4 py-2 font-medium border-b">Deskripsi</th>
-                                <th class="px-4 py-2 font-medium border-b text-right w-32">Aksi</th>
-                            </tr>
-                        </thead>
-                        <tbody class="divide-y divide-zinc-200 dark:divide-zinc-700">
-                            @forelse($subjectTps as $tp)
-                                <tr class="hover:bg-zinc-50 dark:hover:bg-zinc-800/50">
-                                    <td class="px-4 py-2 font-mono text-xs">{{ $tp->code }}</td>
-                                    <td class="px-4 py-2">{{ $tp->description }}</td>
-                                    <td class="px-4 py-2 text-right space-x-1">
-                                        <flux:button size="xs" variant="ghost" icon="pencil-square" wire:click="editTp({{ $tp->id }})" />
-                                        <flux:button size="xs" variant="ghost" icon="trash" class="text-red-500" wire:confirm="Hapus TP ini?" wire:click="deleteTp({{ $tp->id }})" />
-                                    </td>
-                                </tr>
-                            @empty
-                                <tr>
-                                    <td colspan="3" class="px-4 py-8 text-center text-zinc-500">
-                                        Belum ada TP untuk Fase {{ $managingSubject?->phase }}. Tambahkan TP di atas.
-                                    </td>
-                                </tr>
-                            @endforelse
-                        </tbody>
-                    </table>
-                </div>
-            @elseif($managingSubject && !$managingSubject->phase)
-                <div class="flex flex-col items-center justify-center py-8 text-zinc-500 border-2 border-dashed rounded-xl">
-                    <flux:icon icon="exclamation-triangle" class="w-10 h-10 mb-2 opacity-20" />
-                    <p>Mata pelajaran ini tidak memiliki fase yang valid.</p>
-                </div>
-            @endif
+                    {{-- Add TP Form --}}
+                    <div class="bg-base-200 p-4 rounded-xl">
+                        <form wire:submit="saveTp">
+                            <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+                                <x-input wire:model="tpCode" label="Kode TP (Opsional)" placeholder="e.g. TP.1" />
+                                <div class="md:col-span-2">
+                                     <x-input wire:model="tpDescription" label="Deskripsi TP" placeholder="Peserta didik mampu..." required />
+                                </div>
+                            </div>
+                            <div class="flex justify-end gap-2 mt-4">
+                                @if($editingTpId)
+                                    <x-button label="Batal" wire:click="cancelEditTp" />
+                                @endif
+                                <x-button label="{{ $editingTpId ? 'Update TP' : 'Tambah TP' }}" type="submit" class="btn-primary" icon="o-plus" spinner="saveTp" />
+                            </div>
+                        </form>
+                    </div>
 
-            <div class="flex justify-end">
-                <flux:modal.close>
-                    <flux:button variant="ghost">Tutup</flux:button>
-                </flux:modal.close>
+                    {{-- TP List --}}
+                    <div class="border rounded-xl border-base-200 overflow-hidden bg-white dark:bg-base-300">
+                        <table class="table table-sm">
+                            <thead>
+                                <tr class="bg-base-200">
+                                    <th class="w-24">Kode</th>
+                                    <th>Deskripsi</th>
+                                    <th class="text-right w-24">Aksi</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                @forelse($subjectTps as $tp)
+                                    <tr class="hover">
+                                        <td class="font-mono text-xs">{{ $tp->code }}</td>
+                                        <td class="text-sm">{{ $tp->description }}</td>
+                                        <td class="text-right">
+                                            <div class="flex justify-end gap-1">
+                                                <x-button icon="o-pencil-square" wire:click="editTp({{ $tp->id }})" ghost sm />
+                                                <x-button icon="o-trash" class="text-error" wire:confirm="Hapus TP ini?" wire:click="deleteTp({{ $tp->id }})" ghost sm />
+                                            </div>
+                                        </td>
+                                    </tr>
+                                @empty
+                                    <tr>
+                                        <td colspan="3" class="text-center py-8 opacity-40 italic font-serif">
+                                            Belum ada TP untuk Fase {{ $managingSubject?->phase }}.
+                                        </td>
+                                    </tr>
+                                @endforelse
+                            </tbody>
+                        </table>
+                    </div>
+                @endif
             </div>
-        </div>
-    </flux:modal>
+
+            <x-slot:actions>
+                <x-button label="Tutup" @click="$set('tpModal', false)" />
+            </x-slot:actions>
+        @endif
+    </x-modal>
 </div>

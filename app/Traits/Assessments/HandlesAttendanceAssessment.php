@@ -2,10 +2,10 @@
 
 namespace App\Traits\Assessments;
 
-use App\Models\User;
-use App\Models\Classroom;
 use App\Models\AcademicYear;
+use App\Models\Classroom;
 use App\Models\ReportAttendance;
+use App\Models\User;
 use Illuminate\Support\Facades\DB;
 
 trait HandlesAttendanceAssessment
@@ -16,9 +16,11 @@ trait HandlesAttendanceAssessment
     // But shared logic might benefit from getFilteredClassrooms?
     // The original used $teacher->getAssignedClassroomIds().
     // We'll keep logic close to original but organized.
-    
+
     public ?int $academic_year_id = null;
+
     public ?int $classroom_id = null;
+
     public string $semester = '1';
 
     public array $attendance_data = []; // [student_id => ['sick' => 0, 'permission' => 0, 'absent' => 0]]
@@ -43,17 +45,19 @@ trait HandlesAttendanceAssessment
 
     public function loadAttendance(): void
     {
-        if (!$this->classroom_id) {
+        if (! $this->classroom_id) {
             $this->attendance_data = [];
+
             return;
         }
 
         // Verify teacher has access
         // Ideally use HasAssessmentLogic for consistency if possible, but let's stick to working logic.
         $user = auth()->user();
-        if ($user->role === 'guru' && !$user->hasAccessToClassroom($this->classroom_id)) {
+        if ($user->role === 'guru' && ! $user->hasAccessToClassroom($this->classroom_id)) {
             $this->attendance_data = [];
             \Flux::toast(variant: 'danger', text: 'Anda tidak memiliki akses ke kelas ini.');
+
             return;
         }
 
@@ -70,10 +74,10 @@ trait HandlesAttendanceAssessment
                     'sick' => $att->sick,
                     'permission' => $att->permission,
                     'absent' => $att->absent,
-                ]
+                ],
             ];
         })->toArray();
-        
+
         // Ensure all students in classroom have an entry
         $students = User::where('role', 'siswa')
             ->whereHas('profiles', function ($q) {
@@ -83,7 +87,7 @@ trait HandlesAttendanceAssessment
             })->get();
 
         foreach ($students as $student) {
-            if (!isset($this->attendance_data[$student->id])) {
+            if (! isset($this->attendance_data[$student->id])) {
                 $this->attendance_data[$student->id] = [
                     'sick' => 0,
                     'permission' => 0,
@@ -95,14 +99,15 @@ trait HandlesAttendanceAssessment
 
     public function save(): void
     {
-        if (!$this->classroom_id || !$this->academic_year_id) {
+        if (! $this->classroom_id || ! $this->academic_year_id) {
             return;
         }
 
         // Verify teacher has access
         $user = auth()->user();
-        if ($user->role === 'guru' && !$user->hasAccessToClassroom($this->classroom_id)) {
+        if ($user->role === 'guru' && ! $user->hasAccessToClassroom($this->classroom_id)) {
             \Flux::toast(variant: 'danger', text: 'Anda tidak memiliki akses untuk menyimpan presensi ini.');
+
             return;
         }
 
@@ -116,9 +121,9 @@ trait HandlesAttendanceAssessment
                     ],
                     [
                         'classroom_id' => $this->classroom_id,
-                        'sick' => (int)($data['sick'] ?? 0),
-                        'permission' => (int)($data['permission'] ?? 0),
-                        'absent' => (int)($data['absent'] ?? 0),
+                        'sick' => (int) ($data['sick'] ?? 0),
+                        'permission' => (int) ($data['permission'] ?? 0),
+                        'absent' => (int) ($data['absent'] ?? 0),
                     ]
                 );
             }
@@ -130,19 +135,19 @@ trait HandlesAttendanceAssessment
     public function with(): array
     {
         $user = auth()->user();
-        
+
         // Improve classroom filtering to support Admin
         $classrooms = collect();
         if ($user->role === 'guru') {
             $assignedIds = $user->getAssignedClassroomIds();
             $classrooms = Classroom::whereIn('id', $assignedIds)
-                ->when($this->academic_year_id, fn($q) => $q->where('academic_year_id', $this->academic_year_id))
+                ->when($this->academic_year_id, fn ($q) => $q->where('academic_year_id', $this->academic_year_id))
                 ->orderBy('name')
                 ->get();
         } else {
             // Admin sees all
             $classrooms = Classroom::query()
-                ->when($this->academic_year_id, fn($q) => $q->where('academic_year_id', $this->academic_year_id))
+                ->when($this->academic_year_id, fn ($q) => $q->where('academic_year_id', $this->academic_year_id))
                 ->orderBy('name')
                 ->get();
         }

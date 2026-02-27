@@ -69,131 +69,117 @@ new #[Layout('components.admin.layouts.app')] class extends Component {
 }; ?>
 
 <div class="p-6">
-    <div class="mb-6">
-        <flux:heading size="xl" level="1">Laporan & Analitik</flux:heading>
-        <flux:subheading>Pantau performa akademik dan keuangan PKBM.</flux:subheading>
-    </div>
+<div class="p-6 flex flex-col gap-6">
+    <x-header title="Laporan & Analitik" subtitle="Pantau performa akademik dan keuangan PKBM." separator />
 
     <!-- Tabs -->
-    <div class="flex gap-4 border-b dark:border-zinc-800 mb-6">
-        <button 
-            wire:click="$set('tab', 'financial')" 
-            class="pb-2 px-1 text-sm font-medium transition cursor-pointer {{ $tab === 'financial' ? 'text-primary border-b-2 border-primary' : 'text-zinc-500 hover:text-zinc-700' }}"
-        >
-            Laporan Keuangan
-        </button>
-        <button 
-            wire:click="$set('tab', 'attendance')" 
-            class="pb-2 px-1 text-sm font-medium transition cursor-pointer {{ $tab === 'attendance' ? 'text-primary border-b-2 border-primary' : 'text-zinc-500 hover:text-zinc-700' }}"
-        >
-            Laporan Presensi
-        </button>
-    </div>
+    <x-tabs wire:model="tab">
+        <x-tab name="financial" label="Laporan Keuangan" icon="o-banknotes" />
+        <x-tab name="attendance" label="Laporan Presensi" icon="o-clipboard-document-check" />
+    </x-tabs>
 
     <!-- Filters -->
-    <div class="grid grid-cols-1 md:grid-cols-4 gap-4 mb-6 p-4 bg-zinc-50 dark:bg-zinc-800/50 rounded-xl border border-dashed">
-        @if($tab === 'financial')
-            <flux:select wire:model.live="fee_category_id" label="Kategori Biaya">
-                <option value="">Semua Kategori</option>
-                @foreach($categories as $cat)
-                    <option value="{{ $cat->id }}">{{ $cat->name }}</option>
-                @endforeach
-            </flux:select>
-            <flux:input wire:model.live="start_date" type="date" label="Dari Tanggal" />
-            <flux:input wire:model.live="end_date" type="date" label="Sampai Tanggal" />
-        @endif
+    <x-card shadow class="bg-base-200/50 border-dashed">
+        <div class="grid grid-cols-1 md:grid-cols-4 gap-4 items-end">
+            @if($tab === 'financial')
+                <x-select 
+                    wire:model.live="fee_category_id" 
+                    label="Kategori Biaya" 
+                    placeholder="Semua Kategori"
+                    :options="$categories"
+                />
+                <x-input wire:model.live="start_date" type="date" label="Dari Tanggal" />
+                <x-input wire:model.live="end_date" type="date" label="Sampai Tanggal" />
+            @endif
 
-        @if($tab === 'attendance')
-            <flux:select wire:model.live="academic_year_id" label="Tahun Ajaran">
-                @foreach($years as $year)
-                    <option value="{{ $year->id }}">{{ $year->name }}</option>
-                @endforeach
-            </flux:select>
-            <flux:select wire:model.live="classroom_id" label="Kelas">
-                <option value="">Semua Kelas</option>
-                @foreach($classrooms as $room)
-                    <option value="{{ $room->id }}">{{ $room->name }}</option>
-                @endforeach
-            </flux:select>
-        @endif
-        
-        <div class="flex items-end">
-            <flux:button icon="printer" class="w-full">Cetak / Export</flux:button>
+            @if($tab === 'attendance')
+                <x-select 
+                    wire:model.live="academic_year_id" 
+                    label="Tahun Ajaran" 
+                    :options="$years"
+                />
+                <x-select 
+                    wire:model.live="classroom_id" 
+                    label="Kelas" 
+                    placeholder="Semua Kelas"
+                    :options="$classrooms"
+                />
+            @endif
+            
+            <x-button label="Cetak / Export" icon="o-printer" class="btn-primary w-full" />
         </div>
-    </div>
+    </x-card>
 
     <!-- Results -->
-    <div class="border rounded-xl bg-white dark:bg-zinc-900 overflow-hidden shadow-sm">
+    <x-card shadow>
         @if($tab === 'financial')
-            <table class="w-full text-sm text-left border-collapse">
-                <thead class="bg-zinc-50 dark:bg-zinc-800">
-                    <tr>
-                        <th class="px-4 py-3 font-medium text-zinc-700 dark:text-zinc-300 border-b">Tanggal</th>
-                        <th class="px-4 py-3 font-medium text-zinc-700 dark:text-zinc-300 border-b">Siswa</th>
-                        <th class="px-4 py-3 font-medium text-zinc-700 dark:text-zinc-300 border-b">Kategori</th>
-                        <th class="px-4 py-3 font-medium text-zinc-700 dark:text-zinc-300 border-b">Metode</th>
-                        <th class="px-4 py-3 font-medium text-zinc-700 dark:text-zinc-300 border-b text-right">Nominal</th>
-                    </tr>
-                </thead>
-                <tbody class="divide-y divide-zinc-200 dark:divide-zinc-700">
-                    @php $totalIncome = 0; @endphp
-                    @foreach($financialData as $tx)
-                        @php $totalIncome += $tx->amount; @endphp
-                        <tr>
-                            <td class="px-4 py-3 text-zinc-500">{{ $tx->payment_date->format('d/m/Y') }}</td>
-                            <td class="px-4 py-3 font-medium dark:text-white">{{ $tx->billing?->student?->name ?? 'Siswa Dihapus' }}</td>
-                            <td class="px-4 py-3 text-zinc-600 dark:text-zinc-400">{{ $tx->billing?->feeCategory?->name ?? 'Kategori Dihapus' }}</td>
-                            <td class="px-4 py-3 text-zinc-600 dark:text-zinc-400 uppercase text-xs">{{ $tx->payment_method }}</td>
-                            <td class="px-4 py-3 text-right font-mono dark:text-white">
-                                Rp {{ number_format($tx->amount, 0, ',', '.') }}
-                            </td>
-                        </tr>
-                    @endforeach
-                    <tr class="bg-zinc-50 dark:bg-zinc-800 font-bold">
-                        <td colspan="4" class="px-4 py-4 text-right uppercase tracking-wider text-xs">Total Pendapatan</td>
-                        <td class="px-4 py-4 text-right font-mono text-lg text-primary">
+            <x-table :headers="[
+                ['key' => 'payment_date', 'label' => 'Tanggal'],
+                ['key' => 'student_name', 'label' => 'Siswa'],
+                ['key' => 'category_name', 'label' => 'Kategori'],
+                ['key' => 'payment_method', 'label' => 'Metode', 'class' => 'uppercase text-xs'],
+                ['key' => 'amount', 'label' => 'Nominal', 'class' => 'text-right font-mono']
+            ]" :rows="$financialData">
+                @scope('cell_payment_date', $tx)
+                    <span class="opacity-70">{{ $tx->payment_date->format('d/m/Y') }}</span>
+                @endscope
+
+                @scope('cell_student_name', $tx)
+                    <span class="font-medium">{{ $tx->billing?->student?->name ?? 'Siswa Dihapus' }}</span>
+                @endscope
+
+                @scope('cell_category_name', $tx)
+                    <span class="text-zinc-600 dark:text-zinc-400">{{ $tx->billing?->feeCategory?->name ?? 'Kategori Dihapus' }}</span>
+                @endscope
+
+                @scope('cell_amount', $tx)
+                    Rp {{ number_format($tx->amount, 0, ',', '.') }}
+                @endscope
+
+                <x-slot:append>
+                    @php $totalIncome = $financialData->sum('amount'); @endphp
+                    <tr class="bg-base-200 font-bold">
+                        <td colspan="4" class="text-right uppercase tracking-wider text-xs">Total Pendapatan</td>
+                        <td class="text-right font-mono text-lg text-primary">
                             Rp {{ number_format($totalIncome, 0, ',', '.') }}
                         </td>
                     </tr>
-                </tbody>
-            </table>
+                </x-slot:append>
+            </x-table>
         @endif
 
         @if($tab === 'attendance')
-            <table class="w-full text-sm text-left border-collapse">
-                <thead class="bg-zinc-50 dark:bg-zinc-800">
-                    <tr>
-                        <th class="px-4 py-3 font-medium text-zinc-700 dark:text-zinc-300 border-b">Tanggal</th>
-                        <th class="px-4 py-3 font-medium text-zinc-700 dark:text-zinc-300 border-b">Kelas</th>
-                        <th class="px-4 py-3 font-medium text-zinc-700 dark:text-zinc-300 border-b">Mata Pelajaran</th>
-                        <th class="px-4 py-3 font-medium text-zinc-700 dark:text-zinc-300 border-b text-center">Kehadiran</th>
-                    </tr>
-                </thead>
-                <tbody class="divide-y divide-zinc-200 dark:divide-zinc-700">
-                    @foreach($attendanceData as $att)
-                        <tr>
-                            <td class="px-4 py-3 text-zinc-500">{{ $att->date->format('d/m/Y') }}</td>
-                            <td class="px-4 py-3 font-medium dark:text-white">{{ $att->classroom->name }}</td>
-                            <td class="px-4 py-3 text-zinc-600 dark:text-zinc-400">{{ $att->subject?->name ?? 'Harian' }}</td>
-                            <td class="px-4 py-3 text-center">
-                                @php 
-                                    $items = $att->items;
-                                    $present = $items->filter(fn($i) => $i->status === 'h')->count();
-                                    $total = $items->count();
-                                    $percent = $total > 0 ? round(($present / $total) * 100) : 0;
-                                @endphp
-                                <div class="flex items-center justify-center gap-2">
-                                    <div class="text-xs font-bold">{{ $percent }}%</div>
-                                    <div class="w-16 h-1.5 bg-zinc-100 dark:bg-zinc-800 rounded-full overflow-hidden">
-                                        <div class="h-full bg-green-500" style="width: {{ $percent }}%"></div>
-                                    </div>
-                                    <div class="text-[10px] text-zinc-400">({{ $present }}/{{ $total }})</div>
-                                </div>
-                            </td>
-                        </tr>
-                    @endforeach
-                </tbody>
-            </table>
+            <x-table :headers="[
+                ['key' => 'date', 'label' => 'Tanggal'],
+                ['key' => 'classroom.name', 'label' => 'Kelas'],
+                ['key' => 'subject_name', 'label' => 'Mata Pelajaran'],
+                ['key' => 'percentage', 'label' => 'Kehadiran', 'class' => 'text-center']
+            ]" :rows="$attendanceData">
+                @scope('cell_date', $att)
+                    <span class="opacity-70">{{ $att->date->format('d/m/Y') }}</span>
+                @endscope
+
+                @scope('cell_subject_name', $att)
+                    {{ $att->subject?->name ?? 'Harian' }}
+                @endscope
+
+                @scope('cell_percentage', $att)
+                    @php 
+                        $items = $att->items;
+                        $present = $items->filter(fn($i) => $i->status === 'h')->count();
+                        $total = $items->count();
+                        $percent = $total > 0 ? round(($present / $total) * 100) : 0;
+                    @endphp
+                    <div class="flex items-center justify-center gap-2">
+                        <div class="text-xs font-bold">{{ $percent }}%</div>
+                        <div class="w-16 h-1.5 bg-base-300 rounded-full overflow-hidden">
+                            <div class="h-full bg-success" style="width: {{ $percent }}%"></div>
+                        </div>
+                        <div class="text-[10px] opacity-50">({{ $present }}/{{ $total }})</div>
+                    </div>
+                @endscope
+            </x-table>
         @endif
-    </div>
+    </x-card>
+</div>
 </div>

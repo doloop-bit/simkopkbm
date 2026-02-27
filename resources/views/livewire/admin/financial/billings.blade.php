@@ -10,9 +10,10 @@ use App\Models\Classroom;
 use Livewire\Attributes\Layout;
 use Livewire\Component;
 use Livewire\WithPagination;
+use Mary\Traits\Toast;
 
 new #[Layout('components.admin.layouts.app')] class extends Component {
-    use WithPagination;
+    use WithPagination, Toast;
 
     public ?int $academic_year_id = null;
     public ?int $classroom_id = null;
@@ -21,6 +22,7 @@ new #[Layout('components.admin.layouts.app')] class extends Component {
     public ?float $amount = null;
 
     public string $search = '';
+    public bool $billingModal = false;
 
     public function mount(): void
     {
@@ -112,8 +114,8 @@ new #[Layout('components.admin.layouts.app')] class extends Component {
             }
         }
 
-        \Flux::toast("$count Tagihan berhasil di-generate.");
-        $this->dispatch('close-modal');
+        $this->success("$count Tagihan berhasil di-generate.");
+        $this->billingModal = false;
     }
 
     public function with(): array
@@ -153,98 +155,73 @@ new #[Layout('components.admin.layouts.app')] class extends Component {
 }; ?>
 
 <div class="p-6">
-    <div class="flex items-center justify-between mb-6">
-        <div>
-            <flux:heading size="xl" level="1">Tagihan Siswa</flux:heading>
-            <flux:subheading>Manajemen penagihan biaya pendidikan siswa.</flux:subheading>
-        </div>
-        <flux:modal.trigger name="generate-billing">
-            <flux:button variant="primary" icon="document-plus">Generate Tagihan Kelas</flux:button>
-        </flux:modal.trigger>
-    </div>
+    <x-header title="Tagihan Siswa" subtitle="Manajemen penagihan biaya pendidikan siswa." separator>
+        <x-slot:actions>
+            <x-button label="Generate Tagihan Kelas" icon="o-document-plus" class="btn-primary" click="$set('billingModal', true)" />
+        </x-slot:actions>
+    </x-header>
 
-    <div class="flex gap-4 mb-6">
+    <div class="flex flex-col md:flex-row gap-4 mb-6">
         <div class="flex-1">
-            <flux:input wire:model.live.debounce.300ms="search" placeholder="Cari siswa..." icon="magnifying-glass" />
+            <x-input wire:model.live.debounce.300ms="search" placeholder="Cari siswa..." icon="o-magnifying-glass" />
         </div>
-        <flux:select wire:model.live="classroom_id" class="w-64">
-            <option value="">Semua Kelas</option>
-            @foreach($classrooms as $room)
-                <option value="{{ $room->id }}">{{ $room->name }}</option>
-            @endforeach
-        </flux:select>
+        <x-select wire:model.live="classroom_id" placeholder="Semua Kelas" class="w-full md:w-64" :options="$classrooms" />
     </div>
 
-    <div class="border rounded-lg bg-white dark:bg-zinc-900 overflow-hidden">
-        <table class="w-full text-sm text-left border-collapse">
-            <thead class="bg-zinc-50 dark:bg-zinc-800">
+    <div class="overflow-x-auto border rounded-xl border-zinc-200 dark:border-zinc-700 bg-white dark:bg-zinc-900 shadow-sm">
+        <table class="table">
+            <thead>
                 <tr>
-                    <th class="px-4 py-3 font-medium text-zinc-700 dark:text-zinc-300 border-b">Siswa</th>
-                    <th class="px-4 py-3 font-medium text-zinc-700 dark:text-zinc-300 border-b">Kategori</th>
-                    <th class="px-4 py-3 font-medium text-zinc-700 dark:text-zinc-300 border-b">Bulan</th>
-                    <th class="px-4 py-3 font-medium text-zinc-700 dark:text-zinc-300 border-b text-right">Nominal</th>
-                    <th class="px-4 py-3 font-medium text-zinc-700 dark:text-zinc-300 border-b text-center">Status</th>
+                    <th class="bg-base-200">Siswa</th>
+                    <th class="bg-base-200 text-center">Kategori</th>
+                    <th class="bg-base-200 text-center">Bulan</th>
+                    <th class="bg-base-200 text-right">Nominal</th>
+                    <th class="bg-base-200 text-center">Status</th>
                 </tr>
             </thead>
-            <tbody class="divide-y divide-zinc-200 dark:divide-zinc-700">
+            <tbody>
                 @foreach($billings as $billing)
-                    <tr wire:key="{{ $billing->id }}">
-                        <td class="px-4 py-3 font-medium text-zinc-900 dark:text-white">
-                            {{ $billing->student?->name ?? 'Siswa Dihapus' }}
+                    <tr class="hover" wire:key="{{ $billing->id }}">
+                        <td>
+                            <div class="flex flex-col">
+                                <span class="font-bold">{{ $billing->student?->name ?? 'Siswa Dihapus' }}</span>
+                            </div>
                         </td>
-                        <td class="px-4 py-3 text-zinc-600 dark:text-zinc-400">
+                        <td class="text-center opacity-70">
                             {{ $billing->feeCategory?->name ?? 'Kategori Dihapus' }}
                         </td>
-                        <td class="px-4 py-3 text-zinc-600 dark:text-zinc-400">
+                        <td class="text-center opacity-70 whitespace-nowrap">
                             {{ $billing->month ?? '-' }}
                         </td>
-                        <td class="px-4 py-3 text-right text-zinc-900 dark:text-white">
+                        <td class="text-right font-mono">
                             Rp {{ number_format($billing->amount, 0, ',', '.') }}
                         </td>
-                        <td class="px-4 py-3 text-center">
-                            <flux:badge size="sm" :variant="$billing->status === 'paid' ? 'success' : ($billing->status === 'partial' ? 'warning' : 'danger')">
-                                {{ strtoupper($billing->status) }}
-                            </flux:badge>
+                        <td class="text-center">
+                            <x-badge :value="strtoupper($billing->status)" class="{{ $billing->status === 'paid' ? 'badge-success' : ($billing->status === 'partial' ? 'badge-warning' : 'badge-error') }} badge-sm" />
                         </td>
                     </tr>
                 @endforeach
             </tbody>
         </table>
-        <div class="p-4 border-t">
-            {{ $billings->links() }}
-        </div>
     </div>
 
-    <flux:modal name="generate-billing" class="md:w-[450px]">
-        <div class="space-y-6">
-            <div>
-                <flux:heading size="lg">Generate Tagihan</flux:heading>
-                <flux:subheading>Buat tagihan untuk satu kelas sekaligus.</flux:subheading>
-            </div>
+    <div class="mt-4">
+        {{ $billings->links() }}
+    </div>
 
-            <flux:select wire:model="classroom_id" label="Kelas">
-                <option value="">Pilih Kelas</option>
-                @foreach($classrooms as $room)
-                    <option value="{{ $room->id }}">{{ $room->name }}</option>
-                @endforeach
-            </flux:select>
+    <x-modal wire:model="billingModal" class="backdrop-blur">
+        <x-header title="Generate Tagihan" subtitle="Buat tagihan untuk satu kelas sekaligus." separator />
 
-            <flux:select wire:model.live="fee_category_id" label="Jenis Biaya">
-                <option value="">Pilih Biaya</option>
-                @foreach($categories as $cat)
-                    <option value="{{ $cat->id }}">{{ $cat->name }}</option>
-                @endforeach
-            </flux:select>
-
-            <flux:input wire:model="month" type="month" label="Bulan (Khusus SPP)" />
-            <flux:input wire:model="amount" type="number" label="Nominal" icon="banknotes" />
-
-            <div class="flex justify-end gap-2">
-                <flux:modal.close>
-                    <flux:button variant="ghost">Batal</flux:button>
-                </flux:modal.close>
-                <flux:button variant="primary" wire:click="generateBillings">Generate</flux:button>
-            </div>
+        <div class="grid grid-cols-1 gap-4">
+            <x-select wire:model="classroom_id" label="Kelas" placeholder="Pilih Kelas" :options="$classrooms" />
+            <x-select wire:model.live="fee_category_id" label="Jenis Biaya" placeholder="Pilih Biaya" :options="$categories" />
+            <x-input wire:model="month" type="month" label="Bulan (Khusus SPP)" />
+            <x-input wire:model="amount" type="number" label="Nominal" icon="o-banknotes" />
         </div>
-    </flux:modal>
+
+        <x-slot:actions>
+            <x-button label="Batal" @click="$set('billingModal', false)" />
+            <x-button label="Generate" class="btn-primary" wire:click="generateBillings" spinner="generateBillings" />
+        </x-slot:actions>
+    </x-modal>
 </div>
