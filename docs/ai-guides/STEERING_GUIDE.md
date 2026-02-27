@@ -156,25 +156,22 @@ npm run dev
 
 ```
 Need a component?
-├─> Check Flux UI first
-│   ├─> Available in Flux Free? → Use Flux
-│   └─> Not available?
-│       ├─> Check TallStack UI
-│       │   ├─> Available? → Use TallStack
-│       │   └─> Not available? → Build custom with Tailwind
+├─> Check Mary UI components
+│   └─> Use <x-*> components from Mary UI
+└─> Need custom styling? 
+    └─> Use DaisyUI classes or pure Tailwind v4
 ```
 
 ### **Quick Reference**
 
 | Need                         | Use                                                    |
 | ---------------------------- | ------------------------------------------------------ |
-| Button, Input, Select, Modal | **Flux** `<flux:*>`                                    |
-| Date Picker, Time Picker     | **TallStack** `<x-ts-date-picker>`                     |
-| Searchable Select            | **TallStack** `<x-ts-select.styled>`                   |
-| Tabs, Steps/Wizard           | **TallStack** `<x-ts-tab>`, `<x-ts-step>`              |
-| Rating, Color Picker         | **TallStack** `<x-ts-rating>`, `<x-ts-color-picker>`   |
-| Table                        | **HTML + Tailwind** (Flux Free has no table component) |
-| Toast Notifications          | **Flux** `\Flux::toast()`                              |
+| Button, Input, Select, Modal | **Mary UI** `<x-button>`, `<x-input>`, etc.            |
+| Date Picker                  | **Mary UI** `<x-datetime>`                             |
+| Searchable Select            | **Mary UI** `<x-choices>`                              |
+| Tabs                         | **Mary UI** `<x-tabs>`                                 |
+| Table                        | **Mary UI** `<x-table>`                                |
+| Toast Notifications          | **Mary UI** `$this->success()` / `$this->error()`      |
 
 ---
 
@@ -199,29 +196,26 @@ new #[Layout('components.admin.layouts.app')] class extends Component {
 }; ?>
 
 <div class="p-6">
-    <div class="flex items-center justify-between mb-6">
-        <div>
-            <flux:heading size="xl" level="1">Title</flux:heading>
-            <flux:subheading>Description</flux:subheading>
-        </div>
-    </div>
+    <x-header title="Title" subtitle="Description" separator>
+        <x-slot:actions>
+             <x-button label="Action" icon="o-plus" class="btn-primary" />
+        </x-slot:actions>
+    </x-header>
 
-    <div class="grid grid-cols-1 md:grid-cols-4 gap-4 mb-6">
-        {{-- Filters --}}
-    </div>
+    <x-card shadow>
+        <div class="grid grid-cols-1 md:grid-cols-4 gap-4 mb-6">
+            {{-- Filters --}}
+        </div>
 
-    @if($condition)
-        <div class="border rounded-lg bg-white dark:bg-zinc-900 overflow-hidden">
-            <table class="w-full text-sm text-left border-collapse">
-                {{-- Table content --}}
-            </table>
-        </div>
-    @else
-        <div class="flex flex-col items-center justify-center py-12 text-zinc-500 border-2 border-dashed rounded-xl">
-            <flux:icon icon="icon-name" class="w-12 h-12 mb-2 opacity-20" />
-            <p>Please select filters.</p>
-        </div>
-    @endif
+        @if($condition)
+            <x-table :headers="$headers" :rows="$rows" striped />
+        @else
+            <div class="flex flex-col items-center justify-center py-12 text-zinc-500 border-2 border-dashed rounded-xl">
+                <x-icon name="o-information-circle" class="w-12 h-12 mb-2 opacity-20" />
+                <p>Please select filters.</p>
+            </div>
+        @endif
+    </x-card>
 </div>
 ```
 
@@ -253,8 +247,8 @@ php artisan make:volt admin/module/feature --class
 {{-- ❌ WRONG - Raw HTML --}}
 <input type="text" wire:model="name" class="border rounded px-3 py-2">
 
-{{-- ✅ CORRECT - Flux component --}}
-<flux:input wire:model="name" label="Name" />
+{{-- ✅ CORRECT - Mary UI component --}}
+<x-input wire:model="name" label="Name" />
 ```
 
 ### **3. Forgetting to Clear Cache**
@@ -370,7 +364,7 @@ When reporting issues, include:
 A feature is complete when:
 
 - [ ] Code follows existing patterns
-- [ ] Uses Flux/TallStack components appropriately
+- [ ] Uses Mary UI components appropriately
 - [ ] Route is properly named
 - [ ] Added to sidebar (if needed)
 - [ ] Works in both light and dark mode
@@ -381,8 +375,8 @@ A feature is complete when:
 
 ---
 
-**Last Updated:** 2026-01-22
-**Version:** 2.0
+**Last Updated:** 2026-02-27
+**Version:** 2.1
 
 ---
 

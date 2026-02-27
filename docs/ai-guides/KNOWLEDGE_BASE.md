@@ -790,7 +790,7 @@ All public content is manageable via admin panel:
 ### **When Creating New Features:**
 
 1. [ ] Check existing patterns in similar files
-2. [ ] Use Flux components first, TallStack if needed
+2. [ ] Use Mary UI components
 3. [ ] Follow naming conventions
 4. [ ] Add route to appropriate route file
 5. [ ] Add menu item to sidebar (if needed)
@@ -843,14 +843,12 @@ $user->isGuru(): bool
 ```php
 // In sidebar - show competency assessment only for PAUD teachers
 @if(auth()->user()->isAdmin() || auth()->user()->teachesPaudLevel())
-    <flux:sidebar.item :href="route('admin.assessments.competency')">
-        {{ __('Penilaian Kompetensi') }}
-    </flux:sidebar.item>
+    <x-menu-item icon="o-academic-cap" :href="route('admin.assessments.competency')" label="{{ __('Penilaian Kompetensi') }}" />
 @endif
 ```
 
 ---
 
-**Last Updated:** 2026-02-15
-**Version:** 2.2
+**Last Updated:** 2026-02-27
+**Version:** 2.3
 **Maintained By:** Antigravity AI Assistant
