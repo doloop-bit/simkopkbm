@@ -3,7 +3,7 @@
         <div class="shrink-0 flex items-center justify-center">
             <x-global.app-logo-icon class="size-8 fill-primary block aspect-square object-contain" />
         </div>
-        <span class="text-xl font-bold text-base-content whitespace-nowrap overflow-hidden">{{ config('app.name') }}</span>
+        <span class="text-xl font-extrabold text-slate-100 whitespace-nowrap overflow-hidden tracking-tight">{{ config('app.name') }}</span>
     </a>
 </div>
 

@@ -1,204 +1,202 @@
-@import 'tailwindcss';
+@import "tailwindcss";
 
 @source '../views';
 @source "../../vendor/robsontenorio/mary/src/View/Components/**/*.php";
-@source '../../vendor/laravel/framework/src/Illuminate/Pagination/resources/views/*.blade.php';
-@source '../../vendor/laravel/framework/src/Illuminate/Pagination/resources/views/*.blade.php';
+@source "../../vendor/laravel/framework/src/Illuminate/Pagination/resources/views/*.blade.php";
 
 @custom-variant dark (&:where(.dark, .dark *));
 
 @theme {
-    --font-sans: 'Instrument Sans', ui-sans-serif, system-ui, sans-serif, 'Apple Color Emoji', 'Segoe UI Emoji', 'Segoe UI Symbol', 'Noto Color Emoji';
+    --font-sans: 'Outfit', 'Instrument Sans', ui-sans-serif, system-ui, sans-serif;
 
-    --color-zinc-50: #fafafa;
-    --color-zinc-100: #f5f5f5;
-    --color-zinc-200: #e5e5e5;
-    --color-zinc-300: #d4d4d4;
-    --color-zinc-400: #a3a3a3;
-    --color-zinc-500: #737373;
-    --color-zinc-600: #525252;
-    --color-zinc-700: #404040;
-    --color-zinc-800: #262626;
-    --color-zinc-900: #171717;
-    --color-zinc-950: #0a0a0a;
+    /* Primary Accent: Electric Emerald */
+    --color-primary-50: #f0fdf4;
+    --color-primary-100: #dcfce7;
+    --color-primary-200: #bbf7d0;
+    --color-primary-300: #86efac;
+    --color-primary-400: #4ade80;
+    --color-primary-500: #22c55e;
+    --color-primary-600: #16a34a;
+    --color-primary-700: #15803d;
+    --color-primary-800: #166534;
+    --color-primary-900: #14532d;
+    --color-primary-950: #052e16;
 
-    --color-dark-50: var(--color-zinc-50);
-    --color-dark-100: var(--color-zinc-100);
-    --color-dark-200: var(--color-zinc-200);
-    --color-dark-300: var(--color-zinc-300);
-    --color-dark-400: var(--color-zinc-400);
-    --color-dark-500: var(--color-zinc-500);
-    --color-dark-600: var(--color-zinc-600);
-    --color-dark-700: var(--color-zinc-700);
-    --color-dark-800: var(--color-zinc-800);
-    --color-dark-900: var(--color-zinc-900);
-    --color-dark-950: var(--color-zinc-950);
+    --color-primary: var(--color-primary-500);
 
-    --color-primary-50: var(--color-indigo-50);
-    --color-primary-100: var(--color-indigo-100);
-    --color-primary-200: var(--color-indigo-200);
-    --color-primary-300: var(--color-indigo-300);
-    --color-primary-400: var(--color-indigo-400);
-    --color-primary-500: var(--color-indigo-500);
-    --color-primary-600: var(--color-indigo-600);
-    --color-primary-700: var(--color-indigo-700);
-    --color-primary-800: var(--color-indigo-800);
-    --color-primary-900: var(--color-indigo-900);
-    --color-primary-950: var(--color-indigo-950);
+    /* Background Neutrals: Modern Slate */
+    --color-base-50: #f8fafc;
+    --color-base-100: #ffffff;
+    --color-base-200: #f1f5f9;
+    --color-base-300: #e2e8f0;
+    --color-base-content: #0f172a;
 
-    --color-accent: var(--color-neutral-800);
-    --color-accent-content: var(--color-neutral-800);
-    --color-accent-foreground: var(--color-white);
-}
-
-@layer theme {
-    .dark {
-        --color-accent: var(--color-white);
-        --color-accent-content: var(--color-white);
-        --color-accent-foreground: var(--color-neutral-800);
-    }
+    /* Shadow tokens */
+    --shadow-premium: 0 10px 15px -3px rgba(0, 0, 0, 0.04), 0 4px 6px -2px rgba(0, 0, 0, 0.02);
 }
 
 @layer base {
 
     *,
     ::after,
-    ::before,
-    ::backdrop,
-    ::file-selector-button {
-        border-color: var(--color-gray-200, currentColor);
+    ::before {
+        border-color: var(--color-base-200);
+        transition-property: all;
+        transition-duration: 250ms;
+        transition-timing-function: cubic-bezier(0.4, 0, 0.2, 1);
     }
 
-    /* Responsive text utilities */
-    .text-responsive-xs {
-        @apply text-xs sm:text-sm;
+    .dark *,
+    .dark ::after,
+    .dark ::before {
+        border-color: #1e293b;
     }
 
-    .text-responsive-sm {
-        @apply text-sm sm:text-base;
+    body {
+        @apply bg-base-50 text-base-content antialiased selection:bg-primary/20 selection:text-primary-800;
     }
 
-    .text-responsive-base {
-        @apply text-base sm:text-lg;
+    .dark body {
+        background-color: #020617;
+        color: #f1f5f9;
     }
 
-    .text-responsive-lg {
-        @apply text-lg sm:text-xl;
-    }
-
-    .text-responsive-xl {
-        @apply text-xl sm:text-2xl;
-    }
-
-    .text-responsive-2xl {
-        @apply text-2xl sm:text-3xl;
-    }
-
-    .text-responsive-3xl {
-        @apply text-3xl sm:text-4xl md:text-5xl;
-    }
-
-    /* Responsive spacing utilities */
-    .p-responsive {
-        @apply p-4 sm:p-6 lg:p-8;
-    }
-
-    .px-responsive {
-        @apply px-4 sm:px-6 lg:px-8;
-    }
-
-    .py-responsive {
-        @apply py-12 sm:py-16 lg:py-20;
-    }
-
-    /* Responsive grid utilities */
-    .grid-responsive-2 {
-        @apply grid-cols-1 sm:grid-cols-2;
-    }
-
-    .grid-responsive-3 {
-        @apply grid-cols-1 sm:grid-cols-2 lg:grid-cols-3;
-    }
-
-    .grid-responsive-4 {
-        @apply grid-cols-1 sm:grid-cols-2 lg:grid-cols-4;
-    }
-
-    .grid-responsive-6 {
-        @apply grid-cols-2 sm:grid-cols-3 lg:grid-cols-6;
-    }
-
-    /* Touch-friendly button sizes */
-    .btn-touch {
-        @apply min-h-[44px] min-w-[44px];
-    }
-
-    /* Responsive container */
-    .container-responsive {
-        @apply max-w-7xl mx-auto px-4 sm:px-6 lg:px-8;
-    }
-
-    /* Custom Scrollbar Styles - Hair-thick and shows on hover */
-    ::-webkit-scrollbar {
-        width: 1px;
-        height: 1px;
-    }
-
-    ::-webkit-scrollbar-track {
-        background: transparent;
-    }
-
-    ::-webkit-scrollbar-thumb {
-        background: transparent;
-        border-radius: 5px;
-    }
-
-    *:hover::-webkit-scrollbar-thumb {
-        @apply bg-zinc-400/50;
-    }
-
-    .dark *:hover::-webkit-scrollbar-thumb {
-        @apply bg-zinc-500/30;
-    }
-
-    /* Firefox Support - Keeps it very thin */
-    * {
-        scrollbar-width: thin;
-        scrollbar-color: transparent transparent;
-    }
-
-    *:hover {
-        scrollbar-color: var(--color-zinc-400) transparent;
-    }
-
-    .dark *:hover {
-        scrollbar-color: var(--color-zinc-700) transparent;
+    /* Custom Focus Style */
+    .input:focus,
+    .input:focus-within,
+    .textarea:focus,
+    .textarea:focus-within,
+    .select:focus,
+    .select:focus-within {
+        outline: none !important;
+        border-color: var(--color-primary) !important;
+        border-width: 2px !important;
+        box-shadow: 0 0 0 4px rgba(34, 197, 94, 0.1) !important;
+        background-color: var(--color-base-100) !important;
     }
 }
 
+@layer components {
 
+    /* Glassmorphism surfaces */
+    .glass-nav {
+        @apply bg-white/80 dark:bg-slate-950/80 backdrop-blur-xl sticky top-0 z-40 border-b border-base-300/50 dark:border-slate-800/50;
+    }
 
-/**
-    The lines above are intact.
-    The lines below were added by maryUI installer.
-*/
+    /* Sidebar Dark Mode forced look */
+    .sidebar-premium {
+        background-color: #0f172a !important;
+        color: #94a3b8 !important;
+        border-right: 1px solid rgba(30, 41, 59, 0.5) !important;
+    }
+
+    .sidebar-premium .fill-primary {
+        fill: #10b981 !important;
+    }
+
+    .sidebar-premium .text-base-content {
+        color: #f8fafc !important;
+    }
+
+    /* Mary UI Menu Styling - Aggressive Green Active State */
+    .sidebar-premium .menu li>a.active,
+    .sidebar-premium .menu li>details>summary.active,
+    .sidebar-premium .menu li>.active {
+        background-color: #059669 !important;
+        /* Emerald 600 */
+        color: #ffffff !important;
+        font-weight: 700 !important;
+    }
+
+    /* Submenu header styling when open */
+    .sidebar-premium .menu li>details[open]>summary {
+        color: #34d399 !important;
+        background-color: #1e293b !important;
+    }
+
+    /* Active background for sub-items */
+    .sidebar-premium .menu li ul li a.active {
+        background-color: rgba(16, 185, 129, 0.15) !important;
+        color: #10b981 !important;
+        border-left: 4px solid #10b981 !important;
+        border-radius: 0 12px 12px 0 !important;
+    }
+
+    /* Ensure icons/text in active items are white */
+    .sidebar-premium .menu li a.active span,
+    .sidebar-premium .menu li a.active svg,
+    .sidebar-premium .menu li details summary.active span,
+    .sidebar-premium .menu li details summary.active svg {
+        color: #ffffff !important;
+    }
+
+    /* Hover effect */
+    .sidebar-premium .menu li>*:not(ul):not(.menu-title):not(details):hover,
+    .sidebar-premium .menu li>details>summary:hover {
+        background-color: #1e293b !important;
+        color: #ffffff !important;
+    }
+
+    /* Premium Card Styling */
+    .card-modern {
+        @apply bg-white dark:bg-slate-900 border border-base-200 dark:border-slate-800 rounded-3xl shadow-premium hover:shadow-lg transition-all duration-500 overflow-hidden;
+    }
+
+    /* Primary Button */
+    .btn-primary {
+        @apply bg-emerald-500 hover:bg-emerald-600 text-white font-semibold rounded-2xl px-6 py-2 shadow-lg shadow-emerald-500/20 active:scale-95 border-none;
+    }
+
+    .btn-ghost {
+        @apply hover:bg-slate-100 dark:hover:bg-slate-800 rounded-2xl transition-colors;
+    }
+}
+
+@layer utilities {
+    .p-responsive {
+        @apply p-4 md:p-8 lg:p-12;
+    }
+
+    .bg-gradient-mesh {
+        background-color: #f8fafc;
+        background-image:
+            radial-gradient(at 0% 0%, rgba(34, 197, 94, 0.03) 0, transparent 50%),
+            radial-gradient(at 50% 0%, rgba(59, 130, 246, 0.03) 0, transparent 50%);
+    }
+
+    .dark .bg-gradient-mesh {
+        background-color: #020617;
+        background-image:
+            radial-gradient(at 0% 0%, rgba(16, 185, 129, 0.05) 0, transparent 50%),
+            radial-gradient(at 50% 0%, rgba(30, 64, 175, 0.05) 0, transparent 50%);
+    }
+}
 
 /** daisyUI */
 @plugin "daisyui" {
     themes: light --default, dark --prefersdark;
 }
 
-/* Theme toggle moved to line 8 */
-
-/**
-* Paginator - Traditional style
-* Because Laravel defaults does not match well the design of daisyUI.
-*/
-
-.mary-table-pagination span[aria-current="page"]>span {
-    @apply bg-primary text-base-100
+[data-theme="light"] {
+    --color-primary: #10b981;
+    --color-primary-content: #ffffff;
+    --color-base-100: #ffffff;
+    --color-base-200: #f8fafc;
 }
 
-.mary-table-pagination button {
-    @apply cursor-pointer
+/* Scrollbar Modern */
+::-webkit-scrollbar {
+    width: 5px;
+}
+
+::-webkit-scrollbar-track {
+    background: transparent;
+}
+
+::-webkit-scrollbar-thumb {
+    @apply bg-slate-300 dark:bg-slate-700 rounded-full;
+}
+
+::-webkit-scrollbar-thumb:hover {
+    @apply bg-emerald-400;
 }

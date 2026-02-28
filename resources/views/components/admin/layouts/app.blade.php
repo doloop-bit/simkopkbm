@@ -13,37 +13,60 @@
 
 
     @include('partials.head')
+
+    <style>
+        /* INLINE BRUTE FORCE PATCH FOR SIDEBAR */
+        .sidebar-premium .menu li > a.active,
+        .sidebar-premium .menu li > details > summary.active,
+        .sidebar-premium .menu li > .active {
+            background-color: #059669 !important;
+            color: #ffffff !important;
+        }
+        .sidebar-premium .menu li > a.active *,
+        .sidebar-premium .menu li > details > summary.active * {
+            color: #ffffff !important;
+        }
+        .sidebar-premium .menu li > details[open] > summary {
+            background-color: rgba(30, 41, 59, 0.4) !important;
+        }
+    </style>
 </head>
-<body class="min-h-screen bg-white font-sans antialiased dark:bg-zinc-900">
+<body class="min-h-screen bg-gradient-mesh font-sans antialiased text-slate-900 dark:text-slate-100 selection:bg-emerald-500/30">
     <x-main full-width>
         {{-- Sidebar --}}
-        <x-slot:sidebar drawer="main-drawer" collapsible class="bg-base-200">
+        <x-slot:sidebar drawer="main-drawer" collapsible class="sidebar-premium">
             <x-admin.sidebar />
 
-            {{-- User & Settings at the bottom --}}
-            <div class="mt-auto px-2 pb-2">
-                <x-menu-separator />
+            {{-- User & Settings --}}
+            <div class="mt-auto px-4 pb-4">
+                <x-menu-separator class="my-4 border-slate-700/50" />
                 <x-admin.desktop-user-menu />
             </div>
         </x-slot:sidebar>
 
         {{-- Content --}}
-        <x-slot:content>
-            <x-admin.header />
+        <x-slot:content class="p-0">
+            <div class="min-h-screen flex flex-col">
+                <x-admin.header />
 
-            @if(request()->routeIs('admin.school-profile.*') || request()->routeIs('admin.news.*') || request()->routeIs('admin.gallery.*') || request()->routeIs('admin.programs.*') || request()->routeIs('admin.contact-inquiries.*'))
-                <x-admin.konten-web-nav />
-            @endif
+                <div class="p-responsive flex-1">
+                    @if(request()->routeIs('admin.school-profile.*') || request()->routeIs('admin.news.*') || request()->routeIs('admin.gallery.*') || request()->routeIs('admin.programs.*') || request()->routeIs('admin.contact-inquiries.*'))
+                        <div class="mb-6"><x-admin.konten-web-nav /></div>
+                    @endif
 
-            @if(request()->routeIs('admin.report-card.*') || request()->routeIs('admin.assessments.attendance') || request()->routeIs('admin.assessments.extracurricular'))
-                <x-admin.report-card-nav />
-            @endif
+                    @if(request()->routeIs('admin.report-card.*') || request()->routeIs('admin.assessments.attendance') || request()->routeIs('admin.assessments.extracurricular'))
+                        <div class="mb-6"><x-admin.report-card-nav /></div>
+                    @endif
 
-            @if(request()->routeIs('financial.*'))
-                <x-admin.keuangan-nav />
-            @endif
+                    @if(request()->routeIs('financial.*'))
+                        <div class="mb-6"><x-admin.keuangan-nav /></div>
+                    @endif
 
-            {{ $slot }}
+                    <div class="max-w-7xl mx-auto">
+                        {{ $slot }}
+                    </div>
+                </div>
+            </div>
         </x-slot:content>
     </x-main>
 
