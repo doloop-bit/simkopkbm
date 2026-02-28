@@ -151,137 +151,176 @@ new class extends Component
     }
 }; ?>
 
-<div class="p-6">
-    <x-header title="{{ $article ? 'Edit Berita' : 'Tambah Berita' }}" subtitle="{{ $article ? 'Perbarui artikel berita' : 'Buat artikel berita baru' }}" separator />
-
+<div class="p-6 space-y-8 text-slate-900 dark:text-white pb-24 md:pb-6">
     @if (session()->has('message'))
-        <x-alert title="Sukses" icon="o-check-circle" class="alert-success mb-6">
+        <x-ui.alert :title="__('Sukses')" icon="o-check-circle" class="bg-emerald-50 text-emerald-800 border-emerald-100" dismissible>
             {{ session('message') }}
-        </x-alert>
+        </x-ui.alert>
     @endif
+
+    <x-ui.header :title="$article ? __('Edit Artikel Berita') : __('Tulis Berita Baru')" :subtitle="$article ? __('Perbarui konten, status, atau metadata artikel.') : __('Siapkan publikasi artikel informasi atau pengumuman sekolah.')" separator />
 
     <form wire:submit="save" class="space-y-8">
         {{-- Basic Information --}}
-        <x-card title="Informasi Dasar" subtitle="Informasi utama artikel" separator shadow>
-            <div class="space-y-4">
-                <x-input 
+        <x-ui.card shadow padding="false" class="border-none ring-1 ring-slate-100 dark:ring-slate-800">
+            <div class="p-6 border-b border-slate-50 dark:border-slate-800/50 bg-slate-50/50 dark:bg-slate-900/50">
+                <h3 class="font-black text-slate-800 dark:text-white uppercase tracking-tight text-sm italic">{{ __('Informasi & Konfigurasi Dasar') }}</h3>
+            </div>
+            <div class="p-8 space-y-8">
+                <x-ui.input 
                     wire:model="title" 
-                    label="Judul Artikel" 
+                    :label="__('Judul Utama Berita')" 
                     type="text" 
                     required 
-                    placeholder="Masukkan judul artikel"
+                    :placeholder="__('Tulis judul yang menarik dan informatif...')"
+                    class="font-black text-xl italic uppercase tracking-tighter"
                 />
 
-                <div class="grid grid-cols-1 gap-4 md:grid-cols-2">
-                    <x-input 
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-8">
+                    <x-ui.input 
                         wire:model="publishedAt" 
-                        label="Tanggal Publikasi" 
+                        :label="__('Tanggal Penayangan')" 
                         type="date" 
                         required 
+                        class="font-bold text-slate-600"
                     />
 
-                    <x-select 
+                    <x-ui.select 
                         wire:model="status" 
-                        label="Status" 
-                        :options="[['id' => 'draft', 'name' => 'Draft'], ['id' => 'published', 'name' => 'Dipublikasikan']]"
+                        :label="__('Status Publikasi')" 
+                        :options="[['id' => 'draft', 'name' => __('Draft (Arsip Lokal)')], ['id' => 'published', 'name' => __('Published (Tampil Live)')]]"
                         required 
+                        class="font-bold"
                     />
                 </div>
 
-                <x-textarea 
+                <x-ui.textarea 
                     wire:model="excerpt" 
-                    label="Ringkasan (Opsional)" 
+                    :label="__('Cuplikan (Snippet)')" 
                     rows="3" 
-                    placeholder="Ringkasan singkat artikel. Jika kosong, akan dibuat otomatis dari konten."
+                    :placeholder="__('Tulis ringkasan singkat untuk menarik pembaca di halaman daftar berita...')"
+                    class="italic text-sm leading-relaxed"
                 />
+                <p class="text-[10px] text-slate-400 italic px-1">
+                    * {{ __('Jika dikosongkan, sistem akan mengambil secara otomatis dari 200 karakter pertama isi artikel.') }}
+                </p>
             </div>
-        </x-card>
+        </x-ui.card>
 
         {{-- Featured Image --}}
-        <x-card title="Gambar Unggulan" subtitle="Upload gambar utama artikel (maksimal 5MB, format: JPEG, PNG, WebP)" separator shadow>
-            <div class="space-y-6">
+        <x-ui.card shadow padding="false" class="border-none ring-1 ring-slate-100 dark:ring-slate-800">
+            <div class="p-6 border-b border-slate-50 dark:border-slate-800/50 bg-slate-50/50 dark:bg-slate-900/50">
+                <h3 class="font-black text-slate-800 dark:text-white uppercase tracking-tight text-sm italic">{{ __('Visual & Poster Berita') }}</h3>
+            </div>
+            <div class="p-8 space-y-6">
                 @if ($currentFeaturedImagePath)
-                    <div class="flex items-start gap-4 p-4 bg-base-200 rounded-lg">
-                        <img 
-                            src="{{ Storage::url($currentFeaturedImagePath) }}" 
-                            alt="Gambar Unggulan" 
-                            class="h-48 w-auto rounded-lg border border-base-300 object-cover bg-white"
-                        >
-                        <div class="flex flex-col gap-2">
-                            <span class="text-sm font-medium">Gambar saat ini</span>
-                            <x-button 
+                    <div class="flex items-center gap-6 p-6 bg-slate-50 dark:bg-slate-900/50 rounded-3xl border border-slate-100 dark:border-slate-800 group">
+                        <div class="relative overflow-hidden rounded-2xl shadow-xl ring-4 ring-white dark:ring-slate-800">
+                            <img 
+                                src="{{ Storage::url($currentFeaturedImagePath) }}" 
+                                alt="Gambar Unggulan" 
+                                class="h-48 w-80 object-cover group-hover:scale-105 transition-transform duration-700"
+                            >
+                        </div>
+                        <div class="flex-1">
+                            <span class="text-[10px] font-black text-slate-400 uppercase tracking-widest italic mb-2 block">{{ __('Gambar Utama Saat Ini') }}</span>
+                            <x-ui.button 
                                 wire:click="removeFeaturedImage" 
-                                label="Hapus Gambar"
+                                :label="__('Hapus Gambar')"
                                 icon="o-trash"
-                                class="btn-error btn-sm"
-                                wire:confirm="Apakah Anda yakin ingin menghapus gambar unggulan?"
+                                class="btn-ghost btn-xs text-rose-500 hover:bg-rose-50 font-bold"
+                                wire:confirm="__('Apakah Anda yakin ingin menghapus gambar unggulan ini?')"
                             />
                         </div>
                     </div>
                 @endif
 
-                <x-file 
+                <x-ui.file 
                     wire:model="featuredImage" 
-                    label="Upload Gambar Baru" 
+                    :label="__('Unggah Foto Sampul Berita')" 
                     accept="image/jpeg,image/jpg,image/png,image/webp"
-                    crop-after-change
+                    class="bg-white dark:bg-slate-800"
                 >
                     @if ($featuredImage)
-                        <div class="text-sm mt-2">
-                            File dipilih: <span class="font-medium">{{ $featuredImage->getClientOriginalName() }}</span>
+                        <div class="text-[10px] font-black italic text-indigo-600 mt-2 px-1">
+                            {{ __('File dipilih') }}: <span class="underline">{{ $featuredImage->getClientOriginalName() }}</span>
                         </div>
                     @endif
-                </x-file>
+                </x-ui.file>
+                <p class="text-[10px] text-slate-400 italic px-1 leading-relaxed">
+                    * {{ __('Ukuran maksimal 5MB. Format: JPEG, PNG, WebP. Direkomendasikan rasio 16:9 untuk tampilan optimal di beranda.') }}
+                </p>
             </div>
-        </x-card>
+        </x-ui.card>
 
         {{-- Content --}}
-        <x-card title="Konten Artikel" subtitle="Tulis konten artikel lengkap" separator shadow>
-            <div class="space-y-4">
-                <x-textarea 
+        <x-ui.card shadow padding="false" class="border-none ring-1 ring-primary/5">
+            <div class="p-6 border-b border-slate-50 dark:border-slate-800/50 bg-slate-50/50 dark:bg-slate-900/50 flex items-center justify-between">
+                <h3 class="font-black text-slate-800 dark:text-white uppercase tracking-tight text-sm italic">{{ __('Editor Isi Artikel') }}</h3>
+                <x-ui.badge :label="__('Editor Terintegrasi')" class="bg-indigo-50 text-indigo-600 border-none font-black italic text-[9px] px-3" />
+            </div>
+            <div class="p-8 space-y-6">
+                <x-ui.textarea 
                     wire:model="content" 
-                    label="Konten" 
+                    :label="__('Badan Artikel')" 
                     rows="20" 
                     required 
-                    placeholder="Tulis konten artikel di sini..."
+                    :placeholder="__('Tulis narasi lengkap berita di sini...')"
+                    class="font-medium text-slate-700 dark:text-slate-300 leading-relaxed text-base"
                 />
-                <x-alert icon="o-information-circle" class="bg-base-200 border-base-300">
-                    Tip: Gunakan Markdown atau HTML sederhana untuk memformat konten.
-                </x-alert>
+                
+                <div class="flex items-start gap-4 p-4 rounded-2xl bg-slate-50 dark:bg-slate-900/50 border border-slate-100 dark:border-slate-800">
+                    <x-ui.icon name="o-information-circle" class="size-5 text-indigo-500 shrink-0" />
+                    <div>
+                        <p class="text-[10px] font-bold text-slate-500 uppercase tracking-widest italic mb-1">{{ __('Panduan Editor') }}</p>
+                        <p class="text-[11px] text-slate-400 italic leading-relaxed">
+                            {{ __('Gunakan format paragraf yang jelas. Anda dapat menyisipkan HTML sederhana jika diperlukan untuk pembentukan struktur teks yang lebih kompleks.') }}
+                        </p>
+                    </div>
+                </div>
             </div>
-        </x-card>
+        </x-ui.card>
 
         {{-- SEO Metadata --}}
-        <x-card title="SEO (Opsional)" subtitle="Optimasi untuk mesin pencari" separator shadow>
-            <div class="space-y-4">
-                <x-input 
-                    wire:model="metaTitle" 
-                    label="Judul SEO" 
-                    type="text" 
-                    placeholder="Jika kosong, akan menggunakan judul artikel"
-                    hint="Disarankan 50-60 karakter"
-                />
-
-                <x-textarea 
-                    wire:model="metaDescription" 
-                    label="Deskripsi SEO" 
-                    rows="3" 
-                    placeholder="Jika kosong, akan dibuat otomatis dari konten"
-                    hint="Disarankan 150-160 karakter"
-                />
+        <x-ui.card shadow padding="false" class="border-none ring-1 ring-slate-100 dark:ring-slate-800">
+            <div class="p-6 border-b border-slate-50 dark:border-slate-800/50 bg-slate-50/50 dark:bg-slate-900/50">
+                <h3 class="font-black text-slate-800 dark:text-white uppercase tracking-tight text-sm italic">{{ __('Optimasi Mesin Pencari (SEO)') }}</h3>
             </div>
-        </x-card>
+            <div class="p-8 space-y-8">
+                <x-ui.input 
+                    wire:model="metaTitle" 
+                    :label="__('Judul SEO (Browser Title)')" 
+                    type="text" 
+                    :placeholder="__('Contoh: Berita Terbaru Hari Ini | Nama Sekolah')"
+                    class="font-bold"
+                />
+                <p class="text-[10px] text-slate-400 italic px-1 -mt-6">
+                    * {{ __('Jika dikosongkan, akan menggunakan judul artikel di atas. Disarankan 50-60 karakter.') }}
+                </p>
+
+                <x-ui.textarea 
+                    wire:model="metaDescription" 
+                    :label="__('Deskripsi SEO (Search Snippet)')" 
+                    rows="3" 
+                    :placeholder="__('Tulis deskripsi yang mengundang klik bagi pencari berita di Google...')"
+                    class="text-xs italic"
+                />
+                <p class="text-[10px] text-slate-400 italic px-1 -mt-6">
+                    * {{ __('Jika dikosongkan, akan mengambil otomatis dari konten. Disarankan 150-160 karakter untuk hasil optimal di mesin cari.') }}
+                </p>
+            </div>
+        </x-ui.card>
 
         {{-- Submit Buttons --}}
-        <div class="flex items-center justify-end gap-3 pt-6">
-            <x-button 
-                label="Batal"
+        <div class="flex items-center justify-end gap-3 pt-8 pb-12">
+            <x-ui.button 
+                :label="__('Batalkan & Kembali')"
                 link="{{ route('admin.news.index') }}"
-                ghost
+                class="btn-ghost"
             />
-            <x-button 
-                label="{{ $article ? 'Perbarui Artikel' : 'Simpan Artikel' }}"
-                class="btn-primary" 
+            <x-ui.button 
+                :label="$article ? __('Perbarui Publikasi') : __('Terbitkan Berita Sekarang')"
+                class="btn-primary shadow-xl shadow-primary/20 px-8" 
                 type="submit" 
                 spinner="save"
             />

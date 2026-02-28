@@ -14,367 +14,322 @@ use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Validation\Rule;
 
-use Mary\Traits\Toast;
-
 new #[Layout('components.admin.layouts.app')] class extends Component {
-    use WithPagination, Toast;
+    use WithPagination;
 
-    public string $search = '';
+    public $search = '';
     public bool $ptkModal = false;
-    
-    // User fields
-    public string $name = '';
-    public string $email = '';
-    public string $password = '';
-    public string $role = 'guru'; // guru, staf
-    
-    // Profile fields
-    public string $nip = '';
-    public string $phone = '';
-    public string $address = '';
-    
-    // Teacher specific
-    public string $education_level = '';
-    
-    // Staff specific
-    public string $position = ''; // Kepala Sekolah, Kepala PKBM, Admin
-    public ?int $level_id = null;
-    public string $department = '';
-
     public ?User $editingUser = null;
 
-    public function rules(): array
+    // Form fields
+    public $name = '';
+    public $email = '';
+    public $password = '';
+    public $role = 'guru';
+    public $nip = '';
+    public $phone = '';
+    public $education_level = '';
+    public $position = '';
+    public $level_id = '';
+    public $department = '';
+    public $address = '';
+
+    public function updatedSearch(): void
     {
-        $profileableId = $this->editingUser?->profile?->profileable_id;
-        
-        return [
-            'name' => 'required|string|max:255',
-            'email' => [
-                'required', 
-                'email', 
-                Rule::unique('users', 'email')->ignore($this->editingUser?->id)
-            ],
-            'password' => $this->editingUser ? 'nullable|min:8' : 'required|min:8',
-            'role' => 'required|in:guru,staf',
-            'nip' => [
-                'nullable',
-                'string',
-                'max:20',
-                $this->role === 'guru' 
-                    ? Rule::unique('teacher_profiles', 'nip')->ignore($profileableId)
-                    : Rule::unique('staff_profiles', 'nip')->ignore($profileableId)
-            ],
-            'phone' => 'nullable|string|max:20',
-            'address' => 'nullable|string',
-            'education_level' => 'required_if:role,guru|nullable|string',
-            'position' => 'required_if:role,staf|nullable|string',
-            'level_id' => 'nullable|exists:levels,id',
-            'department' => 'nullable|string',
-        ];
-    }
-
-    public function save(): void
-    {
-        $this->validate();
-
-        DB::transaction(function () {
-            $profileData = [
-                'nip' => $this->nip ?: null,
-                'phone' => $this->phone ?: null,
-                'address' => $this->address ?: null,
-            ];
-
-            if ($this->editingUser) {
-                // Update User
-                $this->editingUser->update([
-                    'name' => $this->name,
-                    'email' => $this->email,
-                    'role' => $this->role,
-                ]);
-
-                if ($this->password) {
-                    $this->editingUser->update(['password' => Hash::make($this->password)]);
-                }
-
-                $profile = $this->editingUser->profile;
-                $profileable = $profile->profileable;
-
-                // Handle Role Change (Complex case)
-                if (($this->role === 'guru' && !($profileable instanceof TeacherProfile)) ||
-                    ($this->role === 'staf' && !($profileable instanceof StaffProfile))) {
-                    
-                    // Delete old profileable
-                    $profileable->delete();
-
-                    // Create new profileable
-                    if ($this->role === 'guru') {
-                        $newProfileable = TeacherProfile::create(array_merge($profileData, [
-                            'education_level' => $this->education_level,
-                        ]));
-                    } else {
-                        $newProfileable = StaffProfile::create(array_merge($profileData, [
-                            'position' => $this->position,
-                            'level_id' => $this->level_id,
-                            'department' => $this->department,
-                        ]));
-                    }
-
-                    $profile->update([
-                        'profileable_id' => $newProfileable->id,
-                        'profileable_type' => get_class($newProfileable),
-                    ]);
-                } else {
-                    // Update existing
-                    if ($this->role === 'guru') {
-                        $profileable->update(array_merge($profileData, [
-                            'education_level' => $this->education_level,
-                        ]));
-                    } else {
-                        $profileable->update(array_merge($profileData, [
-                            'position' => $this->position,
-                            'level_id' => $this->level_id,
-                            'department' => $this->department,
-                        ]));
-                    }
-                }
-                $this->success('Data PTK berhasil diperbarui.');
-            } else {
-                // Create User
-                $user = User::create([
-                    'name' => $this->name,
-                    'email' => $this->email,
-                    'password' => Hash::make($this->password),
-                    'role' => $this->role,
-                ]);
-
-                // Create Profileable
-                if ($this->role === 'guru') {
-                    $profileable = TeacherProfile::create(array_merge($profileData, [
-                        'education_level' => $this->education_level,
-                    ]));
-                } else {
-                    $profileable = StaffProfile::create(array_merge($profileData, [
-                        'position' => $this->position,
-                        'level_id' => $this->level_id,
-                        'department' => $this->department,
-                    ]));
-                }
-
-                // Create Profile
-                Profile::create([
-                    'user_id' => $user->id,
-                    'profileable_id' => $profileable->id,
-                    'profileable_type' => get_class($profileable),
-                ]);
-                
-                $this->success('Data PTK berhasil ditambahkan.');
-            }
-        });
-
-        $this->reset(['name', 'email', 'password', 'role', 'nip', 'phone', 'address', 'education_level', 'position', 'level_id', 'department', 'editingUser', 'ptkModal']);
+        $this->resetPage();
     }
 
     public function create(): void
     {
-        $this->reset(['name', 'email', 'password', 'role', 'nip', 'phone', 'address', 'education_level', 'position', 'level_id', 'department', 'editingUser']);
+        $this->reset(['editingUser', 'name', 'email', 'password', 'role', 'nip', 'phone', 'education_level', 'position', 'level_id', 'department', 'address']);
+        $this->role = 'guru';
         $this->resetValidation();
         $this->ptkModal = true;
     }
 
     public function edit(User $user): void
     {
-        $this->reset(['name', 'email', 'password', 'role', 'nip', 'phone', 'address', 'education_level', 'position', 'level_id', 'department', 'editingUser']);
-        $this->resetValidation();
-        
         $this->editingUser = $user;
         $this->name = $user->name;
         $this->email = $user->email;
         $this->role = $user->role;
+        $this->password = '';
 
-        $profile = $user->profile;
-        $profileable = $profile?->profileable;
-
-        if ($profileable) {
-            $this->nip = $profileable->nip ?? '';
-            $this->phone = $profileable->phone ?? '';
-            $this->address = $profileable->address ?? '';
-
-            if ($profileable instanceof TeacherProfile) {
-                $this->education_level = $profileable->education_level ?? '';
-            } elseif ($profileable instanceof StaffProfile) {
-                $this->position = $profileable->position ?? '';
-                $this->level_id = $profileable->level_id;
-                $this->department = $profileable->department ?? '';
+        $profile = $user->profile?->profileable;
+        if ($profile) {
+            $this->nip = $profile->nip ?? '';
+            $this->phone = $profile->phone ?? '';
+            $this->address = $profile->address ?? '';
+            
+            if ($user->role === 'guru') {
+                $this->education_level = $profile->education_level ?? '';
+            } else {
+                $this->position = $profile->position ?? '';
+                $this->level_id = $profile->level_id ?? '';
+                $this->department = $profile->department ?? '';
             }
         }
 
         $this->ptkModal = true;
     }
 
+    public function save(): void
+    {
+        $rules = [
+            'name' => 'required|string|max:255',
+            'email' => ['required', 'email', Rule::unique('users')->ignore($this->editingUser->id ?? null)],
+            'role' => 'required|in:guru,staf',
+            'nip' => 'nullable|string',
+            'phone' => 'nullable|string',
+            'address' => 'nullable|string',
+        ];
+
+        if (!$this->editingUser) {
+            $rules['password'] = 'required|string|min:8';
+        } else {
+            $rules['password'] = 'nullable|string|min:8';
+        }
+
+        if ($this->role === 'guru') {
+            $rules['education_level'] = 'nullable|string';
+        } else {
+            $rules['position'] = 'nullable|string';
+            $rules['level_id'] = 'nullable|exists:levels,id';
+            $rules['department'] = 'nullable|string';
+        }
+
+        $this->validate($rules);
+
+        DB::transaction(function () {
+            $userData = [
+                'name' => $this->name,
+                'email' => $this->email,
+                'role' => $this->role,
+            ];
+
+            if ($this->password) {
+                $userData['password'] = Hash::make($this->password);
+            }
+
+            if ($this->editingUser) {
+                $this->editingUser->update($userData);
+                $user = $this->editingUser;
+            } else {
+                $user = User::create($userData);
+            }
+
+            $profileData = [
+                'nip' => $this->nip,
+                'phone' => $this->phone,
+                'address' => $this->address,
+            ];
+
+            $profileType = $this->role === 'guru' ? TeacherProfile::class : StaffProfile::class;
+            
+            if ($this->role === 'guru') {
+                $profileData['education_level'] = $this->education_level;
+            } else {
+                $profileData['position'] = $this->position;
+                $profileData['level_id'] = $this->level_id ?: null;
+                $profileData['department'] = $this->department;
+            }
+
+            $currentProfile = $user->profile;
+            
+            if ($currentProfile && $currentProfile->profileable_type === $profileType) {
+                $currentProfile->profileable->update($profileData);
+            } else {
+                if ($currentProfile) {
+                    $currentProfile->profileable->delete();
+                    $currentProfile->delete();
+                }
+
+                $profileable = $profileType::create($profileData);
+                $user->profiles()->create([
+                    'profileable_id' => $profileable->id,
+                    'profileable_type' => $profileType,
+                ]);
+            }
+        });
+
+        $this->ptkModal = false;
+        session()->flash('success', __('Data PTK berhasil disimpan.'));
+    }
+
     public function delete(User $user): void
     {
         DB::transaction(function () use ($user) {
-            $profile = $user->profile;
-            if ($profile) {
-                $profile->profileable?->delete();
-                $profile->delete();
+            if ($user->profile) {
+                $user->profile->profileable->delete();
+                $user->profile->delete();
             }
             $user->delete();
         });
-        $this->success('Data PTK berhasil dihapus.');
+        session()->flash('success', __('Data PTK berhasil dihapus.'));
     }
 
     public function with(): array
     {
-        $users = User::with([
-            'profile.profileable' => function ($morph) {
-                $morph->morphWith([
-                    StaffProfile::class => ['level'],
-                ]);
-            }
-        ])
-            ->whereIn('role', ['guru', 'staf'])
-            ->when($this->search, function($q) {
-                $q->where('name', 'like', "%{$this->search}%")
-                  ->orWhere('email', 'like', "%{$this->search}%");
-            })
-            ->latest()
-            ->paginate(10);
-
         return [
-            'users' => $users,
-            'levels' => Level::all(),
+            'users' => User::query()
+                ->whereIn('role', ['guru', 'staf'])
+                ->with(['profile.profileable'])
+                ->when($this->search, function ($query) {
+                    $query->where('name', 'like', '%' . $this->search . '%')
+                        ->orWhere('email', 'like', '%' . $this->search . '%');
+                })
+                ->latest()
+                ->paginate(10),
+            'levels' => Level::orderBy('name')->get()->map(fn($l) => ['id' => $l->id, 'name' => $l->name]),
         ];
     }
 }; ?>
 
-<div class="p-6">
-    <x-header title="Manajemen PTK" subtitle="Pendidik dan Tenaga Kependidikan (Guru & Staf).">
+<div class="p-6 space-y-6 text-slate-900 dark:text-white">
+    <x-ui.header :title="__('Manajemen PTK')" :subtitle="__('Pendidik dan Tenaga Kependidikan (Guru & Staf).')">
         <x-slot:actions>
-            <x-input wire:model.live.debounce.300ms="search" placeholder="Cari ptk..." icon="o-magnifying-glass" class="w-64" clearable />
-            <x-button label="Tambah PTK" icon="o-plus" wire:click="create" class="btn-primary" />
+            <div class="flex items-center gap-3">
+                <x-ui.input wire:model.live.debounce.300ms="search" :placeholder="__('Cari ptk...')" icon="o-magnifying-glass" sm class="w-64" clearable />
+                <x-ui.button :label="__('Tambah PTK')" icon="o-plus" wire:click="create" class="btn-primary" />
+            </div>
         </x-slot:actions>
-    </x-header>
+    </x-ui.header>
 
-    <x-card shadow>
-        <x-table :headers="[
-            ['key' => 'name', 'label' => 'Nama / Email'],
-            ['key' => 'role_label', 'label' => 'Role / Jabatan'],
-            ['key' => 'contact', 'label' => 'Kontak'],
-            ['key' => 'actions', 'label' => 'Aksi', 'class' => 'text-right']
-        ]" :rows="$users">
+    @if (session('success'))
+        <x-ui.alert :title="__('Berhasil')" icon="o-check-circle" class="bg-emerald-50 text-emerald-800 border-emerald-100" dismissible>
+            {{ session('success') }}
+        </x-ui.alert>
+    @endif
+
+    <x-ui.card shadow padding="false">
+        <x-ui.table 
+            :headers="[
+                ['key' => 'name', 'label' => __('Nama / Email')],
+                ['key' => 'role_label', 'label' => __('Role / Jabatan')],
+                ['key' => 'contact', 'label' => __('Kontak')],
+                ['key' => 'actions', 'label' => '', 'class' => 'text-right']
+            ]" 
+            :rows="$users"
+        >
             @scope('cell_name', $user)
                 <div class="flex flex-col">
-                    <span class="font-bold">{{ $user->name }}</span>
-                    <span class="text-xs opacity-50">{{ $user->email }}</span>
+                    <span class="font-bold text-slate-900 dark:text-white">{{ $user->name }}</span>
+                    <span class="text-[10px] text-slate-400 font-mono tracking-tighter">{{ $user->email }}</span>
                 </div>
             @endscope
 
             @scope('cell_role_label', $user)
                 @php
                     $profileable = $user->profile?->profileable;
-                    $position = $user->role === 'guru' ? 'Guru / Pendidik' : ($profileable?->position ?? 'Tenaga Kependidikan');
+                    $position = $user->role === 'guru' ? __('Guru / Pendidik') : ($profileable?->position ?? __('Tenaga Kependidikan'));
                     if($user->role === 'staf' && $profileable?->level) {
                         $position .= ' (' . $profileable->level->name . ')';
                     }
                 @endphp
                 <div class="flex flex-col gap-1">
-                    <x-badge 
+                    <x-ui.badge 
                         :label="strtoupper($user->role)" 
-                        class="{{ $user->role === 'guru' ? 'badge-success' : 'badge-primary' }} badge-sm" 
+                        class="{{ $user->role === 'guru' ? 'bg-emerald-100 text-emerald-700 dark:bg-emerald-900/30 dark:text-emerald-400' : 'bg-blue-100 text-blue-700 dark:bg-blue-900/30 dark:text-blue-400' }} text-[10px] font-black" 
                     />
-                    <span class="text-[10px] uppercase opacity-60">{{ $position }}</span>
+                    <span class="text-[10px] uppercase font-bold text-slate-400 tracking-tight">{{ $position }}</span>
                 </div>
             @endscope
 
             @scope('cell_contact', $user)
                 @php $profileable = $user->profile?->profileable; @endphp
-                <div class="flex flex-col text-sm">
-                    <span>{{ $profileable->phone ?? '-' }}</span>
-                    <span class="text-xs opacity-50 truncate max-w-[200px]">{{ $profileable->address ?? '-' }}</span>
+                <div class="flex flex-col">
+                    <span class="text-sm font-medium text-slate-700 dark:text-slate-300 font-mono italic">{{ $profileable->phone ?? '-' }}</span>
+                    <span class="text-[10px] text-slate-400 truncate max-w-[200px]">{{ $profileable->address ?? '-' }}</span>
                 </div>
             @endscope
 
             @scope('cell_actions', $user)
                 <div class="flex justify-end gap-1">
-                    <x-button icon="o-pencil-square" wire:click="edit({{ $user->id }})" ghost sm tooltip="Edit" />
-                    <x-button 
+                    <x-ui.button icon="o-pencil-square" wire:click="edit({{ $user->id }})" ghost sm />
+                    <x-ui.button 
                         icon="o-trash" 
-                        wire:confirm="Yakin ingin menghapus data ini?"
+                        class="text-red-500 dark:text-red-400 hover:bg-red-50 dark:hover:bg-red-900/10" 
+                        wire:confirm="{{ __('Yakin ingin menghapus data ini?') }}"
                         wire:click="delete({{ $user->id }})"
-                        ghost sm class="text-error" 
-                        tooltip="Hapus" 
+                        ghost sm 
                     />
                 </div>
             @endscope
-        </x-table>
+        </x-ui.table>
 
-        <div class="mt-4">
-            {{ $users->links() }}
-        </div>
-    </x-card>
+        @if(collect($users)->isEmpty())
+            <div class="py-12 text-center text-slate-400 italic text-sm">
+                {{ __('Belum ada data PTK yang ditemukan.') }}
+            </div>
+        @endif
+    </x-ui.card>
 
-    <x-modal wire:model="ptkModal" class="backdrop-blur">
-        <x-header :title="$editingUser ? 'Edit PTK' : 'Tambah PTK'" subtitle="Isi informasi akun dan data profil PTK." separator />
+    <div class="mt-4">
+        {{ $users->links() }}
+    </div>
 
-        <form wire:submit="save">
-            <div class="grid grid-cols-1 md:grid-cols-2 gap-6 h-[50vh] overflow-y-auto pr-2 custom-scrollbar">
-                <div class="space-y-4">
-                    <div class="font-bold border-b pb-1 text-sm opacity-70 italic">Akun & Identitas</div>
-                    <x-input wire:model="name" label="Nama Lengkap" />
-                    <x-input wire:model="email" label="Email" type="email" />
-                    <x-input wire:model="password" label="Password {{ $editingUser ? '(Kosongkan jika tidak diubah)' : '' }}" type="password" />
-                    <x-select 
+    <x-ui.modal wire:model="ptkModal" persistent>
+        <x-ui.header :title="$editingUser ? __('Edit PTK') : __('Tambah PTK')" :subtitle="__('Isi informasi akun dan data profil PTK.')" separator />
+
+        <form wire:submit="save" class="space-y-6">
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-8 max-h-[60vh] overflow-y-auto pr-4 custom-scrollbar">
+                <div class="space-y-5">
+                    <div class="text-[11px] font-black uppercase text-slate-400 tracking-widest border-b border-slate-100 dark:border-slate-800 pb-2">{{ __('Akun & Identitas') }}</div>
+                    <x-ui.input wire:model="name" :label="__('Nama Lengkap')" required />
+                    <x-ui.input wire:model="email" :label="__('Email')" type="email" required />
+                    <x-ui.input wire:model="password" :label="$editingUser ? __('Password (Kosongkan jika tidak diubah)') : __('Password')" type="password" :required="!$editingUser" />
+                    <x-ui.select 
                         wire:model.live="role" 
-                        label="Status PTK" 
+                        :label="__('Status PTK')" 
                         :options="[
-                            ['id' => 'guru', 'name' => 'Pendidik (Guru)'],
-                            ['id' => 'staf', 'name' => 'Tenaga Kependidikan (Staf)'],
+                            ['id' => 'guru', 'name' => __('Pendidik (Guru)')],
+                            ['id' => 'staf', 'name' => __('Tenaga Kependidikan (Staf)')],
                         ]" 
+                        required
                     />
-                    <x-input wire:model="nip" label="NIP / No. Pegawai" placeholder="Optional" />
+                    <x-ui.input wire:model="nip" :label="__('NIP / No. Pegawai')" :placeholder="__('Optional')" />
                 </div>
 
-                <div class="space-y-4">
-                    <div class="font-bold border-b pb-1 text-sm opacity-70 italic">Detail Profil</div>
-                    <x-input wire:model="phone" label="No. Telepon" icon="o-phone" />
+                <div class="space-y-5">
+                    <div class="text-[11px] font-black uppercase text-slate-400 tracking-widest border-b border-slate-100 dark:border-slate-800 pb-2">{{ __('Detail Profil') }}</div>
+                    <x-ui.input wire:model="phone" :label="__('No. Telepon')" icon="o-phone" />
                     
                     @if($role === 'guru')
-                        <x-input wire:model="education_level" label="Pendidikan Terakhir" />
+                        <x-ui.input wire:model="education_level" :label="__('Pendidikan Terakhir')" />
                     @else
-                        <x-select 
+                        <x-ui.select 
                             wire:model.live="position" 
-                            label="Jabatan" 
-                            placeholder="Pilih Jabatan"
+                            :label="__('Jabatan')" 
+                            :placeholder="__('Pilih Jabatan')"
                             :options="[
-                                ['id' => 'Kepala PKBM', 'name' => 'Kepala PKBM'],
-                                ['id' => 'Kepala Sekolah', 'name' => 'Kepala Sekolah (Jenjang)'],
-                                ['id' => 'Bendahara', 'name' => 'Bendahara'],
-                                ['id' => 'Administrasi', 'name' => 'Administrasi / Operator'],
-                                ['id' => 'Lainnya', 'name' => 'Lainnya'],
+                                ['id' => 'Kepala PKBM', 'name' => __('Kepala PKBM')],
+                                ['id' => 'Kepala Sekolah', 'name' => __('Kepala Sekolah (Jenjang)')],
+                                ['id' => 'Bendahara', 'name' => __('Bendahara')],
+                                ['id' => 'Administrasi', 'name' => __('Administrasi / Operator')],
+                                ['id' => 'Lainnya', 'name' => __('Lainnya')],
                             ]"
                         />
 
                         @if($position === 'Kepala Sekolah')
-                            <x-select 
+                            <x-ui.select 
                                 wire:model="level_id" 
-                                label="Jenjang" 
-                                placeholder="Pilih Jenjang"
+                                :label="__('Jenjang')" 
+                                :placeholder="__('Pilih Jenjang')"
                                 :options="$levels"
                             />
                         @endif
 
-                        <x-input wire:model="department" label="Bagian / Departemen" />
+                        <x-ui.input wire:model="department" :label="__('Bagian / Departemen')" />
                     @endif
 
-                    <x-textarea wire:model="address" label="Alamat Lengkap" rows="3" />
+                    <x-ui.textarea wire:model="address" :label="__('Alamat Lengkap')" rows="3" />
                 </div>
             </div>
 
-            <x-slot:actions>
-                <x-button label="Batal" wire:click="$set('ptkModal', false)" />
-                <x-button label="Simpan" type="submit" class="btn-primary" spinner="save" />
-            </x-slot:actions>
+            <div class="flex justify-end gap-2 pt-4 border-t border-slate-100 dark:border-slate-800">
+                <x-ui.button :label="__('Batal')" ghost @click="$set('ptkModal', false)" />
+                <x-ui.button :label="__('Simpan')" type="submit" class="btn-primary" spinner="save" />
+            </div>
         </form>
-    </x-modal>
+    </x-ui.modal>
 </div>

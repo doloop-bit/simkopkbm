@@ -24,7 +24,7 @@ test('student name and photo are clickable to view details', function () {
         'profileable_type' => StudentProfile::class,
     ]);
 
-    Volt::test('students.index')
+    Volt::test('admin.data-master.students.index')
         ->actingAs($admin)
         ->assertSee('Test Student')
         ->call('viewDetails', $student->id)
@@ -43,7 +43,7 @@ test('edit button opens student modal correctly', function () {
         'profileable_type' => StudentProfile::class,
     ]);
 
-    Volt::test('students.index')
+    Volt::test('admin.data-master.students.index')
         ->actingAs($admin)
         ->call('edit', $student->id)
         ->assertDispatched('open-modal', 'student-modal')
@@ -63,7 +63,7 @@ test('periodic button opens periodic modal correctly', function () {
         'profileable_type' => StudentProfile::class,
     ]);
 
-    Volt::test('students.index')
+    Volt::test('admin.data-master.students.index')
         ->actingAs($admin)
         ->call('openPeriodic', $student->id)
         ->assertDispatched('open-modal', 'periodic-modal')
@@ -92,7 +92,7 @@ test('detail modal shows complete student information', function () {
         'profileable_type' => StudentProfile::class,
     ]);
 
-    Volt::test('students.index')
+    Volt::test('admin.data-master.students.index')
         ->actingAs($admin)
         ->call('viewDetails', $student->id)
         ->assertSet('viewing.id', $student->id)
@@ -116,7 +116,7 @@ test('modals do not overlap', function () {
         'profileable_type' => StudentProfile::class,
     ]);
 
-    $component = Volt::test('students.index')
+    $component = Volt::test('admin.data-master.students.index')
         ->actingAs($admin);
 
     // Open detail modal

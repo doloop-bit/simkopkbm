@@ -126,84 +126,101 @@ new #[Layout('components.admin.layouts.app')] class extends Component {
     }
 }; ?>
 
-<div class="p-6">
-    <x-header title="Manajemen Kelas" subtitle="Kelola rombongan belajar dan wali kelas." separator>
+<div class="p-6 space-y-6 text-slate-900 dark:text-white">
+    <x-ui.header :title="__('Manajemen Kelas')" :subtitle="__('Kelola rombongan belajar dan wali kelas.')" separator>
         <x-slot:actions>
-            <x-select wire:model.live="academic_year_id" :options="$years" placeholder="Semua Tahun" class="w-48" />
-            <x-button label="Tambah Kelas" icon="o-plus" class="btn-primary" wire:click="createNew" wire:loading.attr="disabled" />
+            <div class="flex items-center gap-3">
+                <x-ui.select wire:model.live="academic_year_id" :options="$years" :placeholder="__('Semua Tahun')" sm class="w-48" />
+                <x-ui.button :label="__('Tambah Kelas')" icon="o-plus" class="btn-primary" wire:click="createNew" wire:loading.attr="disabled" />
+            </div>
         </x-slot:actions>
-    </x-header>
+    </x-ui.header>
 
-    <div class="bg-base-100 rounded-lg shadow-sm border border-base-200">
-        <table class="table">
-            <thead>
-                <tr>
-                    <th class="bg-base-200">Nama Kelas</th>
-                    <th class="bg-base-200">Jenjang</th>
-                    <th class="bg-base-200">Tingkat</th>
-                    <th class="bg-base-200">Fase</th>
-                    <th class="bg-base-200">Tahun Ajaran</th>
-                    <th class="bg-base-200">Wali Kelas</th>
-                    <th class="bg-base-200 text-right">Aksi</th>
-                </tr>
-            </thead>
-            <tbody>
-                @foreach ($classrooms as $classroom)
-                    <tr wire:key="{{ $classroom->id }}" class="hover">
-                        <td><span class="font-bold">{{ $classroom->name }}</span></td>
-                        <td><x-badge :label="$classroom->level->name" class="badge-outline badge-sm" /></td>
-                        <td class="opacity-70">{{ $classroom->class_level ? 'Kelas ' . $classroom->class_level : '-' }}</td>
-                        <td>
-                            @if($classroom->getPhase())
-                                <x-badge :label="$classroom->phase_label" class="badge-accent badge-sm" />
-                            @else
-                                <span class="opacity-30">-</span>
-                            @endif
-                        </td>
-                        <td class="opacity-70">{{ $classroom->academicYear->name }}</td>
-                        <td class="opacity-70">{{ $classroom->homeroomTeacher?->name ?? 'Belum Ditentukan' }}</td>
-                        <td class="text-right">
-                            <div class="flex justify-end gap-1">
-                                <x-button icon="o-pencil-square" wire:click="edit({{ $classroom->id }})" ghost sm wire:loading.attr="disabled" />
-                                <x-button 
-                                    icon="o-trash" 
-                                    class="text-error" 
-                                    wire:confirm="Yakin ingin menghapus kelas ini?" 
-                                    wire:click="delete({{ $classroom->id }})" 
-                                    ghost sm 
-                                />
-                            </div>
-                        </td>
-                    </tr>
-                @endforeach
-            </tbody>
-        </table>
-    </div>
+    <x-ui.card shadow padding="false">
+        <x-ui.table 
+            :headers="[
+                ['key' => 'name', 'label' => __('Nama Kelas')],
+                ['key' => 'level', 'label' => __('Jenjang')],
+                ['key' => 'class_level', 'label' => __('Tingkat')],
+                ['key' => 'phase', 'label' => __('Fase')],
+                ['key' => 'academic_year', 'label' => __('Tahun Ajaran')],
+                ['key' => 'homeroom', 'label' => __('Wali Kelas')],
+                ['key' => 'actions', 'label' => '', 'class' => 'text-right']
+            ]" 
+            :rows="$classrooms"
+        >
+            @scope('cell_name', $classroom)
+                <span class="font-bold text-slate-900 dark:text-white">{{ $classroom->name }}</span>
+            @endscope
+
+            @scope('cell_level', $classroom)
+                <x-ui.badge :label="$classroom->level->name" class="bg-slate-100 text-slate-700 dark:bg-slate-800 dark:text-slate-300 text-[10px]" />
+            @endscope
+
+            @scope('cell_class_level', $classroom)
+                <span class="text-slate-500 dark:text-slate-400 text-sm">
+                    {{ $classroom->class_level ? __('Kelas :level', ['level' => $classroom->class_level]) : '-' }}
+                </span>
+            @endscope
+
+            @scope('cell_phase', $classroom)
+                @if($classroom->getPhase())
+                    <x-ui.badge :label="$classroom->phase_label" class="bg-indigo-100 text-indigo-700 dark:bg-indigo-900/30 dark:text-indigo-400 text-[10px] font-black" />
+                @else
+                    <span class="opacity-30">-</span>
+                @endif
+            @endscope
+
+            @scope('cell_academic_year', $classroom)
+                <span class="text-slate-500 dark:text-slate-400 text-sm">{{ $classroom->academicYear->name }}</span>
+            @endscope
+
+            @scope('cell_homeroom', $classroom)
+                <div class="flex items-center gap-2">
+                    <x-ui.icon name="o-user" class="size-3.5 opacity-40" />
+                    <span class="text-slate-600 dark:text-slate-400 text-sm">
+                        {{ $classroom->homeroomTeacher?->name ?? __('Belum Ditentukan') }}
+                    </span>
+                </div>
+            @endscope
+
+            @scope('cell_actions', $classroom)
+                <div class="flex justify-end gap-1">
+                    <x-ui.button icon="o-pencil-square" wire:click="edit({{ $classroom->id }})" ghost sm wire:loading.attr="disabled" />
+                    <x-ui.button 
+                        icon="o-trash" 
+                        class="text-red-600 dark:text-red-400 hover:bg-red-50 dark:hover:bg-red-900/20" 
+                        wire:confirm="{{ __('Yakin ingin menghapus kelas ini?') }}" 
+                        wire:click="delete({{ $classroom->id }})" 
+                        ghost sm 
+                    />
+                </div>
+            @endscope
+        </x-ui.table>
+    </x-ui.card>
 
     <div class="mt-4">
         {{ $classrooms->links() }}
     </div>
 
-    <x-modal wire:model="classroomModal" class="backdrop-blur" persistent>
-        <x-header :title="$editing ? 'Edit Kelas' : 'Tambah Kelas Baru'" subtitle="Lengkapi detail rombongan belajar di bawah ini." separator />
+    <x-ui.modal wire:model="classroomModal" persistent>
+        <x-ui.header :title="$editing ? __('Edit Kelas') : __('Tambah Kelas Baru')" :subtitle="__('Lengkapi detail rombongan belajar di bawah ini.')" separator />
 
-        <form wire:submit="save">
-            <div class="space-y-4">
-                <x-input wire:model="name" label="Nama Kelas (Contoh: Kelas 1 A, Paket B Smt 1)" required />
+        <form wire:submit="save" class="space-y-6">
+            <x-ui.input wire:model="name" :label="__('Nama Kelas (Contoh: Kelas 1 A, Paket B Smt 1)')" required />
 
-                <div class="grid grid-cols-2 gap-4">
-                    <x-select wire:model.live="level_id" label="Jenjang" :options="$levels" placeholder="Pilih Jenjang" required />
-                    <x-select wire:model="class_level" label="Tingkat Kelas" :options="$classLevelOptions" placeholder="Pilih Tingkat" />
-                </div>
-
-                <x-select wire:model="academic_year_id" label="Tahun Ajaran" :options="$years" required />
-                <x-select wire:model="homeroom_teacher_id" label="Wali Kelas (Opsional)" :options="$teachers" placeholder="Pilih Wali Kelas" />
+            <div class="grid grid-cols-2 gap-4">
+                <x-ui.select wire:model.live="level_id" :label="__('Jenjang')" :options="$levels" :placeholder="__('Pilih Jenjang')" required />
+                <x-ui.select wire:model="class_level" :label="__('Tingkat Kelas')" :options="$classLevelOptions" :placeholder="__('Pilih Tingkat')" option-label="label" option-value="value" />
             </div>
 
-            <x-slot:actions>
-                <x-button label="Batal" @click="$set('classroomModal', false)" />
-                <x-button label="Simpan" type="submit" class="btn-primary" spinner="save" />
-            </x-slot:actions>
+            <x-ui.select wire:model="academic_year_id" :label="__('Tahun Ajaran')" :options="$years" required />
+            <x-ui.select wire:model="homeroom_teacher_id" :label="__('Wali Kelas (Opsional)')" :options="$teachers" :placeholder="__('Pilih Wali Kelas')" />
+
+            <div class="flex justify-end gap-2 pt-4">
+                <x-ui.button :label="__('Batal')" ghost @click="$set('classroomModal', false)" />
+                <x-ui.button :label="__('Simpan')" type="submit" class="btn-primary" spinner="save" />
+            </div>
         </form>
-    </x-modal>
+    </x-ui.modal>
 </div>

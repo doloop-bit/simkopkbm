@@ -125,95 +125,118 @@ new class extends Component {
     }
 }; ?>
 
-<div class="flex flex-col gap-6">
-    <x-header title="Manajemen Pengguna" subtitle="Kelola akun pengguna, role, dan akses sistem." separator>
+<div class="p-6 space-y-6 text-slate-900 dark:text-white">
+    <x-ui.header :title="__('Manajemen Pengguna')" :subtitle="__('Kelola akun pengguna, role, dan akses sistem.')" separator>
         <x-slot:actions>
-             <x-button label="Tambah User" icon="o-plus" class="btn-primary" wire:click="createNew" />
+             <x-ui.button :label="__('Tambah User')" icon="o-plus" class="btn-primary" wire:click="createNew" />
         </x-slot:actions>
-    </x-header>
+    </x-ui.header>
 
-    <div class="flex flex-col md:flex-row gap-4 mb-2 items-center justify-between">
+    <div class="flex flex-col md:flex-row gap-4 items-center justify-between">
         <div class="flex gap-2 w-full md:w-auto">
-            <x-input wire:model.live="search" icon="o-magnifying-glass" placeholder="Cari user..." class="w-full md:w-64" />
-            <x-select wire:model.live="role_filter" placeholder="Semua Role" class="w-full md:w-48" :options="collect($this->roles)->map(fn($v, $k) => ['id' => $k, 'name' => $v])->values()->toArray()" />
+            <x-ui.input wire:model.live="search" icon="o-magnifying-glass" :placeholder="__('Cari user...')" class="w-full md:w-64" sm />
+            <x-ui.select wire:model.live="role_filter" :placeholder="__('Semua Role')" class="w-full md:w-48" :options="collect($this->roles)->map(fn($v, $k) => ['id' => $k, 'name' => $v])->values()->toArray()" sm />
         </div>
     </div>
 
-    <div class="overflow-x-auto border rounded-xl border-zinc-200 dark:border-zinc-700 bg-white dark:bg-zinc-900 shadow-sm">
-        <table class="table">
-            <thead>
-                <tr>
-                    <th class="bg-base-200">Nama & Email</th>
-                    <th class="bg-base-200">Role</th>
-                    <th class="bg-base-200 text-center">No. HP</th>
-                    <th class="bg-base-200 text-center">Jenjang</th>
-                    <th class="bg-base-200 text-center">Status</th>
-                    <th class="bg-base-200 text-right">Aksi</th>
-                </tr>
-            </thead>
-            <tbody>
-                @foreach($users as $user)
-                    <tr class="hover">
-                        <td>
-                            <div class="flex flex-col">
-                                <span class="font-bold text-zinc-900 dark:text-white">{{ $user->name }}</span>
-                                <span class="text-xs opacity-60">{{ $user->email }}</span>
-                            </div>
-                        </td>
-                        <td class="capitalize opacity-70">
-                            {{ $this->roles[$user->role] ?? $user->role }}
-                        </td>
-                        <td class="text-center opacity-70 whitespace-nowrap">
-                            {{ $user->phone ?? '-' }}
-                        </td>
-                        <td class="text-center opacity-70">
-                            {{ $user->managedLevel->name ?? '-' }}
-                        </td>
-                        <td class="text-center">
-                            <x-badge :value="$user->is_active ? 'Aktif' : 'Non-Aktif'" class="{{ $user->is_active ? 'badge-success' : 'badge-error' }} badge-sm" />
-                        </td>
-                        <td class="text-right">
-                            <div class="flex justify-end gap-1">
-                                <x-button icon="o-pencil-square" wire:click="edit({{ $user->id }})" ghost sm />
-                                @if($user->id !== auth()->id())
-                                    <x-button icon="o-trash" class="text-error" wire:confirm="Hapus user ini?" wire:click="delete({{ $user->id }})" ghost sm />
-                                @endif
-                            </div>
-                        </td>
-                    </tr>
-                @endforeach
-            </tbody>
-        </table>
-    </div>
+    @if (session('success'))
+        <x-ui.alert :title="__('Berhasil')" icon="o-check-circle" class="bg-emerald-50 text-emerald-800 border-emerald-100" dismissible>
+            {{ session('success') }}
+        </x-ui.alert>
+    @endif
+
+    <x-ui.card shadow padding="false">
+        <x-ui.table 
+            :headers="[
+                ['key' => 'name', 'label' => __('Nama & Email')],
+                ['key' => 'role', 'label' => __('Role')],
+                ['key' => 'phone', 'label' => __('No. HP')],
+                ['key' => 'managed_level_id', 'label' => __('Jenjang')],
+                ['key' => 'is_active', 'label' => __('Status')],
+                ['key' => 'actions', 'label' => '', 'class' => 'text-right']
+            ]" 
+            :rows="$users"
+        >
+            @scope('cell_name', $user)
+                <div class="flex flex-col">
+                    <span class="font-bold text-slate-900 dark:text-white">{{ $user->name }}</span>
+                    <span class="text-[10px] text-slate-400 font-mono tracking-tighter">{{ $user->email }}</span>
+                </div>
+            @endscope
+
+            @scope('cell_role', $user)
+                <x-ui.badge :label="$this->roles[$user->role] ?? $user->role" class="bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-400 text-[10px] font-bold" />
+            @endscope
+
+            @scope('cell_phone', $user)
+                <span class="text-sm text-slate-600 dark:text-slate-400 font-mono italic">
+                    {{ $user->phone ?? '-' }}
+                </span>
+            @endscope
+
+            @scope('cell_managed_level_id', $user)
+                <span class="text-xs text-slate-500 font-medium">
+                    {{ $user->managedLevel->name ?? '-' }}
+                </span>
+            @endscope
+
+            @scope('cell_is_active', $user)
+                @if($user->is_active)
+                    <x-ui.badge :label="__('Aktif')" class="bg-emerald-100 text-emerald-700 dark:bg-emerald-900/30 dark:text-emerald-400 text-[10px] font-black" />
+                @else
+                    <x-ui.badge :label="__('Non-Aktif')" class="bg-rose-100 text-rose-700 dark:bg-rose-900/30 dark:text-rose-400 text-[10px] font-black" />
+                @endif
+            @endscope
+
+            @scope('cell_actions', $user)
+                <div class="flex justify-end gap-1">
+                    <x-ui.button icon="o-pencil-square" wire:click="edit({{ $user->id }})" ghost sm />
+                    @if($user->id !== auth()->id())
+                        <x-ui.button 
+                            icon="o-trash" 
+                            class="text-red-500 dark:text-red-400 hover:bg-red-50 dark:hover:bg-red-900/10" 
+                            wire:confirm="{{ __('Hapus user ini?') }}" 
+                            wire:click="delete({{ $user->id }})" 
+                            ghost sm 
+                        />
+                    @endif
+                </div>
+            @endscope
+        </x-ui.table>
+
+        @if(collect($users)->isEmpty())
+            <div class="py-12 text-center text-slate-400 italic text-sm">
+                {{ __('Belum ada data pengguna.') }}
+            </div>
+        @endif
+    </x-ui.card>
     
     <div class="mt-4">
         {{ $users->links() }}
     </div>
 
-    <x-modal wire:model="userModal" class="backdrop-blur">
-        <x-header :title="$editing ? 'Edit User' : 'Tambah User Baru'" separator />
+    <x-ui.modal wire:model="userModal" persistent>
+        <x-ui.header :title="$editing ? __('Edit User') : __('Tambah User Baru')" separator />
         
-        <form wire:submit="save">
-            <div class="grid grid-cols-1 gap-4">
-                <x-input wire:model="name" label="Nama Lengkap" required />
-                <x-input wire:model="email" type="email" label="Email Address" required />
-                <x-input wire:model="phone" type="tel" label="No. HP / WhatsApp" placeholder="08xxxxxxxx" />
-                
-                <x-select wire:model.live="role" label="Role / Peran" :options="collect($this->roles)->map(fn($v, $k) => ['id' => $k, 'name' => $v])->values()->toArray()" />
+        <form wire:submit="save" class="space-y-6">
+            <x-ui.input wire:model="name" :label="__('Nama Lengkap')" required />
+            <x-ui.input wire:model="email" type="email" :label="__('Email Address')" required />
+            <x-ui.input wire:model="phone" type="tel" :label="__('No. HP / WhatsApp')" :placeholder="__('08xxxxxxxx')" />
+            
+            <x-ui.select wire:model.live="role" :label="__('Role / Peran')" :options="collect($this->roles)->map(fn($v, $k) => ['id' => $k, 'name' => $v])->values()->toArray()" />
 
-                @if(in_array($role, ['bendahara', 'kepsek']))
-                    <x-select wire:model="managed_level_id" label="Kelola Jenjang" placeholder="Pilih Jenjang" :options="$levels" />
-                @endif
-                
-                <x-input wire:model="password" type="password" label="{{ $editing ? 'Password (Kosongkan jika tidak diubah)' : 'Password' }}" :required="!$editing" />
-                
-                <x-checkbox wire:model="is_active" label="Status Aktif" />
+            @if(in_array($role, ['bendahara', 'kepsek']))
+                <x-ui.select wire:model="managed_level_id" :label="__('Kelola Jenjang')" :placeholder="__('Pilih Jenjang')" :options="$levels" />
+            @endif
+            
+            <x-ui.input wire:model="password" type="password" :label="$editing ? __('Password (Kosongkan jika tidak diubah)') : __('Password')" :required="!$editing" />
+            
+            <x-ui.checkbox wire:model="is_active" :label="__('Status Aktif')" />
+
+            <div class="flex justify-end gap-2 pt-4">
+                <x-ui.button :label="__('Batal')" ghost @click="$set('userModal', false)" />
+                <x-ui.button :label="__('Simpan')" type="submit" class="btn-primary" spinner="save" />
             </div>
-
-            <x-slot:actions>
-                <x-button label="Batal" @click="$set('userModal', false)" />
-                <x-button label="Simpan" type="submit" class="btn-primary" spinner="save" />
-            </x-slot:actions>
         </form>
-    </x-modal>
+    </x-ui.modal>
 </div>

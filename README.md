@@ -49,7 +49,7 @@ Built with the latest Laravel 12 ecosystem, it focuses on ease of use for teache
 
 ## 🛠️ Tech Stack
 
-- **Backend**: [Laravel 12](https://laravel.com), [Livewire 4](https://livewire.laravel.com), [Volt](https://livewire.laravel.com/docs/volt), [Fortify](https://laravel.com/docs/fortify)
+- **Backend**: [Laravel 12](https://laravel.com), [Livewire 4](https://livewire.laravel.com), [Fortify](https://laravel.com/docs/fortify)
 - **Frontend**: [Tailwind CSS 4](https://tailwindcss.com), [Flux UI](https://fluxui.dev), [TallStack UI](https://tallstackui.com), [Alpine.js](https://alpinejs.dev)
 - **Tooling**: [Vite](https://vitejs.dev), [Pest](https://pestphp.com) (Testing), [Laravel Pint](https://laravel.com/docs/pint)
 - **Infrastructure**: SQLite (Local), MySQL (Production), GitHub Actions (Autodeploy to Hostinger)

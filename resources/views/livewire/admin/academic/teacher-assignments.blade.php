@@ -100,112 +100,123 @@ new #[Layout('components.admin.layouts.app')] class extends Component {
     }
 }; ?>
 
-<div class="p-6">
-    <x-header title="Penugasan Guru" subtitle="Atur penugasan guru untuk mata pelajaran dan kelas." separator>
+<div class="p-6 space-y-6 text-slate-900 dark:text-white">
+    <x-ui.header :title="__('Penugasan Guru')" :subtitle="__('Atur penugasan guru untuk mata pelajaran dan kelas.')" separator>
         <x-slot:actions>
-            <x-select wire:model.live="academic_year_id" :options="$years" placeholder="Semua Tahun" class="w-48" />
-            <x-select wire:model.live="classroom_id" :options="$classrooms" placeholder="Semua Kelas" class="w-48" />
-            <x-button label="Tambah Penugasan" icon="o-plus" class="btn-primary" wire:click="createNew" />
+            <div class="flex items-center gap-3">
+                <x-ui.select wire:model.live="academic_year_id" :options="$years" :placeholder="__('Tahun Ajaran')" sm class="w-40" />
+                <x-ui.select wire:model.live="classroom_id" :options="$classrooms" :placeholder="__('Semua Kelas')" sm class="w-48" />
+                <x-ui.button :label="__('Tambah Penugasan')" icon="o-plus" class="btn-primary" wire:click="createNew" />
+            </div>
         </x-slot:actions>
-    </x-header>
+    </x-ui.header>
 
     @if (session('success'))
-        <x-alert title="Berhasil" icon="o-check-circle" class="alert-success mb-6" dismissible>
+        <x-ui.alert :title="__('Berhasil')" icon="o-check-circle" class="bg-emerald-50 text-emerald-800 border-emerald-100 mb-6" dismissible>
             {{ session('success') }}
-        </x-alert>
+        </x-ui.alert>
     @endif
 
-    <div class="bg-base-100 rounded-xl shadow-sm border border-base-200 overflow-hidden">
-        <table class="table">
-            <thead>
-                <tr>
-                    <th class="bg-base-200">Guru</th>
-                    <th class="bg-base-200">Kelas</th>
-                    <th class="bg-base-200">Mata Pelajaran</th>
-                    <th class="bg-base-200">Tipe</th>
-                    <th class="bg-base-200 text-right">Aksi</th>
-                </tr>
-            </thead>
-            <tbody>
-                @forelse ($assignments as $assignment)
-                    <tr wire:key="{{ $assignment->id }}" class="hover">
-                        <td class="font-bold">
-                            {{ $assignment->teacher->name }}
-                        </td>
-                        <td class="opacity-70 text-sm">
-                            {{ $assignment->classroom->name }} ({{ $assignment->classroom->academicYear->name }})
-                        </td>
-                        <td class="opacity-70 text-sm">
-                            {{ $assignment->subject?->name ?? '-' }}
-                        </td>
-                        <td>
-                            <x-badge 
-                                :label="match($assignment->type) {
-                                    'class_teacher' => 'Guru Kelas',
-                                    'subject_teacher' => 'Guru Mapel',
-                                    'homeroom' => 'Wali Kelas',
-                                    default => $assignment->type
-                                }" 
-                                class="badge-outline badge-sm" 
-                            />
-                        </td>
-                        <td class="text-right">
-                            <div class="flex justify-end gap-1">
-                                <x-button icon="o-pencil-square" wire:click="edit({{ $assignment->id }})" ghost sm />
-                                <x-button 
-                                    icon="o-trash" 
-                                    class="text-error" 
-                                    wire:confirm="Yakin ingin menghapus penugasan ini?" 
-                                    wire:click="delete({{ $assignment->id }})" 
-                                    ghost sm 
-                                />
-                            </div>
-                        </td>
-                    </tr>
-                @empty
-                    <tr>
-                        <td colspan="5" class="text-center py-12 opacity-40 italic">
-                            Belum ada penugasan guru yang ditemukan.
-                        </td>
-                    </tr>
-                @endforelse
-            </tbody>
-        </table>
-    </div>
-
-    <x-modal wire:model="assignmentModal" class="backdrop-blur">
-        <x-header :title="$editing ? 'Edit Penugasan' : 'Tambah Penugasan Baru'" subtitle="Lengkapi detail penugasan guru di bawah ini." separator />
-
-        <form wire:submit="save">
-            <div class="space-y-4">
-                <div class="grid grid-cols-2 gap-4">
-                    <x-select wire:model="academic_year_id" label="Tahun Ajaran" :options="$years" required />
-                    <x-select wire:model.live="classroom_id" label="Kelas" :options="Classroom::where('academic_year_id', $academic_year_id)->get()" placeholder="Pilih Kelas" required />
+    <x-ui.card shadow padding="false">
+        <x-ui.table 
+            :headers="[
+                ['key' => 'teacher', 'label' => __('Guru')],
+                ['key' => 'classroom', 'label' => __('Kelas')],
+                ['key' => 'subject', 'label' => __('Mata Pelajaran')],
+                ['key' => 'type', 'label' => __('Tipe')],
+                ['key' => 'actions', 'label' => '', 'class' => 'text-right']
+            ]" 
+            :rows="$assignments"
+        >
+            @scope('cell_teacher', $assignment)
+                <div class="flex flex-col">
+                    <span class="font-bold text-slate-900 dark:text-white">{{ $assignment->teacher->name }}</span>
+                    <span class="text-[10px] text-slate-400 font-mono tracking-tighter">{{ $assignment->teacher->email }}</span>
                 </div>
+            @endscope
 
-                <x-select wire:model="teacher_id" label="Guru" :options="$teachers" placeholder="Pilih Guru" required />
+            @scope('cell_classroom', $assignment)
+                <div class="flex flex-col">
+                    <span class="text-sm font-medium">{{ $assignment->classroom->name }}</span>
+                    <span class="text-[10px] text-slate-400">{{ $assignment->classroom->academicYear->name }}</span>
+                </div>
+            @endscope
 
-                <div class="space-y-2">
-                    <div class="text-sm font-medium">Tipe Penugasan</div>
-                    <x-radio 
-                        wire:model.live="type" 
-                        :options="[
-                            ['id' => 'subject_teacher', 'label' => 'Guru Mata Pelajaran'],
-                            ['id' => 'class_teacher', 'label' => 'Guru Kelas'],
-                            ['id' => 'homeroom', 'label' => 'Wali Kelas'],
-                        ]"
+            @scope('cell_subject', $assignment)
+                <span class="text-sm text-slate-600 dark:text-slate-400">
+                    {{ $assignment->subject?->name ?? '-' }}
+                </span>
+            @endscope
+
+            @scope('cell_type', $assignment)
+                <x-ui.badge 
+                    :label="match($assignment->type) {
+                        'class_teacher' => __('Guru Kelas'),
+                        'subject_teacher' => __('Guru Mapel'),
+                        'homeroom' => __('Wali Kelas'),
+                        default => $assignment->type
+                    }" 
+                    class="{{ match($assignment->type) {
+                        'class_teacher' => 'bg-emerald-50 text-emerald-700 dark:bg-emerald-900/20 dark:text-emerald-400',
+                        'subject_teacher' => 'bg-blue-50 text-blue-700 dark:bg-blue-900/20 dark:text-blue-400',
+                        'homeroom' => 'bg-amber-50 text-amber-700 dark:bg-amber-900/20 dark:text-amber-400',
+                        default => 'bg-slate-100'
+                    } }} text-[10px] font-bold" 
+                />
+            @endscope
+
+            @scope('cell_actions', $assignment)
+                <div class="flex justify-end gap-1">
+                    <x-ui.button icon="o-pencil-square" wire:click="edit({{ $assignment->id }})" ghost sm />
+                    <x-ui.button 
+                        icon="o-trash" 
+                        class="text-red-500 dark:text-red-400 hover:bg-red-50 dark:hover:bg-red-900/10" 
+                        wire:confirm="{{ __('Yakin ingin menghapus penugasan ini?') }}" 
+                        wire:click="delete({{ $assignment->id }})" 
+                        ghost sm 
                     />
                 </div>
+            @endscope
+        </x-ui.table>
 
-                @if($type === 'subject_teacher')
-                    <x-select wire:model="subject_id" label="Mata Pelajaran" :options="$subjects" placeholder="Pilih Mata Pelajaran" required />
-                @endif
+        @if(collect($assignments)->isEmpty())
+            <div class="py-12 text-center text-slate-400 italic text-sm">
+                {{ __('Belum ada penugasan guru yang ditemukan.') }}
+            </div>
+        @endif
+    </x-ui.card>
+
+    <x-ui.modal wire:model="assignmentModal" persistent>
+        <x-ui.header :title="$editing ? __('Edit Penugasan') : __('Tambah Penugasan Baru')" :subtitle="__('Lengkapi detail penugasan guru di bawah ini.')" separator />
+
+        <form wire:submit="save" class="space-y-6">
+            <div class="grid grid-cols-2 gap-4">
+                <x-ui.select wire:model="academic_year_id" :label="__('Tahun Ajaran')" :options="$years" required />
+                <x-ui.select wire:model.live="classroom_id" :label="__('Kelas')" :options="App\Models\Classroom::where('academic_year_id', $academic_year_id)->get()" :placeholder="__('Pilih Kelas')" required />
             </div>
 
-            <x-slot:actions>
-                <x-button label="Batal" @click="$set('assignmentModal', false)" />
-                <x-button label="Simpan" type="submit" class="btn-primary" spinner="save" />
-            </x-slot:actions>
+            <x-ui.select wire:model="teacher_id" :label="__('Guru')" :options="$teachers" :placeholder="__('Pilih Guru')" required />
+
+            <div class="space-y-3">
+                <div class="text-sm font-bold text-slate-900 dark:text-white">{{ __('Tipe Penugasan') }}</div>
+                <x-ui.radio 
+                    wire:model.live="type" 
+                    :options="[
+                        ['id' => 'subject_teacher', 'label' => __('Guru Mata Pelajaran')],
+                        ['id' => 'class_teacher', 'label' => __('Guru Kelas')],
+                        ['id' => 'homeroom', 'label' => __('Wali Kelas')],
+                    ]"
+                />
+            </div>
+
+            @if($type === 'subject_teacher')
+                <x-ui.select wire:model="subject_id" :label="__('Mata Pelajaran')" :options="$subjects" :placeholder="__('Pilih Mata Pelajaran')" required />
+            @endif
+
+            <div class="flex justify-end gap-2 pt-4">
+                <x-ui.button :label="__('Batal')" ghost @click="$set('assignmentModal', false)" />
+                <x-ui.button :label="__('Simpan')" type="submit" class="btn-primary" spinner="save" />
+            </div>
         </form>
-    </x-modal>
+    </x-ui.modal>
 </div>

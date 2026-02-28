@@ -118,111 +118,111 @@ new #[Layout('components.admin.layouts.app')] class extends Component {
     }
 }; ?>
 
-<div class="p-6">
-    <x-header title="Ekstrakurikuler" subtitle="Kelola daftar kegiatan ekstrakurikuler untuk siswa." separator>
+<div class="p-6 space-y-6 text-slate-900 dark:text-white">
+    <x-ui.header :title="__('Ekstrakurikuler')" :subtitle="__('Kelola daftar kegiatan ekstrakurikuler untuk siswa.')" separator>
         <x-slot:actions>
-             <x-button label="Tambah Ekskul" icon="o-plus" class="btn-primary" wire:click="createNew" wire:loading.attr="disabled" />
+             <x-ui.button :label="__('Tambah Ekskul')" icon="o-plus" class="btn-primary" wire:click="createNew" wire:loading.attr="disabled" />
         </x-slot:actions>
-    </x-header>
+    </x-ui.header>
 
-    <div class="flex flex-col md:flex-row gap-4 mb-6 items-center justify-between">
+    <div class="flex flex-col md:flex-row gap-4 items-center justify-between">
         <div class="flex flex-col md:flex-row flex-1 gap-4 w-full">
-            <x-input wire:model.live.debounce.300ms="search" placeholder="Cari nama ekskul atau pembina..." icon="o-magnifying-glass" class="w-full md:w-80" />
+            <x-ui.input wire:model.live.debounce.300ms="search" :placeholder="__('Cari nama ekskul atau pembina...')" icon="o-magnifying-glass" class="w-full md:w-80" />
             
-            <x-select wire:model.live="filterLevelId" placeholder="Semua Jenjang" class="w-full md:w-64" :options="$levels" />
+            <x-ui.select wire:model.live="filterLevelId" :placeholder="__('Semua Jenjang')" class="w-full md:w-64" :options="$levels" sm />
         </div>
     </div>
 
     @if (session('success'))
-        <x-alert title="Berhasil" icon="o-check-circle" class="alert-success mb-6" dismissible>
+        <x-ui.alert :title="__('Berhasil')" icon="o-check-circle" class="bg-emerald-50 text-emerald-800 border-emerald-100" dismissible>
             {{ session('success') }}
-        </x-alert>
+        </x-ui.alert>
     @endif
 
-    <div class="bg-base-100 rounded-xl shadow-sm border border-base-200 overflow-hidden">
-        <table class="table">
-            <thead>
-                <tr>
-                    <th class="bg-base-200">Jenjang</th>
-                    <th class="bg-base-200">Nama Kegiatan</th>
-                    <th class="bg-base-200">Pembina</th>
-                    <th class="bg-base-200">Status</th>
-                    <th class="bg-base-200 text-right">Aksi</th>
-                </tr>
-            </thead>
-            <tbody>
-                @forelse ($activities as $activity)
-                    <tr wire:key="{{ $activity->id }}" class="hover">
-                        <td>
-                            <x-badge :label="$activity->level?->name ?? '-'" class="badge-neutral badge-sm" />
-                        </td>
-                        <td>
-                            <div class="font-bold">{{ $activity->name }}</div>
-                            @if($activity->description)
-                                <div class="text-xs opacity-60 line-clamp-1">{{ $activity->description }}</div>
-                            @endif
-                        </td>
-                        <td class="opacity-70 text-sm">
-                            {{ $activity->instructor ?: '-' }}
-                        </td>
-                        <td>
-                            <button wire:click="toggleStatus({{ $activity->id }})" class="focus:outline-none">
-                                @if($activity->is_active)
-                                    <x-badge label="Aktif" class="badge-success badge-sm" />
-                                @else
-                                    <x-badge label="Non-aktif" class="badge-error badge-sm" />
-                                @endif
-                            </button>
-                        </td>
-                        <td class="text-right">
-                            <div class="flex justify-end gap-1">
-                                <x-button icon="o-pencil-square" wire:click="edit({{ $activity->id }})" ghost sm wire:loading.attr="disabled" />
-                                <x-button 
-                                    icon="o-trash" 
-                                    class="text-error" 
-                                    wire:confirm="Yakin ingin menghapus ekstrakurikuler ini?" 
-                                    wire:click="delete({{ $activity->id }})" 
-                                    ghost sm 
-                                />
-                            </div>
-                        </td>
-                    </tr>
-                @empty
-                    <tr>
-                        <td colspan="5" class="text-center py-12 opacity-40">
-                            Belum ada data ekstrakurikuler.
-                        </td>
-                    </tr>
-                @endforelse
-            </tbody>
-        </table>
-    </div>
+    <x-ui.card shadow padding="false">
+        <x-ui.table 
+            :headers="[
+                ['key' => 'level', 'label' => __('Jenjang')],
+                ['key' => 'name', 'label' => __('Nama Kegiatan')],
+                ['key' => 'instructor', 'label' => __('Pembina')],
+                ['key' => 'is_active', 'label' => __('Status')],
+                ['key' => 'actions', 'label' => '', 'class' => 'text-right']
+            ]" 
+            :rows="$activities"
+        >
+            @scope('cell_level', $activity)
+                <x-ui.badge :label="$activity->level?->name ?? '-'" class="bg-slate-100 text-slate-600 dark:bg-slate-800 dark:text-slate-400 text-[10px]" />
+            @endscope
+
+            @scope('cell_name', $activity)
+                <div class="flex flex-col max-w-xs">
+                    <span class="font-bold text-slate-900 dark:text-white">{{ $activity->name }}</span>
+                    @if($activity->description)
+                        <span class="text-[10px] text-slate-400 line-clamp-1 italic">{{ $activity->description }}</span>
+                    @endif
+                </div>
+            @endscope
+
+            @scope('cell_instructor', $activity)
+                <span class="text-sm text-slate-600 dark:text-slate-400">
+                    {{ $activity->instructor ?: '-' }}
+                </span>
+            @endscope
+
+            @scope('cell_is_active', $activity)
+                <button wire:click="toggleStatus({{ $activity->id }})" class="focus:outline-none group">
+                    @if($activity->is_active)
+                        <x-ui.badge :label="__('Aktif')" class="bg-emerald-100 text-emerald-700 dark:bg-emerald-900/30 dark:text-emerald-400 text-[10px] font-black group-hover:brightness-110" />
+                    @else
+                        <x-ui.badge :label="__('Non-aktif')" class="bg-rose-100 text-rose-700 dark:bg-rose-900/30 dark:text-rose-400 text-[10px] font-black group-hover:brightness-110" />
+                    @endif
+                </button>
+            @endscope
+
+            @scope('cell_actions', $activity)
+                <div class="flex justify-end gap-1">
+                    <x-ui.button icon="o-pencil-square" wire:click="edit({{ $activity->id }})" ghost sm wire:loading.attr="disabled" />
+                    <x-ui.button 
+                        icon="o-trash" 
+                        class="text-red-500 dark:text-red-400 hover:bg-red-50 dark:hover:bg-red-900/10" 
+                        wire:confirm="{{ __('Yakin ingin menghapus ekstrakurikuler ini?') }}" 
+                        wire:click="delete({{ $activity->id }})" 
+                        ghost sm 
+                    />
+                </div>
+            @endscope
+        </x-ui.table>
+
+        @if(collect($activities)->isEmpty())
+            <div class="py-12 text-center text-slate-400 italic text-sm">
+                {{ __('Belum ada data ekstrakurikuler.') }}
+            </div>
+        @endif
+    </x-ui.card>
 
     <div class="mt-4">
         {{ $activities->links() }}
     </div>
 
     {{-- Activity Create/Edit Modal --}}
-    <x-modal wire:model="activityModal" class="backdrop-blur">
-        <x-header :title="$editing ? 'Edit Ekstrakurikuler' : 'Tambah Ekstrakurikuler'" subtitle="Lengkapi detail kegiatan di bawah ini." separator />
+    <x-ui.modal wire:model="activityModal" persistent>
+        <x-ui.header :title="$editing ? __('Edit Ekstrakurikuler') : __('Tambah Ekstrakurikuler')" :subtitle="__('Lengkapi detail kegiatan di bawah ini.')" separator />
 
-        <form wire:submit="save">
-            <div class="space-y-4">
-                <x-select wire:model="level_id" label="Jenjang" :options="$levels" placeholder="Pilih Jenjang" required />
+        <form wire:submit="save" class="space-y-6">
+            <x-ui.select wire:model="level_id" :label="__('Jenjang')" :options="$levels" :placeholder="__('Pilih Jenjang')" required />
 
-                <x-input wire:model="name" label="Nama Kegiatan" required placeholder="e.g. Futsal, Pramuka" />
-                
-                <x-input wire:model="instructor" label="Pembina / Pelatih" placeholder="e.g. Pak Budi Santoso" />
+            <x-ui.input wire:model="name" :label="__('Nama Kegiatan')" required :placeholder="__('e.g. Futsal, Pramuka')" />
+            
+            <x-ui.input wire:model="instructor" :label="__('Pembina / Pelatih')" :placeholder="__('e.g. Pak Budi Santoso')" />
 
-                <x-textarea wire:model="description" label="Keterangan (Opsional)" rows="3" placeholder="Deskripsi singkat kegiatan..." />
+            <x-ui.textarea wire:model="description" :label="__('Keterangan (Opsional)')" rows="3" :placeholder="__('Deskripsi singkat kegiatan...')" />
 
-                <x-checkbox wire:model="is_active" label="Kegiatan ini aktif" />
+            <x-ui.checkbox wire:model="is_active" :label="__('Kegiatan ini aktif')" />
+
+            <div class="flex justify-end gap-2 pt-4">
+                <x-ui.button :label="__('Batal')" ghost @click="$set('activityModal', false)" />
+                <x-ui.button :label="__('Simpan')" type="submit" class="btn-primary" spinner="save" />
             </div>
-
-            <x-slot:actions>
-                <x-button label="Batal" @click="$set('activityModal', false)" />
-                <x-button label="Simpan" type="submit" class="btn-primary" spinner="save" />
-            </x-slot:actions>
         </form>
-    </x-modal>
+    </x-ui.modal>
 </div>

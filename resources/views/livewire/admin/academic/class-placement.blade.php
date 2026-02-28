@@ -138,46 +138,47 @@ new #[Layout('components.admin.layouts.app')] class extends Component {
     }
 }; ?>
 
-<div class="p-6">
-    <x-header title="Penempatan Kelas" subtitle="Pindahkan siswa antar kelas secara massal." separator />
+<div class="p-6 space-y-6 text-slate-900 dark:text-white">
+    <x-ui.header :title="__('Penempatan Kelas')" :subtitle="__('Pindahkan siswa antar kelas secara massal.')" separator />
 
     @if (session('success'))
-        <x-alert title="Berhasil" icon="o-check-circle" class="alert-success mb-6" dismissible>
+        <x-ui.alert :title="__('Berhasil')" icon="o-check-circle" class="bg-emerald-50 text-emerald-800 border-emerald-100" dismissible>
             {{ session('success') }}
-        </x-alert>
+        </x-ui.alert>
     @endif
 
     @if (session('error'))
-        <x-alert title="Error" icon="o-exclamation-triangle" class="alert-error mb-6" dismissible>
+        <x-ui.alert :title="__('Error')" icon="o-exclamation-triangle" class="bg-rose-50 text-rose-800 border-rose-100" dismissible>
             {{ session('error') }}
-        </x-alert>
+        </x-ui.alert>
     @endif
 
-    <!-- Filters -->
-    <div class="grid grid-cols-1 gap-4 mb-6 md:grid-cols-2 lg:grid-cols-4">
-        <x-select wire:model.live="academic_year_id" label="Tahun Ajaran" :options="$years" placeholder="Pilih Tahun" />
-        <x-select wire:model.live="level_id" label="Jenjang" :options="$levels" placeholder="Pilih Jenjang" />
+    <div class="grid grid-cols-1 gap-4 md:grid-cols-2 lg:grid-cols-4">
+        <x-ui.select wire:model.live="academic_year_id" :label="__('Tahun Ajaran')" :options="$years" :placeholder="__('Pilih Tahun')" sm />
+        <x-ui.select wire:model.live="level_id" :label="__('Jenjang')" :options="$levels" :placeholder="__('Pilih Jenjang')" sm />
     </div>
 
     @if($academic_year_id && $level_id)
-        <div class="grid grid-cols-1 gap-6 md:grid-cols-2" 
+        <div class="grid grid-cols-1 gap-8 md:grid-cols-2 lg:gap-12" 
              x-data="{ 
                 selectedSource: [], 
                 selectedTarget: [],
                 draggingSource: false,
                 draggingTarget: false,
                 toggleSource(id) {
+                    id = id.toString();
                     if (this.selectedSource.includes(id)) {
                         this.selectedSource = this.selectedSource.filter(i => i !== id);
                     } else {
-                        this.selectedSource.push(id.toString());
+                        this.selectedSource.push(id);
                     }
                 },
                 toggleTarget(id) {
+                    id = id.toString();
                     if (this.selectedTarget.includes(id)) {
                         this.selectedTarget = this.selectedTarget.filter(i => i !== id);
                     } else {
-                        this.selectedTarget.push(id.toString());
+                        this.selectedTarget.push(id);
                     }
                 },
                 selectAllSource(ids) {
@@ -195,11 +196,13 @@ new #[Layout('components.admin.layouts.app')] class extends Component {
                     }
                 },
                 getDragDataSource(id) {
-                    if(!this.selectedSource.includes(id.toString())) this.selectedSource = [id.toString()];
+                    id = id.toString();
+                    if(!this.selectedSource.includes(id)) this.selectedSource = [id];
                     return JSON.stringify({ source: 'source', ids: this.selectedSource });
                 },
                 getDragDataTarget(id) {
-                    if(!this.selectedTarget.includes(id.toString())) this.selectedTarget = [id.toString()];
+                    id = id.toString();
+                    if(!this.selectedTarget.includes(id)) this.selectedTarget = [id];
                     return JSON.stringify({ source: 'target', ids: this.selectedTarget });
                 },
                 onDropTarget(e) {
@@ -231,122 +234,143 @@ new #[Layout('components.admin.layouts.app')] class extends Component {
              }">
 
             <!-- Panel Kiri (Sumber) -->
-            <div class="flex flex-col overflow-hidden border rounded-xl bg-base-200 border-base-300 shadow-sm">
-                <div class="p-4 border-b border-base-300 bg-base-100">
-                    <x-select wire:model.live="source_classroom_id" label="Kelas Asal">
-                        <option value="">Pilih Kelas Asal / Status Baru</option>
-                        <option value="unassigned">- Belum Ada Kelas (Siswa Baru) -</option>
-                        @foreach($classrooms as $cls)
-                            <option value="{{ $cls->id }}">{{ $cls->name }}</option>
-                        @endforeach
-                    </x-select>
+            <div class="flex flex-col space-y-4">
+                <x-ui.card shadow padding="false" class="overflow-hidden !bg-slate-50 dark:!bg-slate-800/30 border-slate-200 dark:border-slate-800">
+                    <div class="p-5 space-y-5 bg-white dark:bg-slate-900 border-b border-slate-200 dark:border-slate-800">
+                        <x-ui.select wire:model.live="source_classroom_id" :label="__('Kelas Asal')" sm>
+                            <option value="">{{ __('Pilih Kelas Asal / Status Baru') }}</option>
+                            <option value="unassigned" class="font-bold text-primary">{{ __('- Belum Ada Kelas (Siswa Baru) -') }}</option>
+                            @foreach($classrooms as $cls)
+                                <option value="{{ $cls->id }}">{{ $cls->name }}</option>
+                            @endforeach
+                        </x-ui.select>
+                        
+                        <div class="flex items-center justify-between">
+                            <x-ui.checkbox 
+                                x-on:click="selectAllSource({{ json_encode(array_column($sourceStudents, 'id')) }})" 
+                                x-bind:checked="selectedSource.length > 0 && selectedSource.length === {{ count($sourceStudents) }}"
+                                :label="__('Pilih Semua (:count)', ['count' => count($sourceStudents)])" />
+                            
+                            <x-ui.button sm x-show="selectedSource.length > 0" x-on:click="moveToTarget" class="btn-primary flex items-center gap-2">
+                                {{ __('Pindah Kanan') }} <x-ui.icon name="o-arrow-right" class="size-3" />
+                            </x-ui.button>
+                        </div>
+                    </div>
                     
-                    <div class="flex items-center justify-between mt-4">
-                        <x-checkbox 
-                            x-on:click="selectAllSource({{ json_encode(array_column($sourceStudents, 'id')) }})" 
-                            x-bind:checked="selectedSource.length > 0 && selectedSource.length === {{ count($sourceStudents) }}"
-                            label="Pilih Semua ({{ count($sourceStudents) }})" />
-                        
-                        <x-button sm x-show="selectedSource.length > 0" x-on:click="moveToTarget" class="btn-primary">
-                            Pindah Kanan <x-icon name="o-arrow-right" class="w-4 h-4 ml-1" />
-                        </x-button>
-                    </div>
-                </div>
-                
-                <div class="p-2 overflow-y-auto h-[500px]"
-                     x-on:dragover.prevent="draggingSource = true"
-                     x-on:dragleave.prevent="draggingSource = false"
-                     x-on:drop.prevent="onDropSource($event)"
-                     x-bind:class="draggingSource ? 'bg-primary/5 ring-2 ring-primary rounded-xl' : ''">
-                    <div class="space-y-2 pb-4">
-                        @if(count($sourceStudents) === 0 && $source_classroom_id)
-                            <div class="py-12 text-center opacity-40">
-                                Tidak ada siswa di kelas ini.
-                            </div>
-                        @endif
-                        
-                        @foreach($sourceStudents as $student)
-                            <div class="p-3 border rounded-xl shadow-sm flex items-center bg-base-100 border-base-300 cursor-move hover:border-primary transition-all group"
-                                 draggable="true"
-                                 x-on:dragstart="$event.dataTransfer.setData('text/plain', getDragDataSource({{ $student['id'] }}))"
-                                 x-bind:class="selectedSource.includes('{{ $student['id'] }}') ? 'ring-2 ring-primary border-primary bg-primary/5' : ''"
-                                 x-on:click="toggleSource({{ $student['id'] }})">
-                                 
-                                <x-icon name="o-bars-3" class="w-4 h-4 mr-3 opacity-30 group-hover:opacity-100" />
-                                <div class="flex-1">
-                                    <div class="font-bold text-sm">{{ $student['name'] }}</div>
-                                    <div class="text-xs opacity-60">NIS: {{ $student['nis'] ?? '-' }}</div>
+                    <div class="p-3 overflow-y-auto h-[600px] transition-all duration-300"
+                         x-on:dragover.prevent="draggingSource = true"
+                         x-on:dragleave.prevent="draggingSource = false"
+                         x-on:drop.prevent="onDropSource($event)"
+                         x-bind:class="draggingSource ? 'bg-primary/5 ring-4 ring-inset ring-primary/20' : ''">
+                        <div class="space-y-2 pb-6">
+                            @if(count($sourceStudents) === 0 && $source_classroom_id)
+                                <div class="py-24 text-center opacity-30 italic text-sm">
+                                    {{ __('Tidak ada siswa di kelas ini.') }}
                                 </div>
-                                <div x-on:click.stop>
-                                    <x-checkbox id="source-{{ $student['id'] }}" x-model="selectedSource" value="{{ $student['id'] }}" />
+                            @endif
+                            
+                            @foreach($sourceStudents as $student)
+                                <div class="p-3 rounded-2xl border flex items-center bg-white dark:bg-slate-900 border-slate-100 dark:border-slate-800 cursor-grab active:cursor-grabbing hover:border-primary transition-all group relative overflow-hidden"
+                                     draggable="true"
+                                     x-on:dragstart="$event.dataTransfer.setData('text/plain', getDragDataSource({{ $student['id'] }}))"
+                                     x-bind:class="selectedSource.includes('{{ $student['id'] }}') ? 'ring-2 ring-primary border-primary bg-primary/5' : ''"
+                                     x-on:click="toggleSource({{ $student['id'] }})">
+                                     
+                                    <div class="absolute inset-y-0 left-0 w-1 bg-primary opacity-0 group-hover:opacity-100 transition-opacity"></div>
+
+                                    <div class="size-8 rounded-xl bg-slate-50 dark:bg-slate-800 flex items-center justify-center mr-3 group-hover:bg-primary/10 transition-colors">
+                                        <x-ui.icon name="o-bars-3" class="size-4 opacity-20 group-hover:opacity-100 group-hover:text-primary transition-all" />
+                                    </div>
+                                    
+                                    <div class="flex-1">
+                                        <div class="font-bold text-sm text-slate-900 dark:text-white">{{ $student['name'] }}</div>
+                                        <div class="text-[10px] uppercase font-mono tracking-wider text-slate-400">NIS: {{ $student['nis'] ?? '-' }}</div>
+                                    </div>
+                                    
+                                    <div x-on:click.stop class="ml-2">
+                                        <x-ui.checkbox id="source-{{ $student['id'] }}" x-model="selectedSource" value="{{ $student['id'] }}" />
+                                    </div>
                                 </div>
-                            </div>
-                        @endforeach
+                            @endforeach
+                        </div>
                     </div>
-                </div>
+                </x-ui.card>
             </div>
 
             <!-- Panel Kanan (Tujuan) -->
-            <div class="flex flex-col overflow-hidden border rounded-xl bg-base-200 border-base-300 shadow-sm">
-                <div class="p-4 border-b border-base-300 bg-base-100">
-                    <x-select wire:model.live="target_classroom_id" label="Kelas Tujuan">
-                        <option value="">Pilih Kelas Tujuan</option>
-                        <option value="unassigned">- Belum Ada Kelas (Cabut Siswa) -</option>
-                        @foreach($classrooms as $cls)
-                            <option value="{{ $cls->id }}">{{ $cls->name }}</option>
-                        @endforeach
-                    </x-select>
+            <div class="flex flex-col space-y-4">
+                <x-ui.card shadow padding="false" class="overflow-hidden !bg-slate-50 dark:!bg-slate-800/30 border-slate-200 dark:border-slate-800">
+                    <div class="p-5 space-y-5 bg-white dark:bg-slate-900 border-b border-slate-200 dark:border-slate-800">
+                        <x-ui.select wire:model.live="target_classroom_id" :label="__('Kelas Tujuan')" sm>
+                            <option value="">{{ __('Pilih Kelas Tujuan') }}</option>
+                            <option value="unassigned" class="font-bold text-rose-600">{{ __('- Belum Ada Kelas (Cabut Siswa) -') }}</option>
+                            @foreach($classrooms as $cls)
+                                <option value="{{ $cls->id }}">{{ $cls->name }}</option>
+                            @endforeach
+                        </x-ui.select>
+                        
+                        <div class="flex items-center justify-between">
+                            <x-ui.checkbox 
+                                x-on:click="selectAllTarget({{ json_encode(array_column($targetStudents, 'id')) }})" 
+                                x-bind:checked="selectedTarget.length > 0 && selectedTarget.length === {{ count($targetStudents) }}"
+                                :label="__('Pilih Semua (:count)', ['count' => count($targetStudents)])" />
+                            
+                            <x-ui.button sm x-show="selectedTarget.length > 0" x-on:click="moveToSource" class="btn-primary flex items-center gap-2">
+                                <x-ui.icon name="o-arrow-left" class="size-3" /> {{ __('Pindah Kiri') }} 
+                            </x-ui.button>
+                        </div>
+                    </div>
                     
-                    <div class="flex items-center justify-between mt-4">
-                        <x-checkbox 
-                            x-on:click="selectAllTarget({{ json_encode(array_column($targetStudents, 'id')) }})" 
-                            x-bind:checked="selectedTarget.length > 0 && selectedTarget.length === {{ count($targetStudents) }}"
-                            label="Pilih Semua ({{ count($targetStudents) }})" />
-                        
-                        <x-button sm x-show="selectedTarget.length > 0" x-on:click="moveToSource" class="btn-primary">
-                            <x-icon name="o-arrow-left" class="w-4 h-4 mr-1" /> Pindah Kiri 
-                        </x-button>
-                    </div>
-                </div>
-                
-                <div class="p-2 overflow-y-auto h-[500px]"
-                     x-on:dragover.prevent="draggingTarget = true"
-                     x-on:dragleave.prevent="draggingTarget = false"
-                     x-on:drop.prevent="onDropTarget($event)"
-                     x-bind:class="draggingTarget ? 'bg-primary/5 ring-2 ring-primary rounded-xl' : ''">
-                    <div class="space-y-2 pb-4">
-                        @if(count($targetStudents) === 0 && $target_classroom_id)
-                            <div class="py-12 text-center opacity-40">
-                                Pilih / Drag siswa ke sini.
-                            </div>
-                        @endif
-                        
-                        @foreach($targetStudents as $student)
-                            <div class="p-3 border rounded-xl shadow-sm flex items-center bg-base-100 border-base-300 cursor-move hover:border-primary transition-all group"
-                                 draggable="true"
-                                 x-on:dragstart="$event.dataTransfer.setData('text/plain', getDragDataTarget({{ $student['id'] }}))"
-                                 x-bind:class="selectedTarget.includes('{{ $student['id'] }}') ? 'ring-2 ring-primary border-primary bg-primary/5' : ''"
-                                 x-on:click="toggleTarget({{ $student['id'] }})">
-                                 
-                                <x-icon name="o-bars-3" class="w-4 h-4 mr-3 opacity-30 group-hover:opacity-100" />
-                                <div class="flex-1">
-                                    <div class="font-bold text-sm">{{ $student['name'] }}</div>
-                                    <div class="text-xs opacity-60">NIS: {{ $student['nis'] ?? '-' }}</div>
+                    <div class="p-3 overflow-y-auto h-[600px] transition-all duration-300"
+                         x-on:dragover.prevent="draggingTarget = true"
+                         x-on:dragleave.prevent="draggingTarget = false"
+                         x-on:drop.prevent="onDropTarget($event)"
+                         x-bind:class="draggingTarget ? 'bg-emerald-500/5 ring-4 ring-inset ring-emerald-500/20' : ''">
+                        <div class="space-y-2 pb-6">
+                            @if(count($targetStudents) === 0 && $target_classroom_id)
+                                <div class="py-24 text-center opacity-30 italic text-sm">
+                                    {{ __('Pilih / Drag siswa ke sini.') }}
                                 </div>
-                                <div x-on:click.stop>
-                                    <x-checkbox id="target-{{ $student['id'] }}" x-model="selectedTarget" value="{{ $student['id'] }}" />
+                            @endif
+                            
+                            @foreach($targetStudents as $student)
+                                <div class="p-3 rounded-2xl border flex items-center bg-white dark:bg-slate-900 border-slate-100 dark:border-slate-800 cursor-grab active:cursor-grabbing hover:border-primary transition-all group relative overflow-hidden"
+                                     draggable="true"
+                                     x-on:dragstart="$event.dataTransfer.setData('text/plain', getDragDataTarget({{ $student['id'] }}))"
+                                     x-bind:class="selectedTarget.includes('{{ $student['id'] }}') ? 'ring-2 ring-primary border-primary bg-primary/5' : ''"
+                                     x-on:click="toggleTarget({{ $student['id'] }})">
+                                     
+                                    <div class="absolute inset-y-0 left-0 w-1 bg-emerald-500 opacity-0 group-hover:opacity-100 transition-opacity"></div>
+
+                                    <div class="size-8 rounded-xl bg-slate-50 dark:bg-slate-800 flex items-center justify-center mr-3 group-hover:bg-primary/10 transition-colors">
+                                        <x-ui.icon name="o-bars-3" class="size-4 opacity-20 group-hover:opacity-100 group-hover:text-primary transition-all" />
+                                    </div>
+
+                                    <div class="flex-1">
+                                        <div class="font-bold text-sm text-slate-900 dark:text-white">{{ $student['name'] }}</div>
+                                        <div class="text-[10px] uppercase font-mono tracking-wider text-slate-400">NIS: {{ $student['nis'] ?? '-' }}</div>
+                                    </div>
+
+                                    <div x-on:click.stop class="ml-2">
+                                        <x-ui.checkbox id="target-{{ $student['id'] }}" x-model="selectedTarget" value="{{ $student['id'] }}" />
+                                    </div>
                                 </div>
-                            </div>
-                        @endforeach
+                            @endforeach
+                        </div>
                     </div>
-                </div>
+                </x-ui.card>
             </div>
             
         </div>
     @else
-        <div class="py-20 text-center border-2 border-dashed rounded-3xl border-base-300 bg-base-200/50 mt-6 box-border">
-            <x-icon name="o-academic-cap" class="w-16 h-16 mb-4 opacity-20" />
-            <p class="text-xl font-medium opacity-50">Pilih Tahun Ajaran dan Jenjang untuk mulai memindahkan kelas siswa.</p>
+        <div class="flex flex-col items-center justify-center py-40 rounded-[3rem] border-4 border-dashed border-slate-100 dark:border-slate-800 bg-white dark:bg-slate-900 shadow-sm transition-all duration-500 group">
+            <div class="size-24 rounded-[2rem] bg-slate-50 dark:bg-slate-800 flex items-center justify-center mb-8 group-hover:scale-110 group-hover:-rotate-3 transition-all ring-8 ring-slate-100/50 dark:ring-slate-800/30">
+                <x-ui.icon name="o-academic-cap" class="size-12 text-primary opacity-20" />
+            </div>
+            <h3 class="text-2xl font-black text-slate-900 dark:text-white mb-3">{{ __('Siap Pindah Kelas?') }}</h3>
+            <p class="text-slate-400 dark:text-slate-500 text-base max-w-md text-center leading-relaxed">
+                {{ __('Pilih Tahun Ajaran dan Jenjang terlebih dahulu untuk mulai memindahkan atau menempatkan siswa pada rombongan belajar yang tepat.') }}
+            </p>
         </div>
     @endif
 </div> 

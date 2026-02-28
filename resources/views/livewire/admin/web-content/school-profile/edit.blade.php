@@ -156,206 +156,256 @@ new class extends Component {
     }
 }; ?>
 
-<div>
-    <div class="p-6">
-    <x-header title="Profil Sekolah" subtitle="Kelola informasi profil sekolah yang ditampilkan di website publik" separator />
-
+<div class="p-6 space-y-8 text-slate-900 dark:text-white pb-24 md:pb-6">
     @if (session()->has('message'))
-        <x-alert title="Sukses" icon="o-check-circle" class="alert-success mb-6">
+        <x-ui.alert :title="__('Berhasil')" icon="o-check-circle" class="bg-emerald-50 text-emerald-800 border-emerald-100" dismissible>
             {{ session('message') }}
-        </x-alert>
+        </x-ui.alert>
     @endif
 
-    <form wire:submit="save" class="space-y-8">
+    <x-ui.header :title="__('Profil Sekolah')" :subtitle="__('Kelola informasi identitas dan profil sekolah yang akan ditampilkan pada portal publik.')" separator>
+        <x-slot:actions>
+            <x-ui.button :label="__('Simpan Perubahan')" icon="o-check" class="btn-primary shadow-lg shadow-primary/20" wire:click="save" spinner="save" />
+        </x-slot:actions>
+    </x-ui.header>
+
+    <form wire:submit="save" class="space-y-8 max-w-5xl mx-auto">
         {{-- Informasi Dasar --}}
-        <x-card title="Informasi Dasar" subtitle="Informasi umum tentang sekolah" separator shadow>
-            <div class="space-y-4">
-                <x-input 
+        <x-ui.card shadow>
+            <div class="p-6 border-b border-slate-100 dark:border-slate-800">
+                <h3 class="font-black text-slate-800 dark:text-white uppercase tracking-tight text-sm italic">{{ __('Informasi Dasar & Kontak') }}</h3>
+            </div>
+            <div class="p-8 space-y-6">
+                <x-ui.input 
                     wire:model="name" 
-                    label="Nama Sekolah" 
+                    :label="__('Nama Lengkap Sekolah / Lembaga')" 
                     type="text" 
                     required 
-                    placeholder="Contoh: PKBM Harapan Bangsa"
+                    :placeholder="__('Contoh: PKBM Harapan Bangsa')"
+                    class="font-bold text-lg"
                 />
 
-                <x-textarea 
+                <x-ui.textarea 
                     wire:model="address" 
-                    label="Alamat Lengkap" 
+                    :label="__('Alamat Domisili Lengkap')" 
                     rows="3" 
                     required 
-                    placeholder="Masukkan alamat lengkap sekolah"
+                    :placeholder="__('Masukkan alamat lengkap termasuk kode pos...')"
+                    class="italic mt-1"
                 />
 
-                <div class="grid grid-cols-1 gap-4 md:grid-cols-2">
-                    <x-input 
+                <div class="grid grid-cols-1 gap-6 md:grid-cols-2">
+                    <x-ui.input 
                         wire:model="phone" 
-                        label="Nomor Telepon" 
+                        :label="__('Nomor Telepon / WhatsApp')" 
                         type="text" 
                         required 
-                        placeholder="Contoh: 021-12345678"
+                        :placeholder="__('Contoh: 021-12345678')"
+                        icon="o-phone"
                     />
 
-                    <x-input 
+                    <x-ui.input 
                         wire:model="email" 
-                        label="Email" 
+                        :label="__('Alamat Email Resmi')" 
                         type="email" 
                         required 
-                        placeholder="Contoh: info@sekolah.com"
+                        :placeholder="__('Contoh: admin@sekolah.sch.id')"
+                        icon="o-envelope"
                     />
                 </div>
 
-                <x-input 
+                <x-ui.input 
                     wire:model="operating_hours" 
-                    label="Jam Operasional" 
+                    :label="__('Jam Layanan Operasional')" 
                     type="text" 
-                    placeholder="Contoh: Senin - Jumat, 08:00 - 16:00"
+                    :placeholder="__('Contoh: Senin - Jumat, 08:00 - 15:00 WIB')"
                     icon="o-clock"
+                    class="bg-slate-50 border-none shadow-none text-sm"
                 />
             </div>
-        </x-card>
+        </x-ui.card>
 
         {{-- Logo Sekolah --}}
-        <x-card title="Logo Sekolah" subtitle="Upload logo sekolah (maksimal 5MB, format: JPEG, PNG, WebP)" separator shadow>
-            <div class="space-y-6">
+        <x-ui.card shadow>
+            <div class="p-6 border-b border-slate-100 dark:border-slate-800">
+                <h3 class="font-black text-slate-800 dark:text-white uppercase tracking-tight text-sm italic">{{ __('Identitas Visual (Logo)') }}</h3>
+            </div>
+            <div class="p-8 space-y-8">
                 @if ($currentLogoPath)
-                    <div class="flex items-start gap-4 p-4 bg-base-200 rounded-lg">
-                        <img 
-                            src="{{ Storage::url($currentLogoPath) }}" 
-                            alt="Logo Sekolah" 
-                            class="h-32 w-32 rounded-lg border border-base-300 object-contain bg-white"
-                        >
-                        <div class="flex flex-col gap-2">
-                            <span class="text-sm font-medium">Logo saat ini</span>
-                            <x-button 
+                    <div class="flex flex-col md:flex-row items-center gap-8 p-6 bg-slate-50 dark:bg-slate-900/50 rounded-3xl border border-slate-100 dark:border-slate-800 group">
+                        <div class="relative shrink-0">
+                            <img 
+                                src="{{ Storage::url($currentLogoPath) }}" 
+                                alt="Logo Sekolah" 
+                                class="h-32 w-32 rounded-2xl border border-white dark:border-slate-700 object-contain bg-white shadow-xl group-hover:scale-105 transition-transform duration-500"
+                            >
+                            <div class="absolute -right-2 -top-2 size-6 bg-emerald-500 rounded-full flex items-center justify-center border-2 border-white shadow-sm ring-4 ring-emerald-50">
+                                <x-ui.icon name="o-check" class="size-3 text-white" />
+                            </div>
+                        </div>
+                        <div class="flex-1 text-center md:text-left">
+                            <h4 class="font-black text-slate-900 dark:text-white mb-1 uppercase tracking-tight text-sm italic">{{ __('Logo Sekolah Saat Ini') }}</h4>
+                            <p class="text-[10px] text-slate-400 font-mono tracking-tighter mb-4">{{ basename($currentLogoPath) }}</p>
+                            <x-ui.button 
                                 wire:click="removeLogo" 
-                                label="Hapus Logo"
+                                :label="__('Hapus Logo Permanen')"
                                 icon="o-trash"
-                                class="btn-error btn-sm"
-                                wire:confirm="Apakah Anda yakin ingin menghapus logo?"
+                                class="btn-ghost btn-xs text-rose-500 hover:bg-rose-50 font-bold"
+                                wire:confirm="{{ __('Apakah Anda yakin ingin menghapus logo sekolah?') }}"
                             />
                         </div>
                     </div>
                 @endif
 
-                <x-file 
+                <x-ui.file 
                     wire:model="logo" 
-                    label="Upload Logo Baru" 
+                    :label="__('Ganti / Unggah Logo Baru')" 
                     accept="image/jpeg,image/jpg,image/png,image/webp"
-                    crop-after-change
+                    class="bg-white dark:bg-slate-800"
                 >
                      @if ($logo)
-                        <div class="text-sm mt-2">
-                            File dipilih: <span class="font-medium">{{ $logo->getClientOriginalName() }}</span>
+                        <div class="text-[10px] font-black italic text-indigo-600 mt-2 px-1">
+                            {{ __('File dipilih') }}: <span class="underline">{{ $logo->getClientOriginalName() }}</span>
                         </div>
                     @endif
-                </x-file>
+                </x-ui.file>
+                <p class="text-[10px] text-slate-400 italic px-1 leading-relaxed">
+                    * {{ __('Format file yang didukung: JPEG, PNG, WebP (Maksimal 5MB). Pastikan logo memiliki background transparan untuk tampilan terbaik.') }}
+                </p>
             </div>
-        </x-card>
+        </x-ui.card>
 
         {{-- Visi & Misi --}}
-        <x-card title="Visi & Misi" subtitle="Visi dan misi sekolah" separator shadow>
-            <div class="space-y-4">
-                <x-textarea 
+        <x-ui.card shadow>
+            <div class="p-6 border-b border-slate-100 dark:border-slate-800">
+                <h3 class="font-black text-slate-800 dark:text-white uppercase tracking-tight text-sm italic">{{ __('Budaya & Filosofi (Visi & Misi)') }}</h3>
+            </div>
+            <div class="p-8 space-y-6">
+                <x-ui.textarea 
                     wire:model="vision" 
-                    label="Visi" 
-                    rows="4" 
+                    :label="__('Visi Sekolah / Harapan Masa Depan')" 
+                    rows="3" 
                     required 
-                    placeholder="Masukkan visi sekolah"
+                    :placeholder="__('Masukkan visi besar sekolah di sini...')"
+                    class="font-black text-sm italic text-indigo-600"
                 />
 
-                <x-textarea 
+                <x-ui.textarea 
                     wire:model="mission" 
-                    label="Misi" 
+                    :label="__('Misi Utama Sekolah')" 
                     rows="6" 
                     required 
-                    placeholder="Masukkan misi sekolah"
+                    :placeholder="__('Masukkan poin-poin misi sekolah...')"
+                    class="text-sm border-slate-100"
                 />
             </div>
-        </x-card>
+        </x-ui.card>
 
         {{-- Sejarah --}}
-        <x-card title="Sejarah" subtitle="Sejarah singkat sekolah (opsional)" separator shadow>
-            <x-textarea 
-                wire:model="history" 
-                label="Sejarah Sekolah" 
-                rows="6" 
-                placeholder="Masukkan sejarah singkat sekolah"
-            />
-        </x-card>
-
-        {{-- Media Sosial --}}
-        <x-card title="Media Sosial" subtitle="Link ke akun media sosial sekolah (opsional)" separator shadow>
-            <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-                <x-input 
-                    wire:model="facebook_url" 
-                    label="Facebook" 
-                    type="url" 
-                    placeholder="https://facebook.com/namaakun"
-                    icon="o-link"
-                />
-
-                <x-input 
-                    wire:model="instagram_url" 
-                    label="Instagram" 
-                    type="url" 
-                    placeholder="https://instagram.com/namaakun"
-                    icon="o-link"
-                />
-
-                <x-input 
-                    wire:model="youtube_url" 
-                    label="YouTube" 
-                    type="url" 
-                    placeholder="https://youtube.com/@namaakun"
-                    icon="o-link"
-                />
-
-                <x-input 
-                    wire:model="twitter_url" 
-                    label="Twitter/X" 
-                    type="url" 
-                    placeholder="https://twitter.com/namaakun"
-                    icon="o-link"
+        <x-ui.card shadow>
+            <div class="p-6 border-b border-slate-100 dark:border-slate-800">
+                <h3 class="font-black text-slate-800 dark:text-white uppercase tracking-tight text-sm italic">{{ __('Rekam Jejak & Sejarah') }}</h3>
+            </div>
+            <div class="p-8">
+                <x-ui.textarea 
+                    wire:model="history" 
+                    :label="__('Narasi Sejarah Sekolah')" 
+                    rows="6" 
+                    :placeholder="__('Ceritakan perjalanan singkat sekolah sejak berdiri...')"
+                    class="text-sm bg-slate-50/50 border-none italic leading-relaxed"
                 />
             </div>
-        </x-card>
+        </x-ui.card>
+
+        {{-- Media Sosial --}}
+        <x-ui.card shadow>
+            <div class="p-6 border-b border-slate-100 dark:border-slate-800">
+                <h3 class="font-black text-slate-800 dark:text-white uppercase tracking-tight text-sm italic">{{ __('Portofolio Media Sosial') }}</h3>
+            </div>
+            <div class="p-8">
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                    <x-ui.input 
+                        wire:model="facebook_url" 
+                        label="Facebook" 
+                        type="url" 
+                        placeholder="https://facebook.com/namaakun"
+                        icon="o-link"
+                    />
+
+                    <x-ui.input 
+                        wire:model="instagram_url" 
+                        label="Instagram" 
+                        type="url" 
+                        placeholder="https://instagram.com/namaakun"
+                        icon="o-link"
+                    />
+
+                    <x-ui.input 
+                        wire:model="youtube_url" 
+                        label="YouTube" 
+                        type="url" 
+                        placeholder="https://youtube.com/@namaakun"
+                        icon="o-link"
+                    />
+
+                    <x-ui.input 
+                        wire:model="twitter_url" 
+                        label="Twitter / X" 
+                        type="url" 
+                        placeholder="https://twitter.com/namaakun"
+                        icon="o-link"
+                    />
+                </div>
+            </div>
+        </x-ui.card>
 
         {{-- Lokasi --}}
-        <x-card title="Lokasi" subtitle="Koordinat lokasi untuk Google Maps (opsional)" separator shadow>
-            <div class="space-y-4">
-                <div class="grid grid-cols-1 gap-4 md:grid-cols-2">
-                    <x-input 
+        <x-ui.card shadow>
+            <div class="p-6 border-b border-slate-100 dark:border-slate-800 flex items-center justify-between">
+                <h3 class="font-black text-slate-800 dark:text-white uppercase tracking-tight text-sm italic">{{ __('Integrasi Peta & Lokasi') }}</h3>
+                <x-ui.icon name="o-map-pin" class="size-5 text-rose-500" />
+            </div>
+            <div class="p-8 space-y-6">
+                <div class="grid grid-cols-1 gap-6 md:grid-cols-2">
+                    <x-ui.input 
                         wire:model="latitude" 
                         label="Latitude" 
                         type="text" 
                         placeholder="Contoh: -6.200000"
-                        icon="o-map-pin"
+                        class="font-mono text-xs"
                     />
 
-                    <x-input 
+                    <x-ui.input 
                         wire:model="longitude" 
                         label="Longitude" 
                         type="text" 
                         placeholder="Contoh: 106.816666"
-                        icon="o-map-pin"
+                        class="font-mono text-xs"
                     />
                 </div>
 
-                <x-alert icon="o-information-circle" class="bg-base-200 border-base-300">
-                    Tip: Anda bisa mendapatkan koordinat dari Google Maps dengan klik kanan pada lokasi dan pilih koordinat.
-                </x-alert>
+                <div class="p-4 bg-amber-50 rounded-2xl border border-amber-100 flex items-start gap-4">
+                    <x-ui.icon name="o-information-circle" class="size-6 text-amber-500" />
+                    <p class="text-xs text-amber-800 leading-relaxed font-medium italic italic">
+                        {{ __('Tip: Anda bisa mendapatkan koordinat dari Google Maps dengan klik kanan pada lokasi sekolah di peta dan pilih "What\'s here?" atau klik langsung pada angka koordinat yang muncul.') }}
+                    </p>
+                </div>
             </div>
-        </x-card>
+        </x-ui.card>
 
         {{-- Submit Button --}}
-        <div class="flex items-center justify-end gap-4 pt-6">
-            <x-button 
-                label="Simpan Profil"
-                class="btn-primary" 
+        <div class="flex items-center justify-end gap-4 py-12 border-t border-slate-100 dark:border-slate-800">
+            <x-ui.button 
+                :label="__('Batalkan Perubahan')"
+                class="btn-ghost" 
+                wire:click="$refresh"
+            />
+            <x-ui.button 
+                :label="__('Simpan Seluruh Profil')"
+                class="btn-primary shadow-2xl shadow-primary/30 px-12 py-4" 
                 type="submit" 
                 spinner="save"
             />
         </div>
     </form>
-</div>
 </div>

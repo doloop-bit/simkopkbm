@@ -1,7 +1,6 @@
 @import "tailwindcss";
 
 @source '../views';
-@source "../../vendor/robsontenorio/mary/src/View/Components/**/*.php";
 @source "../../vendor/laravel/framework/src/Illuminate/Pagination/resources/views/*.blade.php";
 
 @custom-variant dark (&:where(.dark, .dark *));
@@ -83,7 +82,7 @@
         @apply bg-white/80 dark:bg-slate-950/80 backdrop-blur-xl sticky top-0 z-40 border-b border-base-300/50 dark:border-slate-800/50;
     }
 
-    /* Sidebar Dark Mode forced look */
+    /* Sidebar Premium forced look */
     .sidebar-premium {
         background-color: #0f172a !important;
         color: #94a3b8 !important;
@@ -98,45 +97,6 @@
         color: #f8fafc !important;
     }
 
-    /* Mary UI Menu Styling - Aggressive Green Active State */
-    .sidebar-premium .menu li>a.active,
-    .sidebar-premium .menu li>details>summary.active,
-    .sidebar-premium .menu li>.active {
-        background-color: #059669 !important;
-        /* Emerald 600 */
-        color: #ffffff !important;
-        font-weight: 700 !important;
-    }
-
-    /* Submenu header styling when open */
-    .sidebar-premium .menu li>details[open]>summary {
-        color: #34d399 !important;
-        background-color: #1e293b !important;
-    }
-
-    /* Active background for sub-items */
-    .sidebar-premium .menu li ul li a.active {
-        background-color: rgba(16, 185, 129, 0.15) !important;
-        color: #10b981 !important;
-        border-left: 4px solid #10b981 !important;
-        border-radius: 0 12px 12px 0 !important;
-    }
-
-    /* Ensure icons/text in active items are white */
-    .sidebar-premium .menu li a.active span,
-    .sidebar-premium .menu li a.active svg,
-    .sidebar-premium .menu li details summary.active span,
-    .sidebar-premium .menu li details summary.active svg {
-        color: #ffffff !important;
-    }
-
-    /* Hover effect */
-    .sidebar-premium .menu li>*:not(ul):not(.menu-title):not(details):hover,
-    .sidebar-premium .menu li>details>summary:hover {
-        background-color: #1e293b !important;
-        color: #ffffff !important;
-    }
-
     /* Premium Card Styling */
     .card-modern {
         @apply bg-white dark:bg-slate-900 border border-base-200 dark:border-slate-800 rounded-3xl shadow-premium hover:shadow-lg transition-all duration-500 overflow-hidden;
@@ -144,11 +104,11 @@
 
     /* Primary Button */
     .btn-primary {
-        @apply bg-emerald-500 hover:bg-emerald-600 text-white font-semibold rounded-2xl px-6 py-2 shadow-lg shadow-emerald-500/20 active:scale-95 border-none;
+        @apply bg-emerald-500 hover:bg-emerald-600 text-white font-semibold rounded-2xl px-6 py-2 shadow-lg shadow-emerald-500/20 active:scale-95 border-none cursor-pointer;
     }
 
     .btn-ghost {
-        @apply hover:bg-slate-100 dark:hover:bg-slate-800 rounded-2xl transition-colors;
+        @apply hover:bg-slate-100 dark:hover:bg-slate-800 rounded-2xl transition-colors cursor-pointer;
     }
 }
 
@@ -172,21 +132,9 @@
     }
 }
 
-/** daisyUI */
-@plugin "daisyui" {
-    themes: light --default, dark --prefersdark;
-}
-
-[data-theme="light"] {
-    --color-primary: #10b981;
-    --color-primary-content: #ffffff;
-    --color-base-100: #ffffff;
-    --color-base-200: #f8fafc;
-}
-
 /* Scrollbar Modern */
 ::-webkit-scrollbar {
-    width: 5px;
+    width: 6px;
 }
 
 ::-webkit-scrollbar-track {

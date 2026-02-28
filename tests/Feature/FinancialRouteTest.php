@@ -13,7 +13,7 @@ test('admin can access financial categories', function () {
     actingAs($user)
         ->get(route('financial.categories'))
         ->assertOk()
-        ->assertSeeLivewire('financial.categories');
+        ->assertSeeLivewire('admin.financial.categories');
 });
 
 test('admin can access financial billings', function () {
@@ -22,7 +22,7 @@ test('admin can access financial billings', function () {
     actingAs($user)
         ->get(route('financial.billings'))
         ->assertOk()
-        ->assertSeeLivewire('financial.billings');
+        ->assertSeeLivewire('admin.financial.billings');
 });
 
 test('admin can access financial payments', function () {
@@ -31,7 +31,7 @@ test('admin can access financial payments', function () {
     actingAs($user)
         ->get(route('financial.payments'))
         ->assertOk()
-        ->assertSeeLivewire('financial.payments');
+        ->assertSeeLivewire('admin.financial.payments');
 });
 
 test('non-admin cannot access financial routes', function (string $role) {

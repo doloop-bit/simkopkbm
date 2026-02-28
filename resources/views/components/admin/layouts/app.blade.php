@@ -28,6 +28,25 @@
         .sidebar-premium .menu li > details[open] > summary {
             background-color: rgba(30, 41, 59, 0.4) !important;
         }
+
+        /* Custom Scrollbar for Sidebar */
+        .custom-scrollbar::-webkit-scrollbar {
+            width: 5px;
+        }
+        .custom-scrollbar::-webkit-scrollbar-track {
+            background: transparent;
+        }
+        .custom-scrollbar::-webkit-scrollbar-thumb {
+            background: rgba(148, 163, 184, 0.2);
+            border-radius: 10px;
+        }
+        .custom-scrollbar::-webkit-scrollbar-thumb:hover {
+            background: rgba(148, 163, 184, 0.4);
+        }
+        .custom-scrollbar {
+            scrollbar-width: thin;
+            scrollbar-color: rgba(148, 163, 184, 0.2) transparent;
+        }
     </style>
 </head>
 <body class="min-h-screen bg-gradient-mesh font-sans antialiased text-slate-900 dark:text-slate-100 selection:bg-emerald-500/30"
@@ -41,27 +60,37 @@
          @click="sidebarOpen = false">
     </div>
 
-    <div class="flex min-h-screen">
+    <div class="flex min-h-screen relative">
         {{-- Sidebar --}}
         <aside
             x-cloak
             :class="sidebarOpen ? 'translate-x-0' : '-translate-x-full'"
-            class="fixed inset-y-0 left-0 z-50 w-64 sidebar-premium transition-transform duration-300 lg:translate-x-0 lg:static lg:z-auto flex flex-col"
+            class="fixed inset-y-0 left-0 z-50 w-64 sidebar-premium transition-transform duration-300 lg:translate-x-0 flex flex-col h-screen"
         >
-            {{-- Sidebar Content --}}
-            <div class="flex-1 overflow-y-auto">
-                <x-admin.sidebar />
+            {{-- Fixed Logo Header --}}
+            <div class="px-5 py-6 shrink-0">
+                <a href="{{ route('dashboard') }}" class="flex items-center gap-3 no-underline min-w-0" wire:navigate>
+                    <div class="shrink-0 flex items-center justify-center">
+                        <x-global.app-logo-icon class="size-8 fill-primary block aspect-square object-contain" />
+                    </div>
+                    <span class="text-xl font-extrabold text-slate-100 whitespace-nowrap overflow-hidden tracking-tight">{{ config('app.name') }}</span>
+                </a>
             </div>
 
-            {{-- User & Settings --}}
-            <div class="mt-auto px-4 pb-4">
+            {{-- Scrollable Navigation --}}
+            <div class="flex-1 overflow-y-auto custom-scrollbar px-2">
+                <x-admin.sidebar :only-menu="true" />
+            </div>
+
+            {{-- User & Settings (Fixed at bottom) --}}
+            <div class="mt-auto px-4 pb-4 shrink-0">
                 <x-ui.menu-separator class="my-4 border-slate-700/50" />
                 <x-admin.desktop-user-menu />
             </div>
         </aside>
 
         {{-- Main Content --}}
-        <div class="flex-1 min-w-0 lg:ml-0">
+        <div class="flex-1 min-w-0 lg:ml-64 transition-all duration-300">
             <div class="min-h-screen flex flex-col">
                 <x-admin.header />
 

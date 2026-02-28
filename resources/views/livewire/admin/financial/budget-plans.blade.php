@@ -10,10 +10,8 @@ use App\Models\AcademicYear;
 use Livewire\WithPagination;
 use Illuminate\Support\Facades\Auth;
 
-use Mary\Traits\Toast;
-
 new class extends Component {
-    use WithPagination, Toast;
+    use WithPagination;
 
     public $search = '';
     public $level_filter = '';
@@ -317,232 +315,252 @@ new class extends Component {
     }
 }; ?>
 
-<div class="flex flex-col gap-6">
-    <x-header title="RAB / Rencana Anggaran Biaya" subtitle="Kelola pengajuan dan persetujuan anggaran." separator>
+<div class="p-6 space-y-6 text-slate-900 dark:text-white pb-24 md:pb-6">
+    @if (session('success'))
+        <x-ui.alert :title="__('Sukses')" icon="o-check-circle" class="bg-emerald-50 text-emerald-800 border-emerald-100" dismissible>
+            {{ session('success') }}
+        </x-ui.alert>
+    @endif
+
+    <x-ui.header :title="__('RAB / Rencana Anggaran Biaya')" :subtitle="__('Kelola pengajuan, persetujuan, dan pencairan anggaran operasional sekolah.')" separator>
         <x-slot:actions>
             @if(Auth::user()->isTreasurer() || Auth::user()->isHeadmaster() || Auth::user()->isAdmin())
-                <x-button label="Buat RAB Baru" icon="o-plus" class="btn-primary" wire:click="createNew" />
+                <x-ui.button :label="__('Buat RAB Baru')" icon="o-plus" class="btn-primary" wire:click="createNew" />
             @endif
         </x-slot:actions>
-    </x-header>
+    </x-ui.header>
 
-    <!-- Filters -->
-    <div class="flex flex-col md:flex-row gap-4 items-center justify-between">
-        <div class="flex gap-2 w-full md:w-auto">
-            <x-input wire:model.live="search" icon="o-magnifying-glass" placeholder="Cari RAB..." class="w-full md:w-64" />
-            
-            @if(Auth::user()->isAdmin() || Auth::user()->isYayasan())
-                <x-select 
-                    wire:model.live="level_filter" 
-                    placeholder="Semua Jenjang" 
-                    :options="$levels" 
-                    class="w-full md:w-48" 
-                />
-            @endif
+    <div class="flex flex-col md:flex-row gap-4">
+        <div class="flex-1">
+            <x-ui.input 
+                wire:model.live.debounce.300ms="search" 
+                :placeholder="__('Cari judul RAB...')" 
+                icon="o-magnifying-glass" 
+            />
         </div>
+        
+        @if(Auth::user()->isAdmin() || Auth::user()->isYayasan())
+            <x-ui.select 
+                wire:model.live="level_filter" 
+                :placeholder="__('Semua Jenjang')" 
+                :options="$levels" 
+                class="w-full md:w-48" 
+            />
+        @endif
     </div>
 
-    <!-- List -->
-    <x-card shadow>
-        <x-table :headers="[
-            ['key' => 'title', 'label' => 'Judul'],
-            ['key' => 'level.name', 'label' => 'Jenjang'],
-            ['key' => 'academicYear.name', 'label' => 'Tahun Ajaran'],
-            ['key' => 'total_amount', 'label' => 'Total Anggaran', 'class' => 'text-right font-bold'],
-            ['key' => 'status', 'label' => 'Status', 'class' => 'text-center'],
-            ['key' => 'actions', 'label' => 'Aksi', 'class' => 'text-right']
-        ]" :rows="$plans" with-pagination>
-            @scope('cell_total_amount', $plan)
-                Rp {{ number_format($plan->total_amount, 0, ',', '.') }}
+    <x-ui.card shadow padding="false">
+        <x-ui.table 
+            :headers="[
+                ['key' => 'title_info', 'label' => __('Judul / Tahun')],
+                ['key' => 'level_name', 'label' => __('Jenjang')],
+                ['key' => 'amount_label', 'label' => __('Total Anggaran'), 'class' => 'text-right'],
+                ['key' => 'status_label', 'label' => __('Status'), 'class' => 'text-center'],
+                ['key' => 'actions', 'label' => __('Aksi'), 'class' => 'text-right']
+            ]" 
+            :rows="$plans"
+        >
+            @scope('cell_title_info', $plan)
+                <div class="flex flex-col">
+                    <span class="font-bold text-slate-900 dark:text-white">{{ $plan->title }}</span>
+                    <span class="text-[10px] text-slate-400 font-mono tracking-tighter uppercase">{{ $plan->academicYear?->name ?? '-' }}</span>
+                </div>
             @endscope
 
-            @scope('cell_status', $plan)
+            @scope('cell_level_name', $plan)
+                <span class="text-[10px] font-black text-slate-500 uppercase tracking-widest">{{ $plan->level?->name ?? '-' }}</span>
+            @endscope
+
+            @scope('cell_amount_label', $plan)
+                <span class="font-mono text-sm font-black text-slate-900 dark:text-white italic tracking-tighter">
+                    Rp {{ number_format($plan->total_amount, 0, ',', '.') }}
+                </span>
+            @endscope
+
+            @scope('cell_status_label', $plan)
                 @php
-                    $color = match($plan->status) {
-                        'draft' => 'badge-ghost',
-                        'submitted' => 'badge-warning',
-                        'approved' => 'badge-success',
-                        'transferred' => 'badge-info',
-                        'rejected' => 'badge-error',
+                    $statusClass = match($plan->status) {
+                        'draft' => 'bg-slate-100 text-slate-600',
+                        'submitted' => 'bg-amber-100 text-amber-700',
+                        'approved' => 'bg-emerald-100 text-emerald-700',
+                        'transferred' => 'bg-blue-100 text-blue-700',
+                        'rejected' => 'bg-rose-100 text-rose-700',
+                        default => 'bg-slate-100 text-slate-500'
                     };
                 @endphp
-                <x-badge :label="ucfirst($plan->status)" class="{{ $color }} badge-sm" />
+                <x-ui.badge :label="strtoupper($plan->status)" class="{{ $statusClass }} border-none text-[8px] font-black px-2 py-0.5" />
             @endscope
 
             @scope('cell_actions', $plan)
-                <div class="flex justify-end gap-1">
-                    <!-- View/Edit -->
-                    <x-button icon="o-eye" wire:click="edit({{ $plan->id }})" ghost sm />
-
-                    <!-- Preview PDF -->
-                    <x-button icon="o-printer" wire:click="exportPdf({{ $plan->id }})" ghost sm />
-                    
-                    <!-- Delete (Draft Only) -->
+                <div class="flex justify-end gap-2">
+                    <x-ui.button icon="o-eye" wire:click="edit({{ $plan->id }})" class="btn-ghost btn-sm text-slate-400 hover:text-primary transition-colors" />
+                    <x-ui.button icon="o-printer" wire:click="exportPdf({{ $plan->id }})" class="btn-ghost btn-sm text-slate-400 hover:text-slate-600 transition-colors" />
                     @if($plan->status === 'draft' || Auth::user()->isAdmin())
-                        <x-button 
-                            icon="o-trash" 
-                            class="text-error" 
-                            wire:confirm="Hapus RAB ini?" 
-                            wire:click="delete({{ $plan->id }})" 
-                            ghost sm 
-                        />
-                    @endif
-                    
-                    <!-- Approval Actions (Yayasan) -->
-                    @if((Auth::user()->isYayasan() || Auth::user()->isAdmin()) && $plan->status === 'submitted')
-                        <x-button icon="o-check" class="btn-success btn-sm" wire:click="updateStatus({{ $plan->id }}, 'approved')" />
-                        <x-button icon="o-x-mark" class="btn-error btn-sm" wire:click="updateStatus({{ $plan->id }}, 'rejected')" />
-                    @endif
-                    
-                    <!-- Transfer Action (Yayasan) -->
-                    @if((Auth::user()->isYayasan() || Auth::user()->isAdmin()) && $plan->status === 'approved')
-                        <x-button label="Transfer" icon="o-banknotes" class="btn-primary btn-sm" wire:click="updateStatus({{ $plan->id }}, 'transferred')" title="Tandai Sudah Transfer" />
+                        <x-ui.button icon="o-trash" wire:click="delete({{ $plan->id }})" wire:confirm="{{ __('Hapus RAB ini?') }}" class="btn-ghost btn-sm text-slate-400 hover:text-rose-600 transition-colors" />
                     @endif
                 </div>
             @endscope
-        </x-table>
-    </x-card>
+        </x-ui.table>
 
-    <!-- RAB Modal (Large) -->
-    <x-modal wire:model="planModal" class="backdrop-blur" persistent>
-        <x-header :title="$editing ? 'Edit RAB' : 'Buat RAB Baru'" subtitle="Anggaran diajukan oleh Bendahara/Kepsek untuk disetujui Yayasan." separator />
+        @if($plans->isEmpty())
+            <div class="py-12 text-center text-slate-400 italic text-sm">
+                {{ __('Tidak ada data RAB yang ditemukan.') }}
+            </div>
+        @endif
 
-        <div class="space-y-6">
-            <div class="grid grid-cols-1 md:grid-cols-3 gap-4 items-start">
-                <x-select wire:model="academic_year_id" label="Tahun Ajaran" placeholder="Pilih Tahun Ajaran" :options="$years" />
-                <x-select wire:model="level_id" label="Jenjang / Level" placeholder="Pilih Jenjang" :options="$levels" />
-                <x-input wire:model="title" label="Judul RAB" placeholder="Contoh: RAB Operasional Januari 2026" />
+        <div class="p-4 border-t border-slate-100 dark:border-slate-800">
+            {{ $plans->links() }}
+        </div>
+    </x-ui.card>
+
+    <x-ui.modal wire:model="planModal" class="!max-w-6xl">
+        <x-ui.header :title="$editing ? __('Edit RAB') : __('Buat RAB Baru')" :subtitle="__('Rencana Anggaran diajukan untuk disetujui oleh Yayasan.')" separator />
+
+        <div class="space-y-8">
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+                <x-ui.select wire:model="academic_year_id" :label="__('Tahun Ajaran')" :placeholder="__('Pilih Tahun')" :options="$years" required />
+                <x-ui.select wire:model="level_id" :label="__('Jenjang / Level')" :placeholder="__('Pilih Jenjang')" :options="$levels" required />
+                <x-ui.input wire:model="title" :label="__('Judul RAB')" :placeholder="__('Contoh: Operasional Januari 2026')" required />
             </div>
 
-            <!-- Items Table -->
-            <div class="border rounded-lg bg-base-200 p-0.5 overflow-x-auto">
-                <table class="table table-sm">
-                    <thead>
-                        <tr>
-                            <th class="bg-base-300">Item Standar / Baru</th>
-                            <th class="bg-base-300 w-32">Kategori</th>
-                            <th class="bg-base-300 text-center w-28">Qty</th>
-                            <th class="bg-base-300 text-center w-24">Satuan</th>
-                            <th class="bg-base-300 text-right w-40">Harga Satuan</th>
-                            <th class="bg-base-300 text-right w-40">Total</th>
-                            <th class="bg-base-300 w-10"></th>
-                        </tr>
-                    </thead>
-                    <tbody class="bg-base-100">
-                        @foreach($formItems as $index => $item)
-                        <tr wire:key="item-{{ $index }}">
-                            <td>
-                                <div class="relative" 
-                                    x-data="{ 
-                                        open: false, 
-                                        search: @entangle('itemSearches.' . $index),
-                                        options: {{ $standardItems->map(fn($i) => ['id' => $i->id, 'name' => $i->name])->toJson() }},
-                                        get filteredOptions() {
-                                            if (!this.search) return this.options.slice(0, 10);
-                                            return this.options.filter(o => o.name.toLowerCase().includes(this.search.toLowerCase())).slice(0, 10);
-                                        },
-                                        get exactMatch() {
-                                            return this.options.some(o => o.name.toLowerCase() === this.search.toLowerCase());
-                                        },
-                                        select(opt) {
-                                            $wire.set('formItems.{{ $index }}.standard_item_id', opt.id);
-                                            this.search = opt.name;
-                                            this.open = false;
-                                        },
-                                        create() {
-                                            $wire.createSubItem({{ $index }}, this.search);
-                                            this.open = false;
-                                        }
-                                    }"
-                                    x-on:click.away="open = false"
-                                >
-                                    <x-input 
-                                        x-model="search" 
-                                        x-on:focus="open = true"
-                                        x-on:input="open = true"
-                                        placeholder="Cari atau ketik nama baru..."
-                                        sm
-                                    />
-                                    
-                                    <div x-show="open" 
-                                        class="absolute z-50 w-full mt-1 bg-base-100 border border-base-300 rounded shadow-lg max-h-60 overflow-auto"
-                                        x-transition
-                                        style="display: none;"
+            <div class="rounded-3xl border border-slate-200 dark:border-slate-800 bg-slate-50/30 dark:bg-slate-900/30 overflow-hidden">
+                <div class="p-4 border-b border-slate-200 dark:border-slate-800 flex items-center justify-between bg-white dark:bg-slate-900">
+                    <span class="text-[11px] font-black uppercase text-slate-400 tracking-widest italic">{{ __('Daftar Rincian Item Anggaran') }}</span>
+                    <x-ui.button :label="__('Tambah Baris')" icon="o-plus" wire:click="addItemRow" class="btn-sm btn-ghost text-xs font-black uppercase" />
+                </div>
+                
+                <div class="overflow-x-auto min-h-[300px]">
+                    <table class="table-auto w-full text-left text-sm border-collapse">
+                        <thead class="bg-slate-100/50 dark:bg-slate-800/50 text-[10px] font-black uppercase text-slate-500 tracking-tighter">
+                            <tr>
+                                <th class="px-4 py-3 min-w-[300px]">{{ __('Item Deskripsi') }}</th>
+                                <th class="px-4 py-3 text-center w-24">{{ __('Qty') }}</th>
+                                <th class="px-4 py-3 text-center w-20">{{ __('Satuan') }}</th>
+                                <th class="px-4 py-3 text-right w-44">{{ __('Harga Satuan') }}</th>
+                                <th class="px-4 py-3 text-right w-44">{{ __('Total') }}</th>
+                                <th class="px-4 py-3 w-10"></th>
+                            </tr>
+                        </thead>
+                        <tbody class="divide-y divide-slate-100 dark:divide-slate-800">
+                            @foreach($formItems as $index => $item)
+                            <tr wire:key="item-{{ $index }}" class="hover:bg-white/50 dark:hover:bg-slate-800/30 transition-colors">
+                                <td class="px-4 py-3">
+                                    <div class="relative" 
+                                        x-data="{ 
+                                            open: false, 
+                                            search: @entangle('itemSearches.' . $index),
+                                            options: {{ $standardItems->map(fn($i) => ['id' => $i->id, 'name' => $i->name])->toJson() }},
+                                            get filteredOptions() {
+                                                if (!this.search) return this.options.slice(0, 10);
+                                                return this.options.filter(o => o.name.toLowerCase().includes(this.search.toLowerCase())).slice(0, 10);
+                                            },
+                                            get exactMatch() {
+                                                return this.options.some(o => o.name.toLowerCase() === this.search.toLowerCase());
+                                            },
+                                            select(opt) {
+                                                $wire.set('formItems.{{ $index }}.standard_item_id', opt.id);
+                                                this.search = opt.name;
+                                                this.open = false;
+                                            },
+                                            create() {
+                                                $wire.createSubItem({{ $index }}, this.search);
+                                                this.open = false;
+                                            }
+                                        }"
+                                        x-on:click.away="open = false"
                                     >
-                                        <template x-for="opt in filteredOptions" :key="opt.id">
-                                            <div x-on:click="select(opt)" 
-                                                class="px-3 py-2 hover:bg-base-200 cursor-pointer text-sm"
-                                                x-text="opt.name">
-                                            </div>
-                                        </template>
+                                        <x-ui.input 
+                                            x-model="search" 
+                                            x-on:focus="open = true"
+                                            x-on:input="open = true"
+                                            :placeholder="__('Cari atau ketik item baru...')"
+                                            class="!py-1.5 !text-xs font-bold"
+                                        />
                                         
-                                        <div x-show="search && search.length > 1 && !exactMatch" 
-                                            x-on:click="create()"
-                                            class="px-3 py-2 hover:bg-base-200 cursor-pointer text-sm border-t font-medium text-emerald-600 flex items-center gap-2"
+                                        <div x-show="open" 
+                                            class="absolute z-[60] w-full mt-2 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-2xl shadow-2xl max-h-60 overflow-auto divide-y divide-slate-50 dark:divide-slate-800"
+                                            x-transition
+                                            style="display: none;"
                                         >
-                                            <x-icon name="o-plus" class="size-3" />
-                                            <span>Tambah "<span x-text="search"></span>"</span>
+                                            <template x-for="opt in filteredOptions" :key="opt.id">
+                                                <div x-on:click="select(opt)" 
+                                                    class="px-4 py-2 hover:bg-slate-50 dark:hover:bg-slate-800 cursor-pointer text-xs font-bold text-slate-700 dark:text-slate-300"
+                                                    x-text="opt.name">
+                                                </div>
+                                            </template>
+                                            
+                                            <div x-show="search && search.length > 1 && !exactMatch" 
+                                                x-on:click="create()"
+                                                class="px-4 py-2 hover:bg-slate-100 dark:hover:bg-slate-800 cursor-pointer text-[10px] font-black text-primary flex items-center gap-2 italic uppercase tracking-widest"
+                                            >
+                                                <x-ui.icon name="o-plus" class="size-3" />
+                                                <span>{{ __('Gunakan Nama') }} "<span x-text="search" class="underline underline-offset-2"></span>"</span>
+                                            </div>
                                         </div>
                                     </div>
-                                </div>
-                            </td>
-                            <td class="text-xs opacity-50">{{ $item['category_name'] }}</td>
-                            <td class="text-center">
-                                <x-input type="number" wire:model.live.debounce.1000ms="formItems.{{ $index }}.quantity" class="text-center w-28 mx-auto" min="1" sm />
-                            </td>
-                            <td class="text-center">
-                                <x-input wire:model="formItems.{{ $index }}.unit" placeholder="Satuan" class="text-center w-16 mx-auto" sm />
-                            </td>
-                            <td>
-                                <x-input type="number" wire:model.live.debounce.1300ms="formItems.{{ $index }}.amount" class="text-right w-32 ml-auto" min="0" sm />
-                            </td>
-                            <td class="text-right font-medium">
-                                <div wire:loading.remove wire:target="formItems.{{ $index }}.quantity, formItems.{{ $index }}.amount">
-                                    Rp {{ number_format($item['total'], 0, ',', '.') }}
-                                </div>
-                                <div wire:loading wire:target="formItems.{{ $index }}.quantity, formItems.{{ $index }}.amount">
-                                    <span class="loading loading-spinner loading-xs text-info"></span>
-                                </div>
-                            </td>
-                            <td class="text-center">
-                                <x-button icon="o-trash" class="text-error" wire:click="removeItemRow({{ $index }})" ghost sm />
-                            </td>
-                        </tr>
-                        @endforeach
-                    </tbody>
-                    <tfoot class="bg-base-300 font-bold">
-                        <tr>
-                            <td colspan="5" class="text-right">Total Anggaran</td>
-                            <td class="text-right">Rp {{ number_format($this->totalAmount, 0, ',', '.') }}</td>
-                            <td></td>
-                        </tr>
-                    </tfoot>
-                </table>
-                <div class="p-2 bg-base-200 border-t border-base-300">
-                    <x-button label="Tambah Baris" icon="o-plus" wire:click="addItemRow" sm />
+                                    <div class="mt-1 flex items-center gap-2">
+                                        <span class="text-[9px] font-black text-slate-400 uppercase tracking-tighter">{{ $item['category_name'] ?: __('Umum') }}</span>
+                                    </div>
+                                </td>
+                                <td class="px-4 py-3">
+                                    <x-ui.input type="number" wire:model.live.debounce.1000ms="formItems.{{ $index }}.quantity" class="text-center !py-1.5 font-mono text-xs font-black" min="1" />
+                                </td>
+                                <td class="px-4 py-3">
+                                    <x-ui.input wire:model="formItems.{{ $index }}.unit" :placeholder="__('Satu')" class="text-center !py-1.5 text-xs font-black uppercase tracking-tighter" />
+                                </td>
+                                <td class="px-4 py-3">
+                                    <x-ui.input type="number" wire:model.live.debounce.1300ms="formItems.{{ $index }}.amount" class="text-right !py-1.5 font-mono text-xs font-black italic" min="0" />
+                                </td>
+                                <td class="px-4 py-3 text-right">
+                                    <div class="font-mono text-xs font-black italic text-slate-900 dark:text-white" wire:loading.remove wire:target="formItems.{{ $index }}.quantity, formItems.{{ $index }}.amount">
+                                        Rp {{ number_format($item['total'], 0, ',', '.') }}
+                                    </div>
+                                    <div wire:loading wire:target="formItems.{{ $index }}.quantity, formItems.{{ $index }}.amount">
+                                        <span class="loading loading-spinner loading-xs text-primary"></span>
+                                    </div>
+                                </td>
+                                <td class="px-4 py-3 text-right">
+                                    <x-ui.button icon="o-trash" wire:click="removeItemRow({{ $index }})" class="btn-ghost btn-sm text-slate-300 hover:text-rose-600 transition-colors" />
+                                </td>
+                            </tr>
+                            @endforeach
+                        </tbody>
+                        <tfoot class="bg-slate-900 text-white font-black italic border-t border-slate-800">
+                            <tr>
+                                <td colspan="4" class="px-6 py-4 text-right uppercase tracking-widest text-[11px]">{{ __('Total Estimasi Anggaran') }}</td>
+                                <td class="px-4 py-4 text-right font-mono text-lg text-emerald-400 tracking-tighter ring-inset ring-1 ring-emerald-500/20">
+                                    Rp {{ number_format($this->totalAmount, 0, ',', '.') }}
+                                </td>
+                                <td></td>
+                            </tr>
+                        </tfoot>
+                    </table>
                 </div>
             </div>
 
-            <x-textarea wire:model="notes" label="Catatan" placeholder="Catatan tambahan..." />
+            <x-ui.textarea wire:model="notes" :label="__('Catatan / Justifikasi')" :placeholder="__('Jelaskan tujuan pengajuan RAB ini secara singkat...')" rows="3" />
             
-            <x-slot:actions>
-                <div class="flex flex-wrap justify-between items-center w-full gap-4">
-                    <div class="flex gap-2">
-                        @if($editing && ($editing->status === 'submitted' && (Auth::user()->isYayasan() || Auth::user()->isAdmin())))
-                            <x-button label="Setujui (Approve)" class="btn-primary" wire:click="updateStatus({{ $editing->id }}, 'approved')" />
-                            <x-button label="Tolak (Reject)" class="btn-error" wire:click="updateStatus({{ $editing->id }}, 'rejected')" />
-                        @endif
-                    </div>
-                    <div class="flex gap-2">
-                        <x-button label="Tutup" @click="$set('planModal', false)" />
-                        @if(!$editing || $editing->status === 'draft' || $editing->status === 'rejected')
-                            <x-button label="Simpan Draft" class="btn-outline btn-primary" wire:click="save('draft')" spinner="save" />
-                            <x-button label="Simpan & Ajukan" class="btn-primary" wire:click="save('submit')" spinner="save" />
-                        @endif
-                    </div>
+            <div class="flex flex-col md:flex-row justify-between items-center gap-6 pt-8 border-t border-slate-100 dark:border-slate-800">
+                <div class="flex gap-3">
+                    @if($editing && ($editing->status === 'submitted' && (Auth::user()->isYayasan() || Auth::user()->isAdmin())))
+                        <x-ui.button :label="__('Setujui Pengajuan')" class="btn-primary" wire:click="updateStatus({{ $editing->id }}, 'approved')" icon="o-check-circle" />
+                        <x-ui.button :label="__('Tolak Pengajuan')" class="btn-ghost text-rose-600 hover:bg-rose-50" wire:click="updateStatus({{ $editing->id }}, 'rejected')" icon="o-x-circle" />
+                    @endif
+
+                    @if($editing && $editing->status === 'approved' && (Auth::user()->isYayasan() || Auth::user()->isAdmin()))
+                        <x-ui.button :label="__('Konfirmasi Transfer Dana')" icon="o-banknotes" class="btn-primary" wire:click="updateStatus({{ $editing->id }}, 'transferred')" />
+                    @endif
                 </div>
-            </x-slot:actions>
+
+                <div class="flex gap-3 w-full md:w-auto">
+                    <x-ui.button :label="__('Tutup')" wire:click="$set('planModal', false)" class="md:grow-0 grow" />
+                    @if(!$editing || $editing->status === 'draft' || $editing->status === 'rejected')
+                        <x-ui.button :label="__('Simpan Draft')" class="btn-ghost border-slate-200 text-slate-600 md:grow-0 grow" wire:click="save('draft')" spinner="save" />
+                        <x-ui.button :label="__('Simpan & Ajukan ke Yayasan')" class="btn-primary md:grow-0 grow shadow-lg shadow-primary/20" wire:click="save('submit')" spinner="save" />
+                    @endif
+                </div>
+            </div>
         </div>
-    </x-modal>
+    </x-ui.modal>
 </div>
 </div>

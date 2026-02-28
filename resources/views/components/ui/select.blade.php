@@ -26,17 +26,21 @@
             @if($name) id="{{ $name }}" name="{{ $name }}" @endif
             {{ $attributes->except(['label', 'options', 'placeholder', 'optionValue', 'optionLabel', 'sm'])->class([$selectClasses, $sizeClasses]) }}
         >
-            @if($placeholder)
-                <option value="">{{ $placeholder }}</option>
+            @if($slot->isNotEmpty())
+                {{ $slot }}
+            @else
+                @if($placeholder)
+                    <option value="">{{ $placeholder }}</option>
+                @endif
+                
+                @foreach($options as $option)
+                    @php
+                        $value = data_get($option, $optionValue, $option);
+                        $text = data_get($option, $optionLabel, $value);
+                    @endphp
+                    <option value="{{ $value }}">{{ $text }}</option>
+                @endforeach
             @endif
-
-            @foreach($options as $option)
-                @php
-                    $value = is_array($option) ? ($option[$optionValue] ?? '') : $option;
-                    $text = is_array($option) ? ($option[$optionLabel] ?? $option[$optionValue] ?? '') : $option;
-                @endphp
-                <option value="{{ $value }}">{{ $text }}</option>
-            @endforeach
         </select>
 
         <div class="pointer-events-none absolute inset-y-0 right-0 flex items-center pr-3">

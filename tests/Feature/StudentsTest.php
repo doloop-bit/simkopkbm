@@ -13,7 +13,7 @@ test('admin can access students page', function () {
     actingAs($user)
         ->get(route('students.index'))
         ->assertOk()
-        ->assertSeeLivewire('students.index');
+        ->assertSeeLivewire('admin.data-master.students.index');
 });
 
 test('non-admin cannot access students page', function () {

@@ -234,190 +234,195 @@ new #[Layout('components.admin.layouts.app')] class extends Component
     }
 }; ?>
 
-<div class="p-6">
-    <x-header title="Galeri Foto" subtitle="Kelola foto-foto sekolah" separator>
-        <x-slot:actions>
-             <x-button label="Upload Foto Baru" icon="o-plus" class="btn-primary" @click="$refs.uploadForm.scrollIntoView({behavior: 'smooth'})" />
-        </x-slot:actions>
-    </x-header>
-
+<div class="p-6 space-y-8 text-slate-900 dark:text-white pb-24 md:pb-6">
     @if (session()->has('message'))
-        <x-alert title="Sukses" icon="o-check-circle" class="alert-success mb-6">
+        <x-ui.alert :title="__('Sukses')" icon="o-check-circle" class="bg-emerald-50 text-emerald-800 border-emerald-100" dismissible>
             {{ session('message') }}
-        </x-alert>
+        </x-ui.alert>
     @endif
 
+    <x-ui.header :title="__('Galeri Dokumentasi')" :subtitle="__('Kelola archive visual kegiatan, fasilitas, dan momen berharga sekolah.')" separator>
+        <x-slot:actions>
+             <x-ui.button :label="__('Unggah Foto')" icon="o-plus" class="btn-primary shadow-lg shadow-primary/20" @click="$refs.uploadForm.scrollIntoView({behavior: 'smooth'})" />
+        </x-slot:actions>
+    </x-ui.header>
+
     {{-- Upload Form --}}
-    <x-card id="upload-form" x-ref="uploadForm" title="Upload Foto Baru" subtitle="Pilih satu atau beberapa foto untuk ditambahkan ke galeri" separator shadow class="mb-8 border border-base-200">
-        <form wire:submit="uploadPhotos" class="space-y-6">
-            <x-file 
-                wire:model="photos" 
-                label="Pilih Foto" 
-                accept="image/jpeg,image/jpg,image/png,image/webp"
-                multiple
-                required
-            >
-                <span class="text-xs opacity-70">Maksimal 5MB per file. Format: JPEG, PNG, WebP. Anda dapat memilih beberapa file sekaligus.</span>
-                @if (count($photos) > 0)
-                     <div class="text-sm font-medium mt-2">
-                        {{ count($photos) }} file dipilih
+    <x-ui.card id="upload-form" x-ref="uploadForm" shadow padding="false" class="border-none ring-1 ring-slate-100 dark:ring-slate-800">
+        <div class="p-6 border-b border-slate-50 dark:border-slate-800/50 bg-slate-50/50 dark:bg-slate-900/50">
+            <h3 class="font-black text-slate-800 dark:text-white uppercase tracking-tight text-sm italic">{{ __('Batch Upload & Registrasi Foto') }}</h3>
+        </div>
+        <div class="p-8">
+            <form wire:submit="uploadPhotos" class="space-y-8">
+                <x-ui.file 
+                    wire:model="photos" 
+                    :label="__('Pilih File Gambar')" 
+                    accept="image/jpeg,image/jpg,image/png,image/webp"
+                    multiple
+                    required
+                    class="bg-white dark:bg-slate-800"
+                >
+                    @if (count($photos) > 0)
+                        <div class="text-[10px] font-black italic text-indigo-600 mt-2 px-1">
+                            {{ count($photos) }} {{ __('file siap diunggah') }}
+                        </div>
+                    @endif
+                </x-ui.file>
+                <p class="text-[10px] text-slate-400 italic px-1 leading-relaxed -mt-6">
+                    * {{ __('Format: JPEG, PNG, WebP (Max 5MB/file). Anda dapat memilih beberapa foto sekaligus untuk unggah massal.') }}
+                </p>
+
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-8">
+                    <div class="space-y-2">
+                        <x-ui.input 
+                            wire:model="category" 
+                            :label="__('Kategori / Album')" 
+                            type="text" 
+                            required 
+                            :placeholder="__('Contoh: Kegiatan, Fasilitas, Acara')"
+                            list="category-suggestions"
+                            class="font-bold"
+                        />
+                        <datalist id="category-suggestions">
+                            @foreach ($availableCategories as $cat)
+                                <option value="{{ $cat }}">
+                            @endforeach
+                        </datalist>
                     </div>
-                @endif
-            </x-file>
 
-            <div class="grid grid-cols-1 gap-4 md:grid-cols-2">
-                <x-input 
-                    wire:model="category" 
-                    label="Kategori" 
-                    type="text" 
-                    required 
-                    placeholder="Contoh: Kegiatan, Fasilitas, Acara"
-                    list="category-suggestions"
-                />
-                <datalist id="category-suggestions">
-                    @foreach ($availableCategories as $cat)
-                        <option value="{{ $cat }}">
-                    @endforeach
-                </datalist>
+                    <x-ui.input 
+                        wire:model="caption" 
+                        :label="__('Keterangan Bersama (Opsional)')" 
+                        type="text" 
+                        :placeholder="__('Deskripsi singkat untuk semua foto yang diunggah...')"
+                        class="italic text-sm"
+                    />
+                </div>
 
-                <x-input 
-                    wire:model="caption" 
-                    label="Keterangan (Opsional)" 
-                    type="text" 
-                    placeholder="Deskripsi singkat foto"
-                />
-            </div>
-
-            <x-slot:actions>
-                <x-button 
-                    label="Upload Foto"
-                    class="btn-primary" 
-                    type="submit" 
-                    spinner="uploadPhotos"
-                />
-            </x-slot:actions>
-        </form>
-    </x-card>
+                <div class="flex items-center justify-end pt-6 border-t border-slate-50 dark:border-slate-800">
+                    <x-ui.button 
+                        :label="__('Mulai Proses Unggah')"
+                        class="btn-primary shadow-xl shadow-primary/20 px-8" 
+                        type="submit" 
+                        spinner="uploadPhotos"
+                    />
+                </div>
+            </form>
+        </div>
+    </x-ui.card>
 
     {{-- Filter & Layout Controls --}}
-    <div class="mb-8 flex flex-col sm:flex-row sm:items-center justify-between gap-4">
-        <div class="flex items-center gap-4">
-            <span class="font-bold whitespace-nowrap">Filter Kategori:</span>
-            <x-select 
+    <div class="flex flex-col md:flex-row md:items-center justify-between gap-6 bg-white dark:bg-slate-900 p-4 rounded-3xl ring-1 ring-slate-100 dark:ring-slate-800">
+        <div class="flex items-center gap-4 px-2">
+            <x-ui.icon name="o-funnel" class="size-4 text-slate-400" />
+            <h4 class="font-black text-slate-800 dark:text-white uppercase tracking-tight text-[11px] italic whitespace-nowrap">{{ __('Filter Koleksi') }}</h4>
+            <div class="h-4 w-px bg-slate-100 dark:bg-slate-800"></div>
+            <x-ui.select 
                 wire:model.live="filterCategory" 
-                class="w-full sm:w-64"
-                :options="collect([['id' => 'all', 'name' => 'Semua Kategori']])->merge(collect($availableCategories)->map(fn($c) => ['id' => $c, 'name' => $c]))"
-                option-label="name"
-                option-value="id"
+                class="min-w-64 border-none shadow-none bg-transparent font-bold text-primary"
+                :options="collect([['id' => 'all', 'name' => __('Tampilkan Semua Album')]])->merge(collect($availableCategories)->map(fn($c) => ['id' => $c, 'name' => $c]))"
             />
         </div>
+        <x-ui.badge :label="$galleryPhotos->count() . ' ' . __('Foto Terdaftar')" class="bg-indigo-50 text-indigo-600 border-none font-black italic text-[10px]" />
     </div>
 
     {{-- Photo Grid --}}
     @if ($galleryPhotos->isEmpty())
-        <x-card class="p-12 text-center" shadow>
-            <x-icon name="o-photo" class="size-16 mb-4 opacity-10" />
-            <p class="text-base-content/50">
-                Belum ada foto di galeri. Upload foto pertama Anda!
-            </p>
-        </x-card>
+        <div class="flex flex-col items-center justify-center py-32 text-slate-300 dark:text-slate-700 border-2 border-dashed border-slate-200 dark:border-slate-800 rounded-[32px] bg-slate-50/50 dark:bg-slate-900/50 transition-all text-center px-6">
+            <x-ui.icon name="o-photo" class="size-20 mb-6 opacity-20" />
+            <p class="text-sm font-black uppercase tracking-widest italic animate-pulse">{{ __('Galeri Belum Berisi Dokumentasi') }}</p>
+            <x-ui.button :label="__('Mulai Mengisi Galeri')" @click="$refs.uploadForm.scrollIntoView({behavior: 'smooth'})" class="mt-8 btn-ghost text-primary btn-sm font-bold" />
+        </div>
     @else
-        <div class="grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
+        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
             @foreach ($galleryPhotos as $index => $photo)
-                <x-card wire:key="photo-{{ $photo->id }}" class="group overflow-hidden border border-base-200 hover:shadow-lg transition-all" no-separator padding="p-0">
-                    {{-- Photo Container --}}
-                    <div class="aspect-square relative overflow-hidden bg-base-200">
+                <x-ui.card wire:key="photo-{{ $photo->id }}" shadow padding="false" class="group relative overflow-hidden border-none ring-1 ring-slate-100 dark:ring-slate-800 hover:ring-primary/20 transition-all duration-500">
+                    {{-- Photo Frame --}}
+                    <div class="aspect-square relative overflow-hidden bg-slate-100 dark:bg-slate-900">
                         <img 
                             src="{{ Storage::url($photo->thumbnail_path) }}" 
                             alt="{{ $photo->caption ?? 'Gallery Photo' }}"
-                            class="h-full w-full object-cover transition-transform duration-500 group-hover:scale-110"
+                            class="absolute inset-0 size-full object-cover transition-transform duration-700 group-hover:scale-110"
                         >
                         
-                        {{-- Quick Badges Overlay --}}
-                        <div class="absolute top-2 left-2 flex flex-col gap-1">
-                            <x-badge :label="$photo->category" class="badge-neutral badge-sm shadow-sm" />
-                            @if ($photo->is_published)
-                                <x-badge label="Live" class="badge-success badge-xs shadow-sm" />
-                            @else
-                                <x-badge label="Draft" class="badge-ghost badge-xs shadow-sm backdrop-blur-md" />
+                        {{-- Overlays --}}
+                        <div class="absolute inset-0 bg-gradient-to-t from-black/80 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-500"></div>
+
+                        {{-- Metadata Overlay --}}
+                        <div class="absolute top-4 left-4 flex flex-col gap-2">
+                            <x-ui.badge :label="$photo->category" class="bg-black/40 backdrop-blur-md text-white border-white/20 font-black italic text-[9px] px-3 py-1 uppercase" />
+                            @if (!$photo->is_published)
+                                <x-ui.badge :label="__('ARSIP/DRAFT')" class="bg-amber-500 text-white border-none font-black italic text-[8px] px-2 py-0.5" />
                             @endif
                         </div>
 
                         {{-- Order Helper Overlay --}}
-                        <div class="absolute top-2 right-2 flex gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
-                            <x-button 
+                        <div class="absolute top-4 right-4 flex flex-col gap-1 translate-x-12 opacity-0 group-hover:translate-x-0 group-hover:opacity-100 transition-all duration-300">
+                            <x-ui.button 
                                 wire:click="moveUp({{ $photo->id }})" 
                                 icon="o-chevron-left"
-                                class="btn-xs btn-circle btn-neutral shadow-lg"
-                                tooltip="Pindah ke kiri"
+                                class="size-8 min-h-0 p-0 bg-white/90 dark:bg-slate-800/90 hover:bg-white text-slate-600 dark:text-white rounded-xl shadow-sm border-none"
                             />
-                            <x-button 
+                            <x-ui.button 
                                 wire:click="moveDown({{ $photo->id }})" 
                                 icon="o-chevron-right"
-                                class="btn-xs btn-circle btn-neutral shadow-lg"
-                                tooltip="Pindah ke kanan"
+                                class="size-8 min-h-0 p-0 bg-white/90 dark:bg-slate-800/90 hover:bg-white text-slate-600 dark:text-white rounded-xl shadow-sm border-none"
                             />
+                        </div>
+
+                        {{-- Floating Info Overlay --}}
+                        <div class="absolute bottom-4 left-4 right-4 translate-y-4 opacity-0 group-hover:translate-y-0 group-hover:opacity-100 transition-all duration-300">
+                            <p class="text-white text-[10px] font-black italic leading-tight uppercase tracking-tight line-clamp-2">{{ $photo->caption ?: __('Tidak Ada Keterangan') }}</p>
                         </div>
                     </div>
 
-                    {{-- Info & Actions --}}
-                    <div class="p-4 bg-base-100">
+                    {{-- Management Control Panel --}}
+                    <div class="p-4 bg-white dark:bg-slate-900 border-t border-slate-50 dark:border-slate-800/50">
                         @if ($editingPhotoId === $photo->id)
-                            {{-- Edit Mode --}}
-                            <div class="space-y-4">
-                                <x-input 
+                            {{-- Inline Edit Experience --}}
+                            <div class="space-y-4 animate-in fade-in slide-in-from-bottom-2 duration-300">
+                                <x-ui.input 
                                     wire:model="editCategory" 
-                                    label="Kategori" 
-                                    size="sm"
+                                    :label="__('Album')" 
+                                    class="text-xs font-bold"
                                 />
-                                <x-input 
+                                <x-ui.textarea 
                                     wire:model="editCaption" 
-                                    label="Keterangan" 
-                                    size="sm"
+                                    :label="__('Deskripsi')" 
+                                    rows="2"
+                                    class="text-[10px] italic leading-relaxed"
                                 />
-                                <div class="flex gap-2">
-                                    <x-button label="Simpan" wire:click="saveEdit" class="btn-primary btn-sm flex-1" spinner="saveEdit" />
-                                    <x-button label="Batal" wire:click="cancelEdit" class="btn-ghost btn-sm flex-1" />
+                                <div class="grid grid-cols-2 gap-2 pt-2">
+                                    <x-ui.button :label="__('Simpan')" wire:click="saveEdit" class="btn-primary btn-xs font-black" spinner="saveEdit" />
+                                    <x-ui.button :label="__('Batal')" wire:click="cancelEdit" class="btn-ghost btn-xs font-bold" />
                                 </div>
                             </div>
                         @else
-                            {{-- View Mode --}}
-                            <div class="mb-4 min-h-[3rem]">
-                                @if ($photo->caption)
-                                    <p class="text-sm font-medium line-clamp-2 leading-tight">{{ $photo->caption }}</p>
-                                @else
-                                    <p class="text-sm italic opacity-40">Tanpa keterangan</p>
-                                @endif
-                            </div>
-
-                            {{-- Action Buttons --}}
-                            <div class="flex items-center justify-between border-t border-base-200 pt-3">
-                                <div class="flex gap-1">
-                                    <x-button 
+                            {{-- View Mode Actions --}}
+                            <div class="flex items-center justify-between">
+                                <div class="flex items-center gap-1">
+                                    <x-ui.button 
                                         wire:click="startEdit({{ $photo->id }})" 
                                         icon="o-pencil"
-                                        class="btn-xs btn-ghost btn-square"
-                                        tooltip="Edit"
+                                        class="btn-ghost btn-xs text-slate-400 hover:text-primary"
                                     />
-                                    <x-button 
+                                    <x-ui.button 
                                         wire:click="togglePublish({{ $photo->id }})" 
                                         icon="{{ $photo->is_published ? 'o-eye-slash' : 'o-eye' }}"
-                                        class="btn-xs btn-ghost btn-square"
-                                        tooltip="{{ $photo->is_published ? 'Tarik dari publikasi' : 'Publikasikan' }}"
+                                        class="btn-ghost btn-xs text-slate-400 hover:text-indigo-500"
                                     />
                                 </div>
                                 
-                                <x-button 
+                                <x-ui.button 
                                     wire:click="deletePhoto({{ $photo->id }})" 
                                     icon="o-trash"
-                                    class="btn-xs btn-ghost btn-square text-error"
-                                    wire:confirm="Yakin ingin menghapus foto ini? Semua versi gambar akan ikut terhapus."
-                                    tooltip="Hapus Permanen"
+                                    class="btn-ghost btn-xs text-slate-300 hover:text-rose-500"
+                                    wire:confirm="__('Hapus foto ini secara permanen dari server?') "
                                 />
                             </div>
                         @endif
                     </div>
-                </x-card>
+                </x-ui.card>
             @endforeach
         </div>
     @endif

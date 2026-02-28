@@ -215,182 +215,205 @@ new #[Layout('components.admin.layouts.app')] class extends Component {
     }
 }; ?>
 
-<div class="p-6">
-    <x-header title="Mata Pelajaran" subtitle="Daftar mata pelajaran yang tersedia di semua jenjang." separator>
+<div class="p-6 space-y-6 text-slate-900 dark:text-white">
+    <x-ui.header :title="__('Mata Pelajaran')" :subtitle="__('Daftar mata pelajaran yang tersedia di semua jenjang.')" separator>
         <x-slot:actions>
-             <x-button label="Tambah Mapel" icon="o-plus" class="btn-primary" wire:click="createNew" />
+             <x-ui.button :label="__('Tambah Mapel')" icon="o-plus" class="btn-primary" wire:click="createNew" />
         </x-slot:actions>
-    </x-header>
+    </x-ui.header>
 
-    <div class="flex flex-col md:flex-row gap-4 mb-6 items-center justify-between">
+    <div class="flex flex-col md:flex-row gap-4 items-center justify-between">
         <div class="flex flex-col md:flex-row flex-1 gap-4 w-full">
-            <x-input wire:model.live.debounce.300ms="search" placeholder="Cari kode atau nama mapel..." icon="o-magnifying-glass" class="w-full md:w-80" />
+            <x-ui.input wire:model.live.debounce.300ms="search" :placeholder="__('Cari kode atau nama mapel...')" icon="o-magnifying-glass" class="w-full md:w-80" />
             
-            <x-select wire:model.live="filterPhase" placeholder="Semua Fase" class="w-full md:w-64" :options="collect($phases)->map(fn($p) => ['id' => $p, 'name' => 'Fase ' . $p])->toArray()" />
+            <x-ui.select 
+                wire:model.live="filterPhase" 
+                :placeholder="__('Semua Fase')" 
+                class="w-full md:w-64" 
+                sm
+                :options="collect($phases)->map(fn($p) => ['id' => $p, 'name' => __('Fase :phase', ['phase' => $p])])->toArray()" 
+            />
         </div>
     </div>
 
     @if (session('success'))
-        <x-alert title="Berhasil" icon="o-check-circle" class="alert-success mb-6" dismissible>
+        <x-ui.alert :title="__('Berhasil')" icon="o-check-circle" class="bg-emerald-50 text-emerald-800 border-emerald-100" dismissible>
             {{ session('success') }}
-        </x-alert>
+        </x-ui.alert>
     @endif
 
-    <div class="overflow-hidden border rounded-xl border-zinc-200 dark:border-zinc-700 bg-white dark:bg-zinc-900 shadow-sm">
-        <table class="table">
-            <thead>
-                <tr>
-                    <th class="bg-base-200">Kode</th>
-                    <th class="bg-base-200">Nama</th>
-                    <th class="bg-base-200">Jenis/Fase</th>
-                    <th class="bg-base-200 text-center">CP / TP</th>
-                    <th class="bg-base-200 text-right">Aksi</th>
-                </tr>
-            </thead>
-            <tbody>
-                @foreach ($subjects as $subject)
-                    <tr wire:key="{{ $subject->id }}" class="hover">
-                        <td class="font-mono opacity-60">
-                            {{ $subject->code }}
-                        </td>
-                        <td class="font-bold">
-                            {{ $subject->name }}
-                        </td>
-                        <td>
-                            @if($subject->phase)
-                                <x-badge :label="'Fase ' . $subject->phase" class="badge-neutral badge-sm" />
-                            @else
-                                <span class="opacity-30 text-xs">Umum</span>
-                            @endif
-                        </td>
-                        <td class="text-center">
-                            @if($subject->phase)
-                                @php
-                                    $tpCount = $subject->tpsForPhase($subject->phase)->count();
-                                @endphp
-                                <div class="text-xs opacity-60">
-                                    {{ $tpCount }} TP
-                                </div>
-                            @else
-                                <span class="opacity-20 text-xs">-</span>
-                            @endif
-                        </td>
-                        <td class="text-right">
-                            <div class="flex justify-end gap-1">
-                                <x-button icon="o-pencil-square" wire:click="edit({{ $subject->id }})" ghost sm />
-                                @if($subject->phase)
-                                    <x-button icon="o-list-bullet" wire:click="manageTps({{ $subject->id }})" ghost sm tooltip="Kelola CP & TP" />
-                                @endif
-                                <x-button icon="o-trash" class="text-error" wire:confirm="Yakin ingin menghapus mapel ini?" wire:click="delete({{ $subject->id }})" ghost sm />
-                            </div>
-                        </td>
-                    </tr>
-                @endforeach
-            </tbody>
-        </table>
-    </div>
+    <x-ui.card shadow padding="false">
+        <x-ui.table 
+            :headers="[
+                ['key' => 'code', 'label' => __('Kode')],
+                ['key' => 'name', 'label' => __('Nama')],
+                ['key' => 'phase', 'label' => __('Jenis/Fase')],
+                ['key' => 'tp_count', 'label' => __('CP / TP'), 'class' => 'text-center'],
+                ['key' => 'actions', 'label' => '', 'class' => 'text-right']
+            ]" 
+            :rows="$subjects"
+        >
+            @scope('cell_code', $subject)
+                <span class="font-mono text-xs opacity-60 text-slate-500 dark:text-slate-400">{{ $subject->code }}</span>
+            @endscope
+
+            @scope('cell_name', $subject)
+                <span class="font-bold text-slate-900 dark:text-white">{{ $subject->name }}</span>
+            @endscope
+
+            @scope('cell_phase', $subject)
+                @if($subject->phase)
+                    <x-ui.badge :label="__('Fase :phase', ['phase' => $subject->phase])" class="bg-slate-100 text-slate-600 dark:bg-slate-800 dark:text-slate-400 text-[10px]" />
+                @else
+                    <span class="opacity-30 text-xs">{{ __('Umum') }}</span>
+                @endif
+            @endscope
+
+            @scope('cell_tp_count', $subject)
+                @if($subject->phase)
+                    @php
+                        $tpCount = $subject->tpsForPhase($subject->phase)->count();
+                    @endphp
+                    <div class="text-xs font-bold text-indigo-600 dark:text-indigo-400">
+                        {{ $tpCount }} TP
+                    </div>
+                @else
+                    <span class="opacity-20 text-xs">-</span>
+                @endif
+            @endscope
+
+            @scope('cell_actions', $subject)
+                <div class="flex justify-end gap-1">
+                    <x-ui.button icon="o-pencil-square" wire:click="edit({{ $subject->id }})" ghost sm />
+                    @if($subject->phase)
+                        <x-ui.button icon="o-list-bullet" wire:click="manageTps({{ $subject->id }})" ghost sm />
+                    @endif
+                    <x-ui.button 
+                        icon="o-trash" 
+                        class="text-red-600 dark:text-red-400 hover:bg-red-50 dark:hover:bg-red-900/20" 
+                        wire:confirm="{{ __('Yakin ingin menghapus mapel ini?') }}" 
+                        wire:click="delete({{ $subject->id }})" 
+                        ghost sm 
+                    />
+                </div>
+            @endscope
+        </x-ui.table>
+    </x-ui.card>
 
     <div class="mt-4">
         {{ $subjects->links() }}
     </div>
 
     {{-- Subject Create/Edit Modal --}}
-    <x-modal wire:model="subjectModal" class="backdrop-blur">
-        <x-header :title="$editing ? 'Edit Mata Pelajaran' : 'Tambah Mata Pelajaran'" subtitle="Lengkapi detail mata pelajaran di bawah ini." separator />
+    <x-ui.modal wire:model="subjectModal">
+        <x-ui.header :title="$editing ? __('Edit Mata Pelajaran') : __('Tambah Mata Pelajaran')" :subtitle="__('Lengkapi detail mata pelajaran di bawah ini.')" separator />
         
-        <form wire:submit="save">
-            <div class="grid grid-cols-1 gap-4">
-                <x-input wire:model="code" label="Kode Mapel (e.g. MAT-A, INDO-P1)" required />
-                <x-input wire:model="name" label="Nama Mata Pelajaran" required />
+        <form wire:submit="save" class="space-y-6">
+            <x-ui.input wire:model="code" :label="__('Kode Mapel (e.g. MAT-A, INDO-P1)')" required />
+            <x-ui.input wire:model="name" :label="__('Nama Mata Pelajaran')" required />
 
-                <x-select wire:model="phase" label="Fase (Kurikulum Merdeka)" required :options="collect($phases)->map(fn($p) => ['id' => $p, 'name' => 'Fase ' . $p])->toArray()" placeholder="Pilih Fase" />
+            <x-ui.select 
+                wire:model="phase" 
+                :label="__('Fase (Kurikulum Merdeka)')" 
+                required 
+                :options="collect($phases)->map(fn($p) => ['id' => $p, 'name' => __('Fase :phase', ['phase' => $p])])->toArray()" 
+                :placeholder="__('Pilih Fase')" 
+            />
+
+            <div class="flex justify-end gap-2 pt-4">
+                <x-ui.button :label="__('Batal')" ghost @click="$set('subjectModal', false)" />
+                <x-ui.button :label="__('Simpan')" type="submit" class="btn-primary" spinner="save" />
             </div>
-
-            <x-slot:actions>
-                <x-button label="Batal" @click="$set('subjectModal', false)" />
-                <x-button label="Simpan" type="submit" class="btn-primary" spinner="save" />
-            </x-slot:actions>
         </form>
-    </x-modal>
+    </x-ui.modal>
 
     {{-- TP Management Modal --}}
-    <x-modal wire:model="tpModal" class="backdrop-blur max-w-4xl">
+    <x-ui.modal wire:model="tpModal">
         @if($managingSubject)
-            <x-header title="Kelola CP & Tujuan Pembelajaran (TP)" separator>
+            <x-ui.header :title="__('Kelola CP & Tujuan Pembelajaran (TP)')" separator>
                 <x-slot:subtitle>
-                    Mapel: <strong>{{ $managingSubject->name }}</strong> — Fase {{ $managingSubject->phase }}
+                    {{ __('Mapel: :name', ['name' => $managingSubject->name]) }} — {{ __('Fase :phase', ['phase' => $managingSubject->phase]) }}
                 </x-slot:subtitle>
-            </x-header>
+            </x-ui.header>
 
-            <div class="space-y-6 max-h-[60vh] overflow-y-auto pr-2 custom-scrollbar">
+            <div class="space-y-8">
                 @if($selectedCpId)
                     {{-- CP Description --}}
-                    <div class="p-4 rounded-xl border border-blue-200 bg-blue-50 dark:bg-blue-900/10 dark:border-blue-800">
-                        <div class="flex items-start gap-4">
-                            <div class="flex-1">
-                                <label class="block text-[10px] font-bold uppercase tracking-wider text-blue-600 mb-1">Capaian Pembelajaran (CP)</label>
-                                <x-textarea wire:model="selectedCpDescription" rows="2" class="text-sm border-none shadow-none bg-transparent focus:ring-0" />
+                    <div class="p-5 rounded-2xl border border-blue-100 bg-blue-50/50 dark:bg-blue-900/10 dark:border-blue-900/50">
+                        <div class="space-y-3">
+                            <label class="block text-[10px] font-black uppercase tracking-widest text-blue-600 dark:text-blue-400">{{ __('Capaian Pembelajaran (CP)') }}</label>
+                            <div class="flex items-start gap-4">
+                                <x-ui.textarea wire:model="selectedCpDescription" rows="3" class="flex-1 bg-white dark:bg-slate-900 !border-blue-200 dark:!border-blue-800 focus:!ring-blue-500/20" />
+                                <x-ui.button icon="o-check" wire:click="updateCpDescription" class="bg-blue-600 text-white shadow-lg shadow-blue-600/20 hover:brightness-110 mt-1" />
                             </div>
-                            <x-button icon="o-check" wire:click="updateCpDescription" class="btn-primary btn-sm mt-5" />
                         </div>
                     </div>
 
                     {{-- Add TP Form --}}
-                    <div class="bg-base-200 p-4 rounded-xl">
-                        <form wire:submit="saveTp">
-                            <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
-                                <x-input wire:model="tpCode" label="Kode TP (Opsional)" placeholder="e.g. TP.1" />
-                                <div class="md:col-span-2">
-                                     <x-input wire:model="tpDescription" label="Deskripsi TP" placeholder="Peserta didik mampu..." required />
+                    <div class="bg-slate-50 dark:bg-slate-800/50 p-6 rounded-2xl border border-slate-100 dark:border-slate-800">
+                        <form wire:submit="saveTp" class="space-y-4">
+                            <div class="grid grid-cols-1 md:grid-cols-4 gap-4">
+                                <div class="md:col-span-1">
+                                    <x-ui.input wire:model="tpCode" :label="__('Kode TP')" :placeholder="__('e.g. TP.1')" />
+                                </div>
+                                <div class="md:col-span-3">
+                                     <x-ui.input wire:model="tpDescription" :label="__('Deskripsi TP')" :placeholder="__('Peserta didik mampu...')" required />
                                 </div>
                             </div>
-                            <div class="flex justify-end gap-2 mt-4">
+                            <div class="flex justify-end gap-2">
                                 @if($editingTpId)
-                                    <x-button label="Batal" wire:click="cancelEditTp" />
+                                    <x-ui.button :label="__('Batal')" ghost wire:click="cancelEditTp" />
                                 @endif
-                                <x-button label="{{ $editingTpId ? 'Update TP' : 'Tambah TP' }}" type="submit" class="btn-primary" icon="o-plus" spinner="saveTp" />
+                                <x-ui.button :label="$editingTpId ? __('Update TP') : __('Tambah TP')" type="submit" class="btn-primary" icon="o-plus" spinner="saveTp" />
                             </div>
                         </form>
                     </div>
 
                     {{-- TP List --}}
-                    <div class="border rounded-xl border-base-200 overflow-hidden bg-white dark:bg-base-300">
-                        <table class="table table-sm">
-                            <thead>
-                                <tr class="bg-base-200">
-                                    <th class="w-24">Kode</th>
-                                    <th>Deskripsi</th>
-                                    <th class="text-right w-24">Aksi</th>
-                                </tr>
-                            </thead>
-                            <tbody>
-                                @forelse($subjectTps as $tp)
-                                    <tr class="hover">
-                                        <td class="font-mono text-xs">{{ $tp->code }}</td>
-                                        <td class="text-sm">{{ $tp->description }}</td>
-                                        <td class="text-right">
-                                            <div class="flex justify-end gap-1">
-                                                <x-button icon="o-pencil-square" wire:click="editTp({{ $tp->id }})" ghost sm />
-                                                <x-button icon="o-trash" class="text-error" wire:confirm="Hapus TP ini?" wire:click="deleteTp({{ $tp->id }})" ghost sm />
-                                            </div>
-                                        </td>
-                                    </tr>
-                                @empty
-                                    <tr>
-                                        <td colspan="3" class="text-center py-8 opacity-40 italic font-serif">
-                                            Belum ada TP untuk Fase {{ $managingSubject?->phase }}.
-                                        </td>
-                                    </tr>
-                                @endforelse
-                            </tbody>
-                        </table>
-                    </div>
+                    <x-ui.card padding="false" shadow="false" class="border border-slate-100 dark:border-slate-800 !bg-transparent">
+                        <x-ui.table 
+                            :headers="[
+                                ['key' => 'code', 'label' => __('Kode')],
+                                ['key' => 'description', 'label' => __('Deskripsi')],
+                                ['key' => 'actions', 'label' => '', 'class' => 'text-right']
+                            ]" 
+                            :rows="$subjectTps"
+                            sm
+                        >
+                            @scope('cell_code', $tp)
+                                <span class="font-mono text-xs font-bold text-slate-500">{{ $tp->code }}</span>
+                            @endscope
+
+                            @scope('cell_description', $tp)
+                                <span class="text-xs text-slate-600 dark:text-slate-300 leading-relaxed">{{ $tp->description }}</span>
+                            @endscope
+
+                            @scope('cell_actions', $tp)
+                                <div class="flex justify-end gap-1">
+                                    <x-ui.button icon="o-pencil-square" wire:click="editTp({{ $tp->id }})" ghost sm />
+                                    <x-ui.button 
+                                        icon="o-trash" 
+                                        class="text-red-500 dark:text-red-400 hover:bg-red-50" 
+                                        wire:confirm="{{ __('Hapus TP ini?') }}" 
+                                        wire:click="deleteTp({{ $tp->id }})" 
+                                        ghost sm 
+                                    />
+                                </div>
+                            @endscope
+                        </x-ui.table>
+
+                        @if(collect($subjectTps)->isEmpty())
+                            <div class="py-12 text-center text-slate-400 italic text-sm">
+                                {{ __('Belum ada TP untuk Fase :phase.', ['phase' => $managingSubject?->phase]) }}
+                            </div>
+                        @endif
+                    </x-ui.card>
                 @endif
             </div>
 
-            <x-slot:actions>
-                <x-button label="Tutup" @click="$set('tpModal', false)" />
-            </x-slot:actions>
+            <div class="flex justify-end gap-2 pt-6">
+                <x-ui.button :label="__('Tutup')" ghost @click="$set('tpModal', false)" />
+            </div>
         @endif
-    </x-modal>
+    </x-ui.modal>
 </div>

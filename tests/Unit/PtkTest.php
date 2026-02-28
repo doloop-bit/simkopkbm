@@ -4,7 +4,7 @@ use App\Models\Profile;
 use App\Models\StaffProfile;
 use App\Models\TeacherProfile;
 use App\Models\User;
-use Livewire\Volt\Volt;
+use Livewire\Livewire;
 
 use function Pest\Laravel\actingAs;
 
@@ -14,7 +14,7 @@ test('admin can access ptk management', function () {
     actingAs($user)
         ->get(route('ptk.index'))
         ->assertOk()
-        ->assertSeeLivewire('ptk.index');
+        ->assertSeeLivewire('admin.data-master.ptk.index');
 });
 
 test('can create teacher ptk', function () {
@@ -22,7 +22,7 @@ test('can create teacher ptk', function () {
 
     actingAs($admin);
 
-    Volt::test('ptk.index')
+    Livewire::test('admin.data-master.ptk.index')
         ->set('name', 'Guru Test')
         ->set('email', 'guru@test.com')
         ->set('password', 'password123')
@@ -43,7 +43,7 @@ test('can create staff ptk', function () {
 
     actingAs($admin);
 
-    Volt::test('ptk.index')
+    Livewire::test('admin.data-master.ptk.index')
         ->set('name', 'Staff Test')
         ->set('email', 'staff@test.com')
         ->set('password', 'password123')
@@ -71,7 +71,7 @@ test('can delete ptk', function () {
 
     actingAs($admin);
 
-    Volt::test('ptk.index')
+    Livewire::test('admin.data-master.ptk.index')
         ->call('delete', $ptk->id);
 
     expect(User::find($ptk->id))->toBeNull();

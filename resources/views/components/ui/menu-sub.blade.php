@@ -1,12 +1,12 @@
 @props([
     'title' => null,
     'icon' => null,
+    'active' => false,
+    'open' => false,
 ])
 
 @php
-    // Check if any child route is active
-    $isOpen = false;
-    // The sub-menu starts open if the current URL matches any child link
+    $isOpen = $open || $active;
 @endphp
 
 <div x-data="{ open: {{ $isOpen ? 'true' : 'false' }} }" class="space-y-0.5">
@@ -14,7 +14,9 @@
         type="button"
         @click="open = !open"
         {{ $attributes->class([
-            'flex items-center justify-between w-full px-3 py-2.5 rounded-xl text-sm text-slate-400 hover:text-white hover:bg-slate-800 transition-all duration-200',
+            'flex items-center justify-between w-full px-3 py-2.5 rounded-xl text-sm transition-all duration-200',
+            'bg-slate-800/40 text-white font-medium shadow-sm border border-slate-700/50 mb-1' => $active,
+            'text-slate-400 hover:text-white hover:bg-slate-800' => !$active,
         ]) }}
     >
         <span class="flex items-center gap-3">

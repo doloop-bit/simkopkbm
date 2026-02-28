@@ -1,35 +1,36 @@
-<x-modal wire:model="periodicModal" class="backdrop-blur">
-    <x-header title="Data Periodik Siswa" subtitle="Input data berat badan, tinggi, dan lingkar kepala." separator />
+<x-ui.modal wire:model="periodicModal" persistent>
+    <x-ui.header :title="__('Data Periodik Siswa')" :subtitle="__('Input data berat badan, tinggi, dan lingkar kepala.')" separator />
 
     <form wire:submit.prevent="savePeriodic({{ $editing?->latestProfile?->profileable_id ?? 0 }})" class="space-y-6">
         @if($hasExistingPeriodicData)
-            <x-alert title="Data sudah ada" icon="o-information-circle" class="alert-info">
-                Terakhir diupdate {{ $periodicDataLastUpdated }}
-            </x-alert>
+            <x-ui.alert :title="__('Data sudah ada')" icon="o-information-circle" class="bg-blue-50 text-blue-800 border-blue-100 shadow-sm">
+                {{ __('Terakhir diupdate') }} {{ $periodicDataLastUpdated }}
+            </x-ui.alert>
         @else
-            <x-alert title="Belum ada data" icon="o-exclamation-triangle" class="alert-warning text-xs">
-                Belum ada data untuk semester ini
-            </x-alert>
+            <x-ui.alert :title="__('Belum ada data')" icon="o-exclamation-triangle" class="bg-amber-50 text-amber-800 border-amber-100 shadow-sm">
+                {{ __('Belum ada data untuk semester ini.') }}
+            </x-ui.alert>
         @endif
 
         <div class="space-y-4">
-            <x-select 
+            <x-ui.select 
                 wire:model.live="semester" 
-                label="Semester" 
+                :label="__('Semester')" 
                 :options="[
-                    ['id' => 1, 'name' => 'Ganjil (1)'],
-                    ['id' => 2, 'name' => 'Genap (2)'],
+                    ['id' => 1, 'name' => __('Ganjil (1)')],
+                    ['id' => 2, 'name' => __('Genap (2)')],
                 ]"
+                required
             />
 
-            <x-input type="number" step="0.5" wire:model="weight" label="Berat Badan (kg)" suffix="kg" />
-            <x-input type="number" step="1" wire:model="height" label="Tinggi Badan (cm)" suffix="cm" />
-            <x-input type="number" step="0.1" wire:model="head_circumference" label="Lingkar Kepala (cm)" suffix="cm" />
+            <x-ui.input type="number" step="0.5" wire:model="weight" :label="__('Berat Badan (kg)')" suffix="kg" required />
+            <x-ui.input type="number" step="1" wire:model="height" :label="__('Tinggi Badan (cm)')" suffix="cm" required />
+            <x-ui.input type="number" step="0.1" wire:model="head_circumference" :label="__('Lingkar Kepala (cm)')" suffix="cm" required />
         </div>
 
-        <x-slot:actions>
-            <x-button label="Batal" @click="$set('periodicModal', false)" />
-            <x-button label="Simpan Data" type="submit" class="btn-primary" spinner="savePeriodic" />
-        </x-slot:actions>
+        <div class="flex justify-end gap-2 pt-4 border-t border-slate-100 dark:border-slate-800">
+            <x-ui.button :label="__('Batal')" ghost @click="$set('periodicModal', false)" />
+            <x-ui.button :label="__('Simpan Data')" type="submit" class="btn-primary" spinner="savePeriodic" />
+        </div>
     </form>
-</x-modal>
+</x-ui.modal>

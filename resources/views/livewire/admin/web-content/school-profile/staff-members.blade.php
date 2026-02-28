@@ -229,185 +229,195 @@ new class extends Component {
     }
 }; ?>
 
-<div class="p-6">
-    <x-header title="Struktur Organisasi" subtitle="Kelola anggota struktur organisasi sekolah" separator>
-        <x-slot:actions>
-            @if (!$showForm && $profile)
-                <x-button label="Tambah Anggota" icon="o-plus" class="btn-primary" wire:click="showAddForm" />
-            @endif
-        </x-slot:actions>
-    </x-header>
-
+<div class="p-6 space-y-8 text-slate-900 dark:text-white pb-24 md:pb-6">
     @if (session()->has('message'))
-        <x-alert title="Sukses" icon="o-check-circle" class="alert-success mb-6">
+        <x-ui.alert :title="__('Sukses')" icon="o-check-circle" class="bg-emerald-50 text-emerald-800 border-emerald-100" dismissible>
             {{ session('message') }}
-        </x-alert>
+        </x-ui.alert>
     @endif
 
     @if (session()->has('error'))
-        <x-alert title="Error" icon="o-exclamation-triangle" class="alert-error mb-6">
+        <x-ui.alert :title="__('Kesalahan')" icon="o-exclamation-triangle" class="bg-rose-50 text-rose-800 border-rose-100" dismissible>
             {{ session('error') }}
-        </x-alert>
+        </x-ui.alert>
     @endif
 
+    <x-ui.header :title="__('Struktur Organisasi')" :subtitle="__('Kelola daftar pengurus, guru, dan staf pendukung yang bertugas di sekolah.')" separator>
+        <x-slot:actions>
+            @if (!$showForm && $profile)
+                <x-ui.button :label="__('Tambah Anggota Baru')" icon="o-plus" class="btn-primary shadow-lg shadow-primary/20" wire:click="showAddForm" />
+            @endif
+        </x-slot:actions>
+    </x-ui.header>
+
     @if (!$profile)
-        <x-alert title="Profil Belum Ada" icon="o-exclamation-triangle" class="alert-warning mb-6">
-            Profil sekolah belum dibuat. Silakan buat profil sekolah terlebih dahulu di halaman Profil Sekolah.
-        </x-alert>
+        <x-ui.alert :title="__('Profil Belum Dikonfigurasi')" icon="o-exclamation-triangle" class="bg-amber-50 text-amber-800 border-amber-100 shadow-sm rounded-3xl">
+            {{ __('Profil sekolah belum dibuat. Silakan buat profil sekolah terlebih dahulu di halaman Profil Sekolah untuk dapat mengelola struktur organisasi.') }}
+        </x-ui.alert>
     @else
         {{-- Add/Edit Form --}}
         @if ($showForm)
-            <x-card title="{{ $editingId ? 'Edit Anggota' : 'Tambah Anggota Baru' }}" separator shadow class="mb-8 border border-base-200">
-                <form wire:submit="save" class="space-y-6">
-                    <x-input 
-                        wire:model="name" 
-                        label="Nama Lengkap" 
-                        type="text" 
-                        required 
-                        placeholder="Contoh: Dr. Ahmad Suryadi, M.Pd"
-                    />
+            <x-ui.card shadow padding="false" class="mb-12 ring-2 ring-primary/5">
+                <div class="p-6 border-b border-slate-100 dark:border-slate-800 bg-slate-50/50 dark:bg-slate-900/50">
+                    <h3 class="font-black text-slate-800 dark:text-white uppercase tracking-tight text-sm italic">
+                        {{ $editingId ? __('Edit Data Personel') : __('Registrasi Personel Baru') }}
+                    </h3>
+                </div>
+                <div class="p-8 space-y-8">
+                    <form wire:submit="save" class="space-y-6">
+                        <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                            <x-ui.input 
+                                wire:model="name" 
+                                :label="__('Nama Lengkap & Gelar')" 
+                                type="text" 
+                                required 
+                                :placeholder="__('Contoh: Dr. Ahmad Suryadi, M.Pd')"
+                                class="font-bold text-lg"
+                            />
 
-                    <x-input 
-                        wire:model="position" 
-                        label="Jabatan" 
-                        type="text" 
-                        required 
-                        placeholder="Contoh: Kepala Sekolah"
-                    />
+                            <x-ui.input 
+                                wire:model="position" 
+                                :label="__('Jabatan / Peran')" 
+                                type="text" 
+                                required 
+                                :placeholder="__('Contoh: Kepala Sekolah')"
+                                class="font-bold text-slate-600"
+                            />
+                        </div>
 
-                    {{-- Photo Upload --}}
-                    <div class="space-y-4">
-                        @if ($currentPhotoPath && !$photo)
-                            <div class="flex items-start gap-4 p-4 bg-base-200 rounded-lg">
-                                <img 
-                                    src="{{ Storage::url($currentPhotoPath) }}" 
-                                    alt="Foto {{ $name }}" 
-                                    class="h-32 w-32 rounded-lg border border-base-300 object-cover"
-                                >
-                                <div class="flex flex-col gap-2">
-                                    <span class="text-sm font-medium">Foto saat ini</span>
-                                    <x-button 
-                                        wire:click="removePhoto" 
-                                        label="Hapus Foto"
-                                        icon="o-trash"
-                                        class="btn-error btn-sm"
-                                        wire:confirm="Apakah Anda yakin ingin menghapus foto?"
-                                    />
-                                </div>
-                            </div>
-                        @endif
-
-                        <x-file 
-                            wire:model="photo" 
-                            label="Foto" 
-                            accept="image/jpeg,image/jpg,image/png,image/webp"
-                            crop-after-change
-                        >
-                            <span class="text-xs opacity-70">Format: JPEG, PNG, WebP. Maksimal 5MB. Opsional.</span>
-                            @if ($photo)
-                                <div class="text-sm mt-2">
-                                    File dipilih: <span class="font-medium">{{ $photo->getClientOriginalName() }}</span>
+                        {{-- Photo Upload --}}
+                        <div class="space-y-4">
+                            @if ($currentPhotoPath && !$photo)
+                                <div class="flex items-center gap-6 p-6 bg-slate-50 dark:bg-slate-900/50 rounded-[2rem] border border-slate-100 dark:border-slate-800 group">
+                                    <div class="relative">
+                                        <img 
+                                            src="{{ Storage::url($currentPhotoPath) }}" 
+                                            alt="Foto {{ $name }}" 
+                                            class="h-24 w-24 rounded-full border-4 border-white dark:border-slate-700 object-cover shadow-xl group-hover:scale-105 transition-transform duration-500"
+                                        >
+                                    </div>
+                                    <div class="flex-1">
+                                        <span class="text-[10px] font-black text-slate-400 uppercase tracking-widest italic mb-2 block">{{ __('Foto Profil Saat Ini') }}</span>
+                                        <x-ui.button 
+                                            wire:click="removePhoto" 
+                                            :label="__('Hapus Foto')"
+                                            icon="o-trash"
+                                            class="btn-ghost btn-xs text-rose-500 hover:bg-rose-50 font-bold"
+                                            wire:confirm="{{ __('Hapus foto personel ini?') }}"
+                                        />
+                                    </div>
                                 </div>
                             @endif
-                        </x-file>
-                    </div>
 
-                    {{-- Form Actions --}}
-                    <x-slot:actions>
-                        <x-button label="Batal" wire:click="cancelEdit" ghost />
-                        <x-button 
-                            label="{{ $editingId ? 'Perbarui' : 'Simpan' }}"
-                            class="btn-primary" 
-                            type="submit" 
-                            spinner="save"
-                        />
-                    </x-slot:actions>
-                </form>
-            </x-card>
+                            <x-ui.file 
+                                wire:model="photo" 
+                                :label="__('Unggah Foto Formal')" 
+                                accept="image/jpeg,image/jpg,image/png,image/webp"
+                                class="bg-white dark:bg-slate-800"
+                            >
+                                @if ($photo)
+                                    <div class="text-[10px] font-black italic text-indigo-600 mt-2 px-1">
+                                        {{ __('File dipilih') }}: <span class="underline">{{ $photo->getClientOriginalName() }}</span>
+                                    </div>
+                                @endif
+                            </x-ui.file>
+                            <p class="text-[10px] text-slate-400 italic px-1 leading-relaxed">
+                                * {{ __('Format file: JPEG, PNG, WebP (Maksimal 5MB). Gunakan latar belakang polos atau formal untuk konsistensi visual.') }}
+                            </p>
+                        </div>
+
+                        {{-- Form Actions --}}
+                        <div class="flex items-center justify-end gap-3 pt-6 border-t border-slate-100 dark:border-slate-800">
+                            <x-ui.button :label="__('Batalkan')" wire:click="cancelEdit" class="btn-ghost" />
+                            <x-ui.button 
+                                :label="$editingId ? __('Perbarui Data') : __('Simpan Personel')"
+                                class="btn-primary shadow-xl shadow-primary/20 px-8" 
+                                type="submit" 
+                                spinner="save"
+                            />
+                        </div>
+                    </form>
+                </div>
+            </x-ui.card>
         @endif
 
         {{-- Staff Members List --}}
-        @if (count($staffMembers) > 0)
-            <div class="space-y-4">
-                <h3 class="text-lg font-bold">Daftar Anggota</h3>
-                
-                <div class="grid grid-cols-1 gap-4">
+        <div class="space-y-6">
+            <div class="flex items-center justify-between px-2">
+                <h3 class="font-black text-slate-800 dark:text-white uppercase tracking-tight text-sm italic">{{ __('Daftar Pengurus & Staf') }}</h3>
+                <x-ui.badge :label="count($staffMembers) . ' ' . __('Personel')" class="bg-emerald-50 text-emerald-600 border-none font-bold italic" />
+            </div>
+            
+            @if (count($staffMembers) > 0)
+                <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
                     @foreach ($staffMembers as $index => $staff)
-                        <x-card wire:key="staff-{{ $staff['id'] }}" shadow class="border border-base-200 hover:shadow-md transition-all">
-                            <div class="flex flex-col sm:flex-row items-center sm:items-start gap-4">
-                                {{-- Photo --}}
-                                <div class="flex-shrink-0">
-                                    @if ($staff['photo_path'])
-                                        <img 
-                                            src="{{ Storage::url($staff['photo_path']) }}" 
-                                            alt="Foto {{ $staff['name'] }}" 
-                                            class="h-24 w-24 sm:h-20 sm:w-20 rounded-full border border-base-300 object-cover"
-                                        >
-                                    @else
-                                        <div class="flex h-24 w-24 sm:h-20 sm:w-20 items-center justify-center rounded-full border border-base-200 bg-base-200">
-                                            <x-icon name="o-user" class="h-10 w-10 opacity-30" />
-                                        </div>
-                                    @endif
-                                </div>
-
-                                {{-- Info --}}
-                                <div class="flex-1 text-center sm:text-left">
-                                    <h4 class="font-bold text-lg">{{ $staff['name'] }}</h4>
-                                    <p class="text-sm opacity-70">{{ $staff['position'] }}</p>
-                                    <div class="mt-2 text-xs flex items-center justify-center sm:justify-start gap-2">
-                                        <x-badge label="Urutan: {{ $staff['order'] }}" class="badge-ghost badge-xs" />
+                        <x-ui.card wire:key="staff-{{ $staff['id'] }}" shadow padding="false" class="group relative overflow-hidden border-none ring-1 ring-slate-100 dark:ring-slate-800 hover:ring-primary/20 transition-all duration-500">
+                            {{-- Photo Frame --}}
+                            <div class="pt-8 pb-6 flex justify-center bg-slate-50 dark:bg-slate-900/50 border-b border-slate-100 dark:border-slate-800/50">
+                                <div class="relative">
+                                    <div class="size-24 rounded-full p-1 bg-white dark:bg-slate-800 shadow-xl ring-1 ring-slate-100 dark:ring-slate-700">
+                                        @if ($staff['photo_path'])
+                                            <img 
+                                                src="{{ Storage::url($staff['photo_path']) }}" 
+                                                alt="Foto {{ $staff['name'] }}" 
+                                                class="size-full rounded-full object-cover group-hover:scale-110 transition-transform duration-700"
+                                            >
+                                        @else
+                                            <div class="size-full rounded-full bg-slate-50 dark:bg-slate-900 flex items-center justify-center">
+                                                <x-ui.icon name="o-user" class="size-10 text-slate-200" />
+                                            </div>
+                                        @endif
+                                    </div>
+                                    <div class="absolute -bottom-1 -right-1 size-7 bg-white dark:bg-slate-800 rounded-full shadow-md flex items-center justify-center border-2 border-slate-50 dark:border-slate-900">
+                                        <span class="text-[9px] font-black text-slate-400 italic">#{{ $index + 1 }}</span>
                                     </div>
                                 </div>
+                            </div>
 
-                                {{-- Actions --}}
-                                <div class="flex flex-row sm:flex-col justify-end gap-1 w-full sm:w-auto mt-4 sm:mt-0 pt-4 sm:pt-0 border-t sm:border-t-0 border-base-200">
-                                    {{-- Ordering Buttons --}}
-                                    <div class="flex gap-1 justify-center">
-                                        <x-button 
+                            <div class="p-6 text-center">
+                                <h4 class="font-black text-slate-900 dark:text-white leading-tight mb-1 group-hover:text-primary transition-colors italic uppercase tracking-tighter">{{ $staff['name'] }}</h4>
+                                <p class="text-[10px] font-bold text-indigo-500 uppercase tracking-widest italic mb-6 leading-relaxed">{{ $staff['position'] }}</p>
+                                
+                                <div class="flex items-center justify-between pt-4 border-t border-slate-50 dark:border-slate-800/50">
+                                    <div class="flex gap-1 opacity-0 group-hover:opacity-100 transition-all duration-300">
+                                        <x-ui.button 
                                             wire:click="moveUp({{ $staff['id'] }})" 
                                             icon="o-chevron-up"
-                                            class="btn-xs btn-ghost btn-circle"
+                                            class="size-7 min-h-0 p-0 btn-ghost text-slate-400 hover:text-indigo-500"
                                             :disabled="$index === 0"
-                                            tooltip="Pindah ke atas"
                                         />
-                                        <x-button 
+                                        <x-ui.button 
                                             wire:click="moveDown({{ $staff['id'] }})" 
                                             icon="o-chevron-down"
-                                            class="btn-xs btn-ghost btn-circle"
+                                            class="size-7 min-h-0 p-0 btn-ghost text-slate-400 hover:text-indigo-500"
                                             :disabled="$index === count($staffMembers) - 1"
-                                            tooltip="Pindah ke bawah"
                                         />
                                     </div>
-
-                                    {{-- Edit & Delete Buttons --}}
-                                    <div class="flex gap-1 justify-center">
-                                        <x-button 
+                                    <div class="flex gap-1">
+                                        <x-ui.button 
                                             wire:click="edit({{ $staff['id'] }})" 
                                             icon="o-pencil"
-                                            class="btn-sm btn-ghost"
-                                            tooltip="Edit"
+                                            class="size-7 min-h-0 p-0 btn-ghost text-slate-300 hover:text-primary"
                                         />
-                                        <x-button 
+                                        <x-ui.button 
                                             wire:click="delete({{ $staff['id'] }})" 
                                             icon="o-trash"
-                                            class="btn-sm btn-ghost text-error"
-                                            wire:confirm="Apakah Anda yakin ingin menghapus anggota ini?"
-                                            tooltip="Hapus"
+                                            class="size-7 min-h-0 p-0 btn-ghost text-slate-300 hover:text-rose-500"
+                                            wire:confirm="{{ __('Hapus personel ini dari struktur organisasi?') }}"
                                         />
                                     </div>
                                 </div>
                             </div>
-                        </x-card>
+                        </x-ui.card>
                     @endforeach
                 </div>
-            </div>
-        @else
-            <x-card class="mt-8 p-12 text-center" shadow>
-                <x-icon name="o-user-group" class="size-12 mb-3 opacity-20" />
-                <p class="text-base-content/50">
-                    Belum ada anggota struktur organisasi. Klik tombol "Tambah Anggota" untuk menambahkan anggota baru.
-                </p>
-            </x-card>
-        @endif
+            @else
+                <div class="flex flex-col items-center justify-center py-32 text-slate-300 dark:text-slate-700 border-2 border-dashed border-slate-200 dark:border-slate-800 rounded-[32px] bg-slate-50/50 dark:bg-slate-900/50 transition-all text-center px-6">
+                    <x-ui.icon name="o-user-group" class="size-20 mb-6 opacity-20" />
+                    <p class="text-sm font-black uppercase tracking-widest italic animate-pulse">{{ __('Data Struktur Organisasi Masih Kosong') }}</p>
+                    <x-ui.button :label="__('Inisialisasi Data Personel')" wire:click="showAddForm" class="mt-8 btn-ghost text-primary btn-sm font-bold" />
+                </div>
+            @endif
+        </div>
     @endif
 </div>

@@ -488,226 +488,249 @@ new #[Layout('components.admin.layouts.app')] class extends Component {
     }
 }; ?>
 
-<div class="p-6">
+<div class="p-6 space-y-6 text-slate-900 dark:text-white">
     @if (session('success'))
-        <x-alert title="Sukses" icon="o-check-circle" class="alert-success mb-6">
+        <x-ui.alert :title="__('Sukses')" icon="o-check-circle" class="bg-emerald-50 text-emerald-800 border-emerald-100" dismissible>
             {{ session('success') }}
-        </x-alert>
+        </x-ui.alert>
     @endif
 
     @if (session('error'))
-        <x-alert title="Gagal" icon="o-exclamation-circle" class="alert-error mb-6">
+        <x-ui.alert :title="__('Gagal')" icon="o-exclamation-circle" class="bg-rose-50 text-rose-800 border-rose-100" dismissible>
             {{ session('error') }}
-        </x-alert>
+        </x-ui.alert>
     @endif
 
-    <x-header title="Manajemen Siswa" subtitle="Kelola data murid, profil, dan penempatan kelas.">
+    <x-ui.header :title="__('Manajemen Siswa')" :subtitle="__('Kelola data murid, profil, dan penempatan kelas.')">
         <x-slot:actions>
-            <x-input wire:model.live.debounce.300ms="search" placeholder="Cari siswa..." icon="o-magnifying-glass" class="w-64" clearable />
-            <x-button label="Import" icon="o-arrow-up-tray" wire:click="$set('importModal', true)" />
-            <x-button label="Tambah Siswa" icon="o-plus" wire:click="createNew" class="btn-primary" />
+            <div class="flex items-center gap-3">
+                <x-ui.input wire:model.live.debounce.300ms="search" :placeholder="__('Cari siswa...')" icon="o-magnifying-glass" sm class="w-64" clearable />
+                <x-ui.button :label="__('Import')" icon="o-arrow-up-tray" wire:click="$set('importModal', true)" ghost sm />
+                <x-ui.button :label="__('Tambah Siswa')" icon="o-plus" wire:click="createNew" class="btn-primary" />
+            </div>
         </x-slot:actions>
-    </x-header>
+    </x-ui.header>
 
-    <div
-        class="border rounded-xl border-zinc-200 dark:border-zinc-700 bg-white dark:bg-zinc-900 shadow-sm">
-        <div class="p-4 border-b border-base-200 flex flex-col md:flex-row gap-4 items-center justify-between bg-base-200/50">
+    <x-ui.card shadow padding="false">
+        <div class="p-4 border-b border-slate-100 dark:border-slate-800 flex flex-col md:flex-row gap-4 items-center justify-between bg-slate-50/50 dark:bg-slate-900/50">
             <div class="flex flex-1 gap-3 w-full md:w-auto">
                 <div class="w-full md:w-48">
-                    <x-select 
+                    <x-ui.select 
                         wire:model.live="filter_level_id" 
-                        placeholder="Semua Tingkat"
+                        :placeholder="__('Semua Tingkat')"
                         :options="$levels"
+                        sm
                     />
                 </div>
                 <div class="w-full md:w-48">
-                    <x-select 
+                    <x-ui.select 
                         wire:model.live="filter_classroom_id" 
-                        placeholder="Semua Kelas"
+                        :placeholder="__('Semua Kelas')"
                         :options="$filter_classrooms"
+                        sm
                     />
                 </div>
             </div>
 
             <div class="flex gap-2 w-full md:w-auto justify-end">
-                <x-button wire:click="export" icon="o-arrow-down-tray" label="Export XLSX" outline />
+                <x-ui.button wire:click="export" icon="o-arrow-down-tray" :label="__('Export XLSX')" ghost sm />
             </div>
         </div>
 
-        <table class="table">
-            <thead>
-                <tr>
-                    <th class="bg-base-200">
-                        <x-button label="Siswa" wire:click="sortBy('name')" ghost sm class="!px-0" />
-                        @if ($sortField === 'name')
-                            <x-icon :name="$sortDirection === 'asc' ? 'o-chevron-up' : 'o-chevron-down'" class="size-3" />
-                        @endif
-                    </th>
-                    <th class="bg-base-200">NIS/NISN</th>
-                    <th class="bg-base-200">Kelas</th>
-                    <th class="bg-base-200">Orang Tua/Wali</th>
-                    <th class="bg-base-200 text-right">Aksi</th>
-                </tr>
-            </thead>
-            <tbody>
-                @forelse ($students as $student)
-                    @php $profile = $student->latestProfile?->profileable; @endphp
-                    <tr wire:key="{{ $student->id }}" class="hover">
-                        <td>
-                            <div class="flex items-center gap-3 cursor-pointer" wire:click="viewDetails({{ $student->id }})">
-                                <x-avatar 
-                                    image="{{ ($profile?->photo && Storage::disk('public')->exists($profile->photo)) ? '/storage/'.$profile->photo : null }}" 
-                                    fallback="o-user" 
-                                    class="!w-10 !h-10"
-                                />
-                                <div class="flex flex-col">
-                                    <span class="font-bold">{{ $student->name }}</span>
-                                    <span class="text-xs opacity-60">{{ $student->email ?? '-' }}</span>
-                                </div>
-                            </div>
-                        </td>
-                        <td>
-                            <div class="flex flex-col">
-                                <span class="text-sm font-medium">{{ $profile?->nis ?? '-' }}</span>
-                                <span class="text-[10px] uppercase tracking-wider opacity-60">NISN: {{ $profile?->nisn ?? '-' }}</span>
-                            </div>
-                        </td>
-                        <td>
-                            @if ($profile?->classroom)
-                                <x-badge :label="$profile->classroom->name" class="badge-neutral badge-sm" />
-                            @else
-                                <span class="text-xs text-error italic">Belum ada kelas</span>
-                            @endif
-                        </td>
-                        <td>
-                            <div class="flex flex-col text-sm">
-                                <span class="font-medium">{{ $profile?->father_name ?: ($profile?->mother_name ?: ($profile?->guardian_name ?: '-')) }}</span>
-                                <span class="text-xs opacity-60">{{ $profile?->guardian_phone ?: ($profile?->phone ?: '-') }}</span>
-                            </div>
-                        </td>
-                        <td class="text-right">
-                            <div class="flex justify-end gap-1">
-                                <x-button icon="o-chart-bar" wire:click="openPeriodic({{ $student->id }})" ghost sm tooltip="Data Periodik" />
-                                <x-button icon="o-pencil-square" wire:click="edit({{ $student->id }})" ghost sm tooltip="Edit Siswa" />
-                                <x-button 
-                                    icon="o-trash" 
-                                    wire:confirm="Yakin ingin menghapus siswa ini?"
-                                    wire:click="delete({{ $student->id }})"
-                                    ghost sm class="text-error" 
-                                    tooltip="Hapus Siswa" 
-                                />
-                            </div>
-                        </td>
-                    </tr>
-                @empty
+        <div class="overflow-x-auto">
+            <table class="w-full text-sm text-left border-collapse">
+                <thead class="text-xs font-semibold text-slate-500 dark:text-slate-400 uppercase tracking-wider border-b border-slate-100 dark:border-slate-800 bg-slate-50/30 dark:bg-slate-900/30">
                     <tr>
-                        <td colspan="5" class="py-8 text-center opacity-50 italic">
-                            Belum ada data siswa ditemukan.
-                        </td>
+                        <th class="px-6 py-4 font-black">{{ __('Siswa') }}</th>
+                        <th class="px-6 py-4 font-black">{{ __('NIS/NISN') }}</th>
+                        <th class="px-6 py-4 font-black">{{ __('Kelas') }}</th>
+                        <th class="px-6 py-4 font-black">{{ __('Orang Tua/Wali') }}</th>
+                        <th class="px-6 py-4 font-black text-right">{{ __('Aksi') }}</th>
                     </tr>
-                @endforelse
-            </tbody>
-        </table>
-    </div>
+                </thead>
+                <tbody class="divide-y divide-slate-100 dark:divide-slate-800">
+                    @forelse($students as $student)
+                        @php $profile = $student->latestProfile?->profileable; @endphp
+                        <tr class="group hover:bg-slate-50/80 dark:hover:bg-slate-800/50 transition-all duration-200">
+                            <td class="px-6 py-4">
+                                <div class="flex items-center gap-4 cursor-pointer" wire:click="viewDetails({{ $student->id }})">
+                                    <div class="relative">
+                                        <x-ui.avatar 
+                                            :image="($profile?->photo && Storage::disk('public')->exists($profile->photo)) ? '/storage/'.$profile->photo : null" 
+                                            fallback="o-user" 
+                                            class="!w-11 !h-11 rounded-xl group-hover:ring-2 group-hover:ring-primary/30 transition-all shadow-sm border border-slate-100 dark:border-slate-800"
+                                        />
+                                        @if($student->is_active)
+                                            <div class="absolute -bottom-1 -right-1 w-3.5 h-3.5 bg-emerald-500 border-2 border-white dark:border-slate-900 rounded-full"></div>
+                                        @endif
+                                    </div>
+                                    <div class="flex flex-col">
+                                        <span class="font-bold text-slate-900 dark:text-white group-hover:text-primary transition-colors">{{ $student->name }}</span>
+                                        <span class="text-[10px] text-slate-400 font-mono tracking-tighter">{{ $student->email ?? '-' }}</span>
+                                    </div>
+                                </div>
+                            </td>
+                            <td class="px-6 py-4">
+                                <div class="flex flex-col">
+                                    <span class="text-sm font-semibold text-slate-700 dark:text-slate-300 font-mono tracking-tight italic">{{ $profile?->nis ?? '-' }}</span>
+                                    <span class="text-[10px] uppercase font-bold text-slate-400 tracking-wider">NISN: {{ $profile?->nisn ?? '-' }}</span>
+                                </div>
+                            </td>
+                            <td class="px-6 py-4">
+                                @if ($profile?->classroom)
+                                    <div class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-md bg-primary/5 text-primary border border-primary/10">
+                                        <span class="text-[10px] font-black tracking-widest uppercase">{{ $profile->classroom->name }}</span>
+                                    </div>
+                                @else
+                                    <span class="text-[10px] text-rose-500 font-black uppercase italic tracking-widest bg-rose-50 dark:bg-rose-950/30 px-2 py-0.5 rounded">{{ __('Belum ada kelas') }}</span>
+                                @endif
+                            </td>
+                            <td class="px-6 py-4">
+                                <div class="flex flex-col">
+                                    <span class="text-sm font-medium text-slate-700 dark:text-slate-300">{{ $profile?->father_name ?: ($profile?->mother_name ?: ($profile?->guardian_name ?: '-')) }}</span>
+                                    <div class="flex items-center gap-1 mt-0.5">
+                                        <x-ui.icon name="o-phone" class="!w-2.5 !h-2.5 text-slate-400" />
+                                        <span class="text-[10px] text-slate-400 font-mono italic">{{ $profile?->guardian_phone ?: ($profile?->phone ?: '-') }}</span>
+                                    </div>
+                                </div>
+                            </td>
+                            <td class="px-6 py-4 text-right">
+                                <div class="flex justify-end gap-1.5 opacity-0 group-hover:opacity-100 transition-opacity duration-200">
+                                    <x-ui.button icon="o-chart-bar" wire:click="openPeriodic({{ $student->id }})" ghost sm class="hover:text-primary" />
+                                    <x-ui.button icon="o-pencil-square" wire:click="edit({{ $student->id }})" ghost sm class="hover:text-indigo-600" />
+                                    <x-ui.button 
+                                        icon="o-trash" 
+                                        class="text-red-500 dark:text-red-400 hover:bg-red-50 dark:hover:bg-red-900/10" 
+                                        wire:confirm="{{ __('Yakin ingin menghapus siswa ini?') }}"
+                                        wire:click="delete({{ $student->id }})"
+                                        ghost sm 
+                                    />
+                                </div>
+                            </td>
+                        </tr>
+                    @empty
+                        <tr>
+                            <td colspan="5" class="py-20 text-center">
+                                <div class="flex flex-col items-center gap-3">
+                                    <div class="p-4 rounded-full bg-slate-50 dark:bg-slate-900">
+                                        <x-ui.icon name="o-user-group" class="!w-10 !h-10 text-slate-300" />
+                                    </div>
+                                    <div class="text-slate-400 font-medium italic text-sm">
+                                        {{ __('Belum ada data siswa yang ditemukan.') }}
+                                    </div>
+                                </div>
+                            </td>
+                        </tr>
+                    @endforelse
+                </tbody>
+            </table>
+        </div>
+    </x-ui.card>
 
     <div class="mt-4">
         {{ $students->links() }}
     </div>
 
-    <x-modal wire:model="studentModal" class="backdrop-blur">
-        <div class="mb-5 flex items-start justify-between">
+    <x-ui.modal wire:model="studentModal" persistent>
+        <div class="mb-8 flex items-start justify-between">
             <div>
-                <x-header :title="$editing ? 'Edit Profil Siswa' : 'Tambah Siswa Baru'" subtitle="Lengkapi data identitas dan akademik siswa." separator />
+                <x-ui.header :title="$editing ? __('Edit Profil Siswa') : __('Tambah Siswa Baru')" :subtitle="__('Lengkapi data identitas dan akademik siswa.')" separator />
             </div>
 
-            <div class="flex flex-col items-center gap-2">
+            <div class="flex flex-col items-center gap-3">
                 <div class="relative group">
-                    <x-file wire:model="photo" accept="image/*" crop-after-change hidden />
+                    <x-ui.file wire:model="photo" accept="image/*" hidden />
                     <div class="cursor-pointer" onclick="document.querySelector('input[type=file]').click()">
-                        <x-avatar 
-                            image="{{ $photo ? $photo->temporaryUrl() : ($existingPhoto ? '/storage/'.$existingPhoto : null) }}" 
+                        <x-ui.avatar 
+                            :image="$photo ? $photo->temporaryUrl() : ($existingPhoto ? '/storage/'.$existingPhoto : null)" 
                             fallback="o-camera" 
-                            class="!w-24 !h-24 rounded-lg"
+                            class="!w-24 !h-24 rounded-2xl ring-4 ring-primary/5 shadow-xl transition-all hover:scale-105 active:scale-95"
                         />
                     </div>
                 </div>
-                <div class="text-[10px] opacity-60">Foto Profil (Max 1MB)</div>
+                <div class="text-[10px] font-black uppercase text-slate-400 tracking-widest">{{ __('Foto Profil (Max 1MB)') }}</div>
             </div>
         </div>
 
-        <form wire:submit="save">
-            <div class="grid grid-cols-1 md:grid-cols-2 gap-6 h-[60vh] overflow-y-auto pr-2 custom-scrollbar">
-                <div class="space-y-4">
-                    <div class="font-bold border-b pb-1 text-sm opacity-70 italic">Identitas Siswa</div>
+        <form wire:submit="save" class="space-y-6">
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-8 max-h-[60vh] overflow-y-auto pr-4 custom-scrollbar">
+                <div class="space-y-5">
+                    <div class="text-[11px] font-black uppercase text-slate-400 tracking-widest border-b border-slate-100 dark:border-slate-800 pb-2">{{ __('Identitas Siswa') }}</div>
 
-                    <x-input wire:model="name" label="Nama Lengkap" />
-                    <x-input wire:model="email" label="Email" type="email" />
+                    <x-ui.input wire:model="name" :label="__('Nama Lengkap')" required />
+                    <x-ui.input wire:model="email" :label="__('Email')" type="email" required />
 
-                    <div class="grid grid-cols-2 gap-3">
-                        <x-input wire:model="nis" label="NIS" />
-                        <x-input wire:model="nisn" label="NISN" />
+                    <div class="grid grid-cols-2 gap-4">
+                        <x-ui.input wire:model="nis" :label="__('NIS')" />
+                        <x-ui.input wire:model="nisn" :label="__('NISN')" />
                     </div>
 
-                    <x-input wire:model="nik" label="NIK Siswa" placeholder="16 digit NIK" />
+                    <x-ui.input wire:model="nik" :label="__('NIK Siswa')" :placeholder="__('16 digit NIK')" required />
 
-                    <div class="grid grid-cols-2 gap-3">
-                        <x-input wire:model="no_kk" label="No. Kartu Keluarga" />
-                        <x-input wire:model="no_akta" label="No. Akta Kelahiran" />
+                    <div class="grid grid-cols-2 gap-4">
+                        <x-ui.input wire:model="no_kk" :label="__('No. Kartu Keluarga')" required />
+                        <x-ui.input wire:model="no_akta" :label="__('No. Akta Kelahiran')" required />
                     </div>
 
-                    <div class="grid grid-cols-2 gap-3">
-                        <x-input wire:model="pob" label="Tempat Lahir" />
-                        <x-input wire:model="dob" label="Tanggal Lahir" type="date" />
+                    <div class="grid grid-cols-2 gap-4">
+                        <x-ui.input wire:model="pob" :label="__('Tempat Lahir')" required />
+                        <x-ui.input wire:model="dob" :label="__('Tanggal Lahir')" type="date" required />
                     </div>
 
-                    <x-input wire:model="phone" label="No. Telepon / WA" />
+                    <x-ui.input wire:model="phone" :label="__('No. Telepon / WA')" />
 
-                    <x-select wire:model="classroom_id" label="Kelas" :options="$classrooms" placeholder="Pilih Kelas" />
+                    <x-ui.select wire:model="classroom_id" :label="__('Kelas')" :options="$classrooms" :placeholder="__('Pilih Kelas')" />
 
-                    <x-textarea wire:model="address" label="Alamat" rows="3" />
+                    <x-ui.textarea wire:model="address" :label="__('Alamat')" rows="3" />
 
-                    <div class="grid grid-cols-2 gap-3">
-                        <x-input type="number" wire:model="birth_order" label="Anak Ke-" />
-                        <x-input type="number" wire:model="total_siblings" label="Dari ... Bersaudara" />
+                    <div class="grid grid-cols-2 gap-4">
+                        <x-ui.input type="number" wire:model="birth_order" :label="__('Anak Ke-')" />
+                        <x-ui.input type="number" wire:model="total_siblings" :label="__('Dari ... Bersaudara')" />
                     </div>
 
-                    <x-input wire:model="previous_school" label="Asal Sekolah" />
+                    <x-ui.input wire:model="previous_school" :label="__('Asal Sekolah')" />
 
-                    <x-select 
+                    <x-ui.select 
                         wire:model="status" 
-                        label="Status Siswa" 
+                        :label="__('Status Siswa')" 
                         :options="[
-                            ['id' => 'baru', 'name' => 'Baru'],
-                            ['id' => 'mutasi', 'name' => 'Mutasi / Pindahan'],
-                            ['id' => 'naik_kelas', 'name' => 'Naik Kelas'],
-                            ['id' => 'lulus', 'name' => 'Lulus'],
-                            ['id' => 'keluar', 'name' => 'Keluar'],
+                            ['id' => 'baru', 'name' => __('Baru')],
+                            ['id' => 'mutasi', 'name' => __('Mutasi / Pindahan')],
+                            ['id' => 'naik_kelas', 'name' => __('Naik Kelas')],
+                            ['id' => 'lulus', 'name' => __('Lulus')],
+                            ['id' => 'keluar', 'name' => __('Keluar')],
                         ]"
+                        required
                     />
                 </div>
 
-                <div class="space-y-4">
-                    <div class="font-bold border-b pb-1 text-sm opacity-70 italic">Data Orang Tua / Wali</div>
+                <div class="space-y-5">
+                    <div class="text-[11px] font-black uppercase text-slate-400 tracking-widest border-b border-slate-100 dark:border-slate-800 pb-2">{{ __('Data Orang Tua / Wali') }}</div>
 
-                    <x-input wire:model="father_name" label="Nama Ayah" />
-                    <x-input wire:model="nik_ayah" label="NIK Ayah" />
-                    <x-input wire:model="mother_name" label="Nama Ibu" />
-                    <x-input wire:model="nik_ibu" label="NIK Ibu" />
+                    <div class="space-y-4">
+                        <x-ui.input wire:model="father_name" :label="__('Nama Ayah')" required />
+                        <x-ui.input wire:model="nik_ayah" :label="__('NIK Ayah')" required />
+                    </div>
+                    
+                    <div class="space-y-4 pt-2">
+                        <x-ui.input wire:model="mother_name" :label="__('Nama Ibu')" required />
+                        <x-ui.input wire:model="nik_ibu" :label="__('NIK Ibu')" required />
+                    </div>
 
-                    <div class="pt-4 space-y-4">
-                        <div class="font-bold text-xs opacity-70 uppercase tracking-widest">Kontak Wali (Jika Ada)</div>
-                        <x-input wire:model="guardian_name" label="Nama Wali" />
-                        <x-input wire:model="guardian_phone" label="No. Telp Wali" />
+                    <div class="pt-6 space-y-4 bg-slate-50/50 dark:bg-slate-900/50 p-4 rounded-xl border border-slate-100 dark:border-slate-800">
+                        <div class="text-[10px] font-black uppercase text-slate-400 tracking-widest">{{ __('Kontak Wali (Jika Ada)') }}</div>
+                        <x-ui.input wire:model="guardian_name" :label="__('Nama Wali')" />
+                        <x-ui.input wire:model="guardian_phone" :label="__('No. Telp Wali')" />
                     </div>
                 </div>
             </div>
 
-            <x-slot:actions>
-                <x-button label="Batal" wire:click="$set('studentModal', false)" />
-                <x-button label="Simpan" type="submit" class="btn-primary" spinner="save" />
-            </x-slot:actions>
+            <div class="flex justify-end gap-2 pt-4 border-t border-slate-100 dark:border-slate-800">
+                <x-ui.button :label="__('Batal')" ghost @click="$set('studentModal', false)" />
+                <x-ui.button :label="__('Simpan')" type="submit" class="btn-primary" spinner="save" />
+            </div>
         </form>
-    </x-modal>
+    </x-ui.modal>
 
     {{-- Modals --}}
     @include('livewire.admin.data-master.students.partials.import-modal')

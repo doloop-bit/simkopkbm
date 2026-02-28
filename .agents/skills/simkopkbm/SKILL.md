@@ -9,7 +9,7 @@ Maintain high code quality, follow existing patterns strictly, and leverage the 
 ## 🛠 Technical Stack
 
 - **Framework**: Laravel 12 (Streamlined structure)
-- **Frontend**: Livewire 4 + Volt (Single File Components)
+- **Frontend**: Livewire 4 (Native Single File Components)
 - **UI Libraries**:
     - **Flux UI (Free)**: Primary choice for Button, Input, Select, Modal.
     - **TallStack UI**: Secondary choice for Table, DatePicker, Searchable Select, Tabs.
@@ -30,7 +30,7 @@ Before implementing any feature, especially if unsure about syntax or best pract
 ### 2. Follow Development Workflows
 
 - **New Page**:
-    1. `php artisan make:volt admin/{module}/{name} --class`
+    1. `php artisan make:livewire admin/{module}/{name} --sfc`
     2. Add route in `routes/{module}.php`
     3. Add to `resources/views/components/admin/sidebar.blade.php`
     4. `php artisan view:clear`
@@ -43,7 +43,7 @@ Before implementing any feature, especially if unsure about syntax or best pract
 ### 3. Structural Patterns
 
 - **Layouts**: Use `#[Layout('components.admin.layouts.app')]`.
-- **Volt Components**: Use class-based Volt components by default for complexity.
+- **SFC Components**: Use native Livewire 4 single-file components (`<?php ... ?>` tags).
 - **Multi-Role**: For shared features between Admin and Teacher:
     - Extract logic to Traits.
     - Extract UI to partials in `resources/views/livewire/shared/_partials/`.
@@ -69,7 +69,7 @@ Before implementing any feature, especially if unsure about syntax or best pract
 - **Cache**: Run `php artisan view:clear` after modifying Blade/Volt components.
 - **Database**: Ensure migrations are compatible with both SQLite and MySQL.
 - **Formatting**: Run `vendor/bin/pint --dirty` before finalizing.
-- **N+1**: Always eager load relationships in `with()` method of Volt components.
+- **N+1**: Always eager load relationships in `with()` method of components.
 
 ## 📂 Reference Directory
 

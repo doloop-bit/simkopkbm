@@ -229,186 +229,201 @@ new class extends Component {
     }
 }; ?>
 
-<div class="p-6">
-    <x-header title="Fasilitas Sekolah" subtitle="Kelola fasilitas sekolah" separator>
-        <x-slot:actions>
-            @if (!$showForm && $profile)
-                <x-button label="Tambah Fasilitas" icon="o-plus" class="btn-primary" wire:click="showAddForm" />
-            @endif
-        </x-slot:actions>
-    </x-header>
-
+<div class="p-6 space-y-8 text-slate-900 dark:text-white pb-24 md:pb-6">
     @if (session()->has('message'))
-        <x-alert title="Sukses" icon="o-check-circle" class="alert-success mb-6">
+        <x-ui.alert :title="__('Sukses')" icon="o-check-circle" class="bg-emerald-50 text-emerald-800 border-emerald-100" dismissible>
             {{ session('message') }}
-        </x-alert>
+        </x-ui.alert>
     @endif
 
     @if (session()->has('error'))
-        <x-alert title="Error" icon="o-exclamation-triangle" class="alert-error mb-6">
+        <x-ui.alert :title="__('Kesalahan')" icon="o-exclamation-triangle" class="bg-rose-50 text-rose-800 border-rose-100" dismissible>
             {{ session('error') }}
-        </x-alert>
+        </x-ui.alert>
     @endif
 
+    <x-ui.header :title="__('Fasilitas Sekolah')" :subtitle="__('Kelola daftar fasilitas penunjang kegiatan belajar mengajar di sekolah.')" separator>
+        <x-slot:actions>
+            @if (!$showForm && $profile)
+                <x-ui.button :label="__('Tambah Fasilitas Baru')" icon="o-plus" class="btn-primary shadow-lg shadow-primary/20" wire:click="showAddForm" />
+            @endif
+        </x-slot:actions>
+    </x-ui.header>
+
     @if (!$profile)
-        <x-alert title="Profil Belum Ada" icon="o-exclamation-triangle" class="alert-warning mb-6">
-            Profil sekolah belum dibuat. Silakan buat profil sekolah terlebih dahulu di halaman Profil Sekolah.
-        </x-alert>
+        <x-ui.alert :title="__('Profil Belum Dikonfigurasi')" icon="o-exclamation-triangle" class="bg-amber-50 text-amber-800 border-amber-100 shadow-sm rounded-3xl">
+            {{ __('Profil sekolah belum dibuat. Silakan buat profil sekolah terlebih dahulu di halaman Profil Sekolah untuk dapat mengelola fasilitas.') }}
+        </x-ui.alert>
     @else
         {{-- Add/Edit Form --}}
         @if ($showForm)
-            <x-card title="{{ $editingId ? 'Edit Fasilitas' : 'Tambah Fasilitas Baru' }}" separator shadow class="mb-8 border border-base-200">
-                <form wire:submit="save" class="space-y-6">
-                    <x-input 
-                        wire:model="name" 
-                        label="Nama Fasilitas" 
-                        type="text" 
-                        required 
-                        placeholder="Contoh: Perpustakaan"
-                    />
+            <x-ui.card shadow padding="false" class="mb-12 ring-2 ring-primary/5">
+                <div class="p-6 border-b border-slate-100 dark:border-slate-800 bg-slate-50/50 dark:bg-slate-900/50">
+                    <h3 class="font-black text-slate-800 dark:text-white uppercase tracking-tight text-sm italic">
+                        {{ $editingId ? __('Edit Detail Fasilitas') : __('Registrasi Fasilitas Baru') }}
+                    </h3>
+                </div>
+                <div class="p-8 space-y-8">
+                    <form wire:submit="save" class="space-y-6">
+                        <x-ui.input 
+                            wire:model="name" 
+                            :label="__('Nama Fasilitas')" 
+                            type="text" 
+                            required 
+                            :placeholder="__('Contoh: Laboratorium Digital')"
+                            class="font-bold text-lg"
+                        />
 
-                    <x-textarea 
-                        wire:model="description" 
-                        label="Deskripsi" 
-                        rows="4" 
-                        placeholder="Deskripsi fasilitas (opsional)"
-                    />
+                        <x-ui.textarea 
+                            wire:model="description" 
+                            :label="__('Deskripsi Singkat')" 
+                            rows="4" 
+                            :placeholder="__('Jelaskan fungsi atau keunggulan fasilitas ini...')"
+                            class="italic text-sm"
+                        />
 
-                    {{-- Image Upload --}}
-                    <div class="space-y-4">
-                        @if ($currentImagePath && !$image)
-                            <div class="flex items-start gap-4 p-4 bg-base-200 rounded-lg">
-                                <img 
-                                    src="{{ Storage::url($currentImagePath) }}" 
-                                    alt="Gambar {{ $name }}" 
-                                    class="h-32 w-32 rounded-lg border border-base-300 object-cover"
-                                >
-                                <div class="flex flex-col gap-2">
-                                    <span class="text-sm font-medium">Gambar saat ini</span>
-                                    <x-button 
-                                        wire:click="removeImage" 
-                                        label="Hapus Gambar"
-                                        icon="o-trash"
-                                        class="btn-error btn-sm"
-                                        wire:confirm="Apakah Anda yakin ingin menghapus gambar?"
-                                    />
-                                </div>
-                            </div>
-                        @endif
-
-                        <x-file 
-                            wire:model="image" 
-                            label="Gambar" 
-                            accept="image/jpeg,image/jpg,image/png,image/webp"
-                            crop-after-change
-                        >
-                            <span class="text-xs opacity-70">Format: JPEG, PNG, WebP. Maksimal 5MB. Opsional.</span>
-                            @if ($image)
-                                <div class="text-sm mt-2">
-                                    File dipilih: <span class="font-medium">{{ $image->getClientOriginalName() }}</span>
+                        {{-- Image Upload --}}
+                        <div class="space-y-4">
+                            @if ($currentImagePath && !$image)
+                                <div class="flex items-center gap-6 p-6 bg-slate-50 dark:bg-slate-900/50 rounded-2xl border border-slate-100 dark:border-slate-800 group">
+                                    <div class="relative">
+                                        <img 
+                                            src="{{ Storage::url($currentImagePath) }}" 
+                                            alt="Gambar {{ $name }}" 
+                                            class="h-32 w-48 rounded-xl border border-white dark:border-slate-700 object-cover shadow-lg group-hover:scale-105 transition-transform duration-500"
+                                        >
+                                    </div>
+                                    <div class="flex-1">
+                                        <span class="text-xs font-black text-slate-400 uppercase tracking-widest italic mb-2 block">{{ __('Gambar Saat Ini') }}</span>
+                                        <x-ui.button 
+                                            wire:click="removeImage" 
+                                            :label="__('Hapus Gambar')"
+                                            icon="o-trash"
+                                            class="btn-ghost btn-xs text-rose-500 hover:bg-rose-50 font-bold"
+                                            wire:confirm="{{ __('Apakah Anda yakin ingin menghapus gambar fasilitas ini?') }}"
+                                        />
+                                    </div>
                                 </div>
                             @endif
-                        </x-file>
-                    </div>
 
-                    {{-- Form Actions --}}
-                    <x-slot:actions>
-                        <x-button label="Batal" wire:click="cancelEdit" ghost />
-                        <x-button 
-                            label="{{ $editingId ? 'Perbarui' : 'Simpan' }}"
-                            class="btn-primary" 
-                            type="submit" 
-                            spinner="save"
-                        />
-                    </x-slot:actions>
-                </form>
-            </x-card>
+                            <x-ui.file 
+                                wire:model="image" 
+                                :label="__('Unggah Foto Fasilitas')" 
+                                accept="image/jpeg,image/jpg,image/png,image/webp"
+                                class="bg-white dark:bg-slate-800"
+                            >
+                                @if ($image)
+                                    <div class="text-[10px] font-black italic text-indigo-600 mt-2 px-1">
+                                        {{ __('File dipilih') }}: <span class="underline">{{ $image->getClientOriginalName() }}</span>
+                                    </div>
+                                @endif
+                            </x-ui.file>
+                            <p class="text-[10px] text-slate-400 italic px-1 leading-relaxed">
+                                * {{ __('Format file yang didukung: JPEG, PNG, WebP (Maksimal 5MB). Rasio 16:9 direkomendasikan.') }}
+                            </p>
+                        </div>
+
+                        {{-- Form Actions --}}
+                        <div class="flex items-center justify-end gap-3 pt-6 border-t border-slate-100 dark:border-slate-800">
+                            <x-ui.button :label="__('Batalkan')" wire:click="cancelEdit" class="btn-ghost" />
+                            <x-ui.button 
+                                :label="$editingId ? __('Perbarui Fasilitas') : __('Simpan Fasilitas')"
+                                class="btn-primary shadow-xl shadow-primary/20 px-8" 
+                                type="submit" 
+                                spinner="save"
+                            />
+                        </div>
+                    </form>
+                </div>
+            </x-ui.card>
         @endif
 
         {{-- Facilities List --}}
-        @if (count($facilities) > 0)
-            <div class="space-y-4">
-                <h3 class="text-lg font-bold">Daftar Fasilitas</h3>
-                
-                <div class="grid grid-cols-1 gap-4">
+        <div class="space-y-6">
+            <div class="flex items-center justify-between px-2">
+                <h3 class="font-black text-slate-800 dark:text-white uppercase tracking-tight text-sm italic">{{ __('Daftar Fasilitas Terdaftar') }}</h3>
+                <x-ui.badge :label="count($facilities) . ' ' . __('Unit')" class="bg-indigo-50 text-indigo-600 border-none font-bold italic" />
+            </div>
+            
+            @if (count($facilities) > 0)
+                <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
                     @foreach ($facilities as $index => $facility)
-                        <x-card wire:key="facility-{{ $facility['id'] }}" shadow class="border border-base-200 hover:shadow-md transition-all">
-                            <div class="flex flex-col sm:flex-row items-center sm:items-start gap-4">
-                                {{-- Image --}}
-                                <div class="flex-shrink-0">
-                                    @if ($facility['image_path'])
-                                        <img 
-                                            src="{{ Storage::url($facility['image_path']) }}" 
-                                            alt="Gambar {{ $facility['name'] }}" 
-                                            class="h-24 w-24 sm:h-20 sm:w-20 rounded-lg border border-base-300 object-cover"
-                                        >
-                                    @else
-                                        <div class="flex h-24 w-24 sm:h-20 sm:w-20 items-center justify-center rounded-lg border border-base-200 bg-base-200">
-                                            <x-icon name="o-building-office" class="h-10 w-10 opacity-30" />
-                                        </div>
-                                    @endif
+                        <x-ui.card wire:key="facility-{{ $facility['id'] }}" shadow padding="false" class="group overflow-hidden border-none ring-1 ring-slate-100 dark:ring-slate-800 hover:ring-primary/20 transition-all duration-500">
+                            {{-- Image Preview --}}
+                            <div class="relative h-48 overflow-hidden bg-slate-100 dark:bg-slate-800">
+                                @if ($facility['image_path'])
+                                    <img 
+                                        src="{{ Storage::url($facility['image_path']) }}" 
+                                        alt="Gambar {{ $facility['name'] }}" 
+                                        class="absolute inset-0 w-full h-full object-cover group-hover:scale-110 transition-transform duration-700"
+                                    >
+                                @else
+                                    <div class="absolute inset-0 flex items-center justify-center opacity-10">
+                                        <x-ui.icon name="o-building-office" class="size-24" />
+                                    </div>
+                                @endif
+                                
+                                {{-- Ordering Controls Overlay --}}
+                                <div class="absolute top-4 right-4 flex flex-col gap-2 translate-x-12 opacity-0 group-hover:translate-x-0 group-hover:opacity-100 transition-all duration-300">
+                                    <x-ui.button 
+                                        wire:click="moveUp({{ $facility['id'] }})" 
+                                        icon="o-chevron-up"
+                                        class="size-8 min-h-0 p-0 bg-white/90 dark:bg-slate-800/90 hover:bg-white text-slate-600 dark:text-white rounded-xl shadow-sm border-none"
+                                        :disabled="$index === 0"
+                                    />
+                                    <x-ui.button 
+                                        wire:click="moveDown({{ $facility['id'] }})" 
+                                        icon="o-chevron-down"
+                                        class="size-8 min-h-0 p-0 bg-white/90 dark:bg-slate-800/90 hover:bg-white text-slate-600 dark:text-white rounded-xl shadow-sm border-none"
+                                        :disabled="$index === count($facilities) - 1"
+                                    />
                                 </div>
 
-                                {{-- Info --}}
-                                <div class="flex-1 text-center sm:text-left">
-                                    <h4 class="font-bold text-lg">{{ $facility['name'] }}</h4>
-                                    @if ($facility['description'])
-                                        <p class="mt-1 text-sm opacity-70 line-clamp-2">{{ $facility['description'] }}</p>
-                                    @endif
-                                    <div class="mt-2 text-xs flex items-center justify-center sm:justify-start gap-2">
-                                        <x-badge label="Urutan: {{ $facility['order'] }}" class="badge-ghost badge-xs" />
-                                    </div>
-                                </div>
-
-                                {{-- Actions --}}
-                                <div class="flex flex-row sm:flex-col justify-end gap-1 w-full sm:w-auto mt-4 sm:mt-0 pt-4 sm:pt-0 border-t sm:border-t-0 border-base-200">
-                                    {{-- Ordering Buttons --}}
-                                    <div class="flex gap-1 justify-center">
-                                        <x-button 
-                                            wire:click="moveUp({{ $facility['id'] }})" 
-                                            icon="o-chevron-up"
-                                            class="btn-xs btn-ghost btn-circle"
-                                            :disabled="$index === 0"
-                                            tooltip="Pindah ke atas"
-                                        />
-                                        <x-button 
-                                            wire:click="moveDown({{ $facility['id'] }})" 
-                                            icon="o-chevron-down"
-                                            class="btn-xs btn-ghost btn-circle"
-                                            :disabled="$index === count($facilities) - 1"
-                                            tooltip="Pindah ke bawah"
-                                        />
-                                    </div>
-
-                                    {{-- Edit & Delete Buttons --}}
-                                    <div class="flex gap-1 justify-center">
-                                        <x-button 
-                                            wire:click="edit({{ $facility['id'] }})" 
-                                            icon="o-pencil"
-                                            class="btn-sm btn-ghost"
-                                            tooltip="Edit"
-                                        />
-                                        <x-button 
-                                            wire:click="delete({{ $facility['id'] }})" 
-                                            icon="o-trash"
-                                            class="btn-sm btn-ghost text-error"
-                                            wire:confirm="Apakah Anda yakin ingin menghapus fasilitas ini?"
-                                            tooltip="Hapus"
-                                        />
-                                    </div>
+                                {{-- Order Badge --}}
+                                <div class="absolute left-4 top-4">
+                                    <span class="px-3 py-1 bg-black/50 backdrop-blur-md text-[10px] font-black text-white italic rounded-full border border-white/20">
+                                        #{{ $index + 1 }}
+                                    </span>
                                 </div>
                             </div>
-                        </x-card>
+
+                            <div class="p-6">
+                                <h4 class="font-black text-lg text-slate-800 dark:text-white leading-tight mb-2 group-hover:text-primary transition-colors italic uppercase tracking-tighter">{{ $facility['name'] }}</h4>
+                                @if ($facility['description'])
+                                    <p class="text-xs text-slate-500 leading-relaxed italic line-clamp-2 mb-4">{{ $facility['description'] }}</p>
+                                @endif
+                                
+                                <div class="flex items-center justify-between mt-auto pt-4 border-t border-slate-50 dark:border-slate-800/50">
+                                    <div class="flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
+                                        <x-ui.button 
+                                            wire:click="edit({{ $facility['id'] }})" 
+                                            icon="o-pencil"
+                                            class="btn-ghost btn-xs text-slate-400 hover:text-primary"
+                                        />
+                                        <x-ui.button 
+                                            wire:click="delete({{ $facility['id'] }})" 
+                                            icon="o-trash"
+                                            class="btn-ghost btn-xs text-slate-400 hover:text-rose-500"
+                                            wire:confirm="{{ __('Hapus fasilitas ini secara permanen?') }}"
+                                        />
+                                    </div>
+                                    <x-ui.button 
+                                        wire:click="edit({{ $facility['id'] }})"
+                                        :label="__('Kelola')"
+                                        class="btn-ghost btn-xs text-primary font-black uppercase italic tracking-widest text-[10px]"
+                                    />
+                                </div>
+                            </div>
+                        </x-ui.card>
                     @endforeach
                 </div>
-            </div>
-        @else
-            <x-card class="mt-8 p-12 text-center" shadow>
-                <x-icon name="o-information-circle" class="size-12 mb-3 opacity-20" />
-                <p class="text-base-content/50">
-                    Belum ada fasilitas. Klik tombol "Tambah Fasilitas" untuk menambahkan fasilitas baru.
-                </p>
-            </x-card>
-        @endif
+            @else
+                <div class="flex flex-col items-center justify-center py-32 text-slate-300 dark:text-slate-700 border-2 border-dashed border-slate-200 dark:border-slate-800 rounded-[32px] bg-slate-50/50 dark:bg-slate-900/50 transition-all">
+                    <x-ui.icon name="o-building-office-2" class="size-20 mb-6 opacity-20" />
+                    <p class="text-sm font-black uppercase tracking-widest italic animate-pulse">{{ __('Belum Ada Fasilitas Terdaftar') }}</p>
+                    <x-ui.button :label="__('Mulai Tambahkan Data')" wire:click="showAddForm" class="mt-8 btn-ghost text-primary btn-sm font-bold" />
+                </div>
+            @endif
+        </div>
     @endif
 </div>

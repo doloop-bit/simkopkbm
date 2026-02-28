@@ -3,10 +3,9 @@
 use Livewire\Component;
 use App\Models\BudgetCategory;
 use Livewire\WithPagination;
-use Mary\Traits\Toast;
 
 new class extends Component {
-    use WithPagination, Toast;
+    use WithPagination;
 
     public $search = '';
     public $name = '';
@@ -59,7 +58,7 @@ new class extends Component {
                 'description' => $this->description,
                 'is_active' => $this->is_active,
             ]);
-            $this->success('Kategori anggaran berhasil diperbarui.');
+            session()->flash('success', 'Kategori anggaran berhasil diperbarui.');
         } else {
             BudgetCategory::create([
                 'name' => $this->name,
@@ -67,7 +66,7 @@ new class extends Component {
                 'description' => $this->description,
                 'is_active' => $this->is_active,
             ]);
-            $this->success('Kategori anggaran berhasil ditambahkan.');
+            session()->flash('success', 'Kategori anggaran berhasil ditambahkan.');
         }
 
         $this->categoryModal = false;
@@ -77,72 +76,106 @@ new class extends Component {
     public function delete(BudgetCategory $category): void
     {
         $category->delete();
-        $this->success('Kategori anggaran berhasil dihapus.');
+        session()->flash('success', 'Kategori anggaran berhasil dihapus.');
     }
 }; ?>
 
-<div class="flex flex-col gap-6">
-    <x-header title="Kategori Anggaran" subtitle="Kelola master kategori anggaran (POS) untuk RAB." separator>
+<div class="p-6 space-y-6 text-slate-900 dark:text-white pb-24 md:pb-6">
+    @if (session('success'))
+        <x-ui.alert :title="__('Sukses')" icon="o-check-circle" class="bg-emerald-50 text-emerald-800 border-emerald-100" dismissible>
+            {{ session('success') }}
+        </x-ui.alert>
+    @endif
+
+    <x-ui.header :title="__('Kategori Anggaran')" :subtitle="__('Kelola master kategori anggaran (POS) untuk perencanaan RAB.')" separator>
         <x-slot:actions>
-            <x-button label="Tambah Kategori" icon="o-plus" class="btn-primary" wire:click="createNew" />
+            <x-ui.button :label="__('Tambah Kategori Baru')" icon="o-plus" class="btn-primary" wire:click="createNew" />
         </x-slot:actions>
-    </x-header>
+    </x-ui.header>
 
-    <div class="flex flex-col md:flex-row gap-4 mb-2 items-center justify-between">
-        <x-input wire:model.live="search" icon="o-magnifying-glass" placeholder="Cari kategori..." class="w-full md:w-64" />
+    <div class="max-w-md">
+        <x-ui.input 
+            wire:model.live.debounce.300ms="search" 
+            :placeholder="__('Cari kode atau nama kategori...')" 
+            icon="o-magnifying-glass" 
+        />
     </div>
 
-    <div class="overflow-x-auto border rounded-xl border-zinc-200 dark:border-zinc-700 bg-white dark:bg-zinc-900 shadow-sm">
-        <table class="table">
-            <thead>
-                <tr>
-                    <th class="bg-base-200">Kode</th>
-                    <th class="bg-base-200">Nama Kategori</th>
-                    <th class="bg-base-200">Keterangan</th>
-                    <th class="bg-base-200 text-center">Status</th>
-                    <th class="bg-base-200 text-right">Aksi</th>
-                </tr>
-            </thead>
-            <tbody>
-                @foreach($categories as $category)
-                    <tr class="hover" wire:key="{{ $category->id }}">
-                        <td class="font-mono text-sm font-medium">{{ $category->code }}</td>
-                        <td class="font-bold">{{ $category->name }}</td>
-                        <td class="opacity-70 text-sm italic">{{ $category->description ?? '-' }}</td>
-                        <td class="text-center">
-                            <x-badge :value="$category->is_active ? 'Aktif' : 'Non-Aktif'" class="{{ $category->is_active ? 'badge-success' : 'badge-error' }} badge-sm" />
-                        </td>
-                        <td class="text-right">
-                            <div class="flex justify-end gap-1">
-                                <x-button icon="o-pencil-square" wire:click="edit({{ $category->id }})" ghost sm />
-                                <x-button icon="o-trash" class="text-error" wire:confirm="Hapus kategori ini?" wire:click="delete({{ $category->id }})" ghost sm />
-                            </div>
-                        </td>
-                    </tr>
-                @endforeach
-            </tbody>
-        </table>
-    </div>
-    
-    <div class="mt-4">
-        {{ $categories->links() }}
-    </div>
+    <x-ui.card shadow padding="false">
+        <x-ui.table 
+            :headers="[
+                ['key' => 'code_label', 'label' => __('Kode POS')],
+                ['key' => 'name', 'label' => __('Nama Kategori')],
+                ['key' => 'description', 'label' => __('Keterangan')],
+                ['key' => 'status_label', 'label' => __('Status'), 'class' => 'text-center'],
+                ['key' => 'actions', 'label' => __('Aksi'), 'class' => 'text-right']
+            ]" 
+            :rows="$categories"
+        >
+            @scope('cell_code_label', $category)
+                <span class="font-mono text-xs font-black text-indigo-600 italic bg-indigo-50 px-2 py-0.5 rounded shadow-sm ring-1 ring-indigo-100">
+                    {{ $category->code }}
+                </span>
+            @endscope
 
-    <x-modal wire:model="categoryModal" class="backdrop-blur">
-        <x-header :title="$editing ? 'Edit Kategori' : 'Tambah Kategori'" separator />
+            @scope('cell_name', $category)
+                <span class="font-bold text-slate-900 dark:text-white">{{ $category->name }}</span>
+            @endscope
 
-        <form wire:submit="save">
-            <div class="grid grid-cols-1 gap-4 text-left">
-                <x-input wire:model="code" label="Kode Kategori" placeholder="Contoh: ADM" required />
-                <x-input wire:model="name" label="Nama Kategori" placeholder="Contoh: Belanja Administrasi" required />
-                <x-textarea wire:model="description" label="Keterangan" />
-                <x-checkbox wire:model="is_active" label="Status Aktif" />
+            @scope('cell_description', $category)
+                <span class="text-xs text-slate-500 italic">{{ $category->description ?? '-' }}</span>
+            @endscope
+
+            @scope('cell_status_label', $category)
+                <x-ui.badge 
+                    :label="$category->is_active ? __('Aktif') : __('Non-Aktif')" 
+                    class="{{ $category->is_active ? 'bg-emerald-50 text-emerald-700' : 'bg-rose-50 text-rose-700' }} border-none text-[8px] font-black italic tracking-widest px-2 py-0.5" 
+                />
+            @endscope
+
+            @scope('cell_actions', $category)
+                <div class="flex justify-end gap-2">
+                    <x-ui.button icon="o-pencil-square" wire:click="edit({{ $category->id }})" class="btn-ghost btn-sm text-slate-400 hover:text-primary transition-colors" />
+                    <x-ui.button icon="o-trash" wire:click="delete({{ $category->id }})" wire:confirm="{{ __('Hapus kategori anggaran ini?') }}" class="btn-ghost btn-sm text-slate-400 hover:text-rose-600 transition-colors" />
+                </div>
+            @endscope
+        </x-ui.table>
+
+        @if($categories->isEmpty())
+            <div class="py-12 text-center text-slate-400 italic text-sm">
+                {{ __('Tidak ada data kategori anggaran yang ditemukan.') }}
+            </div>
+        @endif
+
+        <div class="p-4 border-t border-slate-100 dark:border-slate-800">
+            {{ $categories->links() }}
+        </div>
+    </x-ui.card>
+
+    {{-- Add/Edit Modal --}}
+    <x-ui.modal wire:model="categoryModal">
+        <x-ui.header :title="$editing ? __('Edit Kategori') : __('Tambah Kategori')" :subtitle="__('Kelola rincian POS anggaran untuk pelaporan keuangan.')" separator />
+
+        <form wire:submit="save" class="space-y-6">
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+                <div class="md:col-span-1">
+                    <x-ui.input wire:model="code" :label="__('Kode Kategori')" :placeholder="__('Contoh: ADM')" required />
+                </div>
+                <div class="md:col-span-2">
+                    <x-ui.input wire:model="name" :label="__('Nama Lengkap Kategori')" :placeholder="__('Contoh: Belanja Administrasi Umum')" required />
+                </div>
             </div>
 
-            <x-slot:actions>
-                <x-button label="Batal" @click="$set('categoryModal', false)" />
-                <x-button label="Simpan" type="submit" class="btn-primary" spinner="save" />
-            </x-slot:actions>
+            <x-ui.textarea wire:model="description" :label="__('Keterangan Tambahan')" :placeholder="__('Opsional: Penjelasan rincian POS ini...')" rows="3" />
+            
+            <div class="p-4 bg-slate-50 dark:bg-slate-900/50 rounded-2xl border border-slate-100 dark:border-slate-800">
+                <x-ui.checkbox wire:model="is_active" :label="__('Kategori ini aktif & bisa digunakan dalam RAB')" />
+            </div>
+
+            <div class="flex justify-end gap-3 pt-6 border-t border-slate-100 dark:border-slate-800">
+                <x-ui.button :label="__('Batal')" wire:click="$set('categoryModal', false)" />
+                <x-ui.button :label="__('Simpan Perubahan')" type="submit" class="btn-primary" spinner="save" />
+            </div>
         </form>
-    </x-modal>
+    </x-ui.modal>
 </div>

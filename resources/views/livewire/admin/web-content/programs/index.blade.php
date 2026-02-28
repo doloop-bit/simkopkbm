@@ -184,160 +184,180 @@ new #[Layout('components.admin.layouts.app')] class extends Component
     }
 }; ?>
 
-<div class="p-6">
-    <x-header title="Program Pendidikan" subtitle="Kelola profil program pendidikan untuk setiap jenjang" separator />
-
+<div class="p-6 space-y-8 text-slate-900 dark:text-white pb-24 md:pb-6">
     @if (session()->has('message'))
-        <x-alert title="Sukses" icon="o-check-circle" class="alert-success mb-6">
+        <x-ui.alert :title="__('Sukses')" icon="o-check-circle" class="bg-emerald-50 text-emerald-800 border-emerald-100" dismissible>
             {{ session('message') }}
-        </x-alert>
+        </x-ui.alert>
     @endif
 
+    <x-ui.header :title="__('Kurikulum & Program')" :subtitle="__('Kelola profil program pendidikan, kurikulum, dan durasi belajar setiap jenjang.')" separator />
+
     {{-- Form --}}
-    <x-card separator progress-indicator shadow title="{{ $editingId ? 'Edit Program' : 'Tambah Program Baru' }}">
-        <form wire:submit="save" class="space-y-4">
-            <div class="grid grid-cols-1 gap-4 md:grid-cols-2">
-                <x-select 
-                    wire:model="level_id" 
-                    label="Jenjang Pendidikan" 
-                    placeholder="Pilih Jenjang..."
-                    :options="$levels"
+    <x-ui.card shadow padding="false" class="border-none ring-1 ring-slate-100 dark:ring-slate-800">
+        <div class="p-6 border-b border-slate-50 dark:border-slate-800/50 bg-slate-50/50 dark:bg-slate-900/50">
+            <h3 class="font-black text-slate-800 dark:text-white uppercase tracking-tight text-sm italic">
+                {{ $editingId ? __('Modifikasi Detail Program') : __('Registrasi Program Pendidikan Baru') }}
+            </h3>
+        </div>
+        <div class="p-8">
+            <form wire:submit="save" class="space-y-8">
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-8">
+                    <x-ui.select 
+                        wire:model="level_id" 
+                        :label="__('Target Jenjang Pendidikan')" 
+                        :placeholder="__('Pilih jenjang akademik...')"
+                        :options="$levels"
+                        class="font-black italic uppercase tracking-tighter"
+                    />
+
+                    <x-ui.input 
+                        wire:model="duration" 
+                        :label="__('Estimasi Durasi Belajar')" 
+                        :placeholder="__('Contoh: 6 Bulan / 1 Semester')"
+                        icon="o-clock"
+                        class="font-bold"
+                    />
+                </div>
+
+                <div class="space-y-4">
+                    <x-ui.file 
+                        wire:model="image" 
+                        :label="__('Ilustrasi / Foto Program')" 
+                        accept="image/jpeg,image/jpg,image/png,image/webp"
+                        class="bg-white dark:bg-slate-800"
+                    >
+                        @php
+                            $previewUrl = $image ? $image->temporaryUrl() : ($editingId && ($program = \App\Models\Program::find($editingId)) && $program->image_path ? Storage::url($program->image_path) : '/placeholder.png');
+                        @endphp
+                        <div class="mt-4 relative group">
+                            <img src="{{ $previewUrl }}" class="h-48 w-80 rounded-[2rem] object-cover border-4 border-white dark:border-slate-700 shadow-2xl group-hover:scale-105 transition-transform duration-500" />
+                            <div class="absolute inset-0 rounded-[2rem] bg-gradient-to-t from-black/20 to-transparent"></div>
+                        </div>
+                    </x-ui.file>
+                    <p class="text-[10px] text-slate-400 italic px-1 leading-relaxed">
+                        * {{ __('Format: JPG, PNG, WebP (Maksimal 2MB). Gunakan gambar dengan resolusi tinggi untuk hasil terbaik.') }}
+                    </p>
+                </div>
+
+                <x-ui.textarea 
+                    wire:model="description" 
+                    :label="__('Deskripsi Program & Keunggulan')" 
+                    rows="6" 
+                    :placeholder="__('Jelaskan visi, misi, dan nilai tambah program ini...')"
+                    class="font-medium text-slate-700 dark:text-slate-300 leading-relaxed"
                 />
 
-                <x-input 
-                    wire:model="duration" 
-                    label="Durasi" 
-                    placeholder="Contoh: 6 bulan, 1 tahun"
-                    icon="o-clock"
+                <x-ui.textarea 
+                    wire:model="requirements" 
+                    :label="__('Kualifikasi / Persyaratan Pendaftaran (Opsional)')" 
+                    rows="3" 
+                    :placeholder="__('Sebutkan dokumen atau kriteria yang harus dipenuhi calon peserta...')"
+                    class="italic text-sm leading-relaxed"
                 />
-            </div>
 
-            <x-file 
-                wire:model="image" 
-                label="Gambar Program" 
-                accept="image/jpeg,image/jpg,image/png,image/webp"
-                crop-after-change
-            >
-                @php
-                    $previewUrl = $image ? $image->temporaryUrl() : ($editingId && ($program = \App\Models\Program::find($editingId)) && $program->image_path ? Storage::url($program->image_path) : '/placeholder.png');
-                @endphp
-                <img src="{{ $previewUrl }}" class="h-40 rounded-lg object-cover border border-base-300 shadow-sm" />
-            </x-file>
+                <div class="flex items-center gap-2 p-4 bg-slate-50 dark:bg-slate-900 border border-slate-100 dark:border-slate-800 rounded-2xl">
+                    <x-ui.checkbox wire:model="is_active" :label="__('Status Aktif (Tampilkan di web)')" />
+                    <span class="text-xs font-black text-slate-600 dark:text-slate-400 uppercase tracking-widest italic">{{ __('Aktifkan publikasi program di portal sekolah') }}</span>
+                </div>
 
-            <x-textarea 
-                wire:model="description" 
-                label="Deskripsi" 
-                rows="4" 
-                placeholder="Jelaskan tentang program ini..."
-            />
-
-            <x-textarea 
-                wire:model="requirements" 
-                label="Persyaratan (Opsional)" 
-                rows="3" 
-                placeholder="Persyaratan untuk mengikuti program ini..."
-            />
-
-            <x-checkbox wire:model="is_active" label="Program aktif (ditampilkan di website)" />
-
-            <x-slot:actions>
-                @if ($editingId)
-                    <x-button wire:click="cancelEdit" label="Batal" ghost />
-                @endif
-                <x-button 
-                    label="{{ $editingId ? 'Perbarui' : 'Simpan' }}"
-                    class="btn-primary"
-                    type="submit" 
-                    spinner="save"
-                />
-            </x-slot:actions>
-        </form>
-    </x-card>
+                <div class="flex items-center justify-end gap-3 pt-6 border-t border-slate-50 dark:border-slate-800">
+                    @if ($editingId)
+                        <x-ui.button wire:click="cancelEdit" :label="__('Batalkan Edit')" class="btn-ghost" />
+                    @endif
+                    <x-ui.button 
+                        :label="$editingId ? __('Simpan Perubahan') : __('Tambahkan Program')"
+                        class="btn-primary shadow-xl shadow-primary/20 px-8"
+                        type="submit" 
+                        spinner="save"
+                    />
+                </div>
+            </form>
+        </div>
+    </x-ui.card>
 
     {{-- Programs List --}}
-    @if ($programs->isEmpty())
-        <x-card class="mt-8 p-12 text-center" shadow>
-            <x-icon name="o-folder-open" class="size-12 mb-3 opacity-20" />
-            <p class="text-base-content/50">
-                Belum ada program pendidikan. Tambahkan program pertama Anda!
-            </p>
-        </x-card>
-    @else
-        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 mt-8">
-            @foreach ($programs as $program)
-                <x-card wire:key="program-{{ $program->id }}" shadow class="hover:shadow-lg transition-all border border-base-200">
-                    <div class="flex flex-col items-center w-full text-center p-2">
-                        {{-- Icon/Avatar --}}
-                        <div class="mb-4 relative">
+    <div class="space-y-6">
+        <div class="flex items-center justify-between px-2">
+            <h3 class="font-black text-slate-800 dark:text-white uppercase tracking-tight text-sm italic">{{ __('Katalog Program Pendidikan') }}</h3>
+            <x-ui.badge :label="$programs->count() . ' ' . __('Program')" class="bg-indigo-50 text-indigo-600 border-none font-black italic text-[10px]" />
+        </div>
+
+        @if ($programs->isEmpty())
+            <div class="flex flex-col items-center justify-center py-32 text-slate-300 dark:text-slate-700 border-2 border-dashed border-slate-200 dark:border-slate-800 rounded-[32px] bg-slate-50/50 dark:bg-slate-900/50 transition-all text-center px-6">
+                <x-ui.icon name="o-folder-open" class="size-20 mb-6 opacity-20" />
+                <p class="text-sm font-black uppercase tracking-widest italic animate-pulse">{{ __('Belum Ada Program Terdefinisi') }}</p>
+                <p class="text-[10px] font-bold text-slate-400 uppercase tracking-widest italic mt-2">{{ __('Gunakan formulir di atas untuk mendaftarkan program pendidikan pertama.') }}</p>
+            </div>
+        @else
+            <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
+                @foreach ($programs as $program)
+                    <x-ui.card wire:key="program-{{ $program->id }}" shadow padding="false" class="group relative overflow-hidden border-none ring-1 ring-slate-100 dark:ring-slate-800 hover:ring-primary/20 transition-all duration-500 bg-white">
+                        {{-- Visual Header --}}
+                        <div class="h-48 relative overflow-hidden bg-slate-100 dark:bg-slate-900 border-b border-slate-50 dark:border-slate-800">
                             @if ($program->image_path)
                                 <img 
                                     src="{{ Storage::url($program->image_path) }}" 
                                     alt="{{ $program->name }}"
-                                    class="h-24 w-24 rounded-2xl object-cover shadow-sm border border-base-300"
+                                    class="absolute inset-0 size-full object-cover transition-transform duration-700 group-hover:scale-110"
                                 >
                             @else
-                                <div class="flex h-24 w-24 items-center justify-center rounded-2xl bg-primary text-primary-content text-3xl font-bold shadow-md">
-                                    {{ substr($program->name, 0, 1) }}
+                                <div class="absolute inset-0 flex items-center justify-center bg-indigo-500/10">
+                                    <span class="text-6xl font-black text-indigo-500 opacity-20 italic">{{ substr($program->name, 0, 1) }}</span>
                                 </div>
                             @endif
-                            
-                            @if (!$program->is_active)
-                                <div class="absolute -top-2 -right-2">
-                                    <x-badge label="Nonaktif" class="badge-ghost badge-sm" />
-                                </div>
-                            @endif
-                        </div>
 
-                        {{-- Content --}}
-                        <div class="space-y-1 w-full">
-                            <h3 class="text-lg font-bold truncate">{{ $program->name }}</h3>
-                            <p class="text-sm font-medium opacity-70">{{ $program->level?->name ?? '-' }}</p>
-                            
-                            <div class="flex items-center justify-center gap-2 mt-2">
-                                <x-badge :label="$program->duration" class="badge-outline badge-sm" icon="o-clock" />
+                            <div class="absolute top-4 left-4 z-10 flex flex-col gap-2">
+                                <x-ui.badge :label="$program->level?->name ?? 'GENERAL'" class="bg-black/40 backdrop-blur-md text-white border-white/20 font-black italic text-[9px] px-3 py-1 uppercase tracking-tighter" />
+                                @if (!$program->is_active)
+                                    <x-ui.badge :label="__('NON-AKTIF')" class="bg-rose-500 text-white border-none font-black italic text-[8px] px-2 py-0.5" />
+                                @endif
                             </div>
 
-                            <p class="mt-4 text-sm line-clamp-3 text-base-content/70 h-15">
-                                {{ $program->description }}
-                            </p>
+                            <div class="absolute bottom-4 right-4 z-10">
+                                <x-ui.badge :label="$program->duration" class="bg-white/90 backdrop-blur-sm text-slate-800 border-none font-black italic text-[9px] px-3 py-1 shadow-sm ring-1 ring-slate-100 uppercase" icon="o-clock" />
+                            </div>
 
-                            {{-- Action Buttons --}}
-                            <div class="flex justify-between items-center mt-6 pt-4 border-t border-base-200">
-                                <div class="flex gap-1">
-                                    <x-button 
+                            <div class="absolute inset-0 bg-gradient-to-t from-slate-900/40 to-transparent"></div>
+                        </div>
+
+                        <div class="p-6">
+                            <h3 class="font-black text-xl text-slate-900 dark:text-white leading-tight mb-2 group-hover:text-primary transition-colors italic uppercase tracking-tighter">{{ $program->name }}</h3>
+                            <p class="text-xs text-slate-500 leading-relaxed italic line-clamp-3 mb-6">{{ $program->description }}</p>
+
+                            {{-- Advanced Control Panel --}}
+                            <div class="flex items-center justify-between pt-4 border-t border-slate-50 dark:border-slate-800/50">
+                                <div class="flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-all duration-300">
+                                    <x-ui.button 
                                         wire:click="moveUp({{ $program->id }})" 
                                         icon="o-chevron-up" 
-                                        class="btn-xs btn-ghost btn-circle"
-                                        tooltip="Naikkan"
+                                        class="size-8 min-h-0 p-0 btn-ghost text-slate-400 hover:text-indigo-500"
                                     />
-                                    <x-button 
+                                    <x-ui.button 
                                         wire:click="moveDown({{ $program->id }})" 
                                         icon="o-chevron-down" 
-                                        class="btn-xs btn-ghost btn-circle"
-                                        tooltip="Turunkan"
+                                        class="size-8 min-h-0 p-0 btn-ghost text-slate-400 hover:text-indigo-500"
                                     />
                                 </div>
                                 
-                                <div class="flex gap-1">
-                                    <x-button 
+                                <div class="flex items-center gap-1">
+                                    <x-ui.button 
                                         wire:click="edit({{ $program->id }})" 
                                         icon="o-pencil"
-                                        class="btn-sm btn-ghost"
-                                        tooltip="Edit"
+                                        class="size-8 min-h-0 p-0 btn-ghost text-slate-300 hover:text-primary"
                                     />
-                                    <x-button 
+                                    <x-ui.button 
                                         wire:click="delete({{ $program->id }})" 
                                         icon="o-trash"
-                                        class="btn-sm btn-ghost text-error"
-                                        wire:confirm="Apakah Anda yakin ingin menghapus program ini?"
-                                        tooltip="Hapus"
+                                        class="size-8 min-h-0 p-0 btn-ghost text-slate-300 hover:text-rose-500"
+                                        wire:confirm="__('Hapus deskripsi program pendidikan ini secara permanen?') "
                                     />
                                 </div>
                             </div>
                         </div>
-                    </div>
-                </x-card>
-            @endforeach
-        </div>
-    @endif
+                    </x-ui.card>
+                @endforeach
+            </div>
+        @endif
+    </div>
 </div>

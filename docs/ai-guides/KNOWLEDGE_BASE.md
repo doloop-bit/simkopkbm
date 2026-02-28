@@ -49,28 +49,26 @@
 
 ### **Backend**
 
-| Technology      | Version          | Purpose                  | Notes                                      |
-| --------------- | ---------------- | ------------------------ | ------------------------------------------ |
-| PHP             | **8.4.11**       | Runtime                  | -                                          |
-| Laravel         | **12.48.1**      | Framework                | -                                          |
-| Livewire        | **4.0.0**        | Reactive Components      | ⚠️ Major upgrade from v3                   |
-| Livewire Volt   | **1.10.1**       | Single-file components   | Optional with Livewire 4 (see notes below) |
-| Livewire Blaze  | **1.0.0-beta.1** | Performance optimization | New addition                               |
-| Laravel Fortify | **1.33.0**       | Authentication           | -                                          |
+| Technology      | Version     | Purpose             | Notes              |
+| --------------- | ----------- | ------------------- | ------------------ |
+| PHP             | **8.4.18**  | Runtime             | -                  |
+| Laravel         | **12.52.1** | Framework           | -                  |
+| Livewire        | **4.x**     | Reactive Components | Native SFC Support |
+| Laravel Fortify | **1.33.0**  | Authentication      | -                  |
 
-#### 📝 Notes on Livewire 4 vs Volt
+#### 📝 Notes on Livewire 4
 
 **Livewire 4 Native Single-File Components:**
 
 - Livewire 4 now natively supports combining logic and HTML in single files
-- Volt is **optional** but still useful for its syntactic sugar and functional API
-- Current codebase uses **Volt pattern** for consistency
 
 **Recommended approach:**
 
 ```blade
-{{-- Continue using Volt pattern for new components --}}
 <?php
+use Livewire\Attributes\Layout;
+use Livewire\Component;
+
 new #[Layout('components.admin.layouts.app')] class extends Component {
     // Component logic here
 }; ?>
@@ -82,20 +80,18 @@ new #[Layout('components.admin.layouts.app')] class extends Component {
 
 ### **Frontend**
 
-| Technology   | Version | Purpose            | Notes                                 |
-| ------------ | ------- | ------------------ | ------------------------------------- |
-| Tailwind CSS | **4.x** | Styling            | v4 with new config syntax             |
-| Mary UI      | **2.x** | Primary UI Library | Based on DaisyUI                      |
-| DaisyUI      | **5.x** | CSS Components     | Used by Mary UI                       |
-| Alpine.js    | **3.x** | JavaScript         | Included via Livewire                 |
-| Vite         | **6.x** | Asset Bundling     | -                                     |
+| Technology   | Version | Purpose        | Notes                     |
+| ------------ | ------- | -------------- | ------------------------- |
+| Tailwind CSS | **4.x** | Styling        | v4 with new config syntax |
+| Alpine.js    | **3.x** | JavaScript     | Included via Livewire     |
+| Vite         | **6.x** | Asset Bundling | -                         |
 
 ### **Database**
 
-| Environment           | Engine       | Notes                         |
-| --------------------- | ------------ | ----------------------------- |
-| **Local/Development** | SQLite 3.49+ | URL: `http://simkopkbm.test1` |
-| **Production**        | MySQL 8.x    | Full RDBMS features           |
+| Environment           | Engine       | Notes                                          |
+| --------------------- | ------------ | ---------------------------------------------- |
+| **Local/Development** | SQLite 3.49+ | URL: `http://simkopkbm.test` or localhost:8000 |
+| **Production**        | MySQL 8.x    | Full RDBMS features                            |
 
 ⚠️ **Cross-Database Compatibility Notes:**
 
@@ -118,80 +114,30 @@ new #[Layout('components.admin.layouts.app')] class extends Component {
 
 ### **Component Library**
 
-This project uses **Mary UI** as the primary component library. It is built on top of **DaisyUI** and provides a rich set of reactive components for Livewire.
-
-### **Mary UI - Core Components**
-
-```blade
-{{-- Header & Layout --}}
-<x-header title="Page Title" subtitle="Description text" separator>
-    <x-slot:actions>
-        <x-button label="Add New" icon="o-plus" class="btn-primary" />
-    </x-slot:actions>
-</x-header>
-
-{{-- Cards --}}
-<x-card title="Card Title" shadow separator>
-    Content here
-</x-card>
-
-{{-- Buttons --}}
-<x-button label="Save" icon="o-check" class="btn-primary" />
-<x-button label="Delete" icon="o-trash" class="btn-error" />
-
-{{-- Form Inputs --}}
-<x-input label="Name" wire:model="name" />
-<x-select label="Option" :options="$options" wire:model="option" />
-<x-textarea label="Description" wire:model="description" hint="Max 255 chars" />
-<x-choices label="Multiple select" wire:model="selected_ids" :options="$users" />
-
-{{-- Tables --}}
-<x-table :headers="$headers" :rows="$rows" striped with-pagination />
-
-{{-- Feedback --}}
-<x-badge label="Active" class="badge-success" />
-<x-icon name="o-check-circle" class="text-success" />
-
-{{-- Modals --}}
-<x-modal wire:model="showModal" title="Modal Title">
-    <div>Modal content</div>
-    <x-slot:actions>
-        <x-button label="Cancel" @click="$wire.showModal = false" />
-        <x-button label="Confirm" class="btn-primary" />
-    </x-slot:actions>
-</x-modal>
-
-{{-- Toast notifications (using Trait) --}}
-$this->success('Saved successfully.');
-$this->error('Something went wrong.');
-```
+using custom tailwind and custom components
 
 ### **Iconography**
 
-We use **Heroicons** via Mary UI's `x-icon` component. Use the `o-*` prefix for outline icons (Solid icons are also available with `s-*`).
-
-```blade
-<x-icon name="o-user" class="w-5 h-5" />
-```
+We use **Heroicons**
 
 ### **Page Structure Template**
 
 ```blade
 <div class="p-6">
-    <x-header title="Page Title" subtitle="Page description." separator>
+    <x-ui.header title="Page Title" subtitle="Page description.">
         <x-slot:actions>
-            <x-button label="Add New" icon="o-plus" class="btn-primary" spinner />
+            <x-ui.button label="Add New" icon="o-plus" class="btn-primary" spinner />
         </x-slot:actions>
-    </x-header>
+    </x-ui.header>
 
-    <x-card shadow>
+    <x-ui.card shadow padding="false">
         {{-- Filters/Content --}}
-        <div class="grid grid-cols-1 md:grid-cols-4 gap-4 mb-6">
-            <x-input label="Search" wire:model.live="search" icon="o-magnifying-glass" />
+        <div class="p-6 grid grid-cols-1 md:grid-cols-4 gap-4 mb-6">
+            <x-ui.input label="Search" wire:model.live="search" icon="o-magnifying-glass" />
         </div>
 
-        <x-table :headers="$headers" :rows="$rows" striped />
-    </x-card>
+        <x-ui.table :headers="$headers" :rows="$rows" />
+    </x-ui.card>
 </div>
 ```
 
@@ -331,7 +277,7 @@ Level (Paket A/B/C) → has phase_map JSON
 
 ## 🔄 Development Patterns
 
-### **Livewire Volt Component Pattern**
+### **Livewire 4 Component Pattern use blaze if needed and be carefull to use blaze**
 
 ```blade
 <?php
@@ -340,7 +286,7 @@ declare(strict_types=1);
 
 use App\Models\User;
 use Livewire\Attributes\Layout;
-use Livewire\Volt\Component;
+use Livewire\Component;
 
 new #[Layout('components.admin.layouts.app')] class extends Component {
     // Properties
@@ -665,8 +611,8 @@ php artisan make:migration create_table_name_table
 # Create model
 php artisan make:model ModelName
 
-# Create Volt component
-php artisan make:volt path/component-name --class
+# Create Livewire SFC component
+php artisan make:livewire path/component-name --sfc
 ```
 
 ---
@@ -852,3 +798,4 @@ $user->isGuru(): bool
 **Last Updated:** 2026-02-27
 **Version:** 2.3
 **Maintained By:** Antigravity AI Assistant
+````
