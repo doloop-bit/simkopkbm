@@ -51,7 +51,7 @@
                     wire:navigate 
                     class="flex items-center gap-2 px-4 py-2 rounded-lg transition-all whitespace-nowrap {{ request()->routeIs($tab['route']) ? 'bg-primary text-primary-content font-bold shadow-md' : 'hover:bg-base-200 opacity-70' }}"
                 >
-                    <x-icon name="o-{{ $tab['icon'] }}" class="size-4" />
+                    <x-ui.icon name="o-{{ $tab['icon'] }}" class="size-4" />
                     <span class="text-sm">{{ $tab['label'] }}</span>
                 </a>
             @endforeach
@@ -64,7 +64,7 @@
             @foreach($tabs as $key => $tab)
                 <a href="{{ route($tab['route']) }}" wire:navigate
                     class="flex flex-col items-center justify-center gap-1 px-3 py-1 rounded-lg transition-colors {{ request()->routeIs($tab['route']) ? 'text-primary' : 'opacity-60' }}">
-                    <x-icon name="o-{{ $tab['icon'] }}" class="size-6" />
+                    <x-ui.icon name="o-{{ $tab['icon'] }}" class="size-6" />
                     <span class="text-[10px] uppercase font-bold tracking-tighter">{{ $tab['label_short'] }}</span>
                 </a>
             @endforeach

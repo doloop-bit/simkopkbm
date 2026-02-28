@@ -11,7 +11,6 @@
         $title = $title ? $title . ' - ' . config('app.name', 'Laravel') : config('app.name', 'Laravel');
     @endphp
 
-
     @include('partials.head')
 
     <style>
@@ -31,21 +30,38 @@
         }
     </style>
 </head>
-<body class="min-h-screen bg-gradient-mesh font-sans antialiased text-slate-900 dark:text-slate-100 selection:bg-emerald-500/30">
-    <x-main full-width>
+<body class="min-h-screen bg-gradient-mesh font-sans antialiased text-slate-900 dark:text-slate-100 selection:bg-emerald-500/30"
+      x-data="{ sidebarOpen: false }">
+
+    {{-- Mobile Sidebar Overlay --}}
+    <div x-show="sidebarOpen" x-cloak
+         x-transition:enter="ease-out duration-300" x-transition:enter-start="opacity-0" x-transition:enter-end="opacity-100"
+         x-transition:leave="ease-in duration-200" x-transition:leave-start="opacity-100" x-transition:leave-end="opacity-0"
+         class="fixed inset-0 z-40 bg-black/50 backdrop-blur-sm lg:hidden"
+         @click="sidebarOpen = false">
+    </div>
+
+    <div class="flex min-h-screen">
         {{-- Sidebar --}}
-        <x-slot:sidebar drawer="main-drawer" collapsible class="sidebar-premium">
-            <x-admin.sidebar />
+        <aside
+            x-cloak
+            :class="sidebarOpen ? 'translate-x-0' : '-translate-x-full'"
+            class="fixed inset-y-0 left-0 z-50 w-64 sidebar-premium transition-transform duration-300 lg:translate-x-0 lg:static lg:z-auto flex flex-col"
+        >
+            {{-- Sidebar Content --}}
+            <div class="flex-1 overflow-y-auto">
+                <x-admin.sidebar />
+            </div>
 
             {{-- User & Settings --}}
             <div class="mt-auto px-4 pb-4">
-                <x-menu-separator class="my-4 border-slate-700/50" />
+                <x-ui.menu-separator class="my-4 border-slate-700/50" />
                 <x-admin.desktop-user-menu />
             </div>
-        </x-slot:sidebar>
+        </aside>
 
-        {{-- Content --}}
-        <x-slot:content class="p-0">
+        {{-- Main Content --}}
+        <div class="flex-1 min-w-0 lg:ml-0">
             <div class="min-h-screen flex flex-col">
                 <x-admin.header />
 
@@ -67,9 +83,9 @@
                     </div>
                 </div>
             </div>
-        </x-slot:content>
-    </x-main>
+        </div>
+    </div>
 
-    <x-toast />
+    <x-ui.toast />
 </body>
 </html>

@@ -24,7 +24,7 @@
             }"
             class="mt-6"
         >
-            <x-radio 
+            <x-ui.radio 
                 wire:model="appearance" 
                 x-model="appearance"
                 @change="updateTheme($event.target.value)"

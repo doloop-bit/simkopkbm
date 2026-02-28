@@ -52,61 +52,59 @@ new class extends Component {
 
 <div class="space-y-6">
     <!-- Header -->
-    <x-header title="Selamat Datang, {{ auth()->user()->name }}" subtitle="Ringkasan aktivitas PKBM hari ini.">
+    <x-ui.header :title="__('Selamat Datang, :name', ['name' => auth()->user()->name])" :subtitle="__('Ringkasan aktivitas PKBM hari ini.')">
         <x-slot:actions>
-            <div class="text-sm font-medium text-base-content/60">{{ now()->translatedFormat('l, d F Y') }}</div>
+            <div class="text-sm font-semibold text-slate-500 bg-slate-100 dark:bg-slate-800 px-3 py-1.5 rounded-lg border border-slate-200 dark:border-slate-700">
+                {{ now()->translatedFormat('l, d F Y') }}
+            </div>
         </x-slot:actions>
-    </x-header>
+    </x-ui.header>
 
     <!-- Stats Grid -->
-    <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
-        <x-stat
-            title="Total Siswa"
-            value="{{ $stats['students'] }}"
+    <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+        <x-ui.stat
+            :title="__('Total Siswa')"
+            :value="$stats['students']"
             icon="o-users"
-            class="bg-base-100 shadow-sm"
-            color="text-primary"
+            color="text-blue-600 dark:text-blue-400"
         />
 
-        <x-stat
-            title="Total Guru"
-            value="{{ $stats['teachers'] }}"
+        <x-ui.stat
+            :title="__('Total Guru')"
+            :value="$stats['teachers']"
             icon="o-academic-cap"
-            class="bg-base-100 shadow-sm"
-            color="text-secondary"
+            color="text-indigo-600 dark:text-indigo-400"
         />
 
-        <x-stat
-            title="Pendapatan (Bulan Ini)"
-            value="Rp {{ number_format($stats['income_month'] / 1000, 0) }}k"
+        <x-ui.stat
+            :title="__('Pendapatan (Bulan Ini)')"
+            :value="'Rp ' . number_format($stats['income_month'] / 1000, 0) . 'k'"
             icon="o-banknotes"
-            class="bg-base-100 shadow-sm"
-            color="text-success"
+            color="text-emerald-600 dark:text-emerald-400"
         />
 
-        <x-stat
-            title="Piutang Tagihan"
-            value="Rp {{ number_format($stats['pending_billings'] / 1000000, 1) }}M"
+        <x-ui.stat
+            :title="__('Piutang Tagihan')"
+            :value="'Rp ' . number_format($stats['pending_billings'] / 1000000, 1) . 'M'"
             icon="o-document-minus"
-            class="bg-base-100 shadow-sm"
-            color="text-warning"
+            color="text-amber-600 dark:text-amber-400"
         />
     </div>
 
     <!-- Main Content -->
     <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
         <!-- Recent Transactions -->
-        <x-card title="Transaksi Terakhir" separator progress-indicator shadow>
-            <x-slot:menu>
-                <x-button label="Lihat Semua" link="{{ route('financial.transactions') }}" wire:navigate ghost sm />
-            </x-slot:menu>
+        <x-ui.card :title="__('Transaksi Terakhir')" separator shadow>
+            <x-slot:actions>
+                <x-ui.button :label="__('Lihat Semua')" :link="route('financial.transactions')" wire:navigate ghost sm />
+            </x-slot:actions>
             
-            <div class="divide-y divide-base-200">
+            <div class="divide-y divide-slate-100 dark:divide-slate-800/50">
                 @forelse($recentTransactions as $tx)
-                    <div class="py-3 flex justify-between items-start">
-                        <x-list-item :item="$tx" no-separator no-hover class="!p-0">
+                    <div class="py-4 flex justify-between items-center transition-all hover:bg-slate-50/50 dark:hover:bg-slate-800/30 -mx-4 px-4 rounded-xl group">
+                        <x-ui.list-item no-separator no-hover class="!p-0 w-full">
                             <x-slot:avatar>
-                                <div class="w-10 h-10 rounded-full bg-base-200 flex items-center justify-center font-bold text-base-content/50">
+                                <div class="w-10 h-10 rounded-xl bg-slate-100 dark:bg-slate-800 flex items-center justify-center font-bold text-slate-500 dark:text-slate-400 shadow-inner group-hover:scale-105 transition-transform">
                                     {{ substr($tx->billing?->student?->name ?? '?', 0, 1) }}
                                 </div>
                             </x-slot:avatar>
@@ -116,46 +114,46 @@ new class extends Component {
                             <x-slot:sub-value>
                                 {{ $tx->billing?->feeCategory?->name ?? 'Kategori Dihapus' }} - {{ $tx->payment_method }}
                             </x-slot:sub-value>
-                        </x-list-item>
+                        </x-ui.list-item>
                         <div class="text-right">
-                            <div class="font-bold text-success font-mono">+ Rp {{ number_format($tx->amount, 0, ',', '.') }}</div>
-                            <div class="text-[10px] opacity-60">{{ $tx->payment_date->diffForHumans() }}</div>
+                            <div class="font-bold text-emerald-600 dark:text-emerald-400 font-mono">+ Rp {{ number_format($tx->amount, 0, ',', '.') }}</div>
+                            <div class="text-[10px] uppercase font-bold text-slate-400">{{ $tx->payment_date->diffForHumans() }}</div>
                         </div>
                     </div>
                 @empty
-                    <div class="py-8 text-center opacity-50 text-sm">Belum ada transaksi masuk.</div>
+                    <div class="py-12 text-center text-slate-500 italic">Belum ada transaksi masuk.</div>
                 @endforelse
             </div>
-        </x-card>
+        </x-ui.card>
 
         <!-- Recent Attendance -->
-        <x-card title="Input Presensi Terakhir" separator progress-indicator shadow>
-            <x-slot:menu>
-                <x-button label="Lihat Semua" link="{{ route('academic.attendance') }}" wire:navigate ghost sm />
-            </x-slot:menu>
+        <x-ui.card :title="__('Input Presensi Terakhir')" separator shadow>
+            <x-slot:actions>
+                <x-ui.button :label="__('Lihat Semua')" :link="route('academic.attendance')" wire:navigate ghost sm />
+            </x-slot:actions>
             
-            <div class="divide-y divide-base-200">
+            <div class="divide-y divide-slate-100 dark:divide-slate-800/50">
                 @forelse($recentAttendance as $att)
-                    <div class="py-3 flex justify-between items-center text-sm">
-                        <div class="flex gap-3 items-center">
-                            <div class="p-2 bg-primary/10 rounded-lg">
-                                <x-icon name="o-clipboard-document-check" class="text-primary size-5" />
+                    <div class="py-4 flex justify-between items-center transition-all hover:bg-slate-50/50 dark:hover:bg-slate-800/30 -mx-4 px-4 rounded-xl group">
+                        <div class="flex gap-4 items-center">
+                            <div class="p-2.5 bg-blue-50 dark:bg-blue-900/20 text-blue-600 dark:text-blue-400 rounded-xl shadow-sm group-hover:bg-blue-100 dark:group-hover:bg-blue-900/40 transition-colors">
+                                <x-ui.icon name="o-clipboard-document-check" class="size-6" />
                             </div>
                             <div>
-                                <div class="font-medium">Kelas {{ $att->classroom->name }}</div>
-                                <div class="text-xs opacity-60">
-                                    {{ $att->subject?->name ?? 'Harian' }} • {{ $att->date->format('d/m/Y') }}
+                                <div class="font-bold text-slate-900 dark:text-white">Kelas {{ $att->classroom->name }}</div>
+                                <div class="text-xs font-medium text-slate-500 dark:text-slate-400">
+                                    {{ $att->subject?->name ?? 'Harian' }} • {{ $att->date->format('d M Y') }}
                                 </div>
                             </div>
                         </div>
-                        <div class="text-xs opacity-50">
-                            {{ $att->items_count ?? $att->items()->count() }} Siswa
+                        <div class="text-xs font-bold px-2 py-0.5 rounded-md bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-400 border border-slate-200 dark:border-slate-700">
+                            {{ $att->items_count ?? $att->items()->count() }} SISWA
                         </div>
                     </div>
                 @empty
-                    <div class="py-8 text-center opacity-50 text-sm">Belum ada data presensi.</div>
+                    <div class="py-12 text-center text-slate-500 italic">Belum ada data presensi.</div>
                 @endforelse
             </div>
-        </x-card>
+        </x-ui.card>
     </div>
 </div>

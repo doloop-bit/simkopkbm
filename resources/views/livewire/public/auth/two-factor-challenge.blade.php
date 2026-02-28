@@ -41,7 +41,7 @@
                 <div class="space-y-5 text-center">
                     <div x-show="!showRecoveryInput">
                         <div class="flex items-center justify-center my-5">
-                            <x-input
+                            <x-ui.input
                                 x-model="code"
                                 name="code"
                                 x-ref="code"
@@ -55,7 +55,7 @@
 
                     <div x-show="showRecoveryInput">
                         <div class="my-5">
-                            <x-input
+                            <x-ui.input
                                 type="text"
                                 name="recovery_code"
                                 x-ref="recovery_code"
@@ -67,18 +67,17 @@
                         </div>
 
                         @error('recovery_code')
-                            <p class="text-error text-xs mt-1">
+                            <p class="text-red-500 text-xs mt-1">
                                 {{ $message }}
                             </p>
                         @enderror
                     </div>
 
-                    <x-button
+                    <x-ui.button
                         type="submit"
                         class="btn-primary w-full"
-                    >
-                        {{ __('Continue') }}
-                    </x-button>
+                        :label="__('Continue')"
+                    />
                 </div>
 
                 <div class="mt-5 space-x-0.5 text-sm leading-5 text-center opacity-70">

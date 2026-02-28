@@ -9,7 +9,7 @@
             @csrf
 
             <!-- Email Address -->
-            <x-input
+            <x-ui.input
                 name="email"
                 :label="__('Email Address')"
                 type="email"
@@ -18,14 +18,12 @@
                 placeholder="email@example.com"
             />
 
-            <x-button type="submit" class="btn-primary w-full" data-test="email-password-reset-link-button">
-                {{ __('Email password reset link') }}
-            </x-button>
+            <x-ui.button type="submit" class="btn-primary w-full" data-test="email-password-reset-link-button" :label="__('Email password reset link')" />
         </form>
 
         <div class="space-x-1 rtl:space-x-reverse text-center text-sm text-zinc-400">
             <span>{{ __('Or, return to') }}</span>
-            <a href="{{ route('login') }}" class="link link-primary font-semibold" wire:navigate>{{ __('log in') }}</a>
+            <a href="{{ route('login') }}" class="text-primary font-semibold hover:underline" wire:navigate>{{ __('log in') }}</a>
         </div>
     </div>
 </x-layouts.auth>

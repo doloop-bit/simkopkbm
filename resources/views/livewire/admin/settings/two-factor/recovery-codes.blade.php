@@ -46,44 +46,44 @@ new class extends Component {
 }; ?>
 
 <div
-    class="py-6 space-y-6 border border-base-300 shadow-sm rounded-xl"
+    class="py-6 space-y-6 border border-slate-300 dark:border-slate-700 shadow-sm rounded-xl"
     wire:cloak
     x-data="{ showRecoveryCodes: false }"
 >
     <div class="px-6 space-y-2 text-left">
         <div class="flex items-center gap-2">
-            <x-icon name="o-lock-closed" class="w-4 h-4"/>
-            <h3 class="text-lg font-bold">{{ __('2FA Recovery Codes') }}</h3>
+            <x-ui.icon name="o-lock-closed" class="w-4 h-4 text-slate-500"/>
+            <h3 class="text-lg font-bold text-slate-900 dark:text-white">{{ __('2FA Recovery Codes') }}</h3>
         </div>
-        <p class="text-sm opacity-70">
+        <p class="text-sm opacity-70 text-slate-600 dark:text-slate-400">
             {{ __('Recovery codes let you regain access if you lose your 2FA device. Store them in a secure password manager.') }}
         </p>
     </div>
 
     <div class="px-6">
         <div class="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
-            <x-button
+            <x-ui.button
                 x-show="!showRecoveryCodes"
                 icon="o-eye"
                 class="btn-primary"
                 @click="showRecoveryCodes = true;"
-                label="{{ __('View Recovery Codes') }}"
+                :label="__('View Recovery Codes')"
             />
 
-            <x-button
+            <x-ui.button
                 x-show="showRecoveryCodes"
                 icon="o-eye-slash"
                 class="btn-primary"
                 @click="showRecoveryCodes = false"
-                label="{{ __('Hide Recovery Codes') }}"
+                :label="__('Hide Recovery Codes')"
             />
 
             @if (filled($recoveryCodes))
-                <x-button
+                <x-ui.button
                     x-show="showRecoveryCodes"
                     icon="o-arrow-path"
                     wire:click="regenerateRecoveryCodes"
-                    label="{{ __('Regenerate Codes') }}"
+                    :label="__('Regenerate Codes')"
                     spinner="regenerateRecoveryCodes"
                 />
             @endif
@@ -97,12 +97,12 @@ new class extends Component {
         >
             <div class="mt-3 space-y-3">
                 @error('recoveryCodes')
-                    <x-alert title="{{ $message }}" icon="o-x-circle" class="alert-error" />
+                    <x-ui.alert :title="$message" icon="o-x-circle" class="bg-red-50 text-red-800 border-red-100" />
                 @enderror
 
                 @if (filled($recoveryCodes))
                     <div
-                        class="grid gap-1 p-4 font-mono text-sm rounded-lg bg-base-200"
+                        class="grid gap-1 p-4 font-mono text-sm rounded-lg bg-slate-100 dark:bg-slate-800"
                     >
                         @foreach($recoveryCodes as $code)
                             <div
@@ -112,7 +112,7 @@ new class extends Component {
                             </div>
                         @endforeach
                     </div>
-                    <p class="text-xs opacity-60">
+                    <p class="text-xs opacity-60 text-slate-500">
                         {{ __('Each recovery code can be used once to access your account and will be removed after use. If you need more, click Regenerate Codes above.') }}
                     </p>
                 @endif

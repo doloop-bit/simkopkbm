@@ -11,27 +11,27 @@
         </a>
     </div>
 
-    <x-menu activate-by-route class="flex-1 px-4 py-6">
-        <x-menu-item 
-            title="Dashboard" 
-            icon="o-home" 
-            link="{{ route('teacher.dashboard') }}" 
+    <x-ui.menu activate-by-route class="flex-1 px-4 py-6">
+        <x-ui.menu-item
+            title="Dashboard"
+            icon="o-home"
+            link="{{ route('teacher.dashboard') }}"
         />
 
-        <x-menu-sub title="Penilaian & Raport" icon="o-pencil-square">
-            <x-menu-item 
-                title="Raport Kesetaraan" 
-                icon="o-document-chart-bar" 
-                link="{{ route('teacher.assessments.grading') }}" 
+        <x-ui.menu-sub title="Penilaian & Raport" icon="o-pencil-square">
+            <x-ui.menu-item
+                title="Raport Kesetaraan"
+                icon="o-document-chart-bar"
+                link="{{ route('teacher.assessments.grading') }}"
             />
 
             @if(auth()->user()->teachesPaudLevel())
-                <x-menu-item 
-                    title="Nilai PAUD" 
-                    icon="o-face-smile" 
-                    link="{{ route('teacher.assessments.paud') }}" 
+                <x-ui.menu-item
+                    title="Nilai PAUD"
+                    icon="o-face-smile"
+                    link="{{ route('teacher.assessments.paud') }}"
                 />
             @endif
-        </x-menu-sub>
-    </x-menu>
+        </x-ui.menu-sub>
+    </x-ui.menu>
 </div>

@@ -59,25 +59,25 @@ new class extends Component {
 
     <x-admin.settings.layout :heading="__('Profile')" :subheading="__('Update your name, email, and phone number')">
         <form wire:submit="updateProfileInformation" class="my-6 w-full space-y-6">
-            <x-input wire:model="name" :label="__('Name')" type="text" required autofocus autocomplete="name" />
+            <x-ui.input wire:model="name" :label="__('Name')" type="text" required autofocus autocomplete="name" />
             
-            <x-input wire:model="phone" :label="__('Phone Number (WhatsApp)')" type="tel" placeholder="08xxxxxxxx" />
+            <x-ui.input wire:model="phone" :label="__('Phone Number (WhatsApp)')" type="tel" placeholder="08xxxxxxxx" />
 
             <div>
-                <x-input wire:model="email" :label="__('Email')" type="email" required autocomplete="email" />
+                <x-ui.input wire:model="email" :label="__('Email')" type="email" required autocomplete="email" />
 
                 @if (auth()->user() instanceof \Illuminate\Contracts\Auth\MustVerifyEmail &&! auth()->user()->hasVerifiedEmail())
                     <div class="mt-4">
-                        <p class="text-sm opacity-70">
+                        <p class="text-sm opacity-70 italic">
                             {{ __('Your email address is unverified.') }}
 
-                            <button type="button" class="link link-primary text-sm" wire:click.prevent="resendVerificationNotification">
+                            <button type="button" class="text-primary hover:underline text-sm font-medium" wire:click.prevent="resendVerificationNotification">
                                 {{ __('Click here to re-send the verification email.') }}
                             </button>
                         </p>
 
                         @if (session('status') === 'verification-link-sent')
-                            <p class="mt-2 text-sm font-medium text-success">
+                            <p class="mt-2 text-sm font-medium text-emerald-600">
                                 {{ __('A new verification link has been sent to your email address.') }}
                             </p>
                         @endif
@@ -86,7 +86,7 @@ new class extends Component {
             </div>
 
             <div class="flex items-center gap-4">
-                <x-button label="Save" type="submit" class="btn-primary" spinner="updateProfileInformation" data-test="update-profile-button" />
+                <x-ui.button :label="__('Save')" type="submit" class="btn-primary" spinner="updateProfileInformation" data-test="update-profile-button" />
 
                 <x-admin.action-message class="me-3" on="profile-updated">
                     {{ __('Saved.') }}

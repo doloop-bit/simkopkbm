@@ -84,96 +84,94 @@ new #[Layout('components.admin.layouts.app')] class extends Component {
     }
 }; ?>
 
-<div class="p-6">
-    <x-header title="Tahun Ajaran" subtitle="Kelola tahun akademik sekolah Anda di sini." separator>
+<div class="p-6 space-y-6">
+    <x-ui.header :title="__('Tahun Ajaran')" :subtitle="__('Kelola tahun akademik sekolah Anda di sini.')" separator>
         <x-slot:actions>
-            <x-button label="Tambah Tahun Ajaran" icon="o-plus" class="btn-primary" wire:click="createNew" />
+            <x-ui.button :label="__('Tambah Tahun Ajaran')" icon="o-plus" class="btn-primary" wire:click="createNew" />
         </x-slot:actions>
-    </x-header>
+    </x-ui.header>
 
-    <div class="bg-base-100 rounded-lg shadow-sm border border-base-200">
-        <table class="table">
-            <thead>
-                <tr>
-                    <th class="bg-base-200">Nama</th>
-                    <th class="bg-base-200">Rentang Waktu</th>
-                    <th class="bg-base-200">Status</th>
-                    <th class="bg-base-200 text-right">Aksi</th>
-                </tr>
-            </thead>
-            <tbody>
-                @foreach ($years as $year)
-                    <tr wire:key="{{ $year->id }}" class="hover">
-                        <td>
-                            <div class="flex items-center gap-2">
-                                <span class="font-bold">{{ $year->name }}</span>
-                                @if($year->is_active)
-                                    <x-badge label="Aktif" class="badge-success badge-sm" />
-                                @endif
-                            </div>
-                        </td>
-                        <td class="opacity-70">
-                            {{ $year->start_date->format('d M Y') }} - {{ $year->end_date->format('d M Y') }}
-                        </td>
-                        <td>
-                            <x-badge 
-                                :label="$year->status === 'open' ? 'Terbuka' : 'Ditutup'" 
-                                class="{{ $year->status === 'open' ? 'badge-neutral' : 'badge-warning' }} badge-sm" 
-                            />
-                        </td>
-                        <td class="text-right">
-                            <div class="flex justify-end gap-1">
-                                @if(!$year->is_active)
-                                    <x-button label="Set Aktif" wire:click="setActive({{ $year->id }})" ghost sm />
-                                @endif
-                                <x-button icon="o-pencil-square" wire:click="edit({{ $year->id }})" ghost sm />
-                                <x-button 
-                                    icon="o-trash" 
-                                    class="text-error" 
-                                    wire:confirm="Yakin ingin menghapus ini?" 
-                                    wire:click="delete({{ $year->id }})" 
-                                    ghost sm 
-                                />
-                            </div>
-                        </td>
-                    </tr>
-                @endforeach
-            </tbody>
-        </table>
-    </div>
+    <x-ui.card shadow padding="false">
+        <x-ui.table 
+            :headers="[
+                ['key' => 'name', 'label' => __('Nama')],
+                ['key' => 'dates', 'label' => __('Rentang Waktu')],
+                ['key' => 'status', 'label' => __('Status')],
+                ['key' => 'actions', 'label' => '', 'class' => 'text-right']
+            ]" 
+            :rows="$years"
+        >
+            @scope('cell_name', $year)
+                <div class="flex items-center gap-2">
+                    <span class="font-bold text-slate-900 dark:text-white">{{ $year->name }}</span>
+                    @if($year->is_active)
+                        <x-ui.badge :label="__('Aktif')" class="bg-emerald-100 text-emerald-700 dark:bg-emerald-900/30 dark:text-emerald-400 text-[10px]" />
+                    @endif
+                </div>
+            @endscope
+
+            @scope('cell_dates', $year)
+                <span class="text-slate-500 dark:text-slate-400 text-sm">
+                    {{ $year->start_date->format('d M Y') }} - {{ $year->end_date->format('d M Y') }}
+                </span>
+            @endscope
+
+            @scope('cell_status', $year)
+                <x-ui.badge 
+                    :label="$year->status === 'open' ? __('Terbuka') : __('Ditutup')" 
+                    class="{{ $year->status === 'open' ? 'bg-slate-100 text-slate-700 dark:bg-slate-800 dark:text-slate-300' : 'bg-amber-100 text-amber-700 dark:bg-amber-900/30 dark:text-amber-400' }} text-[10px]" 
+                />
+            @endscope
+
+            @scope('cell_actions', $year)
+                <div class="flex justify-end gap-1">
+                    @if(!$year->is_active)
+                        <x-ui.button :label="__('Set Aktif')" wire:click="setActive({{ $year->id }})" ghost sm />
+                    @endif
+                    <x-ui.button icon="o-pencil-square" wire:click="edit({{ $year->id }})" ghost sm />
+                    <x-ui.button 
+                        icon="o-trash" 
+                        class="text-red-600 dark:text-red-400 hover:bg-red-50 dark:hover:bg-red-900/20" 
+                        wire:confirm="{{ __('Yakin ingin menghapus ini?') }}" 
+                        wire:click="delete({{ $year->id }})" 
+                        ghost sm 
+                    />
+                </div>
+            @endscope
+        </x-ui.table>
+    </x-ui.card>
 
     <div class="mt-4">
         {{ $years->links() }}
     </div>
 
-    <x-modal wire:model="yearModal" class="backdrop-blur" persistent>
-        <x-header :title="$editing ? 'Edit Tahun Ajaran' : 'Tambah Tahun Ajaran Baru'" subtitle="Masukkan detail tahun ajaran di bawah ini." separator />
+    <x-ui.modal wire:model="yearModal" persistent>
+        <x-ui.header :title="$editing ? __('Edit Tahun Ajaran') : __('Tambah Tahun Ajaran Baru')" :subtitle="__('Masukkan detail tahun ajaran di bawah ini.')" separator />
 
-        <form wire:submit="save">
-            <div class="space-y-4">
-                <x-input wire:model="name" label="Nama (Contoh: 2024/2025)" required />
+        <form wire:submit="save" class="space-y-6">
+            <x-ui.input wire:model="name" :label="__('Nama (Contoh: 2024/2025)')" required />
 
-                <div class="grid grid-cols-2 gap-4">
-                    <x-input wire:model="start_date" type="date" label="Tanggal Mulai" required />
-                    <x-input wire:model="end_date" type="date" label="Tanggal Selesai" required />
-                </div>
-
-                <x-select 
-                    wire:model="status" 
-                    label="Status" 
-                    :options="[
-                        ['id' => 'open', 'name' => 'Terbuka'],
-                        ['id' => 'closed', 'name' => 'Ditutup'],
-                    ]" 
-                />
-
-                <x-checkbox wire:model="is_active" label="Jadikan Tahun Aktif" />
+            <div class="grid grid-cols-2 gap-4">
+                <x-ui.input wire:model="start_date" type="date" :label="__('Tanggal Mulai')" required />
+                <x-ui.input wire:model="end_date" type="date" :label="__('Tanggal Selesai')" required />
             </div>
 
-            <x-slot:actions>
-                <x-button label="Batal" @click="$set('yearModal', false)" />
-                <x-button label="Simpan" type="submit" class="btn-primary" spinner="save" />
-            </x-slot:actions>
+            <x-ui.select 
+                wire:model="status" 
+                :label="__('Status')" 
+                :options="[
+                    ['id' => 'open', 'name' => __('Terbuka')],
+                    ['id' => 'closed', 'name' => __('Ditutup')],
+                ]" 
+                option-label="name"
+            />
+
+            <x-ui.checkbox wire:model="is_active" :label="__('Jadikan Tahun Aktif')" />
+
+            <div class="flex justify-end gap-2 pt-4">
+                <x-ui.button :label="__('Batal')" ghost @click="$set('yearModal', false)" />
+                <x-ui.button :label="__('Simpan')" type="submit" class="btn-primary" spinner="save" />
+            </div>
         </form>
-    </x-modal>
+    </x-ui.modal>
 </div>

@@ -11,7 +11,7 @@
             <input type="hidden" name="token" value="{{ request()->route('token') }}">
 
             <!-- Email Address -->
-            <x-input
+            <x-ui.input
                 name="email"
                 value="{{ request('email') }}"
                 :label="__('Email')"
@@ -21,7 +21,7 @@
             />
 
             <!-- Password -->
-            <x-input
+            <x-ui.input
                 name="password"
                 :label="__('Password')"
                 type="password"
@@ -31,7 +31,7 @@
             />
 
             <!-- Confirm Password -->
-            <x-input
+            <x-ui.input
                 name="password_confirmation"
                 :label="__('Confirm password')"
                 type="password"
@@ -41,9 +41,7 @@
             />
 
             <div class="flex items-center justify-end">
-                <x-button type="submit" class="btn-primary w-full" data-test="reset-password-button">
-                    {{ __('Reset password') }}
-                </x-button>
+                <x-ui.button type="submit" class="btn-primary w-full" data-test="reset-password-button" :label="__('Reset password')" />
             </div>
         </form>
     </div>

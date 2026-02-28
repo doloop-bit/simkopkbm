@@ -188,7 +188,7 @@ new class extends Component {
             @if ($twoFactorEnabled)
                 <div class="space-y-4">
                     <div class="flex items-center gap-3">
-                        <x-badge label="{{ __('Enabled') }}" class="badge-success" />
+                        <x-ui.badge :label="__('Enabled')" class="bg-emerald-100 text-emerald-700 dark:bg-emerald-900/30 dark:text-emerald-400" />
                     </div>
 
                     <p class="opacity-70">
@@ -198,9 +198,9 @@ new class extends Component {
                     <livewire:admin.settings.two-factor.recovery-codes :$requiresConfirmation/>
 
                     <div class="flex justify-start">
-                        <x-button
-                            label="{{ __('Disable 2FA') }}"
-                            class="btn-error"
+                        <x-ui.button
+                            :label="__('Disable 2FA')"
+                            class="bg-red-600 text-white shadow-lg shadow-red-600/20 hover:brightness-110"
                             icon="o-shield-exclamation"
                             wire:click="disable"
                             spinner="disable"
@@ -210,15 +210,15 @@ new class extends Component {
             @else
                 <div class="space-y-4">
                     <div class="flex items-center gap-3">
-                        <x-badge label="{{ __('Disabled') }}" class="badge-error" />
+                        <x-ui.badge :label="__('Disabled')" class="bg-red-100 text-red-700 dark:bg-red-900/30 dark:text-red-400" />
                     </div>
 
                     <p class="opacity-60">
                         {{ __('When you enable two-factor authentication, you will be prompted for a secure pin during login. This pin can be retrieved from a TOTP-supported application on your phone.') }}
                     </p>
 
-                    <x-button
-                        label="{{ __('Enable 2FA') }}"
+                    <x-ui.button
+                        :label="__('Enable 2FA')"
                         class="btn-primary"
                         icon="o-shield-check"
                         wire:click="enable"
@@ -229,37 +229,37 @@ new class extends Component {
         </div>
     </x-admin.settings.layout>
 
-    <x-modal wire:model="showModal" class="backdrop-blur" persistent>
+    <x-ui.modal wire:model="showModal" persistent>
         <div class="space-y-6">
             <div class="flex flex-col items-center space-y-4">
-                <div class="p-0.5 w-auto rounded-full border border-base-200 bg-white dark:bg-base-200 shadow-sm">
-                    <div class="p-2.5 rounded-full border border-base-300 overflow-hidden bg-base-100 relative">
-                        <div class="flex items-stretch absolute inset-0 w-full h-full divide-x [&>div]:flex-1 divide-base-200 justify-around opacity-50">
+                <div class="p-0.5 w-auto rounded-full border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 shadow-sm">
+                    <div class="p-2.5 rounded-full border border-slate-300 dark:border-slate-600 overflow-hidden bg-slate-50 dark:bg-slate-900 relative">
+                        <div class="flex items-stretch absolute inset-0 w-full h-full divide-x [&>div]:flex-1 divide-slate-200 dark:divide-slate-700 justify-around opacity-50">
                             @for ($i = 1; $i <= 5; $i++)
                                 <div></div>
                             @endfor
                         </div>
 
-                        <div class="flex flex-col items-stretch absolute w-full h-full divide-y [&>div]:flex-1 inset-0 divide-base-200 justify-around opacity-50">
+                        <div class="flex flex-col items-stretch absolute w-full h-full divide-y [&>div]:flex-1 inset-0 divide-slate-200 dark:divide-slate-700 justify-around opacity-50">
                             @for ($i = 1; $i <= 5; $i++)
                                 <div></div>
                             @endfor
                         </div>
 
-                        <x-icon name="o-qr-code" class="w-8 h-8 relative z-20 text-primary"/>
+                        <x-ui.icon name="o-qr-code" class="w-8 h-8 relative z-20 text-primary"/>
                     </div>
                 </div>
 
                 <div class="space-y-2 text-center">
-                    <h3 class="text-xl font-bold">{{ $this->modalConfig['title'] }}</h3>
-                    <p class="text-sm opacity-70">{{ $this->modalConfig['description'] }}</p>
+                    <h3 class="text-xl font-bold text-slate-900 dark:text-white">{{ $this->modalConfig['title'] }}</h3>
+                    <p class="text-sm opacity-70 text-slate-600 dark:text-slate-400">{{ $this->modalConfig['description'] }}</p>
                 </div>
             </div>
 
             @if ($showVerificationStep)
                 <div class="space-y-6">
                     <div class="flex flex-col items-center space-y-3 justify-center text-center">
-                        <x-input
+                        <x-ui.input
                             wire:model="code"
                             name="code"
                             placeholder="000000"
@@ -270,14 +270,15 @@ new class extends Component {
                     </div>
 
                     <div class="flex items-center space-x-3">
-                        <x-button
-                            label="{{ __('Back') }}"
+                        <x-ui.button
+                            :label="__('Back')"
                             class="flex-1"
+                            ghost
                             wire:click="resetVerification"
                         />
 
-                        <x-button
-                            label="{{ __('Confirm') }}"
+                        <x-ui.button
+                            :label="__('Confirm')"
                             class="btn-primary flex-1"
                             wire:click="confirmTwoFactor"
                             x-bind:disabled="$wire.code.length < 6"
@@ -287,14 +288,14 @@ new class extends Component {
                 </div>
             @else
                 @error('setupData')
-                    <x-alert title="{{ $message }}" icon="o-x-circle" class="alert-error" />
+                    <x-ui.alert :title="$message" icon="o-x-circle" class="bg-red-50 text-red-800 border-red-100" />
                 @enderror
 
                 <div class="flex justify-center">
-                    <div class="relative w-64 overflow-hidden border rounded-lg border-base-300 aspect-square">
+                    <div class="relative w-64 overflow-hidden border rounded-lg border-slate-300 dark:border-slate-600 aspect-square">
                         @empty($qrCodeSvg)
-                            <div class="absolute inset-0 flex items-center justify-center bg-base-100 animate-pulse">
-                                <span class="loading loading-spinner loading-md"></span>
+                            <div class="absolute inset-0 flex items-center justify-center bg-slate-100 dark:bg-slate-800 animate-pulse">
+                                <span class="w-8 h-8 border-4 border-primary border-t-transparent rounded-full animate-spin"></span>
                             </div>
                         @else
                             <div class="flex items-center justify-center h-full p-4 bg-white">
@@ -305,19 +306,19 @@ new class extends Component {
                 </div>
 
                 <div>
-                    <x-button
+                    <x-ui.button
                         :disabled="$errors->has('setupData')"
                         class="btn-primary w-full"
                         wire:click="showVerificationIfNecessary"
-                        label="{{ $this->modalConfig['buttonText'] }}"
+                        :label="$this->modalConfig['buttonText']"
                         spinner="showVerificationIfNecessary"
                     />
                 </div>
 
                 <div class="space-y-4">
                     <div class="relative flex items-center justify-center w-full">
-                        <div class="absolute inset-0 w-full h-px top-1/2 bg-base-300"></div>
-                        <span class="relative px-2 text-xs bg-base-100 opacity-60">
+                        <div class="absolute inset-0 w-full h-px top-1/2 bg-slate-300 dark:bg-slate-700"></div>
+                        <span class="relative px-2 text-xs bg-white dark:bg-slate-800 text-slate-500">
                             {{ __('or, enter the code manually') }}
                         </span>
                     </div>
@@ -337,26 +338,26 @@ new class extends Component {
                             }
                         }"
                     >
-                        <div class="flex items-stretch w-full border rounded-xl border-base-300 overflow-hidden">
+                        <div class="flex items-stretch w-full border rounded-xl border-slate-300 dark:border-slate-600 overflow-hidden">
                             @empty($manualSetupKey)
-                                <div class="flex items-center justify-center w-full p-3 bg-base-200">
-                                    <span class="loading loading-spinner loading-xs"></span>
+                                <div class="flex items-center justify-center w-full p-3 bg-slate-100 dark:bg-slate-800">
+                                    <span class="w-4 h-4 border-2 border-primary border-t-transparent rounded-full animate-spin"></span>
                                 </div>
                             @else
                                 <input
                                     type="text"
                                     readonly
                                     value="{{ $manualSetupKey }}"
-                                    class="w-full p-3 bg-transparent outline-none text-sm font-mono"
+                                    class="w-full p-3 bg-transparent outline-none text-sm font-mono text-slate-900 dark:text-white"
                                 />
 
                                 <button
                                     type="button"
                                     @click="copy()"
-                                    class="px-4 bg-base-200 hover:bg-base-300 transition-colors border-l border-base-300"
+                                    class="px-4 bg-slate-100 dark:bg-slate-700 hover:bg-slate-200 dark:hover:bg-slate-600 transition-colors border-l border-slate-300 dark:border-slate-600"
                                 >
-                                    <x-icon x-show="!copied" name="o-document-duplicate" class="w-4 h-4" />
-                                    <x-icon x-show="copied" name="o-check" class="w-4 h-4 text-success" />
+                                    <x-ui.icon x-show="!copied" name="o-document-duplicate" class="w-4 h-4" />
+                                    <x-ui.icon x-show="copied" name="o-check" class="w-4 h-4 text-emerald-600" />
                                 </button>
                             @endempty
                         </div>
@@ -366,7 +367,7 @@ new class extends Component {
         </div>
         
         <x-slot:actions>
-            <x-button label="{{ __('Close') }}" wire:click="closeModal" />
+            <x-ui.button :label="__('Close')" ghost wire:click="closeModal" />
         </x-slot:actions>
-    </x-modal>
+    </x-ui.modal>
 </section>

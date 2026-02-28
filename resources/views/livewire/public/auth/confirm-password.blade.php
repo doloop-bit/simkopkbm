@@ -10,7 +10,7 @@
         <form method="POST" action="{{ route('password.confirm.store') }}" class="flex flex-col gap-6">
             @csrf
 
-            <x-input
+            <x-ui.input
                 name="password"
                 :label="__('Password')"
                 type="password"
@@ -19,9 +19,7 @@
                 :placeholder="__('Password')"
             />
 
-            <x-button type="submit" class="btn-primary w-full" data-test="confirm-password-button">
-                {{ __('Confirm') }}
-            </x-button>
+            <x-ui.button type="submit" class="btn-primary w-full" data-test="confirm-password-button" :label="__('Confirm')" />
         </form>
     </div>
 </x-layouts.auth>
