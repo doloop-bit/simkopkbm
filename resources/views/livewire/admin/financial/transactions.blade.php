@@ -1,3 +1,200 @@
+<?php
+
+declare(strict_types=1);
+
+use App\Models\User;
+use App\Models\StudentBilling;
+use App\Models\Transaction;
+use App\Models\FeeCategory;
+use App\Models\BudgetPlan;
+use App\Models\BudgetPlanItem;
+use App\Models\AcademicYear;
+use Livewire\Attributes\Layout;
+use Livewire\Component;
+use Illuminate\Support\Facades\DB;
+
+new #[Layout('components.admin.layouts.app')] class extends Component {
+    // General Form
+    public string $type = 'income'; // 'income' or 'expense'
+    public float $pay_amount = 0;
+    public string $payment_method = 'cash';
+    public string $payment_date = '';
+    public string $reference_number = '';
+    public string $notes = '';
+
+    // Income Specific
+    public ?int $fee_category_id = null;
+    public ?int $student_id = null;
+    public string $student_search = '';
+    public ?StudentBilling $selectedBilling = null;
+
+    // Expense Specific
+    public ?int $budget_plan_id = null;
+    public ?int $budget_plan_item_id = null;
+
+    public function mount(): void
+    {
+        $this->payment_date = now()->format('Y-m-d');
+        // Auto-select the first active budget plan if exists
+        $activePlan = BudgetPlan::where('is_active', true)->first();
+        if ($activePlan) {
+            $this->budget_plan_id = $activePlan->id;
+        }
+    }
+
+    public function updatedType() {
+        $this->reset(['student_id', 'student_search', 'selectedBilling', 'fee_category_id', 'budget_plan_item_id', 'pay_amount', 'reference_number', 'notes']);
+    }
+
+    public function selectStudent(int $id): void
+    {
+        $this->student_id = $id;
+        $this->student_search = User::find($id)->name;
+        $this->checkExistingBilling();
+    }
+
+    public function updatedFeeCategoryId()
+    {
+        $this->checkExistingBilling();
+        // If no billing exists, but category has default amount, set it
+        if (!$this->selectedBilling && $this->fee_category_id) {
+            $cat = FeeCategory::find($this->fee_category_id);
+            if ($cat) {
+                $this->pay_amount = (float) $cat->default_amount;
+            }
+        }
+    }
+
+    public function checkExistingBilling()
+    {
+        if ($this->student_id && $this->fee_category_id) {
+            $billing = StudentBilling::where('student_id', $this->student_id)
+                ->where('fee_category_id', $this->fee_category_id)
+                ->where('status', '!=', 'paid')
+                ->first();
+            
+            if ($billing) {
+                $this->selectedBilling = $billing;
+                $this->pay_amount = (float) ($billing->amount - $billing->paid_amount);
+            } else {
+                $this->selectedBilling = null;
+            }
+        } else {
+            $this->selectedBilling = null;
+        }
+    }
+
+    public function recordTransaction(): void
+    {
+        $this->validate([
+            'pay_amount' => 'required|numeric|min:1',
+            'payment_method' => 'required|string',
+            'payment_date' => 'required|date',
+        ]);
+
+        if ($this->type === 'income') {
+            $this->validate([
+                'student_id' => 'required',
+                'fee_category_id' => 'required',
+            ]);
+
+            DB::transaction(function () {
+                $billing = $this->selectedBilling;
+                
+                // Auto create billing if it doesn't exist
+                if (!$billing) {
+                    $activeYear = AcademicYear::where('is_active', true)->first();
+                    $billing = StudentBilling::create([
+                        'student_id' => $this->student_id,
+                        'fee_category_id' => $this->fee_category_id,
+                        'academic_year_id' => $activeYear ? $activeYear->id : null,
+                        'amount' => $this->pay_amount,
+                        'paid_amount' => 0,
+                        'status' => 'unpaid'
+                    ]);
+                }
+
+                Transaction::create([
+                    'type' => 'income',
+                    'student_billing_id' => $billing->id,
+                    'user_id' => auth()->id(),
+                    'amount' => $this->pay_amount,
+                    'payment_date' => $this->payment_date,
+                    'payment_method' => $this->payment_method,
+                    'reference_number' => $this->reference_number,
+                    'notes' => $this->notes,
+                ]);
+
+                $newPaidAmount = $billing->paid_amount + $this->pay_amount;
+                $status = 'paid';
+                if ($newPaidAmount < $billing->amount) {
+                    $status = 'partial';
+                }
+
+                $billing->update([
+                    'paid_amount' => $newPaidAmount,
+                    'status' => $status,
+                ]);
+            });
+
+            session()->flash('success', __('Pemasukan berhasil dicatat.'));
+        } else {
+            $this->validate([
+                'budget_plan_id' => 'required',
+                'budget_plan_item_id' => 'required',
+            ]);
+
+            Transaction::create([
+                'type' => 'expense',
+                'budget_plan_id' => $this->budget_plan_id,
+                'budget_plan_item_id' => $this->budget_plan_item_id,
+                'user_id' => auth()->id(),
+                'amount' => $this->pay_amount,
+                'payment_date' => $this->payment_date,
+                'payment_method' => $this->payment_method,
+                'reference_number' => $this->reference_number,
+                'notes' => $this->notes,
+            ]);
+
+            session()->flash('success', __('Pengeluaran berhasil dicatat.'));
+        }
+
+        $this->reset(['selectedBilling', 'student_id', 'student_search', 'fee_category_id', 'budget_plan_item_id', 'pay_amount', 'reference_number', 'notes']);
+    }
+
+    public function with(): array
+    {
+        $students = [];
+        if (strlen($this->student_search) > 2 && !$this->student_id) {
+            $students = User::where('role', 'siswa')
+                ->where('name', 'like', "%{$this->student_search}%")
+                ->limit(5)
+                ->get();
+        }
+
+        $feeCategories = FeeCategory::all();
+        $activeBudgetPlans = BudgetPlan::where('is_active', true)->get();
+        
+        $budgetItems = [];
+        if ($this->budget_plan_id) {
+            $budgetItems = BudgetPlanItem::where('budget_plan_id', $this->budget_plan_id)->get();
+        }
+
+        $recentTransactions = Transaction::with(['billing.student', 'billing.feeCategory', 'budgetPlan', 'budgetItem'])
+            ->latest()
+            ->limit(15)
+            ->get();
+
+        return [
+            'students' => $students,
+            'feeCategories' => $feeCategories,
+            'activeBudgetPlans' => $activeBudgetPlans,
+            'budgetItems' => $budgetItems,
+            'recentTransactions' => $recentTransactions,
+        ];
+    }
+}; ?>
+
 <div class="p-6 space-y-6 text-slate-900 dark:text-white pb-24 md:pb-6">
     @if (session('success'))
         <x-ui.alert :title="__('Sukses')" icon="o-check-circle" class="bg-emerald-50 text-emerald-800 border-emerald-100" dismissible>

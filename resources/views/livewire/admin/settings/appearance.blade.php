@@ -1,4 +1,21 @@
-<section class="w-full">
+<?php
+
+declare(strict_types=1);
+
+use Livewire\Attributes\Layout;
+use Livewire\Component;
+
+new #[Layout('components.admin.layouts.app')] class extends Component {
+    public string $appearance = 'system';
+
+    public function mount(): void
+    {
+        // This is primarily handled via Alpine/LocalStorage in the view for instant feedback
+        // but we keep the state here for Livewire consistency.
+    }
+}; ?>
+
+<section class="w-full p-6">
     @include('partials.settings-heading')
 
     <x-admin.settings.layout :heading="__('Appearance')" :subheading="__('Update the appearance settings for your account')">

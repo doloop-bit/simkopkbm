@@ -1,3 +1,110 @@
+<?php
+
+declare(strict_types=1);
+
+use App\Models\User;
+use App\Models\StudentBilling;
+use App\Models\Transaction;
+use Livewire\Attributes\Layout;
+use Livewire\Component;
+use Illuminate\Support\Facades\DB;
+
+new #[Layout('components.admin.layouts.app')] class extends Component {
+    public ?int $student_id = null;
+    public string $search = '';
+    
+    public ?StudentBilling $selectedBilling = null;
+    public float $pay_amount = 0;
+    public string $payment_method = 'cash';
+    public string $payment_date = '';
+    public string $reference_number = '';
+    public string $notes = '';
+
+    public function mount(): void
+    {
+        $this->payment_date = now()->format('Y-m-d');
+    }
+
+    public function selectStudent(int $id): void
+    {
+        $this->student_id = $id;
+        $this->search = User::find($id)->name;
+    }
+
+    public function selectBilling(StudentBilling $billing): void
+    {
+        $this->selectedBilling = $billing;
+        $this->pay_amount = (float) ($billing->amount - $billing->paid_amount);
+    }
+
+    public function recordPayment(): void
+    {
+        $this->validate([
+            'pay_amount' => 'required|numeric|min:1',
+            'payment_method' => 'required|string',
+            'payment_date' => 'required|date',
+        ]);
+
+        if (!$this->selectedBilling) return;
+
+        DB::transaction(function () {
+            Transaction::create([
+                'student_billing_id' => $this->selectedBilling->id,
+                'user_id' => auth()->id(),
+                'amount' => $this->pay_amount,
+                'payment_date' => $this->payment_date,
+                'payment_method' => $this->payment_method,
+                'reference_number' => $this->reference_number,
+                'notes' => $this->notes,
+            ]);
+
+            $newPaidAmount = $this->selectedBilling->paid_amount + $this->pay_amount;
+            $status = 'paid';
+            if ($newPaidAmount < $this->selectedBilling->amount) {
+                $status = 'partial';
+            }
+
+            $this->selectedBilling->update([
+                'paid_amount' => $newPaidAmount,
+                'status' => $status,
+            ]);
+        });
+
+        session()->flash('success', __('Pembayaran berhasil dicatat.'));
+        $this->reset(['selectedBilling', 'pay_amount', 'reference_number', 'notes', 'student_id', 'search']);
+    }
+
+    public function with(): array
+    {
+        $students = [];
+        if (strlen($this->search) > 2 && !$this->student_id) {
+            $students = User::where('role', 'siswa')
+                ->where('name', 'like', "%{$this->search}%")
+                ->limit(5)
+                ->get();
+        }
+
+        $billings = [];
+        if ($this->student_id) {
+            $billings = StudentBilling::with('feeCategory')
+                ->where('student_id', $this->student_id)
+                ->where('status', '!=', 'paid')
+                ->get();
+        }
+
+        $recentTransactions = Transaction::with(['billing.student', 'billing.feeCategory'])
+            ->latest()
+            ->limit(10)
+            ->get();
+
+        return [
+            'students' => $students,
+            'billings' => $billings,
+            'recentTransactions' => $recentTransactions,
+        ];
+    }
+}; ?>
+
 <div class="p-6 space-y-6 text-slate-900 dark:text-white pb-24 md:pb-6">
     @if (session('success'))
         <x-ui.alert :title="__('Sukses')" icon="o-check-circle" class="bg-emerald-50 text-emerald-800 border-emerald-100" dismissible>

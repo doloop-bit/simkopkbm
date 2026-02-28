@@ -1,3 +1,164 @@
+<?php
+
+declare(strict_types=1);
+
+use App\Models\User;
+use App\Models\FeeCategory;
+use App\Models\StudentBilling;
+use App\Models\AcademicYear;
+use App\Models\Classroom;
+use Livewire\Attributes\Layout;
+use Livewire\Component;
+use Livewire\WithPagination;
+
+new #[Layout('components.admin.layouts.app')] class extends Component {
+    use WithPagination;
+
+    public ?int $academic_year_id = null;
+    public ?int $classroom_id = null;
+    public ?int $fee_category_id = null;
+    public string $month = '';
+    public ?float $amount = null;
+
+    public string $search = '';
+    public bool $billingModal = false;
+
+    public function mount(): void
+    {
+        $activeYear = AcademicYear::where('is_active', true)->first();
+        if ($activeYear) {
+            $this->academic_year_id = $activeYear->id;
+        }
+        $this->month = now()->format('Y-m');
+    }
+
+    public function updatedFeeCategoryId($value): void
+    {
+        if ($value) {
+            $category = FeeCategory::find($value);
+            if ($category) {
+                $this->amount = (float) $category->default_amount;
+            }
+        }
+    }
+
+    public function generateBillings(): void
+    {
+        $this->validate([
+            'academic_year_id' => 'required|exists:academic_years,id',
+            'classroom_id' => 'required|exists:classrooms,id',
+            'fee_category_id' => 'required|exists:fee_categories,id',
+            'amount' => 'required|numeric|min:0',
+            'month' => 'nullable|string',
+        ]);
+
+        $students = User::where('role', 'siswa')
+            ->with(['feeDiscounts' => function($q) {
+                $q->where(function ($query) {
+                    $query->where('fee_category_id', $this->fee_category_id)
+                          ->orWhereNull('fee_category_id');
+                });
+            }])
+            ->whereHas('profiles', function ($q) {
+                $q->whereHasMorph('profileable', [\App\Models\StudentProfile::class], function ($sq) {
+                    $sq->where('classroom_id', $this->classroom_id);
+                });
+            })->get();
+
+        $count = 0;
+        foreach ($students as $student) {
+            $existingBilling = StudentBilling::where([
+                'student_id' => $student->id,
+                'fee_category_id' => $this->fee_category_id,
+                'academic_year_id' => $this->academic_year_id,
+                'month' => $this->month,
+            ])->first();
+
+            if (!$existingBilling || $existingBilling->status === 'unpaid') {
+                $finalAmount = (float) $this->amount;
+                $notes = '';
+
+                // Apply discounts/scholarships if any
+                $discounts = $student->feeDiscounts;
+                if ($discounts->isNotEmpty()) {
+                    foreach ($discounts as $discount) {
+                        if ($discount->discount_type === 'percentage') {
+                            $discountValue = $this->amount * ($discount->amount / 100);
+                            $finalAmount -= $discountValue;
+                        } else {
+                            $discountValue = $discount->amount;
+                            $finalAmount -= $discountValue;
+                        }
+                        $notes .= "Potongan/Beasiswa: {$discount->name} ";
+                    }
+                    if ($finalAmount < 0) {
+                        $finalAmount = 0;
+                    }
+                }
+
+                if ($existingBilling) {
+                    $existingBilling->update([
+                        'amount' => $finalAmount,
+                        'notes' => trim($notes) ?: null,
+                    ]);
+                } else {
+                    StudentBilling::create([
+                        'student_id' => $student->id,
+                        'fee_category_id' => $this->fee_category_id,
+                        'academic_year_id' => $this->academic_year_id,
+                        'month' => $this->month,
+                        'amount' => $finalAmount,
+                        'due_date' => now()->addDays(14),
+                        'status' => 'unpaid',
+                        'notes' => trim($notes) ?: null,
+                    ]);
+                }
+                $count++;
+            }
+        }
+
+        session()->flash('success', __(":count Tagihan berhasil di-generate.", ['count' => $count]));
+        $this->billingModal = false;
+    }
+
+    public function with(): array
+    {
+        $billings = StudentBilling::with(['student', 'feeCategory'])
+            ->when($this->classroom_id, function($q) {
+                $q->whereHas('student.profiles', function($pq) {
+                    $pq->whereHasMorph('profileable', [\App\Models\StudentProfile::class], function($sq) {
+                        $sq->where('classroom_id', $this->classroom_id);
+                    });
+                });
+            })
+            ->when($this->search, function($q) {
+                $q->whereHas('student', function($sq) {
+                    $sq->where('name', 'like', "%{$this->search}%");
+                });
+            })
+            ->latest()
+            ->paginate(15);
+
+        $categoriesQuery = FeeCategory::query();
+        if ($this->classroom_id) {
+            $classroom = Classroom::find($this->classroom_id);
+            if ($classroom) {
+                $categoriesQuery->where(function($q) use ($classroom) {
+                    $q->where('level_id', $classroom->level_id)
+                      ->orWhereNull('level_id');
+                });
+            }
+        }
+
+        return [
+            'years' => AcademicYear::all(),
+            'classrooms' => Classroom::all(),
+            'categories' => $categoriesQuery->get(),
+            'billings' => $billings,
+        ];
+    }
+}; ?>
+
 <div class="p-6 space-y-6 text-slate-900 dark:text-white pb-24 md:pb-6">
     @if (session('success'))
         <x-ui.alert :title="__('Sukses')" icon="o-check-circle" class="bg-emerald-50 text-emerald-800 border-emerald-100" dismissible>
