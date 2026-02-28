@@ -20,18 +20,24 @@
 
 <script>
     (function() {
-        const theme = localStorage.getItem('theme') || 'system';
-        if (theme === 'system') {
-            if (window.matchMedia('(prefers-color-scheme: dark)').matches) {
+        const applyTheme = () => {
+            const theme = localStorage.getItem('theme') || 'system';
+            if (theme === 'system') {
+                if (window.matchMedia('(prefers-color-scheme: dark)').matches) {
+                    document.documentElement.classList.add('dark');
+                } else {
+                    document.documentElement.classList.remove('dark');
+                }
+            } else if (theme === 'dark') {
                 document.documentElement.classList.add('dark');
             } else {
                 document.documentElement.classList.remove('dark');
             }
-        } else if (theme === 'dark') {
-            document.documentElement.classList.add('dark');
-        } else {
-            document.documentElement.classList.remove('dark');
-        }
+        };
+
+        applyTheme();
+
+        document.addEventListener('livewire:navigated', applyTheme);
     })();
 </script>
 

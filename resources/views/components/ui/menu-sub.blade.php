@@ -18,16 +18,18 @@
             'bg-slate-800/40 text-white font-medium shadow-sm border border-slate-700/50 mb-1' => $active,
             'text-slate-400 hover:text-white hover:bg-slate-800' => !$active,
         ]) }}
+        :class="sidebarCollapsed ? 'justify-center' : 'justify-between'"
+        @if($title) :title="sidebarCollapsed ? '{{ addslashes($title) }}' : false " @endif
     >
         <span class="flex items-center gap-3">
             @if($icon)
                 <x-ui.icon :name="$icon" class="w-5 h-5 shrink-0" />
             @endif
             @if($title)
-                <span class="truncate">{{ $title }}</span>
+                <span x-show="!sidebarCollapsed" class="truncate">{{ $title }}</span>
             @endif
         </span>
-        <svg :class="{ 'rotate-180': open }" class="w-4 h-4 shrink-0 transition-transform duration-200" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+        <svg x-show="!sidebarCollapsed" :class="{ 'rotate-180': open }" class="w-4 h-4 shrink-0 transition-transform duration-200" fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path>
         </svg>
     </button>
@@ -41,7 +43,7 @@
         x-transition:leave-start="opacity-100 translate-y-0"
         x-transition:leave-end="opacity-0 -translate-y-1"
         x-cloak
-        class="ml-4 pl-4 border-l border-slate-700/50 space-y-0.5"
+        :class="sidebarCollapsed ? 'mt-2 space-y-0.5' : 'ml-4 pl-4 border-l border-slate-700/50 space-y-0.5'"
     >
         {{ $slot }}
     </div>

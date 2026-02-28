@@ -7,6 +7,11 @@
                 <x-ui.icon name="o-bars-3" class="w-6 h-6" />
             </button>
 
+            {{-- Desktop collapse --}}
+            <button @click="sidebarCollapsed = !sidebarCollapsed; localStorage.setItem('sidebarCollapsed', sidebarCollapsed)" class="hidden lg:block p-1.5 rounded-lg text-slate-500 hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors">
+                <x-ui.icon name="o-bars-3" class="w-6 h-6" x-bind:class="sidebarCollapsed ? 'rotate-180 transition-transform' : 'transition-transform'" />
+            </button>
+
             {{-- Mobile brand --}}
             <div class="flex items-center gap-2 lg:hidden">
                 <x-global.app-logo-icon class="size-6 fill-primary" />

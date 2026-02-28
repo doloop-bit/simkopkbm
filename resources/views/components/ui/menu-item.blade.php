@@ -19,16 +19,18 @@
         'bg-emerald-600 text-white font-bold shadow-md' => $isActive,
         'text-slate-400 hover:text-white hover:bg-slate-800' => !$isActive,
     ]) }}
+    :class="sidebarCollapsed ? 'justify-center' : ''"
+    @if($title) :title="sidebarCollapsed ? '{{ addslashes($title) }}' : false " @endif
 >
     @if($icon)
         <x-ui.icon :name="$icon" class="w-5 h-5 shrink-0" />
     @endif
     @if($title)
-        <span class="truncate">{{ $title }}</span>
+        <span x-show="!sidebarCollapsed" class="truncate">{{ $title }}</span>
     @endif
     {{ $slot }}
     @if($badge)
-        <span class="ml-auto inline-flex items-center rounded-full bg-primary/20 px-2 py-0.5 text-xs font-medium text-primary">
+        <span x-show="!sidebarCollapsed" class="ml-auto inline-flex items-center rounded-full bg-primary/20 px-2 py-0.5 text-xs font-medium text-primary">
             {{ $badge }}
         </span>
     @endif

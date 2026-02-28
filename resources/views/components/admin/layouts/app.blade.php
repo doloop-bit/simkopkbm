@@ -50,7 +50,7 @@
     </style>
 </head>
 <body class="min-h-screen bg-gradient-mesh font-sans antialiased text-slate-900 dark:text-slate-100 selection:bg-emerald-500/30"
-      x-data="{ sidebarOpen: false }">
+      x-data="{ sidebarOpen: false, sidebarCollapsed: localStorage.getItem('sidebarCollapsed') === 'true' }">
 
     {{-- Mobile Sidebar Overlay --}}
     <div x-show="sidebarOpen" x-cloak
@@ -64,16 +64,19 @@
         {{-- Sidebar --}}
         <aside
             x-cloak
-            :class="sidebarOpen ? 'translate-x-0' : '-translate-x-full'"
-            class="fixed inset-y-0 left-0 z-50 w-64 sidebar-premium transition-transform duration-300 lg:translate-x-0 flex flex-col h-screen"
+            :class="[
+                sidebarOpen ? 'translate-x-0' : '-translate-x-full',
+                sidebarCollapsed ? 'w-20' : 'w-64'
+            ]"
+            class="fixed inset-y-0 left-0 z-50 sidebar-premium transition-all duration-300 lg:translate-x-0 flex flex-col h-screen"
         >
             {{-- Fixed Logo Header --}}
             <div class="px-5 py-6 shrink-0">
-                <a href="{{ route('dashboard') }}" class="flex items-center gap-3 no-underline min-w-0" wire:navigate>
+                <a href="{{ route('dashboard') }}" class="flex items-center gap-3 no-underline min-w-0" :class="sidebarCollapsed ? 'justify-center' : ''" wire:navigate>
                     <div class="shrink-0 flex items-center justify-center">
                         <x-global.app-logo-icon class="size-8 fill-primary block aspect-square object-contain" />
                     </div>
-                    <span class="text-xl font-extrabold text-slate-100 whitespace-nowrap overflow-hidden tracking-tight">{{ config('app.name') }}</span>
+                    <span x-show="!sidebarCollapsed" class="text-xl font-extrabold text-slate-100 whitespace-nowrap overflow-hidden tracking-tight">{{ config('app.name') }}</span>
                 </a>
             </div>
 
@@ -90,7 +93,7 @@
         </aside>
 
         {{-- Main Content --}}
-        <div class="flex-1 min-w-0 lg:ml-64 transition-all duration-300">
+        <div :class="sidebarCollapsed ? 'lg:ml-20' : 'lg:ml-64'" class="flex-1 min-w-0 transition-all duration-300">
             <div class="min-h-screen flex flex-col">
                 <x-admin.header />
 
