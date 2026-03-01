@@ -41,16 +41,52 @@ new #[Layout('components.admin.layouts.app')] class extends Component {
             }"
             class="mt-6"
         >
-            <x-ui.radio 
-                wire:model="appearance" 
-                x-model="appearance"
-                @change="updateTheme($event.target.value)"
-                :options="[
-                    ['id' => 'light', 'label' => __('Light')],
-                    ['id' => 'dark', 'label' => __('Dark')],
-                    ['id' => 'system', 'label' => __('System')],
-                ]" 
-            />
+            <div class="inline-flex rounded-xl p-1 bg-slate-100 dark:bg-slate-900 w-auto border border-slate-200 dark:border-slate-800">
+                <label class="relative flex cursor-pointer items-center justify-center gap-2 rounded-lg px-4 py-2 transition-all"
+                       x-bind:class="appearance === 'light' ? 'bg-white text-slate-900 shadow-sm dark:bg-slate-800 dark:text-white' : 'text-slate-500 hover:text-slate-700 dark:text-slate-400 dark:hover:text-slate-300'">
+                    <input 
+                        type="radio" 
+                        name="appearance" 
+                        value="light" 
+                        wire:model="appearance"
+                        x-model="appearance"
+                        @change="updateTheme($event.target.value)"
+                        class="sr-only"
+                    >
+                    <x-heroicon-o-sun class="h-5 w-5" />
+                    <span class="text-sm font-medium">{{ __('Light') }}</span>
+                </label>
+
+                <label class="relative flex cursor-pointer items-center justify-center gap-2 rounded-lg px-4 py-2 transition-all"
+                       x-bind:class="appearance === 'dark' ? 'bg-white text-slate-900 shadow-sm dark:bg-slate-800 dark:text-white' : 'text-slate-500 hover:text-slate-700 dark:text-slate-400 dark:hover:text-slate-300'">
+                    <input 
+                        type="radio" 
+                        name="appearance" 
+                        value="dark" 
+                        wire:model="appearance"
+                        x-model="appearance"
+                        @change="updateTheme($event.target.value)"
+                        class="sr-only"
+                    >
+                    <x-heroicon-s-moon class="h-5 w-5" />
+                    <span class="text-sm font-medium">{{ __('Dark') }}</span>
+                </label>
+
+                <label class="relative flex cursor-pointer items-center justify-center gap-2 rounded-lg px-4 py-2 transition-all"
+                       x-bind:class="appearance === 'system' ? 'bg-white text-slate-900 shadow-sm dark:bg-slate-800 dark:text-white' : 'text-slate-500 hover:text-slate-700 dark:text-slate-400 dark:hover:text-slate-300'">
+                    <input 
+                        type="radio" 
+                        name="appearance" 
+                        value="system" 
+                        wire:model="appearance"
+                        x-model="appearance"
+                        @change="updateTheme($event.target.value)"
+                        class="sr-only"
+                    >
+                    <x-heroicon-o-computer-desktop class="h-5 w-5" />
+                    <span class="text-sm font-medium">{{ __('System') }}</span>
+                </label>
+            </div>
         </div>
     </x-admin.settings.layout>
 </section>
