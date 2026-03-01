@@ -32,8 +32,7 @@
         "nunomaduro/collision": "^8.6",
         "pestphp/pest": "^4.4",
         "pestphp/pest-plugin-laravel": "^4.1",
-        "phpunit/phpunit": "^12.5",
-        "thecodeholic/laravel-hostinger-deploy": "*"
+        "phpunit/phpunit": "^12.5"
     },
     "autoload": {
         "psr-4": {
