@@ -1,13 +1,13 @@
 <div x-data="{ open: false }" class="relative w-full">
     <button @click="open = !open" @click.outside="open = false" type="button" class="flex items-center w-full px-2 py-2 rounded-xl hover:bg-slate-800/50 transition-colors cursor-pointer" :class="sidebarCollapsed ? 'justify-center' : 'gap-3'">
-        <div x-show="sidebarCollapsed">
+        <div x-show="sidebarCollapsed" x-cloak>
             <x-ui.icon name="o-user-circle" class="w-6 h-6 text-slate-400 shrink-0" />
         </div>
-        <div class="flex-1 min-w-0 text-left" x-show="!sidebarCollapsed">
+        <div class="flex-1 min-w-0 text-left" x-show="!sidebarCollapsed" x-cloak>
             <div class="text-sm font-semibold text-slate-200 truncate">{{ auth()->user()->name }}</div>
             <div class="text-xs text-slate-400 truncate">{{ auth()->user()->email }}</div>
         </div>
-        <div x-show="!sidebarCollapsed" class="shrink-0 flex items-center">
+        <div x-show="!sidebarCollapsed" x-cloak class="shrink-0 flex items-center">
             <x-ui.icon name="o-chevron-up-down" class="w-4 h-4 text-slate-500" />
         </div>
     </button>

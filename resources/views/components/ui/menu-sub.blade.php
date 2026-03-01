@@ -30,10 +30,10 @@
                 <x-ui.icon :name="$icon" class="w-5 h-5 shrink-0" />
             @endif
             @if($title)
-                <span x-show="!sidebarCollapsed || inFlyout" class="truncate">{{ $title }}</span>
+                <span x-show="!sidebarCollapsed || inFlyout" x-cloak class="truncate">{{ $title }}</span>
             @endif
         </span>
-        <svg x-show="!sidebarCollapsed || inFlyout" :class="{ 'rotate-180': open }" class="w-4 h-4 shrink-0 transition-transform duration-200" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+        <svg x-show="!sidebarCollapsed || inFlyout" x-cloak :class="{ 'rotate-180': open }" class="w-4 h-4 shrink-0 transition-transform duration-200" fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path>
         </svg>
     </button>

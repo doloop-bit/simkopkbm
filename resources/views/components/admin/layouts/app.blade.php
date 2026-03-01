@@ -77,18 +77,18 @@
                         <div class="shrink-0 flex items-center justify-center">
                             <x-global.app-logo-icon class="size-8 fill-primary block aspect-square object-contain" />
                         </div>
-                        <span x-show="!sidebarCollapsed" class="text-xl font-extrabold text-slate-100 whitespace-nowrap overflow-hidden tracking-tight">{{ config('app.name') }}</span>
+                        <span x-show="!sidebarCollapsed" x-cloak class="text-xl font-extrabold text-slate-100 whitespace-nowrap overflow-hidden tracking-tight">{{ config('app.name') }}</span>
                     </a>
 
                     {{-- Toggle Button Expanded --}}
-                    <button x-show="!sidebarCollapsed" @click="sidebarCollapsed = true; localStorage.setItem('sidebarCollapsed', 'true')" class="hidden lg:block p-1.5 rounded-lg text-slate-500 hover:bg-slate-800 hover:text-white transition-colors">
+                    <button x-show="!sidebarCollapsed" x-cloak @click="sidebarCollapsed = true; localStorage.setItem('sidebarCollapsed', 'true'); document.documentElement.classList.add('sidebar-collapsed')" class="hidden lg:block p-1.5 rounded-lg text-slate-500 hover:bg-slate-800 hover:text-white transition-colors">
                         <x-ui.icon name="o-chevron-double-left" class="w-5 h-5" />
                     </button>
                 </div>
 
                 {{-- Toggle Button Collapsed (Hover over logo) --}}
-                <div x-show="sidebarCollapsed" class="absolute inset-0 hidden lg:flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity">
-                    <button @click="sidebarCollapsed = false; localStorage.setItem('sidebarCollapsed', 'false')" class="p-2 rounded-lg bg-slate-800 text-slate-300 hover:text-white transition-colors shadow-lg">
+                <div x-show="sidebarCollapsed" x-cloak class="absolute inset-0 hidden lg:flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity">
+                    <button @click="sidebarCollapsed = false; localStorage.setItem('sidebarCollapsed', 'false'); document.documentElement.classList.remove('sidebar-collapsed')" class="p-2 rounded-lg bg-slate-800 text-slate-300 hover:text-white transition-colors shadow-lg">
                         <x-ui.icon name="o-chevron-double-right" class="w-5 h-5" />
                     </button>
                 </div>

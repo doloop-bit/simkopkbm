@@ -35,9 +35,22 @@
             }
         };
 
-        applyTheme();
+        const applySidebar = () => {
+            const collapsed = localStorage.getItem('sidebarCollapsed') === 'true';
+            if (collapsed) {
+                document.documentElement.classList.add('sidebar-collapsed');
+            } else {
+                document.documentElement.classList.remove('sidebar-collapsed');
+            }
+        };
 
-        document.addEventListener('livewire:navigated', applyTheme);
+        applyTheme();
+        applySidebar();
+
+        document.addEventListener('livewire:navigated', () => {
+            applyTheme();
+            applySidebar();
+        });
     })();
 </script>
 
