@@ -321,7 +321,7 @@ new #[Layout('components.admin.layouts.app')] class extends Component {
             />
 
             <div class="flex justify-end gap-2 pt-4">
-                <x-ui.button :label="__('Batal')" ghost @click="$set('subjectModal', false)" />
+                <x-ui.button :label="__('Batal')" ghost @click="show = false" />
                 <x-ui.button :label="__('Simpan')" type="submit" class="btn-primary" spinner="save" />
             </div>
         </form>
@@ -412,7 +412,7 @@ new #[Layout('components.admin.layouts.app')] class extends Component {
             </div>
 
             <div class="flex justify-end gap-2 pt-6">
-                <x-ui.button :label="__('Tutup')" ghost @click="$set('tpModal', false)" />
+                <x-ui.button :label="__('Tutup')" ghost @click="show = false" />
             </div>
         @endif
     </x-ui.modal>

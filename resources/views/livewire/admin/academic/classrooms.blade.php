@@ -218,7 +218,7 @@ new #[Layout('components.admin.layouts.app')] class extends Component {
             <x-ui.select wire:model="homeroom_teacher_id" :label="__('Wali Kelas (Opsional)')" :options="$teachers" :placeholder="__('Pilih Wali Kelas')" />
 
             <div class="flex justify-end gap-2 pt-4">
-                <x-ui.button :label="__('Batal')" ghost @click="$set('classroomModal', false)" />
+                <x-ui.button :label="__('Batal')" ghost @click="show = false" />
                 <x-ui.button :label="__('Simpan')" type="submit" class="btn-primary" spinner="save" />
             </div>
         </form>

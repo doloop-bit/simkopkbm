@@ -428,13 +428,13 @@ new #[Layout('components.admin.layouts.app')] class extends Component {
                 </div>
 
                 <div class="flex items-center justify-end gap-3 mt-10 pt-6 border-t border-slate-50 dark:border-slate-800">
-                    <x-ui.button :label="__('Tutup')" @click="$set('detailModal', false)" class="btn-ghost font-bold py-0" />
+                    <x-ui.button :label="__('Tutup')" @click="show = false" class="btn-ghost font-bold py-0" />
                     @if($viewing->status === 'pending')
-                        <x-ui.button :label="__('Tolak Pendaftaran')" icon="o-x-mark" class="btn-ghost text-rose-500 font-bold italic" wire:click="reject({{ $viewing->id }})" wire:confirm="{{ __('Yakin ingin menolak pendaftaran ini?') }}" @click="$set('detailModal', false)" />
-                        <x-ui.button :label="__('Terima & Acc')" icon="o-check" class="btn-primary shadow-xl shadow-primary/20" wire:click="accept({{ $viewing->id }})" @click="$set('detailModal', false)" />
+                        <x-ui.button :label="__('Tolak Pendaftaran')" icon="o-x-mark" class="btn-ghost text-rose-500 font-bold italic" wire:click="reject({{ $viewing->id }})" wire:confirm="{{ __('Yakin ingin menolak pendaftaran ini?') }}" @click="show = false" />
+                        <x-ui.button :label="__('Terima & Acc')" icon="o-check" class="btn-primary shadow-xl shadow-primary/20" wire:click="accept({{ $viewing->id }})" @click="show = false" />
                     @endif
                     @if($viewing->status === 'accepted')
-                        <x-ui.button :label="__('Lanjutkan ke Enroll')" icon="o-academic-cap" class="btn-primary shadow-xl shadow-primary/20" wire:click="openEnroll({{ $viewing->id }})" @click="$set('detailModal', false)" />
+                        <x-ui.button :label="__('Lanjutkan ke Enroll')" icon="o-academic-cap" class="btn-primary shadow-xl shadow-primary/20" wire:click="openEnroll({{ $viewing->id }})" @click="show = false" />
                     @endif
                 </div>
             </div>
@@ -475,7 +475,7 @@ new #[Layout('components.admin.layouts.app')] class extends Component {
                     />
 
                     <div class="flex items-center justify-end gap-3 pt-6 border-t border-slate-50 dark:border-slate-800">
-                        <x-ui.button :label="__('Batalkan')" @click="$set('enrollModal', false)" class="btn-ghost font-bold" />
+                        <x-ui.button :label="__('Batalkan')" @click="show = false" class="btn-ghost font-bold" />
                         <x-ui.button :label="__('Konfirmasi & Enroll')" type="submit" class="btn-primary shadow-xl shadow-primary/20 px-10" spinner="enroll" />
                     </div>
                 </form>
