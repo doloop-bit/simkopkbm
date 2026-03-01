@@ -78,7 +78,7 @@ new #[Layout('components.admin.layouts.app')] class extends Component {
         $rules = [
             'name' => 'required|string|max:255',
             'email' => ['required', 'email', Rule::unique('users')->ignore($this->editingUser->id ?? null)],
-            'role' => 'required|in:guru,staf',
+            'role' => 'required|in:guru,staf,admin,yayasan,bendahara,kepsek',
             'nip' => 'nullable|string',
             'phone' => 'nullable|string',
             'address' => 'nullable|string',
@@ -172,7 +172,7 @@ new #[Layout('components.admin.layouts.app')] class extends Component {
     {
         return [
             'users' => User::query()
-                ->whereIn('role', ['guru', 'staf'])
+                ->whereNotIn('role', ['siswa'])
                 ->with(['profile.profileable'])
                 ->when($this->search, function ($query) {
                     $query->where('name', 'like', '%' . $this->search . '%')
@@ -221,15 +221,26 @@ new #[Layout('components.admin.layouts.app')] class extends Component {
             @scope('cell_role_label', $user)
                 @php
                     $profileable = $user->profile?->profileable;
-                    $position = $user->role === 'guru' ? __('Guru / Pendidik') : ($profileable?->position ?? __('Tenaga Kependidikan'));
-                    if($user->role === 'staf' && $profileable?->level) {
+                    $position = match($user->role) {
+                        'guru' => __('Guru / Pendidik'),
+                        'staf' => $profileable?->position ?? __('Tenaga Kependidikan'),
+                        'admin' => __('Administrator'),
+                        'kepsek' => __('Kepala Sekolah'),
+                        'bendahara' => __('Bendahara'),
+                        'yayasan' => __('Yayasan'),
+                        default => ucfirst($user->role)
+                    };
+                    if ($profileable?->level) {
                         $position .= ' (' . $profileable->level->name . ')';
+                    } elseif ($user->managed_level_id) {
+                        $levelName = \App\Models\Level::find($user->managed_level_id)?->name;
+                        if ($levelName) $position .= ' (' . $levelName . ')';
                     }
                 @endphp
                 <div class="flex flex-col gap-1">
                     <x-ui.badge 
                         :label="strtoupper($user->role)" 
-                        class="{{ $user->role === 'guru' ? 'bg-emerald-100 text-emerald-700 dark:bg-emerald-900/30 dark:text-emerald-400' : 'bg-blue-100 text-blue-700 dark:bg-blue-900/30 dark:text-blue-400' }} text-[10px] font-black" 
+                        class="{{ $user->role === 'guru' ? 'bg-emerald-100 text-emerald-700 dark:bg-emerald-900/30 dark:text-emerald-400' : 'bg-blue-100 text-blue-700 dark:bg-blue-900/30 dark:text-blue-400' }} text-[10px] font-black w-fit" 
                     />
                     <span class="text-[10px] uppercase font-bold text-slate-400 tracking-tight">{{ $position }}</span>
                 </div>
@@ -268,11 +279,11 @@ new #[Layout('components.admin.layouts.app')] class extends Component {
         {{ $users->links() }}
     </div>
 
-    <x-ui.modal wire:model="ptkModal" persistent>
+    <x-ui.modal wire:model="ptkModal" persistent maxWidth="max-w-4xl">
         <x-ui.header :title="$editingUser ? __('Edit PTK') : __('Tambah PTK')" :subtitle="__('Isi informasi akun dan data profil PTK.')" separator />
 
         <form wire:submit="save" class="space-y-6">
-            <div class="grid grid-cols-1 md:grid-cols-2 gap-8 max-h-[60vh] overflow-y-auto pr-4 custom-scrollbar">
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-8">
                 <div class="space-y-5">
                     <div class="text-[11px] font-black uppercase text-slate-400 tracking-widest border-b border-slate-100 dark:border-slate-800 pb-2">{{ __('Akun & Identitas') }}</div>
                     <x-ui.input wire:model="name" :label="__('Nama Lengkap')" required />
@@ -280,10 +291,14 @@ new #[Layout('components.admin.layouts.app')] class extends Component {
                     <x-ui.input wire:model="password" :label="$editingUser ? __('Password (Kosongkan jika tidak diubah)') : __('Password')" type="password" :required="!$editingUser" />
                     <x-ui.select 
                         wire:model.live="role" 
-                        :label="__('Status PTK')" 
+                        :label="__('Status PTK / Role')" 
                         :options="[
                             ['id' => 'guru', 'name' => __('Pendidik (Guru)')],
                             ['id' => 'staf', 'name' => __('Tenaga Kependidikan (Staf)')],
+                            ['id' => 'admin', 'name' => __('Administrator')],
+                            ['id' => 'kepsek', 'name' => __('Kepala Sekolah')],
+                            ['id' => 'bendahara', 'name' => __('Bendahara')],
+                            ['id' => 'yayasan', 'name' => __('Yayasan')],
                         ]" 
                         required
                     />
@@ -327,7 +342,7 @@ new #[Layout('components.admin.layouts.app')] class extends Component {
             </div>
 
             <div class="flex justify-end gap-2 pt-4 border-t border-slate-100 dark:border-slate-800">
-                <x-ui.button :label="__('Batal')" ghost @click="$set('ptkModal', false)" />
+                <x-ui.button :label="__('Batal')" ghost @click="show = false" />
                 <x-ui.button :label="__('Simpan')" type="submit" class="btn-primary" spinner="save" />
             </div>
         </form>

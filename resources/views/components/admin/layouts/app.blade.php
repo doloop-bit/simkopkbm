@@ -102,6 +102,39 @@
             {{-- User & Settings (Fixed at bottom) --}}
             <div class="mt-auto px-4 pb-4 shrink-0">
                 <x-ui.menu-separator class="my-4 border-slate-700/50" />
+                
+                {{-- Theme Toggle --}}
+                <button 
+                    x-data="{ 
+                        isDark: document.documentElement.classList.contains('dark'),
+                        toggleTheme() {
+                            this.isDark = !this.isDark;
+                            if (this.isDark) {
+                                document.documentElement.classList.add('dark');
+                                localStorage.setItem('theme', 'dark');
+                            } else {
+                                document.documentElement.classList.remove('dark');
+                                localStorage.setItem('theme', 'light');
+                            }
+                        }
+                    }"
+                    @click="toggleTheme()"
+                    class="flex items-center w-full px-2 py-2 mb-2 rounded-xl text-slate-400 hover:text-slate-200 hover:bg-slate-800/50 transition-colors"
+                    :class="sidebarCollapsed ? 'justify-center' : 'gap-3'"
+                    title="Toggle Theme"
+                >
+                    <span x-show="isDark" x-cloak class="flex items-center justify-center shrink-0">
+                        <x-ui.icon name="o-sun" class="w-6 h-6" />
+                    </span>
+                    <span x-show="!isDark" x-cloak class="flex items-center justify-center shrink-0">
+                        <x-ui.icon name="o-moon" class="w-6 h-6" />
+                    </span>
+                    <span x-show="!sidebarCollapsed" class="text-sm font-semibold truncate text-left flex-1" x-cloak>
+                        <span x-show="isDark">Mode Terang</span>
+                        <span x-show="!isDark">Mode Gelap</span>
+                    </span>
+                </button>
+
                 <x-admin.desktop-user-menu />
             </div>
         </aside>

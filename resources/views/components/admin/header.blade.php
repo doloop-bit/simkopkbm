@@ -1,4 +1,4 @@
-<header class="glass-nav px-4 lg:px-8">
+<header class="glass-nav px-4 lg:hidden">
     <div class="flex items-center justify-between py-3">
         {{-- Left: Mobile menu + Brand --}}
         <div class="flex items-center gap-3">
@@ -51,6 +51,7 @@
                     <x-ui.icon name="o-moon" class="w-5 h-5" />
                 </span>
             </button>
+
 
             <!-- <button class="p-2 rounded-xl text-slate-500 hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors">
                 <x-ui.icon name="o-bell" class="w-5 h-5" />

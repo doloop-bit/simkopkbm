@@ -11,7 +11,7 @@
     $wireModel = $attributes->wire('model')->value();
     $name = $attributes->get('name') ?? $wireModel;
     $selectClasses = 'w-full rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-900 text-sm text-slate-900 dark:text-slate-100 focus:border-primary focus:ring-2 focus:ring-primary/20 transition-all duration-200 appearance-none';
-    $sizeClasses = $sm ? 'px-2.5 py-1.5 text-xs' : 'px-3 py-2.5';
+    $sizeClasses = $sm ? 'px-2.5 py-1.5 text-xs' : 'px-3 py-2 text-sm';
 @endphp
 
 <div>
