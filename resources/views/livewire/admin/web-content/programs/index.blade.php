@@ -196,7 +196,7 @@ new #[Layout('components.admin.layouts.app')] class extends Component
     {{-- Form --}}
     <x-ui.card shadow padding="false" class="border-none ring-1 ring-slate-100 dark:ring-slate-800">
         <div class="p-6 border-b border-slate-50 dark:border-slate-800/50 bg-slate-50/50 dark:bg-slate-900/50">
-            <h3 class="font-black text-slate-800 dark:text-white uppercase tracking-tight text-sm italic">
+            <h3 class="font-bold text-slate-800 dark:text-white uppercase tracking-wider text-xs">
                 {{ $editingId ? __('Modifikasi Detail Program') : __('Registrasi Program Pendidikan Baru') }}
             </h3>
         </div>
@@ -208,7 +208,7 @@ new #[Layout('components.admin.layouts.app')] class extends Component
                         :label="__('Target Jenjang Pendidikan')" 
                         :placeholder="__('Pilih jenjang akademik...')"
                         :options="$levels"
-                        class="font-black italic uppercase tracking-tighter"
+                        class="tracking-tight"
                     />
 
                     <x-ui.input 
@@ -216,16 +216,16 @@ new #[Layout('components.admin.layouts.app')] class extends Component
                         :label="__('Estimasi Durasi Belajar')" 
                         :placeholder="__('Contoh: 6 Bulan / 1 Semester')"
                         icon="o-clock"
-                        class="font-bold"
+                        class="font-medium"
                     />
                 </div>
 
-                <div class="space-y-4">
+                <div class="space-y-4 max-w-md">
                     <x-ui.file 
                         wire:model="image" 
                         :label="__('Ilustrasi / Foto Program')" 
                         accept="image/jpeg,image/jpg,image/png,image/webp"
-                        class="bg-white dark:bg-slate-800"
+                        class="bg-white dark:bg-slate-900"
                     >
                         @php
                             $previewUrl = $image ? $image->temporaryUrl() : ($editingId && ($program = \App\Models\Program::find($editingId)) && $program->image_path ? Storage::url($program->image_path) : '/placeholder.png');
@@ -235,7 +235,7 @@ new #[Layout('components.admin.layouts.app')] class extends Component
                             <div class="absolute inset-0 rounded-[2rem] bg-gradient-to-t from-black/20 to-transparent"></div>
                         </div>
                     </x-ui.file>
-                    <p class="text-[10px] text-slate-400 italic px-1 leading-relaxed">
+                    <p class="text-xs text-slate-400 px-1 leading-relaxed">
                         * {{ __('Format: JPG, PNG, WebP (Maksimal 2MB). Gunakan gambar dengan resolusi tinggi untuk hasil terbaik.') }}
                     </p>
                 </div>
@@ -253,12 +253,12 @@ new #[Layout('components.admin.layouts.app')] class extends Component
                     :label="__('Kualifikasi / Persyaratan Pendaftaran (Opsional)')" 
                     rows="3" 
                     :placeholder="__('Sebutkan dokumen atau kriteria yang harus dipenuhi calon peserta...')"
-                    class="italic text-sm leading-relaxed"
+                    class="text-sm leading-relaxed"
                 />
 
-                <div class="flex items-center gap-2 p-4 bg-slate-50 dark:bg-slate-900 border border-slate-100 dark:border-slate-800 rounded-2xl">
+                <div class="flex items-center gap-3 p-4 bg-slate-50 dark:bg-slate-900 border border-slate-100 dark:border-slate-800 rounded-2xl">
                     <x-ui.checkbox wire:model="is_active" :label="__('Status Aktif (Tampilkan di web)')" />
-                    <span class="text-xs font-black text-slate-600 dark:text-slate-400 uppercase tracking-widest italic">{{ __('Aktifkan publikasi program di portal sekolah') }}</span>
+                    <span class="text-xs font-semibold text-slate-500 dark:text-slate-400 uppercase tracking-widest">{{ __('Aktifkan publikasi program di portal sekolah') }}</span>
                 </div>
 
                 <div class="flex items-center justify-end gap-3 pt-6 border-t border-slate-50 dark:border-slate-800">
@@ -279,15 +279,15 @@ new #[Layout('components.admin.layouts.app')] class extends Component
     {{-- Programs List --}}
     <div class="space-y-6">
         <div class="flex items-center justify-between px-2">
-            <h3 class="font-black text-slate-800 dark:text-white uppercase tracking-tight text-sm italic">{{ __('Katalog Program Pendidikan') }}</h3>
-            <x-ui.badge :label="$programs->count() . ' ' . __('Program')" class="bg-indigo-50 text-indigo-600 border-none font-black italic text-[10px]" />
+            <h3 class="font-bold text-slate-800 dark:text-white uppercase tracking-wider text-xs">{{ __('Katalog Program Pendidikan') }}</h3>
+            <x-ui.badge :label="$programs->count() . ' ' . __('Program')" class="bg-indigo-50 text-indigo-600 border-none font-bold text-[10px]" />
         </div>
 
         @if ($programs->isEmpty())
             <div class="flex flex-col items-center justify-center py-32 text-slate-300 dark:text-slate-700 border-2 border-dashed border-slate-200 dark:border-slate-800 rounded-[32px] bg-slate-50/50 dark:bg-slate-900/50 transition-all text-center px-6">
                 <x-ui.icon name="o-folder-open" class="size-20 mb-6 opacity-20" />
-                <p class="text-sm font-black uppercase tracking-widest italic animate-pulse">{{ __('Belum Ada Program Terdefinisi') }}</p>
-                <p class="text-[10px] font-bold text-slate-400 uppercase tracking-widest italic mt-2">{{ __('Gunakan formulir di atas untuk mendaftarkan program pendidikan pertama.') }}</p>
+                <p class="text-sm font-semibold uppercase tracking-widest">{{ __('Belum Ada Program Terdefinisi') }}</p>
+                <p class="text-xs text-slate-400 uppercase tracking-widest mt-2">{{ __('Gunakan formulir di atas untuk mendaftarkan program pendidikan pertama.') }}</p>
             </div>
         @else
             <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
@@ -308,22 +308,22 @@ new #[Layout('components.admin.layouts.app')] class extends Component
                             @endif
 
                             <div class="absolute top-4 left-4 z-10 flex flex-col gap-2">
-                                <x-ui.badge :label="$program->level?->name ?? 'GENERAL'" class="bg-black/40 backdrop-blur-md text-white border-white/20 font-black italic text-[9px] px-3 py-1 uppercase tracking-tighter" />
+                                <x-ui.badge :label="$program->level?->name ?? 'GENERAL'" class="bg-black/40 backdrop-blur-md text-white border-white/20 font-bold text-[9px] px-3 py-1 uppercase tracking-wider" />
                                 @if (!$program->is_active)
-                                    <x-ui.badge :label="__('NON-AKTIF')" class="bg-rose-500 text-white border-none font-black italic text-[8px] px-2 py-0.5" />
+                                    <x-ui.badge :label="__('NON-AKTIF')" class="bg-rose-500 text-white border-none font-bold text-[8px] px-2 py-0.5" />
                                 @endif
                             </div>
 
                             <div class="absolute bottom-4 right-4 z-10">
-                                <x-ui.badge :label="$program->duration" class="bg-white/90 backdrop-blur-sm text-slate-800 border-none font-black italic text-[9px] px-3 py-1 shadow-sm ring-1 ring-slate-100 uppercase" icon="o-clock" />
+                                <x-ui.badge :label="$program->duration" class="bg-white/90 backdrop-blur-sm text-slate-800 border-none font-bold text-[9px] px-3 py-1 shadow-sm ring-1 ring-slate-100 uppercase" icon="o-clock" />
                             </div>
 
                             <div class="absolute inset-0 bg-gradient-to-t from-slate-900/40 to-transparent"></div>
                         </div>
 
                         <div class="p-6">
-                            <h3 class="font-black text-xl text-slate-900 dark:text-white leading-tight mb-2 group-hover:text-primary transition-colors italic uppercase tracking-tighter">{{ $program->name }}</h3>
-                            <p class="text-xs text-slate-500 leading-relaxed italic line-clamp-3 mb-6">{{ $program->description }}</p>
+                            <h3 class="font-bold text-lg text-slate-900 dark:text-white leading-tight mb-2 group-hover:text-primary transition-colors uppercase tracking-tight">{{ $program->name }}</h3>
+                            <p class="text-xs text-slate-500 leading-relaxed line-clamp-3 mb-6 font-medium">{{ $program->description }}</p>
 
                             {{-- Advanced Control Panel --}}
                             <div class="flex items-center justify-between pt-4 border-t border-slate-50 dark:border-slate-800/50">

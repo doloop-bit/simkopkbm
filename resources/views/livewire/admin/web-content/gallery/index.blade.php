@@ -250,27 +250,29 @@ new #[Layout('components.admin.layouts.app')] class extends Component
     {{-- Upload Form --}}
     <x-ui.card id="upload-form" x-ref="uploadForm" shadow padding="false" class="border-none ring-1 ring-slate-100 dark:ring-slate-800">
         <div class="p-6 border-b border-slate-50 dark:border-slate-800/50 bg-slate-50/50 dark:bg-slate-900/50">
-            <h3 class="font-black text-slate-800 dark:text-white uppercase tracking-tight text-sm italic">{{ __('Batch Upload & Registrasi Foto') }}</h3>
+            <h3 class="font-bold text-slate-800 dark:text-white uppercase tracking-wider text-xs">{{ __('Batch Upload & Registrasi Foto') }}</h3>
         </div>
         <div class="p-8">
             <form wire:submit="uploadPhotos" class="space-y-8">
+            <div class="max-w-md space-y-4">
                 <x-ui.file 
                     wire:model="photos" 
                     :label="__('Pilih File Gambar')" 
                     accept="image/jpeg,image/jpg,image/png,image/webp"
                     multiple
                     required
-                    class="bg-white dark:bg-slate-800"
+                    class="bg-white dark:bg-slate-900"
                 >
                     @if (count($photos) > 0)
-                        <div class="text-[10px] font-black italic text-indigo-600 mt-2 px-1">
+                        <div class="text-xs font-semibold text-primary mt-2 px-1">
                             {{ count($photos) }} {{ __('file siap diunggah') }}
                         </div>
                     @endif
                 </x-ui.file>
-                <p class="text-[10px] text-slate-400 italic px-1 leading-relaxed -mt-6">
+                <p class="text-xs text-slate-400 px-1 leading-relaxed">
                     * {{ __('Format: JPEG, PNG, WebP (Max 5MB/file). Anda dapat memilih beberapa foto sekaligus untuk unggah massal.') }}
                 </p>
+            </div>
 
                 <div class="grid grid-cols-1 md:grid-cols-2 gap-8">
                     <div class="space-y-2">
@@ -281,7 +283,7 @@ new #[Layout('components.admin.layouts.app')] class extends Component
                             required 
                             :placeholder="__('Contoh: Kegiatan, Fasilitas, Acara')"
                             list="category-suggestions"
-                            class="font-bold"
+                            class="font-medium"
                         />
                         <datalist id="category-suggestions">
                             @foreach ($availableCategories as $cat)
@@ -295,7 +297,7 @@ new #[Layout('components.admin.layouts.app')] class extends Component
                         :label="__('Keterangan Bersama (Opsional)')" 
                         type="text" 
                         :placeholder="__('Deskripsi singkat untuk semua foto yang diunggah...')"
-                        class="italic text-sm"
+                        class="text-sm"
                     />
                 </div>
 
@@ -315,22 +317,22 @@ new #[Layout('components.admin.layouts.app')] class extends Component
     <div class="flex flex-col md:flex-row md:items-center justify-between gap-6 bg-white dark:bg-slate-900 p-4 rounded-3xl ring-1 ring-slate-100 dark:ring-slate-800">
         <div class="flex items-center gap-4 px-2">
             <x-ui.icon name="o-funnel" class="size-4 text-slate-400" />
-            <h4 class="font-black text-slate-800 dark:text-white uppercase tracking-tight text-[11px] italic whitespace-nowrap">{{ __('Filter Koleksi') }}</h4>
+            <h4 class="font-bold text-slate-800 dark:text-white uppercase tracking-wider text-[10px] whitespace-nowrap">{{ __('Filter Koleksi') }}</h4>
             <div class="h-4 w-px bg-slate-100 dark:bg-slate-800"></div>
             <x-ui.select 
                 wire:model.live="filterCategory" 
-                class="min-w-64 border-none shadow-none bg-transparent font-bold text-primary"
+                class="min-w-64 border-none shadow-none bg-transparent font-semibold text-primary"
                 :options="collect([['id' => 'all', 'name' => __('Tampilkan Semua Album')]])->merge(collect($availableCategories)->map(fn($c) => ['id' => $c, 'name' => $c]))"
             />
         </div>
-        <x-ui.badge :label="$galleryPhotos->count() . ' ' . __('Foto Terdaftar')" class="bg-indigo-50 text-indigo-600 border-none font-black italic text-[10px]" />
+        <x-ui.badge :label="$galleryPhotos->count() . ' ' . __('Foto Terdaftar')" class="bg-indigo-50 text-indigo-600 border-none font-bold text-[10px]" />
     </div>
 
     {{-- Photo Grid --}}
     @if ($galleryPhotos->isEmpty())
         <div class="flex flex-col items-center justify-center py-32 text-slate-300 dark:text-slate-700 border-2 border-dashed border-slate-200 dark:border-slate-800 rounded-[32px] bg-slate-50/50 dark:bg-slate-900/50 transition-all text-center px-6">
             <x-ui.icon name="o-photo" class="size-20 mb-6 opacity-20" />
-            <p class="text-sm font-black uppercase tracking-widest italic animate-pulse">{{ __('Galeri Belum Berisi Dokumentasi') }}</p>
+            <p class="text-sm font-semibold uppercase tracking-widest">{{ __('Galeri Belum Berisi Dokumentasi') }}</p>
             <x-ui.button :label="__('Mulai Mengisi Galeri')" @click="$refs.uploadForm.scrollIntoView({behavior: 'smooth'})" class="mt-8 btn-ghost text-primary btn-sm font-bold" />
         </div>
     @else
@@ -350,9 +352,9 @@ new #[Layout('components.admin.layouts.app')] class extends Component
 
                         {{-- Metadata Overlay --}}
                         <div class="absolute top-4 left-4 flex flex-col gap-2">
-                            <x-ui.badge :label="$photo->category" class="bg-black/40 backdrop-blur-md text-white border-white/20 font-black italic text-[9px] px-3 py-1 uppercase" />
+                            <x-ui.badge :label="$photo->category" class="bg-black/40 backdrop-blur-md text-white border-white/20 font-bold text-[9px] px-3 py-1 uppercase tracking-wider" />
                             @if (!$photo->is_published)
-                                <x-ui.badge :label="__('ARSIP/DRAFT')" class="bg-amber-500 text-white border-none font-black italic text-[8px] px-2 py-0.5" />
+                                <x-ui.badge :label="__('ARSIP/DRAFT')" class="bg-amber-500 text-white border-none font-bold text-[8px] px-2 py-0.5" />
                             @endif
                         </div>
 
@@ -372,7 +374,7 @@ new #[Layout('components.admin.layouts.app')] class extends Component
 
                         {{-- Floating Info Overlay --}}
                         <div class="absolute bottom-4 left-4 right-4 translate-y-4 opacity-0 group-hover:translate-y-0 group-hover:opacity-100 transition-all duration-300">
-                            <p class="text-white text-[10px] font-black italic leading-tight uppercase tracking-tight line-clamp-2">{{ $photo->caption ?: __('Tidak Ada Keterangan') }}</p>
+                            <p class="text-white text-[10px] font-semibold leading-tight uppercase tracking-wider line-clamp-2">{{ $photo->caption ?: __('Tidak Ada Keterangan') }}</p>
                         </div>
                     </div>
 
@@ -384,16 +386,16 @@ new #[Layout('components.admin.layouts.app')] class extends Component
                                 <x-ui.input 
                                     wire:model="editCategory" 
                                     :label="__('Album')" 
-                                    class="text-xs font-bold"
+                                    class="text-xs font-semibold"
                                 />
                                 <x-ui.textarea 
                                     wire:model="editCaption" 
                                     :label="__('Deskripsi')" 
                                     rows="2"
-                                    class="text-[10px] italic leading-relaxed"
+                                    class="text-xs leading-relaxed"
                                 />
                                 <div class="grid grid-cols-2 gap-2 pt-2">
-                                    <x-ui.button :label="__('Simpan')" wire:click="saveEdit" class="btn-primary btn-xs font-black" spinner="saveEdit" />
+                                    <x-ui.button :label="__('Simpan')" wire:click="saveEdit" class="btn-primary btn-xs font-bold" spinner="saveEdit" />
                                     <x-ui.button :label="__('Batal')" wire:click="cancelEdit" class="btn-ghost btn-xs font-bold" />
                                 </div>
                             </div>

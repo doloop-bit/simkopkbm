@@ -65,7 +65,7 @@ new class extends Component {
         if (!$user->can('create', BudgetPlan::class) && !$user->managed_level_id && !$user->isAdmin()) {
              // Basic check if user has no level assigned and is not admin
              if (!$user->managed_level_id && !$user->isAdmin()) {
-                 $this->error('Anda tidak memiliki akses untuk membuat RAB.');
+                 session()->flash('error', 'Anda tidak memiliki akses untuk membuat RAB.');
                  return;
              }
         }
@@ -250,7 +250,7 @@ new class extends Component {
         }
 
         $this->planModal = false;
-        $this->success('RAB berhasil disimpan.');
+        session()->flash('success', 'RAB berhasil disimpan.');
     }
     
     // Workflow Actions
@@ -258,7 +258,7 @@ new class extends Component {
     {
         $user = Auth::user();
         if (!$user->isYayasan() && !$user->isAdmin()) {
-             $this->error('Unauthorized action.');
+             session()->flash('error', 'Unauthorized action.');
              return;
         }
         
@@ -276,17 +276,18 @@ new class extends Component {
         }
         
         $plan->update($updateData);
-        $this->success("Status RAB diperbarui menjadi " . ucfirst($status));
+        session()->flash('success', 'Status RAB diperbarui menjadi ' . ucfirst($status));
+        $this->planModal = false;
     }
 
     public function delete(BudgetPlan $plan): void
     {
         if ($plan->status !== 'draft' && !Auth::user()->isAdmin()) {
-             $this->error('Hanya draft yang dapat dihapus.');
+             session()->flash('error', 'Hanya draft yang dapat dihapus.');
              return;
         }
         $plan->delete();
-        $this->success('RAB berhasil dihapus.');
+        session()->flash('success', 'RAB berhasil dihapus.');
     }
 
     public function createSubItem($index, $name): void
@@ -315,10 +316,16 @@ new class extends Component {
     }
 }; ?>
 
-<div class="p-6 space-y-6 text-slate-900 dark:text-white pb-24 md:pb-6">
+<div class="p-6 space-y-5 text-slate-900 dark:text-white pb-24 md:pb-6">
     @if (session('success'))
         <x-ui.alert :title="__('Sukses')" icon="o-check-circle" class="bg-emerald-50 text-emerald-800 border-emerald-100" dismissible>
             {{ session('success') }}
+        </x-ui.alert>
+    @endif
+
+    @if (session('error'))
+        <x-ui.alert :title="__('Gagal')" icon="o-exclamation-circle" class="bg-rose-50 text-rose-800 border-rose-100" dismissible>
+            {{ session('error') }}
         </x-ui.alert>
     @endif
 
@@ -413,11 +420,11 @@ new class extends Component {
         </div>
     </x-ui.card>
 
-    <x-ui.modal wire:model="planModal" class="!max-w-6xl">
+    <x-ui.modal wire:model="planModal" maxWidth="max-w-5xl">
         <x-ui.header :title="$editing ? __('Edit RAB') : __('Buat RAB Baru')" :subtitle="__('Rencana Anggaran diajukan untuk disetujui oleh Yayasan.')" separator />
 
-        <div class="space-y-8">
-            <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+        <div class="space-y-6">
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
                 <x-ui.select wire:model="academic_year_id" :label="__('Tahun Ajaran')" :placeholder="__('Pilih Tahun')" :options="$years" required />
                 <x-ui.select wire:model="level_id" :label="__('Jenjang / Level')" :placeholder="__('Pilih Jenjang')" :options="$levels" required />
                 <x-ui.input wire:model="title" :label="__('Judul RAB')" :placeholder="__('Contoh: Operasional Januari 2026')" required />
@@ -429,22 +436,22 @@ new class extends Component {
                     <x-ui.button :label="__('Tambah Baris')" icon="o-plus" wire:click="addItemRow" class="btn-sm btn-ghost text-xs font-black uppercase" />
                 </div>
                 
-                <div class="overflow-x-auto min-h-[300px]">
-                    <table class="table-auto w-full text-left text-sm border-collapse">
+                <div class="overflow-x-auto min-h-[200px]">
+                    <table class="w-full text-left text-sm border-collapse">
                         <thead class="bg-slate-100/50 dark:bg-slate-800/50 text-[10px] font-black uppercase text-slate-500 tracking-tighter">
                             <tr>
-                                <th class="px-4 py-3 min-w-[300px]">{{ __('Item Deskripsi') }}</th>
-                                <th class="px-4 py-3 text-center w-24">{{ __('Qty') }}</th>
-                                <th class="px-4 py-3 text-center w-20">{{ __('Satuan') }}</th>
-                                <th class="px-4 py-3 text-right w-44">{{ __('Harga Satuan') }}</th>
-                                <th class="px-4 py-3 text-right w-44">{{ __('Total') }}</th>
-                                <th class="px-4 py-3 w-10"></th>
+                                <th class="px-3 py-2.5">{{ __('Item Deskripsi') }}</th>
+                                <th class="px-3 py-2.5 text-center w-20">{{ __('Qty') }}</th>
+                                <th class="px-3 py-2.5 text-center w-20">{{ __('Satuan') }}</th>
+                                <th class="px-3 py-2.5 text-right w-36">{{ __('Harga Satuan') }}</th>
+                                <th class="px-3 py-2.5 text-right w-32">{{ __('Total') }}</th>
+                                <th class="px-3 py-2.5 w-8"></th>
                             </tr>
                         </thead>
                         <tbody class="divide-y divide-slate-100 dark:divide-slate-800">
                             @foreach($formItems as $index => $item)
                             <tr wire:key="item-{{ $index }}" class="hover:bg-white/50 dark:hover:bg-slate-800/30 transition-colors">
-                                <td class="px-4 py-3">
+                                <td class="px-3 py-2">
                                     <div class="relative" 
                                         x-data="{ 
                                             open: false, 
@@ -474,62 +481,66 @@ new class extends Component {
                                             x-on:focus="open = true"
                                             x-on:input="open = true"
                                             :placeholder="__('Cari atau ketik item baru...')"
-                                            class="!py-1.5 !text-xs font-bold"
+                                            class="!py-1 !text-xs"
                                         />
                                         
                                         <div x-show="open" 
-                                            class="absolute z-[60] w-full mt-2 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-2xl shadow-2xl max-h-60 overflow-auto divide-y divide-slate-50 dark:divide-slate-800"
+                                            class="absolute z-[60] w-full mt-1 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-xl shadow-2xl max-h-48 overflow-auto"
                                             x-transition
                                             style="display: none;"
                                         >
                                             <template x-for="opt in filteredOptions" :key="opt.id">
                                                 <div x-on:click="select(opt)" 
-                                                    class="px-4 py-2 hover:bg-slate-50 dark:hover:bg-slate-800 cursor-pointer text-xs font-bold text-slate-700 dark:text-slate-300"
+                                                    class="px-3 py-1.5 hover:bg-slate-50 dark:hover:bg-slate-800 cursor-pointer text-xs text-slate-700 dark:text-slate-300 border-b border-slate-50 dark:border-slate-800 last:border-0"
                                                     x-text="opt.name">
                                                 </div>
                                             </template>
                                             
                                             <div x-show="search && search.length > 1 && !exactMatch" 
                                                 x-on:click="create()"
-                                                class="px-4 py-2 hover:bg-slate-100 dark:hover:bg-slate-800 cursor-pointer text-[10px] font-black text-primary flex items-center gap-2 italic uppercase tracking-widest"
+                                                class="px-3 py-1.5 hover:bg-slate-100 dark:hover:bg-slate-800 cursor-pointer text-[10px] font-black text-primary flex items-center gap-1.5 italic"
                                             >
                                                 <x-ui.icon name="o-plus" class="size-3" />
-                                                <span>{{ __('Gunakan Nama') }} "<span x-text="search" class="underline underline-offset-2"></span>"</span>
+                                                <span>{{ __('Buat') }}: "<span x-text="search" class="underline underline-offset-2"></span>"</span>
                                             </div>
                                         </div>
                                     </div>
-                                    <div class="mt-1 flex items-center gap-2">
-                                        <span class="text-[9px] font-black text-slate-400 uppercase tracking-tighter">{{ $item['category_name'] ?: __('Umum') }}</span>
+                                    <div class="mt-0.5">
+                                        <span class="text-[9px] text-slate-400 uppercase tracking-tight">{{ $item['category_name'] ?: __('Umum') }}</span>
                                     </div>
                                 </td>
-                                <td class="px-4 py-3">
-                                    <x-ui.input type="number" wire:model.live.debounce.1000ms="formItems.{{ $index }}.quantity" class="text-center !py-1.5 font-mono text-xs font-black" min="1" />
+                                <td class="px-3 py-2">
+                                    <x-ui.input type="number" wire:model.live.debounce.1000ms="formItems.{{ $index }}.quantity" class="text-center !py-1 font-mono text-xs w-20" min="1" />
                                 </td>
-                                <td class="px-4 py-3">
-                                    <x-ui.input wire:model="formItems.{{ $index }}.unit" :placeholder="__('Satu')" class="text-center !py-1.5 text-xs font-black uppercase tracking-tighter" />
+                                <td class="px-3 py-2">
+                                    <x-ui.input wire:model="formItems.{{ $index }}.unit" :placeholder="__('Pcs')" class="text-center !py-1 text-xs w-20" />
                                 </td>
-                                <td class="px-4 py-3">
-                                    <x-ui.input type="number" wire:model.live.debounce.1300ms="formItems.{{ $index }}.amount" class="text-right !py-1.5 font-mono text-xs font-black italic" min="0" />
+                                <td class="px-3 py-2">
+                                    <x-ui.input type="number" wire:model.live.debounce.1300ms="formItems.{{ $index }}.amount" class="text-right !py-1 font-mono text-xs" min="0" />
                                 </td>
-                                <td class="px-4 py-3 text-right">
-                                    <div class="font-mono text-xs font-black italic text-slate-900 dark:text-white" wire:loading.remove wire:target="formItems.{{ $index }}.quantity, formItems.{{ $index }}.amount">
+                                <td class="px-3 py-2 text-right">
+                                    <div class="font-mono text-xs font-bold text-slate-900 dark:text-white whitespace-nowrap" wire:loading.remove wire:target="formItems.{{ $index }}.quantity, formItems.{{ $index }}.amount">
                                         Rp {{ number_format($item['total'], 0, ',', '.') }}
                                     </div>
-                                    <div wire:loading wire:target="formItems.{{ $index }}.quantity, formItems.{{ $index }}.amount">
+                                    <div wire:loading wire:target="formItems.{{ $index }}.quantity, formItems.{{ $index }}.amount" class="flex justify-end">
                                         <span class="loading loading-spinner loading-xs text-primary"></span>
                                     </div>
                                 </td>
-                                <td class="px-4 py-3 text-right">
-                                    <x-ui.button icon="o-trash" wire:click="removeItemRow({{ $index }})" class="btn-ghost btn-sm text-slate-300 hover:text-rose-600 transition-colors" />
+                                <td class="px-2 py-2 text-center">
+                                    <button wire:click="removeItemRow({{ $index }})" class="p-1 rounded-lg text-slate-300 hover:text-rose-500 hover:bg-rose-50 dark:hover:bg-rose-950/30 transition-colors">
+                                        <x-ui.icon name="o-trash" class="size-4" />
+                                    </button>
                                 </td>
                             </tr>
                             @endforeach
                         </tbody>
-                        <tfoot class="bg-slate-900 text-white font-black italic border-t border-slate-800">
+                        <tfoot class="bg-slate-100 dark:bg-slate-800/80 border-t-2 border-slate-200 dark:border-slate-700">
                             <tr>
-                                <td colspan="4" class="px-6 py-4 text-right uppercase tracking-widest text-[11px]">{{ __('Total Estimasi Anggaran') }}</td>
-                                <td class="px-4 py-4 text-right font-mono text-lg text-emerald-400 tracking-tighter ring-inset ring-1 ring-emerald-500/20">
-                                    Rp {{ number_format($this->totalAmount, 0, ',', '.') }}
+                                <td colspan="4" class="px-4 py-3 text-right text-xs font-black uppercase tracking-widest text-slate-500 dark:text-slate-400">{{ __('Total Estimasi Anggaran') }}</td>
+                                <td class="px-3 py-3 text-right">
+                                    <span class="font-mono text-base font-black text-emerald-600 dark:text-emerald-400 whitespace-nowrap">
+                                        Rp {{ number_format($this->totalAmount, 0, ',', '.') }}
+                                    </span>
                                 </td>
                                 <td></td>
                             </tr>
@@ -538,9 +549,9 @@ new class extends Component {
                 </div>
             </div>
 
-            <x-ui.textarea wire:model="notes" :label="__('Catatan / Justifikasi')" :placeholder="__('Jelaskan tujuan pengajuan RAB ini secara singkat...')" rows="3" />
+            <x-ui.textarea wire:model="notes" :label="__('Catatan / Justifikasi')" :placeholder="__('Jelaskan tujuan pengajuan RAB ini secara singkat...')" rows="2" />
             
-            <div class="flex flex-col md:flex-row justify-between items-center gap-6 pt-8 border-t border-slate-100 dark:border-slate-800">
+            <div class="flex flex-col md:flex-row justify-between items-center gap-4 pt-4 border-t border-slate-100 dark:border-slate-800">
                 <div class="flex gap-3">
                     @if($editing && ($editing->status === 'submitted' && (Auth::user()->isYayasan() || Auth::user()->isAdmin())))
                         <x-ui.button :label="__('Setujui Pengajuan')" class="btn-primary" wire:click="updateStatus({{ $editing->id }}, 'approved')" icon="o-check-circle" />
@@ -562,5 +573,4 @@ new class extends Component {
             </div>
         </div>
     </x-ui.modal>
-</div>
 </div>

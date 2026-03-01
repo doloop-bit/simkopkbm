@@ -145,16 +145,24 @@
                 <x-admin.header />
 
                 <div class="p-responsive flex-1">
-                    @if(request()->routeIs('admin.school-profile.*') || request()->routeIs('admin.news.*') || request()->routeIs('admin.gallery.*') || request()->routeIs('admin.programs.*') || request()->routeIs('admin.contact-inquiries.*'))
-                        <div class="mb-6"><x-admin.konten-web-nav /></div>
-                    @endif
+                    @php
+                        $hasSubNav = request()->routeIs('admin.school-profile.*', 'admin.news.*', 'admin.gallery.*', 'admin.programs.*', 'admin.contact-inquiries.*', 'admin.report-card.*', 'admin.assessments.attendance', 'admin.assessments.extracurricular', 'financial.*');
+                    @endphp
 
-                    @if(request()->routeIs('admin.report-card.*') || request()->routeIs('admin.assessments.attendance') || request()->routeIs('admin.assessments.extracurricular'))
-                        <div class="mb-6"><x-admin.report-card-nav /></div>
-                    @endif
+                    @if ($hasSubNav)
+                        {{-- Sticky pill nav: uses negative margin to bleed past p-responsive padding --}}
+                        <div class="sticky top-0 z-10 -mt-4 md:-mt-8 lg:-mt-12 -mx-4 md:-mx-8 lg:-mx-12 px-4 md:px-8 lg:px-12 py-3 hidden lg:block">
+                            <x-admin.konten-web-nav />
+                            <x-admin.report-card-nav />
+                            <x-admin.keuangan-nav />
+                        </div>
 
-                    @if(request()->routeIs('financial.*'))
-                        <div class="mb-6"><x-admin.keuangan-nav /></div>
+                        {{-- Mobile: components output their own fixed bottom nav --}}
+                        <div class="lg:hidden">
+                            <x-admin.konten-web-nav />
+                            <x-admin.report-card-nav />
+                            <x-admin.keuangan-nav />
+                        </div>
                     @endif
 
                     <div class="max-w-7xl mx-auto">
