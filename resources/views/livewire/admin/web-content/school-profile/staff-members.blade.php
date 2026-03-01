@@ -244,6 +244,8 @@ new class extends Component {
 
     <x-ui.header :title="__('Struktur Organisasi')" :subtitle="__('Kelola daftar pengurus, guru, dan staf pendukung yang bertugas di sekolah.')" separator>
         <x-slot:actions>
+            <x-ui.button :label="__('Profil')" icon="o-building-office-2" class="btn-ghost" :href="route('admin.school-profile.edit')" wire:navigate />
+            <x-ui.button :label="__('Fasilitas')" icon="o-building-office" class="btn-ghost" :href="route('admin.school-profile.facilities')" wire:navigate />
             @if (!$showForm && $profile)
                 <x-ui.button :label="__('Tambah Anggota Baru')" icon="o-plus" class="btn-primary shadow-lg shadow-primary/20" wire:click="showAddForm" />
             @endif
@@ -259,7 +261,7 @@ new class extends Component {
         @if ($showForm)
             <x-ui.card shadow padding="false" class="mb-12 ring-2 ring-primary/5">
                 <div class="p-6 border-b border-slate-100 dark:border-slate-800 bg-slate-50/50 dark:bg-slate-900/50">
-                    <h3 class="font-black text-slate-800 dark:text-white uppercase tracking-tight text-sm italic">
+                    <h3 class="font-bold text-slate-800 dark:text-white uppercase tracking-wider text-xs">
                         {{ $editingId ? __('Edit Data Personel') : __('Registrasi Personel Baru') }}
                     </h3>
                 </div>
@@ -272,7 +274,7 @@ new class extends Component {
                                 type="text" 
                                 required 
                                 :placeholder="__('Contoh: Dr. Ahmad Suryadi, M.Pd')"
-                                class="font-bold text-lg"
+                                class="font-semibold text-lg"
                             />
 
                             <x-ui.input 
@@ -281,7 +283,7 @@ new class extends Component {
                                 type="text" 
                                 required 
                                 :placeholder="__('Contoh: Kepala Sekolah')"
-                                class="font-bold text-slate-600"
+                                class="font-semibold text-slate-600"
                             />
                         </div>
 
@@ -297,33 +299,35 @@ new class extends Component {
                                         >
                                     </div>
                                     <div class="flex-1">
-                                        <span class="text-[10px] font-black text-slate-400 uppercase tracking-widest italic mb-2 block">{{ __('Foto Profil Saat Ini') }}</span>
+                                        <span class="text-[10px] font-bold text-slate-400 uppercase tracking-wider mb-2 block">{{ __('Foto Profil Saat Ini') }}</span>
                                         <x-ui.button 
                                             wire:click="removePhoto" 
                                             :label="__('Hapus Foto')"
                                             icon="o-trash"
-                                            class="btn-ghost btn-xs text-rose-500 hover:bg-rose-50 font-bold"
+                                            class="btn-ghost btn-xs text-rose-500 hover:bg-rose-50 font-semibold"
                                             wire:confirm="{{ __('Hapus foto personel ini?') }}"
                                         />
                                     </div>
                                 </div>
                             @endif
 
+                        {{-- Photo Upload --}}
+                        <div class="space-y-4 max-w-lg">
                             <x-ui.file 
                                 wire:model="photo" 
                                 :label="__('Unggah Foto Formal')" 
                                 accept="image/jpeg,image/jpg,image/png,image/webp"
-                                class="bg-white dark:bg-slate-800"
                             >
                                 @if ($photo)
-                                    <div class="text-[10px] font-black italic text-indigo-600 mt-2 px-1">
+                                    <div class="text-xs font-semibold text-primary mt-2 px-1">
                                         {{ __('File dipilih') }}: <span class="underline">{{ $photo->getClientOriginalName() }}</span>
                                     </div>
                                 @endif
                             </x-ui.file>
-                            <p class="text-[10px] text-slate-400 italic px-1 leading-relaxed">
+                            <p class="text-xs text-slate-400 px-1 leading-relaxed">
                                 * {{ __('Format file: JPEG, PNG, WebP (Maksimal 5MB). Gunakan latar belakang polos atau formal untuk konsistensi visual.') }}
                             </p>
+                        </div>
                         </div>
 
                         {{-- Form Actions --}}
@@ -344,8 +348,8 @@ new class extends Component {
         {{-- Staff Members List --}}
         <div class="space-y-6">
             <div class="flex items-center justify-between px-2">
-                <h3 class="font-black text-slate-800 dark:text-white uppercase tracking-tight text-sm italic">{{ __('Daftar Pengurus & Staf') }}</h3>
-                <x-ui.badge :label="count($staffMembers) . ' ' . __('Personel')" class="bg-emerald-50 text-emerald-600 border-none font-bold italic" />
+                <h3 class="font-bold text-slate-800 dark:text-white uppercase tracking-wider text-xs">{{ __('Daftar Pengurus & Staf') }}</h3>
+                <x-ui.badge :label="count($staffMembers) . ' ' . __('Personel')" class="bg-emerald-50 text-emerald-600 border-none font-bold" />
             </div>
             
             @if (count($staffMembers) > 0)
@@ -369,14 +373,14 @@ new class extends Component {
                                         @endif
                                     </div>
                                     <div class="absolute -bottom-1 -right-1 size-7 bg-white dark:bg-slate-800 rounded-full shadow-md flex items-center justify-center border-2 border-slate-50 dark:border-slate-900">
-                                        <span class="text-[9px] font-black text-slate-400 italic">#{{ $index + 1 }}</span>
+                                        <span class="text-[9px] font-bold text-slate-400">#{{ $index + 1 }}</span>
                                     </div>
                                 </div>
                             </div>
 
                             <div class="p-6 text-center">
-                                <h4 class="font-black text-slate-900 dark:text-white leading-tight mb-1 group-hover:text-primary transition-colors italic uppercase tracking-tighter">{{ $staff['name'] }}</h4>
-                                <p class="text-[10px] font-bold text-indigo-500 uppercase tracking-widest italic mb-6 leading-relaxed">{{ $staff['position'] }}</p>
+                                <h4 class="font-bold text-slate-900 dark:text-white leading-tight mb-1 group-hover:text-primary transition-colors uppercase tracking-tight text-base">{{ $staff['name'] }}</h4>
+                                <p class="text-[10px] font-bold text-indigo-500 uppercase tracking-widest mb-6 leading-relaxed">{{ $staff['position'] }}</p>
                                 
                                 <div class="flex items-center justify-between pt-4 border-t border-slate-50 dark:border-slate-800/50">
                                     <div class="flex gap-1 opacity-0 group-hover:opacity-100 transition-all duration-300">
@@ -414,7 +418,7 @@ new class extends Component {
             @else
                 <div class="flex flex-col items-center justify-center py-32 text-slate-300 dark:text-slate-700 border-2 border-dashed border-slate-200 dark:border-slate-800 rounded-[32px] bg-slate-50/50 dark:bg-slate-900/50 transition-all text-center px-6">
                     <x-ui.icon name="o-user-group" class="size-20 mb-6 opacity-20" />
-                    <p class="text-sm font-black uppercase tracking-widest italic animate-pulse">{{ __('Data Struktur Organisasi Masih Kosong') }}</p>
+                    <p class="text-sm font-bold uppercase tracking-widest">{{ __('Data Struktur Organisasi Masih Kosong') }}</p>
                     <x-ui.button :label="__('Inisialisasi Data Personel')" wire:click="showAddForm" class="mt-8 btn-ghost text-primary btn-sm font-bold" />
                 </div>
             @endif

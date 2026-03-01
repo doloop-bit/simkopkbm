@@ -235,18 +235,19 @@ new class extends Component
                     </div>
                 @endif
 
-                <x-ui.file 
-                    wire:model="featuredImage" 
-                    :label="__('Unggah Foto Sampul Berita')" 
-                    accept="image/jpeg,image/jpg,image/png,image/webp"
-                    class="bg-white dark:bg-slate-800"
-                >
-                    @if ($featuredImage)
-                        <div class="text-[10px] font-black italic text-indigo-600 mt-2 px-1">
-                            {{ __('File dipilih') }}: <span class="underline">{{ $featuredImage->getClientOriginalName() }}</span>
-                        </div>
-                    @endif
-                </x-ui.file>
+                <div class="max-w-lg space-y-4">
+                    <x-ui.file 
+                        wire:model="featuredImage" 
+                        :label="__('Unggah Foto Sampul Berita')" 
+                        accept="image/jpeg,image/jpg,image/png,image/webp"
+                    >
+                        @if ($featuredImage)
+                            <div class="text-[10px] font-black italic text-indigo-600 mt-2 px-1">
+                                {{ __('File dipilih') }}: <span class="underline">{{ $featuredImage->getClientOriginalName() }}</span>
+                            </div>
+                        @endif
+                    </x-ui.file>
+                </div>
                 <p class="text-[10px] text-slate-400 italic px-1 leading-relaxed">
                     * {{ __('Ukuran maksimal 5MB. Format: JPEG, PNG, WebP. Direkomendasikan rasio 16:9 untuk tampilan optimal di beranda.') }}
                 </p>

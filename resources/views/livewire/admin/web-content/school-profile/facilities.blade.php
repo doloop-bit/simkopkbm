@@ -244,6 +244,8 @@ new class extends Component {
 
     <x-ui.header :title="__('Fasilitas Sekolah')" :subtitle="__('Kelola daftar fasilitas penunjang kegiatan belajar mengajar di sekolah.')" separator>
         <x-slot:actions>
+            <x-ui.button :label="__('Profil')" icon="o-building-office-2" class="btn-ghost" :href="route('admin.school-profile.edit')" wire:navigate />
+            <x-ui.button :label="__('Struktur')" icon="o-user-group" class="btn-ghost" :href="route('admin.school-profile.staff-members')" wire:navigate />
             @if (!$showForm && $profile)
                 <x-ui.button :label="__('Tambah Fasilitas Baru')" icon="o-plus" class="btn-primary shadow-lg shadow-primary/20" wire:click="showAddForm" />
             @endif
@@ -259,7 +261,7 @@ new class extends Component {
         @if ($showForm)
             <x-ui.card shadow padding="false" class="mb-12 ring-2 ring-primary/5">
                 <div class="p-6 border-b border-slate-100 dark:border-slate-800 bg-slate-50/50 dark:bg-slate-900/50">
-                    <h3 class="font-black text-slate-800 dark:text-white uppercase tracking-tight text-sm italic">
+                    <h3 class="font-bold text-slate-800 dark:text-white uppercase tracking-wider text-xs">
                         {{ $editingId ? __('Edit Detail Fasilitas') : __('Registrasi Fasilitas Baru') }}
                     </h3>
                 </div>
@@ -271,7 +273,7 @@ new class extends Component {
                             type="text" 
                             required 
                             :placeholder="__('Contoh: Laboratorium Digital')"
-                            class="font-bold text-lg"
+                            class="font-semibold text-lg"
                         />
 
                         <x-ui.textarea 
@@ -279,11 +281,11 @@ new class extends Component {
                             :label="__('Deskripsi Singkat')" 
                             rows="4" 
                             :placeholder="__('Jelaskan fungsi atau keunggulan fasilitas ini...')"
-                            class="italic text-sm"
+                            class="text-sm"
                         />
 
                         {{-- Image Upload --}}
-                        <div class="space-y-4">
+                        <div class="space-y-4 max-w-lg">
                             @if ($currentImagePath && !$image)
                                 <div class="flex items-center gap-6 p-6 bg-slate-50 dark:bg-slate-900/50 rounded-2xl border border-slate-100 dark:border-slate-800 group">
                                     <div class="relative">
@@ -294,12 +296,12 @@ new class extends Component {
                                         >
                                     </div>
                                     <div class="flex-1">
-                                        <span class="text-xs font-black text-slate-400 uppercase tracking-widest italic mb-2 block">{{ __('Gambar Saat Ini') }}</span>
+                                        <span class="text-[10px] font-bold text-slate-400 uppercase tracking-wider mb-2 block">{{ __('Gambar Saat Ini') }}</span>
                                         <x-ui.button 
                                             wire:click="removeImage" 
                                             :label="__('Hapus Gambar')"
                                             icon="o-trash"
-                                            class="btn-ghost btn-xs text-rose-500 hover:bg-rose-50 font-bold"
+                                            class="btn-ghost btn-xs text-rose-500 hover:bg-rose-50 font-semibold"
                                             wire:confirm="{{ __('Apakah Anda yakin ingin menghapus gambar fasilitas ini?') }}"
                                         />
                                     </div>
@@ -310,15 +312,14 @@ new class extends Component {
                                 wire:model="image" 
                                 :label="__('Unggah Foto Fasilitas')" 
                                 accept="image/jpeg,image/jpg,image/png,image/webp"
-                                class="bg-white dark:bg-slate-800"
                             >
                                 @if ($image)
-                                    <div class="text-[10px] font-black italic text-indigo-600 mt-2 px-1">
+                                    <div class="text-xs font-semibold text-primary mt-2 px-1">
                                         {{ __('File dipilih') }}: <span class="underline">{{ $image->getClientOriginalName() }}</span>
                                     </div>
                                 @endif
                             </x-ui.file>
-                            <p class="text-[10px] text-slate-400 italic px-1 leading-relaxed">
+                            <p class="text-xs text-slate-400 px-1 leading-relaxed">
                                 * {{ __('Format file yang didukung: JPEG, PNG, WebP (Maksimal 5MB). Rasio 16:9 direkomendasikan.') }}
                             </p>
                         </div>
@@ -341,8 +342,8 @@ new class extends Component {
         {{-- Facilities List --}}
         <div class="space-y-6">
             <div class="flex items-center justify-between px-2">
-                <h3 class="font-black text-slate-800 dark:text-white uppercase tracking-tight text-sm italic">{{ __('Daftar Fasilitas Terdaftar') }}</h3>
-                <x-ui.badge :label="count($facilities) . ' ' . __('Unit')" class="bg-indigo-50 text-indigo-600 border-none font-bold italic" />
+                <h3 class="font-bold text-slate-800 dark:text-white uppercase tracking-wider text-xs">{{ __('Daftar Fasilitas Terdaftar') }}</h3>
+                <x-ui.badge :label="count($facilities) . ' ' . __('Unit')" class="bg-indigo-50 text-indigo-600 border-none font-bold" />
             </div>
             
             @if (count($facilities) > 0)
@@ -381,16 +382,16 @@ new class extends Component {
 
                                 {{-- Order Badge --}}
                                 <div class="absolute left-4 top-4">
-                                    <span class="px-3 py-1 bg-black/50 backdrop-blur-md text-[10px] font-black text-white italic rounded-full border border-white/20">
+                                    <span class="px-3 py-1 bg-black/50 backdrop-blur-md text-[10px] font-bold text-white rounded-full border border-white/20">
                                         #{{ $index + 1 }}
                                     </span>
                                 </div>
                             </div>
 
-                            <div class="p-6">
-                                <h4 class="font-black text-lg text-slate-800 dark:text-white leading-tight mb-2 group-hover:text-primary transition-colors italic uppercase tracking-tighter">{{ $facility['name'] }}</h4>
+                             <div class="p-6">
+                                <h4 class="font-bold text-lg text-slate-800 dark:text-white leading-tight mb-2 group-hover:text-primary transition-colors uppercase tracking-tight text-base">{{ $facility['name'] }}</h4>
                                 @if ($facility['description'])
-                                    <p class="text-xs text-slate-500 leading-relaxed italic line-clamp-2 mb-4">{{ $facility['description'] }}</p>
+                                    <p class="text-xs text-slate-500 leading-relaxed line-clamp-2 mb-4">{{ $facility['description'] }}</p>
                                 @endif
                                 
                                 <div class="flex items-center justify-between mt-auto pt-4 border-t border-slate-50 dark:border-slate-800/50">
@@ -407,10 +408,10 @@ new class extends Component {
                                             wire:confirm="{{ __('Hapus fasilitas ini secara permanen?') }}"
                                         />
                                     </div>
-                                    <x-ui.button 
+                                     <x-ui.button 
                                         wire:click="edit({{ $facility['id'] }})"
                                         :label="__('Kelola')"
-                                        class="btn-ghost btn-xs text-primary font-black uppercase italic tracking-widest text-[10px]"
+                                        class="btn-ghost btn-xs text-primary font-bold uppercase tracking-widest text-[10px]"
                                     />
                                 </div>
                             </div>
@@ -420,7 +421,7 @@ new class extends Component {
             @else
                 <div class="flex flex-col items-center justify-center py-32 text-slate-300 dark:text-slate-700 border-2 border-dashed border-slate-200 dark:border-slate-800 rounded-[32px] bg-slate-50/50 dark:bg-slate-900/50 transition-all">
                     <x-ui.icon name="o-building-office-2" class="size-20 mb-6 opacity-20" />
-                    <p class="text-sm font-black uppercase tracking-widest italic animate-pulse">{{ __('Belum Ada Fasilitas Terdaftar') }}</p>
+                    <p class="text-sm font-bold uppercase tracking-widest">{{ __('Belum Ada Fasilitas Terdaftar') }}</p>
                     <x-ui.button :label="__('Mulai Tambahkan Data')" wire:click="showAddForm" class="mt-8 btn-ghost text-primary btn-sm font-bold" />
                 </div>
             @endif

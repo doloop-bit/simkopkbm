@@ -7,6 +7,13 @@
 @php
     $wireModel = $attributes->wire('model')->value();
     $name = $attributes->get('name') ?? $wireModel;
+    
+    $classes = [
+        'block w-full text-sm text-slate-500 dark:text-slate-400 cursor-pointer overflow-hidden p-0',
+        'bg-slate-100 dark:bg-slate-800/50 rounded-xl shadow-inner ring-1 ring-slate-200 dark:ring-slate-700',
+        'file:mr-4 file:py-2.5 file:px-6 file:rounded-none file:border-0 file:text-[10px] file:font-bold',
+        'file:bg-primary file:text-white hover:file:bg-primary/90 file:cursor-pointer file:transition-all file:uppercase file:tracking-widest'
+    ];
 @endphp
 
 <div>
@@ -16,11 +23,9 @@
         </label>
     @endif
 
-    <input
-        type="file"
-        @if($name) id="{{ $name }}" name="{{ $name }}" @endif
+    <input type="file"
         @if($accept) accept="{{ $accept }}" @endif
-        {{ $attributes->except(['label', 'accept', 'hint'])->class(['block w-full text-sm text-slate-500 dark:text-slate-400 file:mr-4 file:py-2 file:px-4 file:rounded-xl file:border-0 file:text-sm file:font-medium file:bg-primary/10 file:text-primary hover:file:bg-primary/20 file:cursor-pointer file:transition-colors']) }}
+        {{ $attributes->merge(['id' => $name, 'name' => $name])->except(['label', 'accept', 'hint'])->class($classes) }}
     />
 
     @if($hint)

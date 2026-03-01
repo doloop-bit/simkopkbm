@@ -261,7 +261,6 @@ new #[Layout('components.admin.layouts.app')] class extends Component
                     accept="image/jpeg,image/jpg,image/png,image/webp"
                     multiple
                     required
-                    class="bg-white dark:bg-slate-900"
                 >
                     @if (count($photos) > 0)
                         <div class="text-xs font-semibold text-primary mt-2 px-1">

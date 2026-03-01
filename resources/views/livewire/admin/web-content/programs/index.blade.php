@@ -225,7 +225,6 @@ new #[Layout('components.admin.layouts.app')] class extends Component
                         wire:model="image" 
                         :label="__('Ilustrasi / Foto Program')" 
                         accept="image/jpeg,image/jpg,image/png,image/webp"
-                        class="bg-white dark:bg-slate-900"
                     >
                         @php
                             $previewUrl = $image ? $image->temporaryUrl() : ($editingId && ($program = \App\Models\Program::find($editingId)) && $program->image_path ? Storage::url($program->image_path) : '/placeholder.png');

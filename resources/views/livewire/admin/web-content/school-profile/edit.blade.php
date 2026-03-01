@@ -165,6 +165,8 @@ new class extends Component {
 
     <x-ui.header :title="__('Profil Sekolah')" :subtitle="__('Kelola informasi identitas dan profil sekolah yang akan ditampilkan pada portal publik.')" separator>
         <x-slot:actions>
+            <x-ui.button :label="__('Fasilitas')" icon="o-building-office" class="btn-ghost" :href="route('admin.school-profile.facilities')" wire:navigate />
+            <x-ui.button :label="__('Struktur')" icon="o-user-group" class="btn-ghost" :href="route('admin.school-profile.staff-members')" wire:navigate />
             <x-ui.button :label="__('Simpan Perubahan')" icon="o-check" class="btn-primary shadow-lg shadow-primary/20" wire:click="save" spinner="save" />
         </x-slot:actions>
     </x-ui.header>
@@ -173,7 +175,7 @@ new class extends Component {
         {{-- Informasi Dasar --}}
         <x-ui.card shadow>
             <div class="p-6 border-b border-slate-100 dark:border-slate-800">
-                <h3 class="font-black text-slate-800 dark:text-white uppercase tracking-tight text-sm italic">{{ __('Informasi Dasar & Kontak') }}</h3>
+                <h3 class="font-bold text-slate-800 dark:text-white uppercase tracking-wider text-xs">{{ __('Informasi Dasar & Kontak') }}</h3>
             </div>
             <div class="p-8 space-y-6">
                 <x-ui.input 
@@ -182,7 +184,7 @@ new class extends Component {
                     type="text" 
                     required 
                     :placeholder="__('Contoh: PKBM Harapan Bangsa')"
-                    class="font-bold text-lg"
+                    class="font-semibold text-lg"
                 />
 
                 <x-ui.textarea 
@@ -191,7 +193,7 @@ new class extends Component {
                     rows="3" 
                     required 
                     :placeholder="__('Masukkan alamat lengkap termasuk kode pos...')"
-                    class="italic mt-1"
+                    class="mt-1"
                 />
 
                 <div class="grid grid-cols-1 gap-6 md:grid-cols-2">
@@ -228,7 +230,7 @@ new class extends Component {
         {{-- Logo Sekolah --}}
         <x-ui.card shadow>
             <div class="p-6 border-b border-slate-100 dark:border-slate-800">
-                <h3 class="font-black text-slate-800 dark:text-white uppercase tracking-tight text-sm italic">{{ __('Identitas Visual (Logo)') }}</h3>
+                <h3 class="font-bold text-slate-800 dark:text-white uppercase tracking-wider text-xs">{{ __('Identitas Visual (Logo)') }}</h3>
             </div>
             <div class="p-8 space-y-8">
                 @if ($currentLogoPath)
@@ -244,32 +246,33 @@ new class extends Component {
                             </div>
                         </div>
                         <div class="flex-1 text-center md:text-left">
-                            <h4 class="font-black text-slate-900 dark:text-white mb-1 uppercase tracking-tight text-sm italic">{{ __('Logo Sekolah Saat Ini') }}</h4>
+                            <h4 class="font-bold text-slate-900 dark:text-white mb-1 uppercase tracking-wider text-xs">{{ __('Logo Sekolah Saat Ini') }}</h4>
                             <p class="text-[10px] text-slate-400 font-mono tracking-tighter mb-4">{{ basename($currentLogoPath) }}</p>
                             <x-ui.button 
                                 wire:click="removeLogo" 
                                 :label="__('Hapus Logo Permanen')"
                                 icon="o-trash"
-                                class="btn-ghost btn-xs text-rose-500 hover:bg-rose-50 font-bold"
+                                class="btn-ghost btn-xs text-rose-500 hover:bg-rose-50 font-semibold"
                                 wire:confirm="{{ __('Apakah Anda yakin ingin menghapus logo sekolah?') }}"
                             />
                         </div>
                     </div>
                 @endif
 
-                <x-ui.file 
-                    wire:model="logo" 
-                    :label="__('Ganti / Unggah Logo Baru')" 
-                    accept="image/jpeg,image/jpg,image/png,image/webp"
-                    class="bg-white dark:bg-slate-800"
-                >
-                     @if ($logo)
-                        <div class="text-[10px] font-black italic text-indigo-600 mt-2 px-1">
-                            {{ __('File dipilih') }}: <span class="underline">{{ $logo->getClientOriginalName() }}</span>
-                        </div>
-                    @endif
-                </x-ui.file>
-                <p class="text-[10px] text-slate-400 italic px-1 leading-relaxed">
+                <div class="max-w-lg space-y-4">
+                    <x-ui.file 
+                        wire:model="logo" 
+                        :label="__('Ganti / Unggah Logo Baru')" 
+                        accept="image/jpeg,image/jpg,image/png,image/webp"
+                    >
+                         @if ($logo)
+                            <div class="text-[10px] font-black italic text-indigo-600 mt-2 px-1">
+                                {{ __('File dipilih') }}: <span class="underline">{{ $logo->getClientOriginalName() }}</span>
+                            </div>
+                        @endif
+                    </x-ui.file>
+                </div>
+                <p class="text-xs text-slate-400 px-1 leading-relaxed">
                     * {{ __('Format file yang didukung: JPEG, PNG, WebP (Maksimal 5MB). Pastikan logo memiliki background transparan untuk tampilan terbaik.') }}
                 </p>
             </div>
@@ -278,7 +281,7 @@ new class extends Component {
         {{-- Visi & Misi --}}
         <x-ui.card shadow>
             <div class="p-6 border-b border-slate-100 dark:border-slate-800">
-                <h3 class="font-black text-slate-800 dark:text-white uppercase tracking-tight text-sm italic">{{ __('Budaya & Filosofi (Visi & Misi)') }}</h3>
+                <h3 class="font-bold text-slate-800 dark:text-white uppercase tracking-wider text-xs">{{ __('Budaya & Filosofi (Visi & Misi)') }}</h3>
             </div>
             <div class="p-8 space-y-6">
                 <x-ui.textarea 
@@ -287,7 +290,7 @@ new class extends Component {
                     rows="3" 
                     required 
                     :placeholder="__('Masukkan visi besar sekolah di sini...')"
-                    class="font-black text-sm italic text-indigo-600"
+                    class="font-semibold text-sm text-indigo-600"
                 />
 
                 <x-ui.textarea 
@@ -304,7 +307,7 @@ new class extends Component {
         {{-- Sejarah --}}
         <x-ui.card shadow>
             <div class="p-6 border-b border-slate-100 dark:border-slate-800">
-                <h3 class="font-black text-slate-800 dark:text-white uppercase tracking-tight text-sm italic">{{ __('Rekam Jejak & Sejarah') }}</h3>
+                <h3 class="font-bold text-slate-800 dark:text-white uppercase tracking-wider text-xs">{{ __('Rekam Jejak & Sejarah') }}</h3>
             </div>
             <div class="p-8">
                 <x-ui.textarea 
@@ -312,7 +315,7 @@ new class extends Component {
                     :label="__('Narasi Sejarah Sekolah')" 
                     rows="6" 
                     :placeholder="__('Ceritakan perjalanan singkat sekolah sejak berdiri...')"
-                    class="text-sm bg-slate-50/50 border-none italic leading-relaxed"
+                    class="text-sm bg-slate-50/50 border-none leading-relaxed"
                 />
             </div>
         </x-ui.card>
@@ -320,7 +323,7 @@ new class extends Component {
         {{-- Media Sosial --}}
         <x-ui.card shadow>
             <div class="p-6 border-b border-slate-100 dark:border-slate-800">
-                <h3 class="font-black text-slate-800 dark:text-white uppercase tracking-tight text-sm italic">{{ __('Portofolio Media Sosial') }}</h3>
+                <h3 class="font-bold text-slate-800 dark:text-white uppercase tracking-wider text-xs">{{ __('Portofolio Media Sosial') }}</h3>
             </div>
             <div class="p-8">
                 <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
@@ -362,7 +365,7 @@ new class extends Component {
         {{-- Lokasi --}}
         <x-ui.card shadow>
             <div class="p-6 border-b border-slate-100 dark:border-slate-800 flex items-center justify-between">
-                <h3 class="font-black text-slate-800 dark:text-white uppercase tracking-tight text-sm italic">{{ __('Integrasi Peta & Lokasi') }}</h3>
+                <h3 class="font-bold text-slate-800 dark:text-white uppercase tracking-wider text-xs">{{ __('Integrasi Peta & Lokasi') }}</h3>
                 <x-ui.icon name="o-map-pin" class="size-5 text-rose-500" />
             </div>
             <div class="p-8 space-y-6">
@@ -386,7 +389,7 @@ new class extends Component {
 
                 <div class="p-4 bg-amber-50 rounded-2xl border border-amber-100 flex items-start gap-4">
                     <x-ui.icon name="o-information-circle" class="size-6 text-amber-500" />
-                    <p class="text-xs text-amber-800 leading-relaxed font-medium italic italic">
+                    <p class="text-xs text-amber-800 leading-relaxed font-semibold">
                         {{ __('Tip: Anda bisa mendapatkan koordinat dari Google Maps dengan klik kanan pada lokasi sekolah di peta dan pilih "What\'s here?" atau klik langsung pada angka koordinat yang muncul.') }}
                     </p>
                 </div>
