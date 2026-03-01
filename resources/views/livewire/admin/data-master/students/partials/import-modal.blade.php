@@ -31,7 +31,7 @@
         @endif
 
         <div class="flex justify-end gap-2 pt-4 border-t border-slate-100 dark:border-slate-800">
-            <x-ui.button :label="__('Batal')" ghost wire:click="clearImport" @click="$set('importModal', false)" />
+            <x-ui.button :label="__('Batal')" ghost wire:click="clearImport" @click="show = false" />
             <x-ui.button :label="__('Proses Import')" type="submit" class="btn-primary" spinner="import" />
         </div>
     </form>

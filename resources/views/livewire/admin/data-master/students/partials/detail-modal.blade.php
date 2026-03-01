@@ -34,7 +34,7 @@
                 </div>
             </div>
 
-            <div class="grid grid-cols-1 md:grid-cols-2 gap-10 max-h-[50vh] overflow-y-auto pr-4 custom-scrollbar">
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-10">
                 <div class="space-y-6">
                     <div class="text-[11px] font-black uppercase text-slate-400 tracking-widest border-b border-slate-100 dark:border-slate-800 pb-2">{{ __('Identitas Siswa') }}</div>
 
@@ -178,8 +178,8 @@
             @endif
 
             <div class="flex justify-end gap-2 pt-6 border-t border-slate-100 dark:border-slate-800">
-                <x-ui.button :label="__('Tutup')" ghost @click="$set('detailModal', false)" />
-                <x-ui.button :label="__('Edit Data')" icon="o-pencil-square" wire:click="edit({{ $viewing->id }})" @click="$set('detailModal', false)" class="btn-primary" />
+                <x-ui.button :label="__('Tutup')" ghost @click="show = false" />
+                <x-ui.button :label="__('Edit Data')" icon="o-pencil-square" wire:click="edit({{ $viewing->id }})" @click="show = false" class="btn-primary" />
             </div>
         </div>
     @endif

@@ -41,13 +41,23 @@
             x-transition:leave-start="opacity-100 translate-y-0 sm:scale-100"
             x-transition:leave-end="opacity-0 translate-y-4 sm:translate-y-0 sm:scale-95"
             {{ $attributes->except(['wire:model', 'title', 'persistent', 'maxWidth'])->class([
-                'relative w-full rounded-2xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 shadow-xl p-6',
+                'relative w-full rounded-2xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 shadow-xl p-6 custom-scrollbar max-h-[90vh] overflow-y-auto',
                 $maxWidthClass,
             ]) }}
             @unless($persistent) @keydown.escape.window="show = false" @endunless
         >
+            {{-- Close Button --}}
+            <button 
+                @click="show = false" 
+                class="absolute top-4 right-4 text-slate-400 hover:text-slate-600 dark:hover:text-slate-300 transition-colors bg-white/50 dark:bg-slate-900/50 hover:bg-slate-100 dark:hover:bg-slate-800 rounded-full p-1"
+                aria-label="Close"
+                type="button"
+            >
+                <x-ui.icon name="o-x-mark" class="w-5 h-5" />
+            </button>
+
             @if($title)
-                <h3 class="text-lg font-bold text-slate-900 dark:text-slate-100 mb-4">{{ $title }}</h3>
+                <h3 class="text-lg font-bold text-slate-900 dark:text-slate-100 mb-4 pr-8">{{ $title }}</h3>
             @endif
 
             {{ $slot }}

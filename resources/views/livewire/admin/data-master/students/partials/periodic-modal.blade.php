@@ -29,7 +29,7 @@
         </div>
 
         <div class="flex justify-end gap-2 pt-4 border-t border-slate-100 dark:border-slate-800">
-            <x-ui.button :label="__('Batal')" ghost @click="$set('periodicModal', false)" />
+            <x-ui.button :label="__('Batal')" ghost @click="show = false" />
             <x-ui.button :label="__('Simpan Data')" type="submit" class="btn-primary" spinner="savePeriodic" />
         </div>
     </form>

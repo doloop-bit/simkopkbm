@@ -631,8 +631,9 @@ new #[Layout('components.admin.layouts.app')] class extends Component {
         {{ $students->links() }}
     </div>
 
-    <x-ui.modal wire:model="studentModal" persistent>
-        <div class="mb-8 flex items-start justify-between">
+    <x-ui.modal wire:model="studentModal" persistent maxWidth="max-w-4xl">
+        <div>
+            <div class="mb-8 flex items-start justify-between">
             <div>
                 <x-ui.header :title="$editing ? __('Edit Profil Siswa') : __('Tambah Siswa Baru')" :subtitle="__('Lengkapi data identitas dan akademik siswa.')" separator />
             </div>
@@ -653,83 +654,86 @@ new #[Layout('components.admin.layouts.app')] class extends Component {
         </div>
 
         <form wire:submit="save" class="space-y-6">
-            <div class="grid grid-cols-1 md:grid-cols-2 gap-8 max-h-[60vh] overflow-y-auto pr-4 custom-scrollbar">
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-8">
                 <div class="space-y-5">
                     <div class="text-[11px] font-black uppercase text-slate-400 tracking-widest border-b border-slate-100 dark:border-slate-800 pb-2">{{ __('Identitas Siswa') }}</div>
 
-                    <x-ui.input wire:model="name" :label="__('Nama Lengkap')" required />
-                    <x-ui.input wire:model="email" :label="__('Email')" type="email" required />
-
                     <div class="grid grid-cols-2 gap-4">
-                        <x-ui.input wire:model="nis" :label="__('NIS')" />
-                        <x-ui.input wire:model="nisn" :label="__('NISN')" />
+                        <x-ui.input wire:model="name" :label="__('Nama Lengkap')" required />
+                        <x-ui.input wire:model="email" :label="__('Email')" type="email" required />
                     </div>
 
-                    <x-ui.input wire:model="nik" :label="__('NIK Siswa')" :placeholder="__('16 digit NIK')" required />
+                    <div class="grid grid-cols-3 gap-4">
+                        <x-ui.input wire:model="nis" :label="__('NIS')" />
+                        <x-ui.input wire:model="nisn" :label="__('NISN')" />
+                        <x-ui.input wire:model="nik" :label="__('NIK Siswa')" :placeholder="__('16 digit NIK')" required />
+                    </div>
 
                     <div class="grid grid-cols-2 gap-4">
                         <x-ui.input wire:model="no_kk" :label="__('No. Kartu Keluarga')" required />
                         <x-ui.input wire:model="no_akta" :label="__('No. Akta Kelahiran')" required />
                     </div>
 
-                    <div class="grid grid-cols-2 gap-4">
+                    <div class="grid grid-cols-3 gap-4">
                         <x-ui.input wire:model="pob" :label="__('Tempat Lahir')" required />
                         <x-ui.input wire:model="dob" :label="__('Tanggal Lahir')" type="date" required />
+                        <x-ui.input wire:model="phone" :label="__('No. Telepon / WA')" />
                     </div>
 
-                    <x-ui.input wire:model="phone" :label="__('No. Telepon / WA')" />
-
-                    <x-ui.select wire:model="classroom_id" :label="__('Kelas')" :options="$classrooms" :placeholder="__('Pilih Kelas')" />
-
-                    <x-ui.textarea wire:model="address" :label="__('Alamat')" rows="3" />
+                    <x-ui.textarea wire:model="address" :label="__('Alamat')" rows="2" />
 
                     <div class="grid grid-cols-2 gap-4">
                         <x-ui.input type="number" wire:model="birth_order" :label="__('Anak Ke-')" />
                         <x-ui.input type="number" wire:model="total_siblings" :label="__('Dari ... Bersaudara')" />
                     </div>
 
-                    <x-ui.input wire:model="previous_school" :label="__('Asal Sekolah')" />
-
-                    <x-ui.select 
-                        wire:model="status" 
-                        :label="__('Status Siswa')" 
-                        :options="[
-                            ['id' => 'baru', 'name' => __('Baru')],
-                            ['id' => 'mutasi', 'name' => __('Mutasi / Pindahan')],
-                            ['id' => 'naik_kelas', 'name' => __('Naik Kelas')],
-                            ['id' => 'lulus', 'name' => __('Lulus')],
-                            ['id' => 'keluar', 'name' => __('Keluar')],
-                        ]"
-                        required
-                    />
+                    <div class="grid grid-cols-3 gap-4">
+                        <x-ui.select wire:model="classroom_id" :label="__('Kelas')" :options="$classrooms" :placeholder="__('Pilih Kelas')" />
+                        <x-ui.select 
+                            wire:model="status" 
+                            :label="__('Status Siswa')" 
+                            :options="[
+                                ['id' => 'baru', 'name' => __('Baru')],
+                                ['id' => 'mutasi', 'name' => __('Mutasi / Pindahan')],
+                                ['id' => 'naik_kelas', 'name' => __('Naik Kelas')],
+                                ['id' => 'lulus', 'name' => __('Lulus')],
+                                ['id' => 'keluar', 'name' => __('Keluar')],
+                            ]"
+                            required
+                        />
+                        <x-ui.input wire:model="previous_school" :label="__('Asal Sekolah')" />
+                    </div>
                 </div>
 
                 <div class="space-y-5">
                     <div class="text-[11px] font-black uppercase text-slate-400 tracking-widest border-b border-slate-100 dark:border-slate-800 pb-2">{{ __('Data Orang Tua / Wali') }}</div>
 
-                    <div class="space-y-4">
+                    <div class="grid grid-cols-2 gap-4">
                         <x-ui.input wire:model="father_name" :label="__('Nama Ayah')" required />
                         <x-ui.input wire:model="nik_ayah" :label="__('NIK Ayah')" required />
                     </div>
                     
-                    <div class="space-y-4 pt-2">
+                    <div class="grid grid-cols-2 gap-4">
                         <x-ui.input wire:model="mother_name" :label="__('Nama Ibu')" required />
                         <x-ui.input wire:model="nik_ibu" :label="__('NIK Ibu')" required />
                     </div>
 
                     <div class="pt-6 space-y-4 bg-slate-50/50 dark:bg-slate-900/50 p-4 rounded-xl border border-slate-100 dark:border-slate-800">
                         <div class="text-[10px] font-black uppercase text-slate-400 tracking-widest">{{ __('Kontak Wali (Jika Ada)') }}</div>
-                        <x-ui.input wire:model="guardian_name" :label="__('Nama Wali')" />
-                        <x-ui.input wire:model="guardian_phone" :label="__('No. Telp Wali')" />
+                        <div class="grid grid-cols-2 gap-4">
+                            <x-ui.input wire:model="guardian_name" :label="__('Nama Wali')" />
+                            <x-ui.input wire:model="guardian_phone" :label="__('No. Telp Wali')" />
+                        </div>
                     </div>
                 </div>
             </div>
 
             <div class="flex justify-end gap-2 pt-4 border-t border-slate-100 dark:border-slate-800">
-                <x-ui.button :label="__('Batal')" ghost @click="$set('studentModal', false)" />
+                <x-ui.button :label="__('Batal')" ghost @click="show = false" />
                 <x-ui.button :label="__('Simpan')" type="submit" class="btn-primary" spinner="save" />
             </div>
         </form>
+        </div>
     </x-ui.modal>
 
     {{-- Modals --}}
