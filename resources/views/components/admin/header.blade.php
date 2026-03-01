@@ -25,9 +25,36 @@
 
         {{-- Right: Actions --}}
         <div class="flex items-center gap-3">
-            <button class="p-2 rounded-xl text-slate-500 hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors">
-                <x-ui.icon name="o-bell" class="w-5 h-5" />
+            {{-- Theme Toggle --}}
+            <button 
+                x-data="{ 
+                    isDark: document.documentElement.classList.contains('dark'),
+                    toggleTheme() {
+                        this.isDark = !this.isDark;
+                        if (this.isDark) {
+                            document.documentElement.classList.add('dark');
+                            localStorage.setItem('theme', 'dark');
+                        } else {
+                            document.documentElement.classList.remove('dark');
+                            localStorage.setItem('theme', 'light');
+                        }
+                    }
+                }"
+                @click="toggleTheme()"
+                class="p-2 rounded-xl text-slate-500 hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors"
+                title="Toggle Theme"
+            >
+                <span x-show="isDark" x-cloak class="flex items-center justify-center">
+                    <x-ui.icon name="o-sun" class="w-5 h-5" />
+                </span>
+                <span x-show="!isDark" x-cloak class="flex items-center justify-center">
+                    <x-ui.icon name="o-moon" class="w-5 h-5" />
+                </span>
             </button>
+
+            <!-- <button class="p-2 rounded-xl text-slate-500 hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors">
+                <x-ui.icon name="o-bell" class="w-5 h-5" />
+            </button> -->
 
             {{-- User dropdown --}}
             <x-ui.dropdown>
