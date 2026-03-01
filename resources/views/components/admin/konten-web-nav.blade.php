@@ -44,4 +44,17 @@
     ] : [];
 @endphp
 
-<x-admin.sub-nav :tabs="$tabs" />
+<x-admin.sub-nav :tabs="$tabs">
+    @if ($isVisible)
+        <x-slot:actions>
+            <x-ui.button 
+                :label="__('Lihat Website')" 
+                icon="o-arrow-top-right-on-square" 
+                class="btn-ghost btn-sm text-primary font-bold uppercase tracking-widest text-[10px]" 
+                link="/" 
+                external 
+                target="_blank" 
+            />
+        </x-slot:actions>
+    @endif
+</x-admin.sub-nav>
