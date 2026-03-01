@@ -19,6 +19,9 @@ new #[Layout('components.admin.layouts.app')] class extends Component {
     public array $sourceStudents = [];
     public array $targetStudents = [];
     
+    public string $sourceSearch = '';
+    public string $targetSearch = '';
+    
     public function mount(): void
     {
         $activeYear = AcademicYear::where('is_active', true)->first();
@@ -33,6 +36,8 @@ new #[Layout('components.admin.layouts.app')] class extends Component {
         $this->target_classroom_id = null;
         $this->sourceStudents = [];
         $this->targetStudents = [];
+        $this->sourceSearch = '';
+        $this->targetSearch = '';
     }
     
     public function updatedSourceClassroomId(): void
@@ -41,6 +46,16 @@ new #[Layout('components.admin.layouts.app')] class extends Component {
     }
     
     public function updatedTargetClassroomId(): void
+    {
+        $this->loadTargetStudents();
+    }
+
+    public function updatedSourceSearch(): void
+    {
+        $this->loadSourceStudents();
+    }
+
+    public function updatedTargetSearch(): void
     {
         $this->loadTargetStudents();
     }
@@ -56,6 +71,15 @@ new #[Layout('components.admin.layouts.app')] class extends Component {
         } else {
             $this->sourceStudents = [];
             return;
+        }
+
+        if ($this->sourceSearch) {
+            $query->where(function ($q) {
+                $q->where('nis', 'like', '%'.$this->sourceSearch.'%')
+                    ->orWhereHas('profile.user', function ($q) {
+                        $q->where('name', 'like', '%'.$this->sourceSearch.'%');
+                    });
+            });
         }
         
         $this->sourceStudents = $query->orderBy('nis')->get()->map(function ($sp) {
@@ -78,6 +102,15 @@ new #[Layout('components.admin.layouts.app')] class extends Component {
         } else {
             $this->targetStudents = [];
             return;
+        }
+
+        if ($this->targetSearch) {
+            $query->where(function ($q) {
+                $q->where('nis', 'like', '%'.$this->targetSearch.'%')
+                    ->orWhereHas('profile.user', function ($q) {
+                        $q->where('name', 'like', '%'.$this->targetSearch.'%');
+                    });
+            });
         }
         
         $this->targetStudents = $query->orderBy('nis')->get()->map(function ($sp) {
@@ -244,6 +277,13 @@ new #[Layout('components.admin.layouts.app')] class extends Component {
                                 <option value="{{ $cls->id }}">{{ $cls->name }}</option>
                             @endforeach
                         </x-ui.select>
+
+                        <x-ui.input 
+                            wire:model.live.debounce.300ms="sourceSearch" 
+                            icon="o-magnifying-glass" 
+                            :placeholder="__('Cari Nama / NIS...')" 
+                            class="bg-white" 
+                        />
                         
                         <div class="flex items-center justify-between">
                             <x-ui.checkbox 
@@ -308,6 +348,13 @@ new #[Layout('components.admin.layouts.app')] class extends Component {
                                 <option value="{{ $cls->id }}">{{ $cls->name }}</option>
                             @endforeach
                         </x-ui.select>
+
+                        <x-ui.input 
+                            wire:model.live.debounce.300ms="targetSearch" 
+                            icon="o-magnifying-glass" 
+                            :placeholder="__('Cari Nama / NIS...')" 
+                            class="bg-white" 
+                        />
                         
                         <div class="flex items-center justify-between">
                             <x-ui.checkbox 

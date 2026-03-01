@@ -75,7 +75,7 @@ new #[Layout('components.admin.layouts.app')] class extends Component {
             'name' => ['required', 'string', 'max:255'],
             'academic_year_id' => ['required', 'exists:academic_years,id'],
             'level_id' => ['required', 'exists:levels,id'],
-            'class_level' => ['nullable', 'integer', 'min:1', 'max:13'],
+            'class_level' => ['nullable', 'integer', 'min:0', 'max:13'],
             'homeroom_teacher_id' => ['nullable', 'exists:users,id'],
         ];
     }
@@ -159,7 +159,7 @@ new #[Layout('components.admin.layouts.app')] class extends Component {
 
             @scope('cell_class_level', $classroom)
                 <span class="text-slate-500 dark:text-slate-400 text-sm">
-                    {{ $classroom->class_level ? __('Kelas :level', ['level' => $classroom->class_level]) : '-' }}
+                    {{ $classroom->class_level !== null ? __('Kelas :level', ['level' => $classroom->class_level]) : '-' }}
                 </span>
             @endscope
 
