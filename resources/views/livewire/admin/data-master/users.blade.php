@@ -134,8 +134,8 @@ new class extends Component {
 
     <div class="flex flex-col md:flex-row gap-4 items-center justify-between">
         <div class="flex gap-2 w-full md:w-auto">
-            <x-ui.input wire:model.live="search" icon="o-magnifying-glass" :placeholder="__('Cari user...')" class="w-full md:w-64" sm />
-            <x-ui.select wire:model.live="role_filter" :placeholder="__('Semua Role')" class="w-full md:w-48" :options="collect($this->roles)->map(fn($v, $k) => ['id' => $k, 'name' => $v])->values()->toArray()" sm />
+            <x-ui.input wire:model.live="search" icon="o-magnifying-glass" :placeholder="__('Cari user...')" class="w-full md:w-64" />
+            <x-ui.select wire:model.live="role_filter" :placeholder="__('Semua Role')" class="w-full md:w-48" :options="collect($this->roles)->map(fn($v, $k) => ['id' => $k, 'name' => $v])->values()->toArray()" />
         </div>
     </div>
 
@@ -190,14 +190,14 @@ new class extends Component {
 
             @scope('cell_actions', $user)
                 <div class="flex justify-end gap-1">
-                    <x-ui.button icon="o-pencil-square" wire:click="edit({{ $user->id }})" ghost sm />
+                    <x-ui.button icon="o-pencil-square" wire:click="edit({{ $user->id }})" ghost />
                     @if($user->id !== auth()->id())
                         <x-ui.button 
                             icon="o-trash" 
                             class="text-red-500 dark:text-red-400 hover:bg-red-50 dark:hover:bg-red-900/10" 
                             wire:confirm="{{ __('Hapus user ini?') }}" 
                             wire:click="delete({{ $user->id }})" 
-                            ghost sm 
+                            ghost 
                         />
                     @endif
                 </div>

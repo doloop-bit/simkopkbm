@@ -2,10 +2,10 @@
     <x-ui.header :title="__('Presensi Siswa')" :subtitle="__('Rekap kehadiran siswa per kelas dan mata pelajaran.')" separator />
 
     <div class="grid grid-cols-1 md:grid-cols-4 gap-4">
-        <x-ui.select wire:model.live="academic_year_id" :label="__('Tahun Ajaran')" :options="$years" sm />
-        <x-ui.select wire:model.live="classroom_id" :label="__('Kelas')" :placeholder="__('Pilih Kelas')" :options="$classrooms" sm />
-        <x-ui.select wire:model.live="subject_id" :label="__('Mata Pelajaran (Opsional)')" :placeholder="__('Semua-Harian')" :options="$subjects" sm />
-        <x-ui.input wire:model.live="date" type="date" :label="__('Tanggal')" sm />
+        <x-ui.select wire:model.live="academic_year_id" :label="__('Tahun Ajaran')" :options="$years" />
+        <x-ui.select wire:model.live="classroom_id" :label="__('Kelas')" :placeholder="__('Pilih Kelas')" :options="$classrooms" />
+        <x-ui.select wire:model.live="subject_id" :label="__('Mata Pelajaran (Opsional)')" :placeholder="__('Semua-Harian')" :options="$subjects" />
+        <x-ui.input wire:model.live="date" type="date" :label="__('Tanggal')" />
     </div>
 
     @if($classroom_id)

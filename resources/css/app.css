@@ -6,7 +6,7 @@
 @custom-variant dark (&:where(.dark, .dark *));
 
 @theme {
-    --font-sans: 'Outfit', 'Instrument Sans', ui-sans-serif, system-ui, sans-serif;
+    --font-sans: 'Inter', 'Instrument Sans', ui-sans-serif, system-ui, sans-serif;
 
     /* Primary Accent: Electric Emerald */
     --color-primary-50: #f0fdf4;
@@ -61,17 +61,16 @@
     }
 
     /* Custom Focus Style */
-    .input:focus,
-    .input:focus-within,
-    .textarea:focus,
-    .textarea:focus-within,
-    .select:focus,
-    .select:focus-within {
+    .ui-input:focus,
+    .ui-input:focus-within,
+    .ui-textarea:focus,
+    .ui-textarea:focus-within,
+    .ui-select:focus,
+    .ui-select:focus-within {
         outline: none !important;
         border-color: var(--color-primary) !important;
         border-width: 2px !important;
         box-shadow: 0 0 0 4px rgba(34, 197, 94, 0.1) !important;
-        background-color: var(--color-base-100) !important;
     }
 }
 

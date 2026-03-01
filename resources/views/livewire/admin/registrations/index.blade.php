@@ -191,7 +191,7 @@ new #[Layout('components.admin.layouts.app')] class extends Component {
                 wire:model.live.debounce.300ms="search" 
                 :placeholder="__('Cari nama atau nomor daftar...')" 
                 icon="o-magnifying-glass" 
-                class="w-80 font-bold" 
+                class="w-80" 
             />
         </x-slot:actions>
     </x-ui.header>

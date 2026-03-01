@@ -126,15 +126,15 @@ new #[Layout('components.admin.layouts.app')] class extends Component {
             @scope('cell_actions', $year)
                 <div class="flex justify-end gap-1">
                     @if(!$year->is_active)
-                        <x-ui.button :label="__('Set Aktif')" wire:click="setActive({{ $year->id }})" ghost sm />
+                        <x-ui.button :label="__('Set Aktif')" wire:click="setActive({{ $year->id }})" ghost />
                     @endif
-                    <x-ui.button icon="o-pencil-square" wire:click="edit({{ $year->id }})" ghost sm />
+                    <x-ui.button icon="o-pencil-square" wire:click="edit({{ $year->id }})" ghost />
                     <x-ui.button 
                         icon="o-trash" 
                         class="text-red-600 dark:text-red-400 hover:bg-red-50 dark:hover:bg-red-900/20" 
                         wire:confirm="{{ __('Yakin ingin menghapus ini?') }}" 
                         wire:click="delete({{ $year->id }})" 
-                        ghost sm 
+                        ghost 
                     />
                 </div>
             @endscope

@@ -96,7 +96,7 @@ new class extends Component {
         <!-- Recent Transactions -->
         <x-ui.card :title="__('Transaksi Terakhir')" separator shadow>
             <x-slot:actions>
-                <x-ui.button :label="__('Lihat Semua')" :link="route('financial.transactions')" wire:navigate ghost sm />
+                <x-ui.button :label="__('Lihat Semua')" :link="route('financial.transactions')" wire:navigate ghost />
             </x-slot:actions>
             
             <div class="divide-y divide-slate-100 dark:divide-slate-800/50">
@@ -129,7 +129,7 @@ new class extends Component {
         <!-- Recent Attendance -->
         <x-ui.card :title="__('Input Presensi Terakhir')" separator shadow>
             <x-slot:actions>
-                <x-ui.button :label="__('Lihat Semua')" :link="route('academic.attendance')" wire:navigate ghost sm />
+                <x-ui.button :label="__('Lihat Semua')" :link="route('academic.attendance')" wire:navigate ghost />
             </x-slot:actions>
             
             <div class="divide-y divide-slate-100 dark:divide-slate-800/50">

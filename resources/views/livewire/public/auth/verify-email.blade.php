@@ -18,7 +18,7 @@
 
             <form method="POST" action="{{ route('logout') }}">
                 @csrf
-                <x-ui.button type="submit" ghost sm data-test="logout-button" :label="__('Log out')" />
+                <x-ui.button type="submit" ghost data-test="logout-button" :label="__('Log out')" />
             </form>
         </div>
     </div>

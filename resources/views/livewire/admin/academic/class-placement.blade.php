@@ -154,8 +154,8 @@ new #[Layout('components.admin.layouts.app')] class extends Component {
     @endif
 
     <div class="grid grid-cols-1 gap-4 md:grid-cols-2 lg:grid-cols-4">
-        <x-ui.select wire:model.live="academic_year_id" :label="__('Tahun Ajaran')" :options="$years" :placeholder="__('Pilih Tahun')" sm />
-        <x-ui.select wire:model.live="level_id" :label="__('Jenjang')" :options="$levels" :placeholder="__('Pilih Jenjang')" sm />
+        <x-ui.select wire:model.live="academic_year_id" :label="__('Tahun Ajaran')" :options="$years" :placeholder="__('Pilih Tahun')" />
+        <x-ui.select wire:model.live="level_id" :label="__('Jenjang')" :options="$levels" :placeholder="__('Pilih Jenjang')" />
     </div>
 
     @if($academic_year_id && $level_id)
@@ -237,7 +237,7 @@ new #[Layout('components.admin.layouts.app')] class extends Component {
             <div class="flex flex-col space-y-4">
                 <x-ui.card shadow padding="false" class="overflow-hidden !bg-slate-50 dark:!bg-slate-800/30 border-slate-200 dark:border-slate-800">
                     <div class="p-5 space-y-5 bg-white dark:bg-slate-900 border-b border-slate-200 dark:border-slate-800">
-                        <x-ui.select wire:model.live="source_classroom_id" :label="__('Kelas Asal')" sm>
+                        <x-ui.select wire:model.live="source_classroom_id" :label="__('Kelas Asal')">
                             <option value="">{{ __('Pilih Kelas Asal / Status Baru') }}</option>
                             <option value="unassigned" class="font-bold text-primary">{{ __('- Belum Ada Kelas (Siswa Baru) -') }}</option>
                             @foreach($classrooms as $cls)
@@ -251,7 +251,7 @@ new #[Layout('components.admin.layouts.app')] class extends Component {
                                 x-bind:checked="selectedSource.length > 0 && selectedSource.length === {{ count($sourceStudents) }}"
                                 :label="__('Pilih Semua (:count)', ['count' => count($sourceStudents)])" />
                             
-                            <x-ui.button sm x-show="selectedSource.length > 0" x-on:click="moveToTarget" class="btn-primary flex items-center gap-2">
+                            <x-ui.button x-show="selectedSource.length > 0" x-on:click="moveToTarget" class="btn-primary flex items-center gap-2">
                                 {{ __('Pindah Kanan') }} <x-ui.icon name="o-arrow-right" class="size-3" />
                             </x-ui.button>
                         </div>
@@ -301,7 +301,7 @@ new #[Layout('components.admin.layouts.app')] class extends Component {
             <div class="flex flex-col space-y-4">
                 <x-ui.card shadow padding="false" class="overflow-hidden !bg-slate-50 dark:!bg-slate-800/30 border-slate-200 dark:border-slate-800">
                     <div class="p-5 space-y-5 bg-white dark:bg-slate-900 border-b border-slate-200 dark:border-slate-800">
-                        <x-ui.select wire:model.live="target_classroom_id" :label="__('Kelas Tujuan')" sm>
+                        <x-ui.select wire:model.live="target_classroom_id" :label="__('Kelas Tujuan')">
                             <option value="">{{ __('Pilih Kelas Tujuan') }}</option>
                             <option value="unassigned" class="font-bold text-rose-600">{{ __('- Belum Ada Kelas (Cabut Siswa) -') }}</option>
                             @foreach($classrooms as $cls)
@@ -315,7 +315,7 @@ new #[Layout('components.admin.layouts.app')] class extends Component {
                                 x-bind:checked="selectedTarget.length > 0 && selectedTarget.length === {{ count($targetStudents) }}"
                                 :label="__('Pilih Semua (:count)', ['count' => count($targetStudents)])" />
                             
-                            <x-ui.button sm x-show="selectedTarget.length > 0" x-on:click="moveToSource" class="btn-primary flex items-center gap-2">
+                            <x-ui.button x-show="selectedTarget.length > 0" x-on:click="moveToSource" class="btn-primary flex items-center gap-2">
                                 <x-ui.icon name="o-arrow-left" class="size-3" /> {{ __('Pindah Kiri') }} 
                             </x-ui.button>
                         </div>

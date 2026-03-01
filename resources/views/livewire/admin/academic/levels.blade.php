@@ -116,13 +116,13 @@ new #[Layout('components.admin.layouts.app')] class extends Component {
 
                 <x-slot:actions>
                     <div class="flex items-center gap-1">
-                        <x-ui.button icon="o-pencil-square" wire:click="edit({{ $level->id }})" ghost sm wire:loading.attr="disabled" />
+                        <x-ui.button icon="o-pencil-square" wire:click="edit({{ $level->id }})" ghost wire:loading.attr="disabled" />
                         <x-ui.button 
                             icon="o-trash" 
                             class="text-red-600 dark:text-red-400 hover:bg-red-50 dark:hover:bg-red-900/20" 
                             wire:confirm="{{ __('Yakin ingin menghapus jenjang ini?') }}" 
                             wire:click="delete({{ $level->id }})" 
-                            ghost sm 
+                            ghost 
                         />
                     </div>
                 </x-slot:actions>

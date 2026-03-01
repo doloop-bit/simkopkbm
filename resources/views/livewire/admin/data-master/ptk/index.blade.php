@@ -189,7 +189,7 @@ new #[Layout('components.admin.layouts.app')] class extends Component {
     <x-ui.header :title="__('Manajemen PTK')" :subtitle="__('Pendidik dan Tenaga Kependidikan (Guru & Staf).')">
         <x-slot:actions>
             <div class="flex items-center gap-3">
-                <x-ui.input wire:model.live.debounce.300ms="search" :placeholder="__('Cari ptk...')" icon="o-magnifying-glass" sm class="w-64" clearable />
+                <x-ui.input wire:model.live.debounce.300ms="search" :placeholder="__('Cari ptk...')" icon="o-magnifying-glass" class="w-64" clearable />
                 <x-ui.button :label="__('Tambah PTK')" icon="o-plus" wire:click="create" class="btn-primary" />
             </div>
         </x-slot:actions>
@@ -256,13 +256,13 @@ new #[Layout('components.admin.layouts.app')] class extends Component {
 
             @scope('cell_actions', $user)
                 <div class="flex justify-end gap-1">
-                    <x-ui.button icon="o-pencil-square" wire:click="edit({{ $user->id }})" ghost sm />
+                    <x-ui.button icon="o-pencil-square" wire:click="edit({{ $user->id }})" ghost />
                     <x-ui.button 
                         icon="o-trash" 
                         class="text-red-500 dark:text-red-400 hover:bg-red-50 dark:hover:bg-red-900/10" 
                         wire:confirm="{{ __('Yakin ingin menghapus data ini?') }}"
                         wire:click="delete({{ $user->id }})"
-                        ghost sm 
+                        ghost 
                     />
                 </div>
             @endscope

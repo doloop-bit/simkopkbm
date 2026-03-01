@@ -504,8 +504,8 @@ new #[Layout('components.admin.layouts.app')] class extends Component {
     <x-ui.header :title="__('Manajemen Siswa')" :subtitle="__('Kelola data murid, profil, dan penempatan kelas.')">
         <x-slot:actions>
             <div class="flex items-center gap-3">
-                <x-ui.input wire:model.live.debounce.300ms="search" :placeholder="__('Cari siswa...')" icon="o-magnifying-glass" sm class="w-64" clearable />
-                <x-ui.button :label="__('Import')" icon="o-arrow-up-tray" wire:click="$set('importModal', true)" ghost sm />
+                <x-ui.input wire:model.live.debounce.300ms="search" :placeholder="__('Cari siswa...')" icon="o-magnifying-glass" class="w-64" clearable />
+                <x-ui.button :label="__('Import')" icon="o-arrow-up-tray" wire:click="$set('importModal', true)" ghost />
                 <x-ui.button :label="__('Tambah Siswa')" icon="o-plus" wire:click="createNew" class="btn-primary" />
             </div>
         </x-slot:actions>
@@ -519,7 +519,7 @@ new #[Layout('components.admin.layouts.app')] class extends Component {
                         wire:model.live="filter_level_id" 
                         :placeholder="__('Semua Tingkat')"
                         :options="$levels"
-                        sm
+                        
                     />
                 </div>
                 <div class="w-full md:w-48">
@@ -527,13 +527,13 @@ new #[Layout('components.admin.layouts.app')] class extends Component {
                         wire:model.live="filter_classroom_id" 
                         :placeholder="__('Semua Kelas')"
                         :options="$filter_classrooms"
-                        sm
+                        
                     />
                 </div>
             </div>
 
             <div class="flex gap-2 w-full md:w-auto justify-end">
-                <x-ui.button wire:click="export" icon="o-arrow-down-tray" :label="__('Export XLSX')" ghost sm />
+                <x-ui.button wire:click="export" icon="o-arrow-down-tray" :label="__('Export XLSX')" ghost />
             </div>
         </div>
 
@@ -596,14 +596,14 @@ new #[Layout('components.admin.layouts.app')] class extends Component {
                             </td>
                             <td class="px-6 py-4 text-right">
                                 <div class="flex justify-end gap-1.5 opacity-0 group-hover:opacity-100 transition-opacity duration-200">
-                                    <x-ui.button icon="o-chart-bar" wire:click="openPeriodic({{ $student->id }})" ghost sm class="hover:text-primary" />
-                                    <x-ui.button icon="o-pencil-square" wire:click="edit({{ $student->id }})" ghost sm class="hover:text-indigo-600" />
+                                    <x-ui.button icon="o-chart-bar" wire:click="openPeriodic({{ $student->id }})" ghost class="hover:text-primary" />
+                                    <x-ui.button icon="o-pencil-square" wire:click="edit({{ $student->id }})" ghost class="hover:text-indigo-600" />
                                     <x-ui.button 
                                         icon="o-trash" 
                                         class="text-red-500 dark:text-red-400 hover:bg-red-50 dark:hover:bg-red-900/10" 
                                         wire:confirm="{{ __('Yakin ingin menghapus siswa ini?') }}"
                                         wire:click="delete({{ $student->id }})"
-                                        ghost sm 
+                                        ghost 
                                     />
                                 </div>
                             </td>

@@ -130,7 +130,7 @@ new #[Layout('components.admin.layouts.app')] class extends Component {
     <x-ui.header :title="__('Manajemen Kelas')" :subtitle="__('Kelola rombongan belajar dan wali kelas.')" separator>
         <x-slot:actions>
             <div class="flex items-center gap-3">
-                <x-ui.select wire:model.live="academic_year_id" :options="$years" :placeholder="__('Semua Tahun')" sm class="w-48" />
+                <x-ui.select wire:model.live="academic_year_id" :options="$years" :placeholder="__('Semua Tahun')" class="w-48" />
                 <x-ui.button :label="__('Tambah Kelas')" icon="o-plus" class="btn-primary" wire:click="createNew" wire:loading.attr="disabled" />
             </div>
         </x-slot:actions>
@@ -186,13 +186,13 @@ new #[Layout('components.admin.layouts.app')] class extends Component {
 
             @scope('cell_actions', $classroom)
                 <div class="flex justify-end gap-1">
-                    <x-ui.button icon="o-pencil-square" wire:click="edit({{ $classroom->id }})" ghost sm wire:loading.attr="disabled" />
+                    <x-ui.button icon="o-pencil-square" wire:click="edit({{ $classroom->id }})" ghost wire:loading.attr="disabled" />
                     <x-ui.button 
                         icon="o-trash" 
                         class="text-red-600 dark:text-red-400 hover:bg-red-50 dark:hover:bg-red-900/20" 
                         wire:confirm="{{ __('Yakin ingin menghapus kelas ini?') }}" 
                         wire:click="delete({{ $classroom->id }})" 
-                        ghost sm 
+                        ghost 
                     />
                 </div>
             @endscope

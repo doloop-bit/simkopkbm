@@ -104,8 +104,8 @@ new #[Layout('components.admin.layouts.app')] class extends Component {
     <x-ui.header :title="__('Penugasan Guru')" :subtitle="__('Atur penugasan guru untuk mata pelajaran dan kelas.')" separator>
         <x-slot:actions>
             <div class="flex items-center gap-3">
-                <x-ui.select wire:model.live="academic_year_id" :options="$years" :placeholder="__('Tahun Ajaran')" sm class="w-40" />
-                <x-ui.select wire:model.live="classroom_id" :options="$classrooms" :placeholder="__('Semua Kelas')" sm class="w-48" />
+                <x-ui.select wire:model.live="academic_year_id" :options="$years" :placeholder="__('Tahun Ajaran')" class="w-40" />
+                <x-ui.select wire:model.live="classroom_id" :options="$classrooms" :placeholder="__('Semua Kelas')" class="w-48" />
                 <x-ui.button :label="__('Tambah Penugasan')" icon="o-plus" class="btn-primary" wire:click="createNew" />
             </div>
         </x-slot:actions>
@@ -167,13 +167,13 @@ new #[Layout('components.admin.layouts.app')] class extends Component {
 
             @scope('cell_actions', $assignment)
                 <div class="flex justify-end gap-1">
-                    <x-ui.button icon="o-pencil-square" wire:click="edit({{ $assignment->id }})" ghost sm />
+                    <x-ui.button icon="o-pencil-square" wire:click="edit({{ $assignment->id }})" ghost />
                     <x-ui.button 
                         icon="o-trash" 
                         class="text-red-500 dark:text-red-400 hover:bg-red-50 dark:hover:bg-red-900/10" 
                         wire:confirm="{{ __('Yakin ingin menghapus penugasan ini?') }}" 
                         wire:click="delete({{ $assignment->id }})" 
-                        ghost sm 
+                        ghost 
                     />
                 </div>
             @endscope

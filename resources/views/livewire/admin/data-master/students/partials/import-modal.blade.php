@@ -9,7 +9,7 @@
                     <div class="font-bold text-sm text-slate-900 dark:text-white">{{ __('Unduh Template') }}</div>
                     <div class="text-[10px] text-slate-400 font-medium">{{ __('Gunakan format Excel yang sudah kami sediakan.') }}</div>
                 </div>
-                <x-ui.button :label="__('Download Template')" icon="o-arrow-down-tray" wire:click="downloadTemplate" ghost sm />
+                <x-ui.button :label="__('Download Template')" icon="o-arrow-down-tray" wire:click="downloadTemplate" ghost />
             </div>
         </div>
 

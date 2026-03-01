@@ -129,7 +129,7 @@ new #[Layout('components.admin.layouts.app')] class extends Component {
         <div class="flex flex-col md:flex-row flex-1 gap-4 w-full">
             <x-ui.input wire:model.live.debounce.300ms="search" :placeholder="__('Cari nama ekskul atau pembina...')" icon="o-magnifying-glass" class="w-full md:w-80" />
             
-            <x-ui.select wire:model.live="filterLevelId" :placeholder="__('Semua Jenjang')" class="w-full md:w-64" :options="$levels" sm />
+            <x-ui.select wire:model.live="filterLevelId" :placeholder="__('Semua Jenjang')" class="w-full md:w-64" :options="$levels" />
         </div>
     </div>
 
@@ -181,13 +181,13 @@ new #[Layout('components.admin.layouts.app')] class extends Component {
 
             @scope('cell_actions', $activity)
                 <div class="flex justify-end gap-1">
-                    <x-ui.button icon="o-pencil-square" wire:click="edit({{ $activity->id }})" ghost sm wire:loading.attr="disabled" />
+                    <x-ui.button icon="o-pencil-square" wire:click="edit({{ $activity->id }})" ghost wire:loading.attr="disabled" />
                     <x-ui.button 
                         icon="o-trash" 
                         class="text-red-500 dark:text-red-400 hover:bg-red-50 dark:hover:bg-red-900/10" 
                         wire:confirm="{{ __('Yakin ingin menghapus ekstrakurikuler ini?') }}" 
                         wire:click="delete({{ $activity->id }})" 
-                        ghost sm 
+                        ghost 
                     />
                 </div>
             @endscope

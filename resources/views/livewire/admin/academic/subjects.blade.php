@@ -284,16 +284,16 @@ new #[Layout('components.admin.layouts.app')] class extends Component {
 
             @scope('cell_actions', $subject)
                 <div class="flex justify-end gap-1">
-                    <x-ui.button icon="o-pencil-square" wire:click="edit({{ $subject->id }})" ghost sm />
+                    <x-ui.button icon="o-pencil-square" wire:click="edit({{ $subject->id }})" ghost />
                     @if($subject->phase)
-                        <x-ui.button icon="o-list-bullet" wire:click="manageTps({{ $subject->id }})" ghost sm />
+                        <x-ui.button icon="o-list-bullet" wire:click="manageTps({{ $subject->id }})" ghost />
                     @endif
                     <x-ui.button 
                         icon="o-trash" 
                         class="text-red-600 dark:text-red-400 hover:bg-red-50 dark:hover:bg-red-900/20" 
                         wire:confirm="{{ __('Yakin ingin menghapus mapel ini?') }}" 
                         wire:click="delete({{ $subject->id }})" 
-                        ghost sm 
+                        ghost 
                     />
                 </div>
             @endscope
@@ -390,13 +390,13 @@ new #[Layout('components.admin.layouts.app')] class extends Component {
 
                             @scope('cell_actions', $tp)
                                 <div class="flex justify-end gap-1">
-                                    <x-ui.button icon="o-pencil-square" wire:click="editTp({{ $tp->id }})" ghost sm />
+                                    <x-ui.button icon="o-pencil-square" wire:click="editTp({{ $tp->id }})" ghost />
                                     <x-ui.button 
                                         icon="o-trash" 
                                         class="text-red-500 dark:text-red-400 hover:bg-red-50" 
                                         wire:confirm="{{ __('Hapus TP ini?') }}" 
                                         wire:click="deleteTp({{ $tp->id }})" 
-                                        ghost sm 
+                                        ghost 
                                     />
                                 </div>
                             @endscope
