@@ -1,7 +1,6 @@
 <?php
 
 use Illuminate\Support\Facades\Route;
-use Livewire\Volt\Volt;
 
 /*
 |--------------------------------------------------------------------------
@@ -16,22 +15,20 @@ use Livewire\Volt\Volt;
 Route::middleware(['auth', 'verified', 'role:guru'])->prefix('teacher')->name('teacher.')->group(function () {
 
     // Dashboard
-    Volt::route('/dashboard', 'teacher.dashboard')->name('dashboard');
+    Route::livewire('/dashboard', 'teacher.dashboard')->name('dashboard');
 
     // Students - filtered by assigned classrooms
-    Volt::route('/students', 'teacher.data-master.students.index')->name('students.index');
-
-
+    Route::livewire('/students', 'teacher.data-master.students.index')->name('students.index');
 
     // Report Card & Assessments
-    Volt::route('/report-cards', 'teacher.report-card.index')->name('report-cards');
+    Route::livewire('/report-cards', 'teacher.report-card.index')->name('report-cards');
 
     // Assessments - filtered by assigned classrooms
-    Volt::route('/assessments/grading', 'teacher.assessments.grading')
+    Route::livewire('/assessments/grading', 'teacher.assessments.grading')
         ->name('assessments.grading');
-    Volt::route('/assessments/extracurricular', 'teacher.assessments.extracurricular')
+    Route::livewire('/assessments/extracurricular', 'teacher.assessments.extracurricular')
         ->name('assessments.extracurricular');
-    Volt::route('/assessments/paud', 'teacher.report-card.paud.developmental')->name('assessments.paud');
-    Volt::route('/assessments/attendance', 'teacher.assessments.attendance')->name('assessments.attendance'); // Rekap Rapor
-    Volt::route('/attendance/daily', 'teacher.attendance.daily')->name('attendance.daily'); // Presensi Harian
+    Route::livewire('/assessments/paud', 'teacher.report-card.paud.developmental')->name('assessments.paud');
+    Route::livewire('/assessments/attendance', 'teacher.assessments.attendance')->name('assessments.attendance'); // Rekap Rapor
+    Route::livewire('/attendance/daily', 'teacher.attendance.daily')->name('attendance.daily'); // Presensi Harian
 });

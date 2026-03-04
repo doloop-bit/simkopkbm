@@ -89,7 +89,7 @@ class GalleryPhoto extends Model
     public function getResponsiveImageHtml(string $class = '', bool $lazy = true): string
     {
         $imageService = app(\App\Services\ImageOptimizationService::class);
-        
+
         return $imageService->generateResponsiveImage(
             $this->getImagePaths(),
             $this->title ?? 'Gallery Photo',

@@ -24,7 +24,7 @@ Before starting any development:
 ### **Workflow 1: Creating a New Page**
 
 ```
-1. Create Volt Component
+1. Create Livewire SFC Component
    └─> resources/views/livewire/admin/{module}/{name}.blade.php
 
 2. Add Route
@@ -42,8 +42,8 @@ Before starting any development:
 **Example Command Sequence:**
 
 ```bash
-# 1. Create component
-php artisan make:volt admin/module/feature-name --class
+# 1. Create component (Native SFC)
+php artisan make:livewire admin/module/feature-name --sfc
 
 # 2. Edit route file (routes/module.php)
 # 3. Edit sidebar (resources/views/components/admin/sidebar.blade.php)
@@ -114,8 +114,8 @@ npm run dev
 1.  **Extract Logic**: Create a Trait in `app/Traits/Assessments/`.
 2.  **Extract UI**: Create a Partial View in `resources/views/livewire/shared/_partials/`.
 3.  **Create Two Components**:
-    - `livewire/admin/.../feature.blade.php` -> uses `#[Layout('admin')]`
-    - `livewire/teacher/.../feature.blade.php` -> uses `#[Layout('teacher')]`
+    - `livewire/admin/.../feature.blade.php` -> uses `#[Layout('components.admin.layouts.app')]`
+    - `livewire/teacher/.../feature.blade.php` -> uses `#[Layout('components.teacher.layouts.app')]`
 4.  **Route Explicitly**:
     - Admin route -> Admin component
     - Teacher route -> Teacher component
@@ -156,25 +156,22 @@ npm run dev
 
 ```
 Need a component?
-├─> Check Flux UI first
-│   ├─> Available in Flux Free? → Use Flux
-│   └─> Not available?
-│       ├─> Check TallStack UI
-│       │   ├─> Available? → Use TallStack
-│       │   └─> Not available? → Build custom with Tailwind
+├─> Check Custom UI components (resources/views/components/ui)
+│   └─> Use <x-ui.*> components
+└─> Need specialized functional component?
+    └─> Check Mary UI available in project (if prefix is set)
 ```
 
 ### **Quick Reference**
 
-| Need                         | Use                                                    |
-| ---------------------------- | ------------------------------------------------------ |
-| Button, Input, Select, Modal | **Flux** `<flux:*>`                                    |
-| Date Picker, Time Picker     | **TallStack** `<x-ts-date-picker>`                     |
-| Searchable Select            | **TallStack** `<x-ts-select.styled>`                   |
-| Tabs, Steps/Wizard           | **TallStack** `<x-ts-tab>`, `<x-ts-step>`              |
-| Rating, Color Picker         | **TallStack** `<x-ts-rating>`, `<x-ts-color-picker>`   |
-| Table                        | **HTML + Tailwind** (Flux Free has no table component) |
-| Toast Notifications          | **Flux** `\Flux::toast()`                              |
+| Need                         | Use                                                 |
+| ---------------------------- | --------------------------------------------------- |
+| Button, Input, Select, Modal | **Custom UI** `<x-ui.button>`, `<x-ui.input>`, etc. |
+| Header / Title               | **Custom UI** `<x-ui.header>`                       |
+| Badge                        | **Custom UI** `<x-ui.badge>`                        |
+| Card                         | **Custom UI** `<x-ui.card>`                         |
+| Table                        | **Custom UI** `<x-ui.table>`                        |
+| Icons                        | **Custom UI** `<x-ui.icon>` (uses Heroicons)        |
 
 ---
 
@@ -182,216 +179,73 @@ Need a component?
 
 ### **Pattern 1: Page with Filters and Table**
 
-Copy from: `grades.blade.php`
-
 ```blade
 <?php
-new #[Layout('components.admin.layouts.app')] class extends Component {
-    public ?int $filter_id = null;
+use Livewire\Attributes\Layout;
+use Livewire\Component;
+use Livewire\WithPagination;
 
-    public function mount(): void { }
-    public function updatedFilterId(): void { }
+new #[Layout('components.admin.layouts.app')] class extends Component {
+    use WithPagination;
+
+    public $search = '';
+
+    public function updatedSearch(): void { }
     public function save(): void { }
 
     public function with(): array {
-        return ['items' => Model::all()];
+        return ['items' => Model::paginate(10)];
     }
 }; ?>
 
 <div class="p-6">
-    <div class="flex items-center justify-between mb-6">
-        <div>
-            <flux:heading size="xl" level="1">Title</flux:heading>
-            <flux:subheading>Description</flux:subheading>
-        </div>
-    </div>
+    <x-ui.header title="Title" subtitle="Description">
+        <x-slot:actions>
+             <x-ui.button label="Action" icon="o-plus" class="btn-primary" />
+        </x-slot:actions>
+    </x-ui.header>
 
-    <div class="grid grid-cols-1 md:grid-cols-4 gap-4 mb-6">
-        {{-- Filters --}}
-    </div>
-
-    @if($condition)
-        <div class="border rounded-lg bg-white dark:bg-zinc-900 overflow-hidden">
-            <table class="w-full text-sm text-left border-collapse">
-                {{-- Table content --}}
-            </table>
-        </div>
-    @else
-        <div class="flex flex-col items-center justify-center py-12 text-zinc-500 border-2 border-dashed rounded-xl">
-            <flux:icon icon="icon-name" class="w-12 h-12 mb-2 opacity-20" />
-            <p>Please select filters.</p>
-        </div>
-    @endif
+    <x-ui.card shadow padding="false">
+        <x-ui.table :headers="$headers" :rows="$items">
+            @scope('cell_actions', $item)
+                <x-ui.button icon="o-pencil" wire:click="edit({{ $item->id }})" ghost sm />
+            @endscope
+        </x-ui.table>
+    </x-ui.card>
 </div>
 ```
-
-### **Pattern 2: CRUD with Modal**
-
-Copy from: `students/index.blade.php`
-
-### **Pattern 3: Form Page**
-
-Copy from: `report-card/create.blade.php`
 
 ---
 
 ## ⚠️ Common Mistakes to Avoid
 
-### **1. Wrong Component Location**
+### **1. Using Volt Syntax**
 
 ```blade
-{{-- ❌ WRONG - Creates component-style file --}}
-php artisan make:livewire admin/feature
+{{-- ❌ WRONG - Volt functionally is not used --}}
+<?php
+use function Livewire\Volt\{state};
+state(['name' => '']);
+?>
 
-{{-- ✅ CORRECT - Creates Volt component --}}
-php artisan make:volt admin/module/feature --class
+{{-- ✅ CORRECT - Native Livewire 4 SFC --}}
+<?php
+new class extends Component {
+    public $name = '';
+}; ?>
 ```
 
-### **2. Not Using UI Libraries**
+### **2. Wrong Component Tag**
 
 ```blade
-{{-- ❌ WRONG - Raw HTML --}}
-<input type="text" wire:model="name" class="border rounded px-3 py-2">
+{{-- ❌ WRONG - Raw HTML or outdated tag --}}
+<button class="btn btn-primary">Save</button>
 
-{{-- ✅ CORRECT - Flux component --}}
-<flux:input wire:model="name" label="Name" />
-```
-
-### **3. Forgetting to Clear Cache**
-
-```bash
-# Always run after changes
-php artisan view:clear
-```
-
-### **4. Not Following Route Naming**
-
-```php
-// ❌ WRONG
-Route::get('/competency', ...)->name('competency');
-
-// ✅ CORRECT
-Route::get('/assessments/competency', ...)->name('admin.assessments.competency');
-```
-
-### **5. Hardcoding Strings**
-
-```blade
-{{-- ❌ WRONG --}}
-<span>Student Name</span>
-
-{{-- ✅ CORRECT (for localization) --}}
-{{ __('Nama Siswa') }}
-```
-
-### **6. Database-Specific SQL**
-
-```php
-// ❌ WRONG - MySQL-only syntax
-DB::raw('JSON_EXTRACT(data, "$.field")')
-
-// ✅ CORRECT - Use Eloquent casts
-protected $casts = ['data' => 'array'];
+{{-- ✅ CORRECT - Custom UI component --}}
+<x-ui.button label="Save" class="btn-primary" type="submit" />
 ```
 
 ---
 
-## 🧪 Testing Commands
-
-### **Quick Verification**
-
-```bash
-# Check if route exists
-php artisan route:list --path=assessments
-
-# Check if view compiles
-php artisan view:cache
-
-# Check last error
-mcp_laravel-boost_last-error()
-```
-
-### **Test Data Creation (Tinker)**
-
-```php
-// Create test competency assessment
-CompetencyAssessment::create([
-    'student_id' => 2,
-    'subject_id' => 1,
-    'academic_year_id' => 1,
-    'classroom_id' => 1,
-    'semester' => '1',
-    'competency_level' => 'BSH',
-    'achievement_description' => 'Test',
-]);
-
-// Verify data
-CompetencyAssessment::with('student', 'subject')->get();
-```
-
----
-
-## 🔄 Git Workflow
-
-### **Branch Naming**
-
-```
-feature/kurikulum-merdeka  # Current branch
-feature/p5-assessment
-feature/report-generator
-fix/blank-page-issue
-```
-
-### **Commit Message Format**
-
-```
-feat: Add P5 assessment form
-fix: Resolve blank page on competency assessment
-refactor: Extract modal into partial
-docs: Update knowledge base
-```
-
----
-
-## 📞 How to Ask for Help
-
-When reporting issues, include:
-
-1. **What you expected:** "Page should show assessment form"
-2. **What happened:** "Page is blank"
-3. **Error message:** (if any from browser console)
-4. **URL:** `/admin/assessments/competency`
-5. **File:** `competency-assessment.blade.php`
-
----
-
-## 🎯 Success Criteria
-
-A feature is complete when:
-
-- [ ] Code follows existing patterns
-- [ ] Uses Flux/TallStack components appropriately
-- [ ] Route is properly named
-- [ ] Added to sidebar (if needed)
-- [ ] Works in both light and dark mode
-- [ ] Tested manually in browser
-- [ ] Toast notifications for user feedback
-- [ ] Proper validation and error messages
-- [ ] Compatible with SQLite (dev) and MySQL (prod)
-
----
-
-**Last Updated:** 2026-01-22
-**Version:** 2.0
-
----
-
-## 💻 Environment Cheat Sheet
-
-- **Local URL**: `http://simkopkbm.test`
-- **Laragon Project Name**: `simkopkbm`
-- **OS**: Windows
-- **Shell**: PowerShell
-- **Test Credentials**:
-    - **Username**: `admin@pkbm.com`
-    - **Password**: `password`
+**Last Updated:** 2026-03-01
+**Version:** 3.0 (Native SFC + Custom UI Update)

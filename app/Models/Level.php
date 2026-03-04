@@ -4,6 +4,7 @@ namespace App\Models;
 
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\Relations\HasOne;
 
 class Level extends Model
 {
@@ -16,6 +17,11 @@ class Level extends Model
         return [
             'phase_map' => 'array',
         ];
+    }
+
+    public function program(): HasOne
+    {
+        return $this->hasOne(Program::class);
     }
 
     public function classrooms()
@@ -40,7 +46,7 @@ class Level extends Model
      */
     public function getAvailablePhases(): array
     {
-        if (!$this->phase_map) {
+        if (! $this->phase_map) {
             return [];
         }
 

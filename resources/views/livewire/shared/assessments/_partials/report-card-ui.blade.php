@@ -1,178 +1,194 @@
-<div class="space-y-6">
-    <!-- Header -->
-    <div class="flex items-center justify-between">
-        <div>
-            <flux:heading size="xl" level="1">{{ __('Generator Rapor') }}</flux:heading>
-            <flux:subheading>{{ __('Buat dan kelola rapor siswa berdasarkan data penilaian.') }}</flux:subheading>
-        </div>
-    </div>
+<div class="p-6 space-y-8 text-slate-900 dark:text-white pb-24 md:pb-6">
+    <x-ui.header :title="__('Generator Rapor')" :subtitle="__('Generate dan kelola lembar rapor siswa secara otomatis berdasarkan data penilaian kompetensi.')" separator />
 
-    <div class="grid gap-6 lg:grid-cols-3">
-        <!-- Left Column: Generator Form -->
-        <div class="lg:col-span-2 space-y-6">
-            <div class="p-6 bg-white dark:bg-zinc-800 rounded-xl border border-zinc-200 dark:border-zinc-700 shadow-sm">
-                <form wire:submit="generateReportCards" class="space-y-6">
-                    <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-                        <flux:select wire:model.live="academicYearId" label="Tahun Ajaran" required>
-                            <option value="">Pilih Tahun Ajaran</option>
-                            @foreach ($academicYears as $year)
-                                <option value="{{ $year->id }}">{{ $year->name }}</option>
-                            @endforeach
-                        </flux:select>
+    <div class="grid gap-8 lg:grid-cols-3">
+        {{-- Left Column: Generator Form --}}
+        <div class="lg:col-span-2 space-y-8">
+            <x-ui.card shadow>
+                <form wire:submit="generateReportCards" class="space-y-8 p-2">
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                        <x-ui.select 
+                            wire:model.live="academicYearId" 
+                            :label="__('Tahun Ajaran')" 
+                            :options="$academicYears" 
+                            :placeholder="__('Pilih Tahun Ajaran')"
+                            required 
+                        />
 
-                        <flux:select wire:model.live="classroomId" label="Kelas" required>
-                            <option value="">Pilih Kelas</option>
-                            @foreach ($classrooms as $classroom)
-                                <option value="{{ $classroom->id }}">{{ $classroom->name }}</option>
-                            @endforeach
-                        </flux:select>
+                        <x-ui.select 
+                            wire:model.live="classroomId" 
+                            :label="__('Kelas / Rombel')" 
+                            :options="$classrooms" 
+                            :placeholder="__('Pilih Kelas')"
+                            required 
+                        />
 
-                        <flux:select wire:model.live="semester" label="Semester" required>
-                            <option value="1">Semester 1 (Ganjil)</option>
-                            <option value="2">Semester 2 (Genap)</option>
-                        </flux:select>
+                        <x-ui.select 
+                            wire:model.live="semester" 
+                            :label="__('Semester')" 
+                            :options="[
+                                ['id' => '1', 'name' => __('Semester 1 (Ganjil)')],
+                                ['id' => '2', 'name' => __('Semester 2 (Genap)')],
+                            ]"
+                            required 
+                        />
 
-                        <flux:input label="Jenis Kurikulum" value="Kurikulum Merdeka" readonly disabled />
+                        <x-ui.input :label="__('Jenis Kurikulum')" value="Kurikulum Merdeka" readonly disabled class="bg-slate-50 border-none italic font-bold text-slate-400" />
                     </div>
 
                     @if (count($students) > 0)
-                        <div class="space-y-2">
+                        <div class="space-y-3">
                             <div class="flex items-center justify-between">
-                                <label class="block text-sm font-medium">{{ __('Pilih Siswa') }}</label>
-                                <div class="flex gap-2 text-xs">
-                                    <button type="button" wire:click="$set('selectedStudents', {{ $students->pluck('id') }})" class="text-blue-600 hover:underline">Pilih Semua</button>
-                                    <span class="text-zinc-300">|</span>
-                                    <button type="button" wire:click="$set('selectedStudents', [])" class="text-zinc-500 hover:underline">Batal</button>
+                                <label class="text-xs font-black uppercase tracking-widest text-slate-500">{{ __('Pilih Siswa Target') }}</label>
+                                <div class="flex gap-2">
+                                    <x-ui.button :label="__('Pilih Semua')" wire:click="$set('selectedStudents', {{ $students->pluck('id') }})" class="btn-ghost btn-xs text-primary font-bold" />
+                                    <x-ui.button :label="__('Batal')" wire:click="$set('selectedStudents', [])" class="btn-ghost btn-xs font-bold" />
                                 </div>
                             </div>
-                            <div class="grid grid-cols-1 md:grid-cols-2 gap-2 max-h-48 overflow-y-auto border border-zinc-200 dark:border-zinc-700 rounded-lg p-3 bg-zinc-50 dark:bg-zinc-900/50">
+                            <div class="grid grid-cols-1 md:grid-cols-2 gap-3 max-h-64 overflow-y-auto p-4 bg-slate-50 dark:bg-slate-900/50 rounded-2xl border border-slate-100 dark:border-slate-800 shadow-inner">
                                 @foreach ($students as $student)
-                                    <label class="flex items-center gap-3 cursor-pointer hover:bg-white dark:hover:bg-zinc-800 p-2 rounded transition-colors border border-transparent hover:border-zinc-200 dark:hover:border-zinc-700">
-                                        <input type="checkbox" wire:model="selectedStudents" value="{{ $student->id }}" class="rounded text-blue-600">
-                                        <span class="text-sm">{{ $student->profile->user->name ?? 'N/A' }}</span>
-                                    </label>
+                                    <div class="flex items-center gap-3 p-2 bg-white dark:bg-slate-800 rounded-xl shadow-sm ring-1 ring-slate-100 dark:ring-slate-700">
+                                        <x-ui.checkbox 
+                                            wire:model="selectedStudents" 
+                                            value="{{ $student->id }}" 
+                                            :label="$student->profile->user->name ?? 'N/A'" 
+                                        />
+                                    </div>
                                 @endforeach
                             </div>
-                            @error('selectedStudents') <p class="text-xs text-red-500">{{ $message }}</p> @enderror
+                            @error('selectedStudents') <p class="text-[10px] font-bold text-rose-500 italic">{{ $message }}</p> @enderror
                         </div>
                     @endif
 
-                    <div class="grid grid-cols-1 gap-4">
-                        <flux:textarea wire:model="characterNotes" label="Catatan Karakter" rows="2" />
-                        <flux:textarea wire:model="teacherNotes" label="Catatan Guru" rows="2" />
+                    <div class="grid grid-cols-1 gap-6">
+                        <x-ui.textarea wire:model="characterNotes" :label="__('Catatan Pertumbuhan Karakter')" rows="2" :placeholder="__('Contoh: Menunjukkan kemandirian yang sangat baik dalam kegiatan sekolah...')" />
+                        <x-ui.textarea wire:model="teacherNotes" :label="__('Catatan Wali Kelas / Guru')" rows="2" :placeholder="__('Contoh: Tingkatkan fokus saat pembelajaran di kelas...')" />
                         @if(auth()->user()->isAdmin())
-                             <flux:textarea wire:model="principalNotes" label="Catatan Kepala Sekolah" rows="2" />
+                             <x-ui.textarea wire:model="principalNotes" :label="__('Catatan / Pesan Kepala Sekolah')" rows="2" />
                         @endif
                     </div>
 
-                    <div class="flex items-center gap-3 pt-2">
-                        <flux:button type="submit" variant="primary" icon="sparkles" wire:loading.attr="disabled">
-                            <span wire:loading.remove>{{ __('Proses & Buat Rapor') }}</span>
-                            <span wire:loading>{{ __('Memproses...') }}</span>
-                        </flux:button>
-                        <flux:button type="button" variant="ghost" wire:click="$refresh" icon="arrow-path">Reset</flux:button>
+                    <div class="flex items-center gap-4 pt-4">
+                        <x-ui.button type="submit" :label="__('Proses & Generate Rapor')" icon="o-sparkles" class="btn-primary shadow-xl shadow-primary/20" spinner="generateReportCards" />
+                        <x-ui.button type="button" :label="__('Reset Form')" icon="o-arrow-path" class="btn-ghost" wire:click="$refresh" />
                     </div>
                 </form>
-            </div>
+            </x-ui.card>
 
-            <!-- List of Generated Reports -->
-            <div class="p-6 bg-white dark:bg-zinc-800 rounded-xl border border-zinc-200 dark:border-zinc-700 shadow-sm">
-                <div class="flex items-center justify-between mb-4">
-                    <flux:heading level="2" size="lg">{{ __('Daftar Rapor Siswa') }}</flux:heading>
-                    <flux:badge color="zinc">{{ $existingReports->count() }} Terdata</flux:badge>
+            {{-- List of Generated Reports --}}
+            <x-ui.card shadow padding="false">
+                <div class="p-6 border-b border-slate-100 dark:border-slate-800 flex items-center justify-between">
+                    <h3 class="font-black text-slate-800 dark:text-white flex items-center gap-2 italic uppercase tracking-tight text-sm">
+                        <x-ui.icon name="o-document-check" class="size-5 text-emerald-500" />
+                        {{ __('Arsip Rapor Terbit') }}
+                    </h3>
+                    <x-ui.badge :label="$existingReports->count() . ' File'" class="bg-indigo-50 text-indigo-700 border-none font-black italic px-3 py-1 text-[10px]" />
                 </div>
 
-                @if($existingReports->isNotEmpty())
-                    <div class="overflow-x-auto">
-                        <table class="w-full text-sm text-left border-collapse">
-                            <thead>
-                                <tr class="text-zinc-500 border-b border-zinc-100 dark:border-zinc-700">
-                                    <th class="py-3 px-2 font-medium">Siswa</th>
-                                    <th class="py-3 px-2 font-medium">Status</th>
-                                    <th class="py-3 px-2 font-medium text-right">Aksi</th>
-                                </tr>
-                            </thead>
-                            <tbody class="divide-y divide-zinc-100 dark:divide-zinc-700">
-                                @foreach($existingReports as $report)
-                                    <tr class="hover:bg-zinc-50 dark:hover:bg-zinc-900/50 transition-colors">
-                                        <td class="py-3 px-2 font-medium">{{ $report->student->name }}</td>
-                                        <td class="py-3 px-2">
-                                            <flux:badge size="sm" :color="$report->status === 'final' ? 'green' : 'zinc'">
-                                                {{ strtoupper($report->status) }}
-                                            </flux:badge>
-                                        </td>
-                                        <td class="py-3 px-2 text-right space-x-1">
-                                            <flux:button variant="ghost" size="sm" icon="eye" wire:click="previewReportCard({{ $report->id }})" />
-                                            <flux:button variant="ghost" size="sm" icon="arrow-down-tray" wire:click="exportPdf({{ $report->id }})" />
-                                            <button type="button" wire:confirm="Hapus rapor ini?" wire:click="deleteReportCard({{ $report->id }})" class="p-1 text-zinc-400 hover:text-red-500">
-                                                <flux:icon icon="trash" class="w-4 h-4" />
-                                            </button>
-                                        </td>
-                                    </tr>
-                                @endforeach
-                            </tbody>
-                        </table>
-                    </div>
-                @else
-                    <div class="py-12 flex flex-col items-center justify-center text-zinc-400 border-2 border-dashed border-zinc-100 dark:border-zinc-800 rounded-xl">
-                        <flux:icon icon="document-text" class="w-12 h-12 mb-2 opacity-20" />
-                        <p>Belum ada rapor yang dibuat untuk kriteria ini.</p>
+                <x-ui.table :headers="[
+                    ['key' => 'student_name', 'label' => __('Nama Siswa')],
+                    ['key' => 'report_status', 'label' => __('Status'), 'class' => 'text-center'],
+                    ['key' => 'actions', 'label' => '', 'class' => 'text-right']
+                ]" :rows="$existingReports">
+                    @scope('cell_student_name', $report)
+                        <div class="flex flex-col">
+                            <span class="font-bold text-slate-900 dark:text-white">{{ $report->student->name }}</span>
+                            <span class="text-[10px] text-slate-400 font-mono tracking-tighter">{{ $report->student->nis ?? $report->student->username }}</span>
+                        </div>
+                    @endscope
+
+                    @scope('cell_report_status', $report)
+                        <x-ui.badge 
+                            :label="strtoupper($report->status)" 
+                            class="{{ $report->status === 'final' ? 'bg-emerald-50 text-emerald-700' : 'bg-slate-100 text-slate-500' }} border-none text-[8px] font-black italic tracking-widest px-2 py-0.5" 
+                        />
+                    @endscope
+
+                    @scope('cell_actions', $report)
+                        <div class="flex justify-end gap-2">
+                            <x-ui.button icon="o-eye" wire:click="previewReportCard({{ $report->id }})" class="btn-ghost btn-sm text-sky-500 hover:bg-sky-50 transition-colors" spinner />
+                            <x-ui.button icon="o-arrow-down-tray" wire:click="exportPdf({{ $report->id }})" class="btn-ghost btn-sm text-indigo-600 hover:bg-indigo-50 transition-colors" spinner />
+                            <x-ui.button icon="o-trash" wire:click="deleteReportCard({{ $report->id }})" wire:confirm="{{ __('Hapus berkas rapor ini secara permanen?') }}" class="btn-ghost btn-sm text-slate-400 hover:text-rose-600 transition-colors" spinner />
+                        </div>
+                    @endscope
+                </x-ui.table>
+
+                @if($existingReports->isEmpty())
+                    <div class="py-24 flex flex-col items-center justify-center opacity-40">
+                        <x-ui.icon name="o-document-text" class="size-16 mb-4 text-slate-400" />
+                        <p class="text-sm italic font-medium uppercase tracking-widest text-slate-500">{{ __('Belum ada arsip rapor') }}</p>
                     </div>
                 @endif
-            </div>
+            </x-ui.card>
         </div>
 
-        <!-- Right Column: Info & Legend -->
-        <div class="space-y-6">
-            <div class="p-6 bg-blue-50 dark:bg-blue-900/20 border border-blue-100 dark:border-blue-900 rounded-xl">
-                <flux:heading size="lg" class="text-blue-900 dark:text-blue-200 mb-2">Panduan Penggunaan</flux:heading>
-                <ul class="text-sm text-blue-800 dark:text-blue-300 space-y-2 list-disc pl-4">
-                    <li>Pilih parameter akademik (Tahun, Kelas, Semester).</li>
-                    <li>Sistem akan menyaring siswa di kelas yang dipilih.</li>
-                    <li>Centang siswa yang ingin dibuatkan rapornya.</li>
-                    <li>Klik <strong>Proses & Buat Rapor</strong> untuk menghitung nilai otomatis.</li>
-                    <li>Data diambil dari Penilaian (Nilai), Kompetensi, P5, Ekskul, dan Presensi.</li>
-                </ul>
-            </div>
-
-            <div class="p-6 bg-white dark:bg-zinc-800 rounded-xl border border-zinc-200 dark:border-zinc-700 shadow-sm">
-                <flux:heading size="md" class="mb-4">Informasi Kurikulum</flux:heading>
-                <div class="space-y-4">
-                    <div>
-                        <p class="text-xs font-bold text-zinc-500 uppercase tracking-wider mb-1">Kurikulum Merdeka</p>
-                        <p class="text-xs text-zinc-600 dark:text-zinc-400">Satu-satunya kurikulum yang aktif. Menggunakan Deskripsi Capaian Kompetensi (BB, MB, BSH, SB) dan Projek P5.</p>
-                    </div>
+        {{-- Right Column: Info & Legend --}}
+        <div class="space-y-8">
+            <div class="p-8 bg-indigo-600 text-white rounded-[2.5rem] shadow-xl shadow-indigo-200 dark:shadow-none relative overflow-hidden group">
+                <div class="absolute -right-12 -top-12 size-48 bg-white/10 rounded-full blur-3xl group-hover:scale-110 transition-transform duration-700"></div>
+                <h3 class="font-black text-xl mb-6 flex items-center gap-3 italic">
+                    <x-ui.icon name="o-information-circle" class="size-6 text-indigo-200" />
+                    {{ __('Panduan') }}
+                </h3>
+                <ol class="space-y-4 text-sm font-medium text-indigo-50">
+                    <li class="flex gap-3">
+                        <span class="flex-none size-5 rounded-full bg-white/20 flex items-center justify-center text-[10px] font-black italic">1</span>
+                        <span>{{ __('Pilih parameter akademik (Tahun, Kelas, Semester).') }}</span>
+                    </li>
+                    <li class="flex gap-3">
+                        <span class="flex-none size-5 rounded-full bg-white/20 flex items-center justify-center text-[10px] font-black italic">2</span>
+                        <span>{{ __('Sistem akan memvalidasi kelengkapan data siswa.') }}</span>
+                    </li>
+                    <li class="flex gap-3">
+                        <span class="flex-none size-5 rounded-full bg-white/20 flex items-center justify-center text-[10px] font-black italic">3</span>
+                        <span>{{ __('Pilih siswa yang ingin dicetak laporannya.') }}</span>
+                    </li>
+                    <li class="flex gap-3">
+                        <span class="flex-none size-5 rounded-full bg-white/20 flex items-center justify-center text-[10px] font-black italic">4</span>
+                        <span>{{ __('Klik Generate untuk sinkronisasi nilai otomatis.') }}</span>
+                    </li>
+                </ol>
+                <div class="mt-8 pt-6 border-t border-white/10">
+                    <p class="text-[10px] font-black uppercase tracking-tighter text-indigo-200 leading-tight italic">
+                        {{ __('Data diambil dari: Penilaian, Capaian Kompetensi, Projek P5, Ekstrakurikuler, & Presensi.') }}
+                    </p>
                 </div>
             </div>
+
+            <x-ui.card shadow padding="false">
+                <div class="p-6 space-y-4">
+                    <h4 class="text-xs font-black uppercase tracking-widest text-slate-500 italic">{{ __('Info Kurikulum') }}</h4>
+                    <div class="p-4 bg-slate-50 dark:bg-slate-900 rounded-2xl border border-slate-100 dark:border-slate-800">
+                        <p class="text-[10px] font-black text-indigo-600 uppercase mb-2 tracking-tight">{{ __('Kurikulum Merdeka') }}</p>
+                        <p class="text-xs text-slate-600 dark:text-slate-400 italic leading-relaxed">
+                            {{ __('Menggunakan Deskripsi Capaian Kompetensi (BB, MB, BSH, SB) dan Penilaian Projek Penguatan Profil Pelajar Pancasila (P5).') }}
+                        </p>
+                    </div>
+                </div>
+            </x-ui.card>
         </div>
     </div>
 
-    <!-- Preview Modal -->
-    @if ($showPreview && $previewData)
-        <flux:modal wire:model="showPreview" class="max-w-4xl">
-            <div class="space-y-6">
-                <div class="flex items-center justify-between">
-                    <flux:heading size="xl">Pratinjau Rapor</flux:heading>
-                </div>
-                
-                <div class="p-8 bg-zinc-50 dark:bg-zinc-900 text-black rounded-lg shadow-inner overflow-y-auto max-h-[70vh]">
-                    <div class="max-w-3xl mx-auto bg-white p-12 shadow-sm min-h-screen">
-                        @include('pdf._rapor_content', [
-                            'reportCard' => $previewData['reportCard'],
-                            'student' => $previewData['student'],
-                            'studentProfile' => $previewData['studentProfile'],
-                            'classroom' => $previewData['classroom'],
-                            'academicYear' => $previewData['academicYear'],
-                            'teacher' => $previewData['teacher']
-                        ])
-                    </div>
-                </div>
-                
-                <div class="flex justify-end gap-3">
-                    <flux:button variant="ghost" wire:click="closePreview">Tutup</flux:button>
-                    <flux:button variant="primary" icon="arrow-down-tray" wire:click="exportPdf({{ $previewData['reportCard']->id }})">Download PDF</flux:button>
+    {{-- Preview Modal --}}
+    <x-ui.modal wire:model="showPreview" :title="__('Pratinjau Lembar Rapor')" persistent>
+        @if ($previewData)
+            <div class="p-4 md:p-8 bg-slate-100 dark:bg-slate-900 rounded-3xl shadow-inner overflow-y-auto max-h-[70vh]">
+                <div class="max-w-3xl mx-auto bg-white p-8 md:p-12 shadow-2xl min-h-screen text-slate-900 rounded-lg">
+                    @include('pdf._rapor_content', [
+                        'reportCard' => $previewData['reportCard'],
+                        'student' => $previewData['student'],
+                        'studentProfile' => $previewData['studentProfile'],
+                        'classroom' => $previewData['classroom'],
+                        'academicYear' => $previewData['academicYear'],
+                        'teacher' => $previewData['teacher']
+                    ])
                 </div>
             </div>
-        </flux:modal>
-    @endif
+            
+            <div class="flex justify-end gap-3 pt-6">
+                <x-ui.button :label="__('Tutup')" wire:click="closePreview" />
+                <x-ui.button :label="__('Download PDF')" icon="o-arrow-down-tray" class="btn-primary shadow-lg shadow-primary/20" wire:click="exportPdf({{ $previewData['reportCard']->id }})" spinner />
+            </div>
+        @endif
+    </x-ui.modal>
 </div>

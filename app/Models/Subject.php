@@ -37,7 +37,7 @@ class Subject extends Model
     /**
      * Get TPs for a specific phase.
      *
-     * @param string $phase The phase letter (A-F)
+     * @param  string  $phase  The phase letter (A-F)
      * @return \Illuminate\Database\Eloquent\Collection
      */
     public function tpsForPhase(string $phase)

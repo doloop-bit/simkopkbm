@@ -1,6 +1,6 @@
 <?php
 
-use Livewire\Volt\Component;
+use Livewire\Component;
 use App\Models\BudgetCategory;
 use Livewire\WithPagination;
 
@@ -13,6 +13,7 @@ new class extends Component {
     public $description = '';
     public $is_active = true;
     public ?BudgetCategory $editing = null;
+    public bool $categoryModal = false;
 
     public function with(): array
     {
@@ -26,8 +27,9 @@ new class extends Component {
     public function createNew(): void
     {
         $this->reset(['name', 'code', 'description', 'is_active', 'editing']);
+        $this->is_active = true;
         $this->resetValidation();
-        $this->dispatch('open-category-modal');
+        $this->categoryModal = true;
     }
 
     public function edit(BudgetCategory $category): void
@@ -37,7 +39,7 @@ new class extends Component {
         $this->code = $category->code;
         $this->description = $category->description;
         $this->is_active = $category->is_active;
-        $this->dispatch('open-category-modal');
+        $this->categoryModal = true;
     }
 
     public function save(): void
@@ -56,6 +58,7 @@ new class extends Component {
                 'description' => $this->description,
                 'is_active' => $this->is_active,
             ]);
+            session()->flash('success', 'Kategori anggaran berhasil diperbarui.');
         } else {
             BudgetCategory::create([
                 'name' => $this->name,
@@ -63,83 +66,116 @@ new class extends Component {
                 'description' => $this->description,
                 'is_active' => $this->is_active,
             ]);
+            session()->flash('success', 'Kategori anggaran berhasil ditambahkan.');
         }
 
-        $this->dispatch('category-saved');
+        $this->categoryModal = false;
         $this->reset(['name', 'code', 'description', 'is_active', 'editing']);
     }
 
     public function delete(BudgetCategory $category): void
     {
         $category->delete();
+        session()->flash('success', 'Kategori anggaran berhasil dihapus.');
     }
 }; ?>
 
-<div class="flex flex-col gap-6">
-    <div class="flex flex-col md:flex-row gap-4 items-center justify-between">
-        <div>
-            <flux:heading size="xl">Kategori Anggaran</flux:heading>
-            <flux:subheading>Kelola master kategori anggaran (POS) untuk RAB.</flux:subheading>
+<div class="p-6 space-y-6 text-slate-900 dark:text-white pb-24 md:pb-6">
+    @if (session('success'))
+        <x-ui.alert :title="__('Sukses')" icon="o-check-circle" class="bg-emerald-50 text-emerald-800 border-emerald-100" dismissible>
+            {{ session('success') }}
+        </x-ui.alert>
+    @endif
+
+    <x-ui.header :title="__('Kategori Anggaran')" :subtitle="__('Kelola master kategori anggaran (POS) untuk perencanaan RAB.')" separator>
+        <x-slot:actions>
+            <x-ui.button :label="__('Tambah Kategori Baru')" icon="o-plus" class="btn-primary" wire:click="createNew" />
+        </x-slot:actions>
+    </x-ui.header>
+
+    <div class="max-w-md">
+        <x-ui.input 
+            wire:model.live.debounce.300ms="search" 
+            :placeholder="__('Cari kode atau nama kategori...')" 
+            icon="o-magnifying-glass" 
+        />
+    </div>
+
+    <x-ui.card shadow padding="false">
+        <x-ui.table 
+            :headers="[
+                ['key' => 'code_label', 'label' => __('Kode POS')],
+                ['key' => 'name', 'label' => __('Nama Kategori')],
+                ['key' => 'description', 'label' => __('Keterangan')],
+                ['key' => 'status_label', 'label' => __('Status'), 'class' => 'text-center'],
+                ['key' => 'actions', 'label' => __('Aksi'), 'class' => 'text-right']
+            ]" 
+            :rows="$categories"
+        >
+            @scope('cell_code_label', $category)
+                <span class="font-mono text-xs font-black text-indigo-600 italic bg-indigo-50 px-2 py-0.5 rounded shadow-sm ring-1 ring-indigo-100">
+                    {{ $category->code }}
+                </span>
+            @endscope
+
+            @scope('cell_name', $category)
+                <span class="font-bold text-slate-900 dark:text-white">{{ $category->name }}</span>
+            @endscope
+
+            @scope('cell_description', $category)
+                <span class="text-xs text-slate-500 italic">{{ $category->description ?? '-' }}</span>
+            @endscope
+
+            @scope('cell_status_label', $category)
+                <x-ui.badge 
+                    :label="$category->is_active ? __('Aktif') : __('Non-Aktif')" 
+                    class="{{ $category->is_active ? 'bg-emerald-50 text-emerald-700' : 'bg-rose-50 text-rose-700' }} border-none text-[8px] font-black italic tracking-widest px-2 py-0.5" 
+                />
+            @endscope
+
+            @scope('cell_actions', $category)
+                <div class="flex justify-end gap-2">
+                    <x-ui.button icon="o-pencil-square" wire:click="edit({{ $category->id }})" class="btn-ghost btn-sm text-slate-400 hover:text-primary transition-colors" />
+                    <x-ui.button icon="o-trash" wire:click="delete({{ $category->id }})" wire:confirm="{{ __('Hapus kategori anggaran ini?') }}" class="btn-ghost btn-sm text-slate-400 hover:text-rose-600 transition-colors" />
+                </div>
+            @endscope
+        </x-ui.table>
+
+        @if($categories->isEmpty())
+            <div class="py-12 text-center text-slate-400 italic text-sm">
+                {{ __('Tidak ada data kategori anggaran yang ditemukan.') }}
+            </div>
+        @endif
+
+        <div class="p-4 border-t border-slate-100 dark:border-slate-800">
+            {{ $categories->links() }}
         </div>
-        <flux:button variant="primary" icon="plus" wire:click="createNew">Tambah Kategori</flux:button>
-    </div>
+    </x-ui.card>
 
-    <div class="flex flex-col md:flex-row gap-4 mb-6 items-center justify-between">
-        <flux:input wire:model.live="search" icon="magnifying-glass" placeholder="Cari kategori..." class="w-full md:w-64" />
-    </div>
+    {{-- Add/Edit Modal --}}
+    <x-ui.modal wire:model="categoryModal">
+        <x-ui.header :title="$editing ? __('Edit Kategori') : __('Tambah Kategori')" :subtitle="__('Kelola rincian POS anggaran untuk pelaporan keuangan.')" separator />
 
-    <div class="overflow-x-auto">
-        <table class="min-w-full divide-y divide-zinc-200 dark:divide-zinc-700">
-            <thead>
-                <tr>
-                    <th class="px-4 py-3 text-left text-xs font-medium text-zinc-500 uppercase tracking-wider">Kode</th>
-                    <th class="px-4 py-3 text-left text-xs font-medium text-zinc-500 uppercase tracking-wider">Nama Kategori</th>
-                    <th class="px-4 py-3 text-left text-xs font-medium text-zinc-500 uppercase tracking-wider">Keterangan</th>
-                    <th class="px-4 py-3 text-left text-xs font-medium text-zinc-500 uppercase tracking-wider">Status</th>
-                    <th class="px-4 py-3 text-right text-xs font-medium text-zinc-500 uppercase tracking-wider">Aksi</th>
-                </tr>
-            </thead>
-            <tbody class="divide-y divide-zinc-200 dark:divide-zinc-700">
-                @foreach($categories as $category)
-                    <tr class="hover:bg-zinc-50 dark:hover:bg-zinc-800">
-                        <td class="px-4 py-3 whitespace-nowrap text-sm font-medium text-zinc-900 dark:text-zinc-100">{{ $category->code }}</td>
-                        <td class="px-4 py-3 whitespace-nowrap text-sm text-zinc-900 dark:text-zinc-100">{{ $category->name }}</td>
-                        <td class="px-4 py-3 text-sm text-zinc-500 dark:text-zinc-400">{{ $category->description ?? '-' }}</td>
-                        <td class="px-4 py-3 whitespace-nowrap">
-                            <flux:badge variant="{{ $category->is_active ? 'success' : 'danger' }}" size="sm">
-                                {{ $category->is_active ? 'Aktif' : 'Non-Aktif' }}
-                            </flux:badge>
-                        </td>
-                        <td class="px-4 py-3 text-right space-x-2">
-                            <flux:button size="sm" variant="ghost" icon="pencil-square" wire:click="edit({{ $category->id }})" />
-                            <flux:button size="sm" variant="ghost" icon="trash" class="text-red-500" wire:confirm="Hapus kategori ini?" wire:click="delete({{ $category->id }})" />
-                        </td>
-                    </tr>
-                @endforeach
-            </tbody>
-        </table>
-    </div>
-    
-    <div class="mt-4">
-        {{ $categories->links() }}
-    </div>
-
-    <flux:modal name="category-modal" class="max-w-md" @open-category-modal.window="$flux.modal('category-modal').show()" x-on:category-saved.window="$flux.modal('category-modal').close()">
         <form wire:submit="save" class="space-y-6">
-            <div>
-                <flux:heading size="lg">{{ $editing ? 'Edit Kategori' : 'Tambah Kategori' }}</flux:heading>
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+                <div class="md:col-span-1">
+                    <x-ui.input wire:model="code" :label="__('Kode Kategori')" :placeholder="__('Contoh: ADM')" required />
+                </div>
+                <div class="md:col-span-2">
+                    <x-ui.input wire:model="name" :label="__('Nama Lengkap Kategori')" :placeholder="__('Contoh: Belanja Administrasi Umum')" required />
+                </div>
             </div>
 
-            <flux:input wire:model="code" label="Kode Kategori" placeholder="Contoh: ADM" required />
-            <flux:input wire:model="name" label="Nama Kategori" placeholder="Contoh: Belanja Administrasi" required />
-            <flux:textarea wire:model="description" label="Keterangan" />
+            <x-ui.textarea wire:model="description" :label="__('Keterangan Tambahan')" :placeholder="__('Opsional: Penjelasan rincian POS ini...')" rows="3" />
             
-            <flux:switch wire:model="is_active" label="Aktif" />
+            <div class="p-4 bg-slate-50 dark:bg-slate-900/50 rounded-2xl border border-slate-100 dark:border-slate-800">
+                <x-ui.checkbox wire:model="is_active" :label="__('Kategori ini aktif & bisa digunakan dalam RAB')" />
+            </div>
 
-            <div class="flex justify-end gap-2">
-                <flux:button variant="ghost" x-on:click="$flux.modal('category-modal').close()">Batal</flux:button>
-                <flux:button type="submit" variant="primary">Simpan</flux:button>
+            <div class="flex justify-end gap-3 pt-6 border-t border-slate-100 dark:border-slate-800">
+                <x-ui.button :label="__('Batal')" wire:click="$set('categoryModal', false)" />
+                <x-ui.button :label="__('Simpan Perubahan')" type="submit" class="btn-primary" spinner="save" />
             </div>
         </form>
-    </flux:modal>
+    </x-ui.modal>
 </div>

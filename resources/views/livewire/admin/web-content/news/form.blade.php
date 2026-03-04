@@ -4,7 +4,7 @@ use App\Models\NewsArticle;
 use App\Services\CacheService;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Str;
-use Livewire\Volt\Component;
+use Livewire\Component;
 use Livewire\WithFileUploads;
 
 new class extends Component
@@ -151,167 +151,180 @@ new class extends Component
     }
 }; ?>
 
-<div>
-    <div class="mb-6">
-        <flux:heading size="xl">{{ $article ? 'Edit Berita' : 'Tambah Berita' }}</flux:heading>
-        <flux:subheading>{{ $article ? 'Perbarui artikel berita' : 'Buat artikel berita baru' }}</flux:subheading>
-    </div>
-
+<div class="p-6 space-y-8 text-slate-900 dark:text-white pb-24 md:pb-6">
     @if (session()->has('message'))
-        <flux:callout color="green" icon="check-circle" class="mb-6">
+        <x-ui.alert :title="__('Sukses')" icon="o-check-circle" class="bg-emerald-50 text-emerald-800 border-emerald-100" dismissible>
             {{ session('message') }}
-        </flux:callout>
+        </x-ui.alert>
     @endif
+
+    <x-ui.header :title="$article ? __('Edit Artikel Berita') : __('Tulis Berita Baru')" :subtitle="$article ? __('Perbarui konten, status, atau metadata artikel.') : __('Siapkan publikasi artikel informasi atau pengumuman sekolah.')" separator />
 
     <form wire:submit="save" class="space-y-8">
         {{-- Basic Information --}}
-        <div class="space-y-4">
-            <flux:heading size="lg">Informasi Dasar</flux:heading>
-            <flux:subheading class="mb-4">Informasi utama artikel</flux:subheading>
-
-            <flux:input 
-                wire:model="title" 
-                label="Judul Artikel" 
-                type="text" 
-                required 
-                placeholder="Masukkan judul artikel"
-            />
-
-            <div class="grid grid-cols-1 gap-4 md:grid-cols-2">
-                <flux:input 
-                    wire:model="publishedAt" 
-                    label="Tanggal Publikasi" 
-                    type="date" 
+        <x-ui.card shadow padding="false" class="border-none ring-1 ring-slate-100 dark:ring-slate-800">
+            <div class="p-6 border-b border-slate-50 dark:border-slate-800/50 bg-slate-50/50 dark:bg-slate-900/50">
+                <h3 class="font-black text-slate-800 dark:text-white uppercase tracking-tight text-sm italic">{{ __('Informasi & Konfigurasi Dasar') }}</h3>
+            </div>
+            <div class="p-8 space-y-8">
+                <x-ui.input 
+                    wire:model="title" 
+                    :label="__('Judul Utama Berita')" 
+                    type="text" 
                     required 
+                    :placeholder="__('Tulis judul yang menarik dan informatif...')"
+                    class="font-black text-xl italic uppercase tracking-tighter"
                 />
 
-                <flux:select wire:model="status" label="Status" required>
-                    <option value="draft">Draft</option>
-                    <option value="published">Dipublikasikan</option>
-                </flux:select>
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-8">
+                    <x-ui.input 
+                        wire:model="publishedAt" 
+                        :label="__('Tanggal Penayangan')" 
+                        type="date" 
+                        required 
+                        class="font-bold text-slate-600"
+                    />
+
+                    <x-ui.select 
+                        wire:model="status" 
+                        :label="__('Status Publikasi')" 
+                        :options="[['id' => 'draft', 'name' => __('Draft (Arsip Lokal)')], ['id' => 'published', 'name' => __('Published (Tampil Live)')]]"
+                        required 
+                        class="font-bold"
+                    />
+                </div>
+
+                <x-ui.textarea 
+                    wire:model="excerpt" 
+                    :label="__('Cuplikan (Snippet)')" 
+                    rows="3" 
+                    :placeholder="__('Tulis ringkasan singkat untuk menarik pembaca di halaman daftar berita...')"
+                    class="italic text-sm leading-relaxed"
+                />
+                <p class="text-[10px] text-slate-400 italic px-1">
+                    * {{ __('Jika dikosongkan, sistem akan mengambil secara otomatis dari 200 karakter pertama isi artikel.') }}
+                </p>
             </div>
-
-            <flux:textarea 
-                wire:model="excerpt" 
-                label="Ringkasan (Opsional)" 
-                rows="3" 
-                placeholder="Ringkasan singkat artikel. Jika kosong, akan dibuat otomatis dari konten."
-            />
-        </div>
-
-        <flux:separator />
+        </x-ui.card>
 
         {{-- Featured Image --}}
-        <div class="space-y-4">
-            <flux:heading size="lg">Gambar Unggulan</flux:heading>
-            <flux:subheading class="mb-4">Upload gambar utama artikel (maksimal 5MB, format: JPEG, PNG, WebP)</flux:subheading>
-
-            @if ($currentFeaturedImagePath)
-                <div class="flex items-start gap-4">
-                    <img 
-                        src="{{ Storage::url($currentFeaturedImagePath) }}" 
-                        alt="Gambar Unggulan" 
-                        class="h-48 w-auto rounded-lg border object-cover"
-                    >
-                    <div class="flex flex-col gap-2">
-                        <flux:text>Gambar saat ini</flux:text>
-                        <flux:button 
-                            wire:click="removeFeaturedImage" 
-                            variant="danger" 
-                            size="sm"
-                            type="button"
-                            wire:confirm="Apakah Anda yakin ingin menghapus gambar unggulan?"
-                        >
-                            Hapus Gambar
-                        </flux:button>
+        <x-ui.card shadow padding="false" class="border-none ring-1 ring-slate-100 dark:ring-slate-800">
+            <div class="p-6 border-b border-slate-50 dark:border-slate-800/50 bg-slate-50/50 dark:bg-slate-900/50">
+                <h3 class="font-black text-slate-800 dark:text-white uppercase tracking-tight text-sm italic">{{ __('Visual & Poster Berita') }}</h3>
+            </div>
+            <div class="p-8 space-y-6">
+                @if ($currentFeaturedImagePath)
+                    <div class="flex items-center gap-6 p-6 bg-slate-50 dark:bg-slate-900/50 rounded-3xl border border-slate-100 dark:border-slate-800 group">
+                        <div class="relative overflow-hidden rounded-2xl shadow-xl ring-4 ring-white dark:ring-slate-800">
+                            <img 
+                                src="{{ Storage::url($currentFeaturedImagePath) }}" 
+                                alt="Gambar Unggulan" 
+                                class="h-48 w-80 object-cover group-hover:scale-105 transition-transform duration-700"
+                            >
+                        </div>
+                        <div class="flex-1">
+                            <span class="text-[10px] font-black text-slate-400 uppercase tracking-widest italic mb-2 block">{{ __('Gambar Utama Saat Ini') }}</span>
+                            <x-ui.button 
+                                wire:click="removeFeaturedImage" 
+                                :label="__('Hapus Gambar')"
+                                icon="o-trash"
+                                class="btn-ghost btn-xs text-rose-500 hover:bg-rose-50 font-bold"
+                                wire:confirm="__('Apakah Anda yakin ingin menghapus gambar unggulan ini?')"
+                            />
+                        </div>
                     </div>
-                </div>
-            @endif
-
-            <div>
-                <flux:input 
-                    wire:model="featuredImage" 
-                    label="Upload Gambar Baru" 
-                    type="file" 
-                    accept="image/jpeg,image/jpg,image/png,image/webp"
-                />
-                @if ($featuredImage)
-                    <flux:text class="mt-2 text-sm">
-                        File dipilih: {{ $featuredImage->getClientOriginalName() }}
-                    </flux:text>
                 @endif
-            </div>
 
-            <div wire:loading wire:target="featuredImage" class="text-sm text-zinc-600 dark:text-zinc-400">
-                Mengunggah file...
+                <div class="max-w-lg space-y-4">
+                    <x-ui.file 
+                        wire:model="featuredImage" 
+                        :label="__('Unggah Foto Sampul Berita')" 
+                        accept="image/jpeg,image/jpg,image/png,image/webp"
+                    >
+                        @if ($featuredImage)
+                            <div class="text-[10px] font-black italic text-indigo-600 mt-2 px-1">
+                                {{ __('File dipilih') }}: <span class="underline">{{ $featuredImage->getClientOriginalName() }}</span>
+                            </div>
+                        @endif
+                    </x-ui.file>
+                </div>
+                <p class="text-[10px] text-slate-400 italic px-1 leading-relaxed">
+                    * {{ __('Ukuran maksimal 5MB. Format: JPEG, PNG, WebP. Direkomendasikan rasio 16:9 untuk tampilan optimal di beranda.') }}
+                </p>
             </div>
-        </div>
-
-        <flux:separator />
+        </x-ui.card>
 
         {{-- Content --}}
-        <div class="space-y-4">
-            <flux:heading size="lg">Konten Artikel</flux:heading>
-            <flux:subheading class="mb-4">Tulis konten artikel lengkap</flux:subheading>
-
-            <div>
-                <flux:textarea 
+        <x-ui.card shadow padding="false" class="border-none ring-1 ring-primary/5">
+            <div class="p-6 border-b border-slate-50 dark:border-slate-800/50 bg-slate-50/50 dark:bg-slate-900/50 flex items-center justify-between">
+                <h3 class="font-black text-slate-800 dark:text-white uppercase tracking-tight text-sm italic">{{ __('Editor Isi Artikel') }}</h3>
+                <x-ui.badge :label="__('Editor Terintegrasi')" class="bg-indigo-50 text-indigo-600 border-none font-black italic text-[9px] px-3" />
+            </div>
+            <div class="p-8 space-y-6">
+                <x-ui.textarea 
                     wire:model="content" 
-                    label="Konten" 
+                    :label="__('Badan Artikel')" 
                     rows="20" 
                     required 
-                    placeholder="Tulis konten artikel di sini..."
+                    :placeholder="__('Tulis narasi lengkap berita di sini...')"
+                    class="font-medium text-slate-700 dark:text-slate-300 leading-relaxed text-base"
                 />
-                <flux:text class="mt-2 text-sm text-zinc-600 dark:text-zinc-400">
-                    Tip: Untuk editor yang lebih canggih dengan formatting, Anda dapat mengintegrasikan TinyMCE atau CKEditor.
-                </flux:text>
+                
+                <div class="flex items-start gap-4 p-4 rounded-2xl bg-slate-50 dark:bg-slate-900/50 border border-slate-100 dark:border-slate-800">
+                    <x-ui.icon name="o-information-circle" class="size-5 text-indigo-500 shrink-0" />
+                    <div>
+                        <p class="text-[10px] font-bold text-slate-500 uppercase tracking-widest italic mb-1">{{ __('Panduan Editor') }}</p>
+                        <p class="text-[11px] text-slate-400 italic leading-relaxed">
+                            {{ __('Gunakan format paragraf yang jelas. Anda dapat menyisipkan HTML sederhana jika diperlukan untuk pembentukan struktur teks yang lebih kompleks.') }}
+                        </p>
+                    </div>
+                </div>
             </div>
-        </div>
-
-        <flux:separator />
+        </x-ui.card>
 
         {{-- SEO Metadata --}}
-        <div class="space-y-4">
-            <flux:heading size="lg">SEO (Opsional)</flux:heading>
-            <flux:subheading class="mb-4">Optimasi untuk mesin pencari</flux:subheading>
+        <x-ui.card shadow padding="false" class="border-none ring-1 ring-slate-100 dark:ring-slate-800">
+            <div class="p-6 border-b border-slate-50 dark:border-slate-800/50 bg-slate-50/50 dark:bg-slate-900/50">
+                <h3 class="font-black text-slate-800 dark:text-white uppercase tracking-tight text-sm italic">{{ __('Optimasi Mesin Pencari (SEO)') }}</h3>
+            </div>
+            <div class="p-8 space-y-8">
+                <x-ui.input 
+                    wire:model="metaTitle" 
+                    :label="__('Judul SEO (Browser Title)')" 
+                    type="text" 
+                    :placeholder="__('Contoh: Berita Terbaru Hari Ini | Nama Sekolah')"
+                    class="font-bold"
+                />
+                <p class="text-[10px] text-slate-400 italic px-1 -mt-6">
+                    * {{ __('Jika dikosongkan, akan menggunakan judul artikel di atas. Disarankan 50-60 karakter.') }}
+                </p>
 
-            <flux:input 
-                wire:model="metaTitle" 
-                label="Judul SEO" 
-                type="text" 
-                placeholder="Jika kosong, akan menggunakan judul artikel"
-            />
-
-            <flux:textarea 
-                wire:model="metaDescription" 
-                label="Deskripsi SEO" 
-                rows="3" 
-                placeholder="Jika kosong, akan dibuat otomatis dari konten"
-            />
-
-            <flux:text class="text-sm text-zinc-600 dark:text-zinc-400">
-                Judul SEO sebaiknya 50-60 karakter. Deskripsi SEO sebaiknya 150-160 karakter.
-            </flux:text>
-        </div>
+                <x-ui.textarea 
+                    wire:model="metaDescription" 
+                    :label="__('Deskripsi SEO (Search Snippet)')" 
+                    rows="3" 
+                    :placeholder="__('Tulis deskripsi yang mengundang klik bagi pencari berita di Google...')"
+                    class="text-xs italic"
+                />
+                <p class="text-[10px] text-slate-400 italic px-1 -mt-6">
+                    * {{ __('Jika dikosongkan, akan mengambil otomatis dari konten. Disarankan 150-160 karakter untuk hasil optimal di mesin cari.') }}
+                </p>
+            </div>
+        </x-ui.card>
 
         {{-- Submit Buttons --}}
-        <div class="flex items-center justify-end gap-4 border-t pt-6">
-            <flux:button 
-                variant="ghost" 
-                href="{{ route('admin.news.index') }}"
-                wire:navigate
-                type="button"
-            >
-                Batal
-            </flux:button>
-            <flux:button 
-                variant="primary" 
+        <div class="flex items-center justify-end gap-3 pt-8 pb-12">
+            <x-ui.button 
+                :label="__('Batalkan & Kembali')"
+                link="{{ route('admin.news.index') }}"
+                class="btn-ghost"
+            />
+            <x-ui.button 
+                :label="$article ? __('Perbarui Publikasi') : __('Terbitkan Berita Sekarang')"
+                class="btn-primary shadow-xl shadow-primary/20 px-8" 
                 type="submit" 
-                wire:loading.attr="disabled"
-            >
-                <span wire:loading.remove wire:target="save">{{ $article ? 'Perbarui Artikel' : 'Simpan Artikel' }}</span>
-                <span wire:loading wire:target="save">Menyimpan...</span>
-            </flux:button>
+                spinner="save"
+            />
         </div>
     </form>
 </div>

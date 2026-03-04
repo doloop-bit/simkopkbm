@@ -1,39 +1,37 @@
-<flux:dropdown position="bottom" align="start">
-    <flux:sidebar.profile
-        {{ $attributes->only('name') }}
-        :initials="auth()->user()->initials()"
-        icon:trailing="chevrons-up-down"
-        data-test="sidebar-menu-button"
-    />
-
-    <flux:menu>
-        <div class="flex items-center gap-2 px-1 py-1.5 text-start text-sm">
-            <flux:avatar
-                :name="auth()->user()->name"
-                :initials="auth()->user()->initials()"
-            />
-            <div class="grid flex-1 text-start text-sm leading-tight">
-                <flux:heading class="truncate">{{ auth()->user()->name }}</flux:heading>
-                <flux:text class="truncate">{{ auth()->user()->email }}</flux:text>
-            </div>
+<div x-data="{ open: false }" class="relative w-full">
+    <button @click="open = !open" @click.outside="open = false" type="button" class="flex items-center w-full px-2 py-2 rounded-xl hover:bg-slate-800/50 transition-colors cursor-pointer" :class="sidebarCollapsed ? 'justify-center' : 'gap-3'">
+        <div x-show="sidebarCollapsed" x-cloak>
+            <x-ui.icon name="o-user-circle" class="w-6 h-6 text-slate-400 shrink-0" />
         </div>
-        <flux:menu.separator />
-        <flux:menu.radio.group>
-            <flux:menu.item :href="route('profile.edit')" wire:navigate>
-                {{ __('Settings') }}
-            </flux:menu.item>
-            <form method="POST" action="{{ route('logout') }}" class="w-full">
-                @csrf
-                <flux:menu.item
-                    as="button"
-                    type="submit"
-                    icon="arrow-right-start-on-rectangle"
-                    class="w-full cursor-pointer"
-                    data-test="logout-button"
-                >
-                    {{ __('Log Out') }}
-                </flux:menu.item>
-            </form>
-        </flux:menu.radio.group>
-    </flux:menu>
-</flux:dropdown>
+        <div class="flex-1 min-w-0 text-left" x-show="!sidebarCollapsed" x-cloak>
+            <div class="text-sm font-semibold text-slate-200 truncate">{{ auth()->user()->name }}</div>
+            <div class="text-xs text-slate-400 truncate">{{ auth()->user()->email }}</div>
+        </div>
+        <div x-show="!sidebarCollapsed" x-cloak class="shrink-0 flex items-center">
+            <x-ui.icon name="o-chevron-up-down" class="w-4 h-4 text-slate-500" />
+        </div>
+    </button>
+
+    {{-- Dropdown menu --}}
+    <div x-show="open" x-cloak
+         x-transition:enter="ease-out duration-200" x-transition:enter-start="opacity-0 scale-95" x-transition:enter-end="opacity-100 scale-100"
+         x-transition:leave="ease-in duration-150" x-transition:leave-start="opacity-100 scale-100" x-transition:leave-end="opacity-0 scale-95"
+         @click="open = false"
+         x-cloak
+         class="absolute bottom-full left-0 mb-2 rounded-xl border border-slate-700 bg-slate-800 shadow-xl py-1 z-[900] overflow-hidden"
+         :class="sidebarCollapsed ? 'min-w-48' : 'right-0'"
+    >
+        <a href="{{ route('profile.edit') }}" wire:navigate class="flex items-center gap-2 px-4 py-2 text-sm text-slate-300 hover:bg-slate-700 transition-colors">
+            <x-ui.icon name="o-cog-6-tooth" class="w-4 h-4" />
+            Settings
+        </a>
+        <div class="border-t border-slate-700 my-1"></div>
+        <form method="POST" action="{{ route('logout') }}">
+            @csrf
+            <button type="submit" class="flex items-center gap-2 w-full px-4 py-2 text-sm text-red-400 hover:bg-slate-700 transition-colors">
+                <x-ui.icon name="o-power" class="w-4 h-4" />
+                Log Out
+            </button>
+        </form>
+    </div>
+</div>

@@ -2,29 +2,28 @@
 
 namespace App\Imports;
 
-use App\Models\User;
-use App\Models\StudentProfile;
 use App\Models\Classroom;
-use App\Models\Profile;
-use Illuminate\Support\Facades\Hash;
+use App\Models\StudentProfile;
+use App\Models\User;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Hash;
 use Maatwebsite\Excel\Concerns\ToModel;
 use Maatwebsite\Excel\Concerns\WithHeadingRow;
 use Maatwebsite\Excel\Concerns\WithValidation;
 
 class StudentsImport implements ToModel, WithHeadingRow, WithValidation
 {
-
     protected static ?string $passwordHash = null;
+
     protected static array $classroomsCache = [];
 
     public function model(array $row)
     {
         return DB::transaction(function () use ($row) {
             $className = trim($row['nama_kelas'] ?? '');
-            
-            if (!empty($className)) {
-                if (!isset(static::$classroomsCache[$className])) {
+
+            if (! empty($className)) {
+                if (! isset(static::$classroomsCache[$className])) {
                     static::$classroomsCache[$className] = Classroom::where('name', $className)->first();
                 }
                 $classroom = static::$classroomsCache[$className];
@@ -36,19 +35,19 @@ class StudentsImport implements ToModel, WithHeadingRow, WithValidation
             $email = $row['email'];
             if (empty($email)) {
                 $uniqueId = $row['nis'] ?: ($row['nik'] ?: uniqid());
-                $email = 'student_' . $uniqueId . '@baitusyukur.id';
+                $email = 'student_'.$uniqueId.'@baitusyukur.id';
             }
 
             // Pre-hash password to save execution time
-            if (!static::$passwordHash) {
+            if (! static::$passwordHash) {
                 static::$passwordHash = Hash::make('password');
             }
 
             $user = User::create([
-                'name'      => $row['nama_lengkap'],
-                'email'     => $email,
-                'password'  => static::$passwordHash,
-                'role'      => 'siswa',
+                'name' => $row['nama_lengkap'],
+                'email' => $email,
+                'password' => static::$passwordHash,
+                'role' => 'siswa',
                 'is_active' => false,
             ]);
 
@@ -58,25 +57,25 @@ class StudentsImport implements ToModel, WithHeadingRow, WithValidation
             }
 
             $studentProfile = StudentProfile::create([
-                'nis'             => $row['nis'] ? (string) $row['nis'] : null,
-                'nisn'            => $row['nisn'] ? (string) $row['nisn'] : null,
-                'nik'             => $row['nik'] ? (string) $row['nik'] : null,
-                'dob'             => $dob,
-                'pob'             => $row['tempat_lahir'] ?: null,
-                'address'         => $row['alamat'] ?: null,
-                'phone'           => $row['no_telepon'] ? (string) $row['no_telepon'] : null,
-                'father_name'     => $row['nama_ayah'] ?: null,
-                'nik_ayah'        => $row['nik_ayah'] ? (string) $row['nik_ayah'] : null,
-                'mother_name'     => $row['nama_ibu'] ?: null,
-                'nik_ibu'         => $row['nik_ibu'] ? (string) $row['nik_ibu'] : null,
-                'no_kk'           => $row['no_kk'] ? (string) $row['no_kk'] : null,
-                'no_akta'         => $row['no_akta'] ?: null,
-                'classroom_id'    => $classroom?->id,
-                'status'          => 'baru',
+                'nis' => $row['nis'] ? (string) $row['nis'] : null,
+                'nisn' => $row['nisn'] ? (string) $row['nisn'] : null,
+                'nik' => $row['nik'] ? (string) $row['nik'] : null,
+                'dob' => $dob,
+                'pob' => $row['tempat_lahir'] ?: null,
+                'address' => $row['alamat'] ?: null,
+                'phone' => $row['no_telepon'] ? (string) $row['no_telepon'] : null,
+                'father_name' => $row['nama_ayah'] ?: null,
+                'nik_ayah' => $row['nik_ayah'] ? (string) $row['nik_ayah'] : null,
+                'mother_name' => $row['nama_ibu'] ?: null,
+                'nik_ibu' => $row['nik_ibu'] ? (string) $row['nik_ibu'] : null,
+                'no_kk' => $row['no_kk'] ? (string) $row['no_kk'] : null,
+                'no_akta' => $row['no_akta'] ?: null,
+                'classroom_id' => $classroom?->id,
+                'status' => 'baru',
             ]);
 
             $user->profiles()->create([
-                'profileable_id'   => $studentProfile->id,
+                'profileable_id' => $studentProfile->id,
                 'profileable_type' => StudentProfile::class,
             ]);
 
@@ -87,18 +86,18 @@ class StudentsImport implements ToModel, WithHeadingRow, WithValidation
     public function prepareForValidation($data, $index)
     {
         // Convert potential numeric fields from Excel to strings to avoid 'validation.string'
-        $data['nis'] = $data['nis'] !== null ? (string)$data['nis'] : null;
-        $data['nisn'] = $data['nisn'] !== null ? (string)$data['nisn'] : null;
-        $data['nik'] = $data['nik'] !== null ? (string)$data['nik'] : null;
-        $data['no_telepon'] = $data['no_telepon'] !== null ? (string)$data['no_telepon'] : null;
-        $data['nik_ayah'] = $data['nik_ayah'] !== null ? (string)$data['nik_ayah'] : null;
-        $data['nik_ibu'] = $data['nik_ibu'] !== null ? (string)$data['nik_ibu'] : null;
-        $data['no_kk'] = $data['no_kk'] !== null ? (string)$data['no_kk'] : null;
+        $data['nis'] = $data['nis'] !== null ? (string) $data['nis'] : null;
+        $data['nisn'] = $data['nisn'] !== null ? (string) $data['nisn'] : null;
+        $data['nik'] = $data['nik'] !== null ? (string) $data['nik'] : null;
+        $data['no_telepon'] = $data['no_telepon'] !== null ? (string) $data['no_telepon'] : null;
+        $data['nik_ayah'] = $data['nik_ayah'] !== null ? (string) $data['nik_ayah'] : null;
+        $data['nik_ibu'] = $data['nik_ibu'] !== null ? (string) $data['nik_ibu'] : null;
+        $data['no_kk'] = $data['no_kk'] !== null ? (string) $data['no_kk'] : null;
 
         // Ensure optional fields are null if empty to trigger 'nullable' correctly
-        $data['nama_kelas'] = !empty(trim($data['nama_kelas'] ?? '')) ? trim($data['nama_kelas']) : null;
-        $data['nisn'] = !empty(trim($data['nisn'] ?? '')) ? trim($data['nisn']) : null;
-        $data['nis'] = !empty(trim($data['nis'] ?? '')) ? trim($data['nis']) : null;
+        $data['nama_kelas'] = ! empty(trim($data['nama_kelas'] ?? '')) ? trim($data['nama_kelas']) : null;
+        $data['nisn'] = ! empty(trim($data['nisn'] ?? '')) ? trim($data['nisn']) : null;
+        $data['nis'] = ! empty(trim($data['nis'] ?? '')) ? trim($data['nis']) : null;
 
         return $data;
     }
@@ -107,15 +106,15 @@ class StudentsImport implements ToModel, WithHeadingRow, WithValidation
     {
         return [
             'nama_lengkap' => ['required', 'max:255'],
-            'email'        => ['nullable', 'email', 'unique:users,email'],
-            'nis'          => ['nullable', 'unique:student_profiles,nis'],
-            'nisn'         => ['nullable', 'unique:student_profiles,nisn'],
-            'nik'          => ['required', 'unique:student_profiles,nik'],
+            'email' => ['nullable', 'email', 'unique:users,email'],
+            'nis' => ['nullable', 'unique:student_profiles,nis'],
+            'nisn' => ['nullable', 'unique:student_profiles,nisn'],
+            'nik' => ['required', 'unique:student_profiles,nik'],
             'tanggal_lahir' => ['required'],
-            'nama_kelas'   => ['nullable', 'exists:classrooms,name'],
+            'nama_kelas' => ['nullable', 'exists:classrooms,name'],
             'tempat_lahir' => ['nullable'],
-            'alamat'       => ['nullable'],
-            'no_telepon'   => ['nullable'],
+            'alamat' => ['nullable'],
+            'no_telepon' => ['nullable'],
         ];
     }
 
@@ -148,7 +147,7 @@ class StudentsImport implements ToModel, WithHeadingRow, WithValidation
             'email.email' => 'Format email tidak valid.',
             'tanggal_lahir.required' => 'Kolom Tanggal Lahir wajib diisi.',
             'nama_kelas.exists' => 'Kelas tidak ditemukan. Pastikan nama kelas sesuai.',
-            
+
             // Generic fallback messages
             '*.required' => ':attribute wajib diisi.',
             '*.string' => ':attribute harus berupa teks.',

@@ -23,7 +23,7 @@ return new class extends Migration
                 'gotong_royong',
                 'mandiri',
                 'bernalar_kritis',
-                'kreatif'
+                'kreatif',
             ])->comment('Dimensi Profil Pelajar Pancasila');
             $table->date('start_date')->nullable();
             $table->date('end_date')->nullable();

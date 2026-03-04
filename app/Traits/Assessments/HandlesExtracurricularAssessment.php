@@ -2,11 +2,11 @@
 
 namespace App\Traits\Assessments;
 
-use App\Models\User;
-use App\Models\Classroom;
 use App\Models\AcademicYear;
+use App\Models\Classroom;
 use App\Models\ExtracurricularActivity;
 use App\Models\ExtracurricularAssessment;
+use App\Models\User;
 use Illuminate\Support\Facades\DB;
 
 trait HandlesExtracurricularAssessment
@@ -14,8 +14,11 @@ trait HandlesExtracurricularAssessment
     use \App\Traits\HasAssessmentLogic;
 
     public ?int $academic_year_id = null;
+
     public ?int $classroom_id = null;
+
     public ?int $activity_id = null;
+
     public string $semester = '1';
 
     public array $assessments_data = []; // [student_id => ['level' => '', 'description' => '']]
@@ -45,16 +48,18 @@ trait HandlesExtracurricularAssessment
 
     public function loadAssessments(): void
     {
-        if (!$this->classroom_id || !$this->activity_id) {
+        if (! $this->classroom_id || ! $this->activity_id) {
             $this->assessments_data = [];
+
             return;
         }
 
         // Security check for Guru
-        if (auth()->user()->isGuru() && !auth()->user()->hasAccessToClassroom((int)$this->classroom_id)) {
-             $this->assessments_data = [];
-             \Flux::toast(variant: 'danger', text: 'Anda tidak memiliki akses ke kelas ini.');
-             return;
+        if (auth()->user()->isGuru() && ! auth()->user()->hasAccessToClassroom((int) $this->classroom_id)) {
+            $this->assessments_data = [];
+            \Flux::toast(variant: 'danger', text: 'Anda tidak memiliki akses ke kelas ini.');
+
+            return;
         }
 
         // Load existing assessments
@@ -69,10 +74,10 @@ trait HandlesExtracurricularAssessment
                 $assessment->student_id => [
                     'level' => $assessment->achievement_level,
                     'description' => $assessment->description ?? '',
-                ]
+                ],
             ];
         })->toArray();
-        
+
         // Ensure all students in classroom have an entry
         $students = User::where('role', 'siswa')
             ->whereHas('profiles', function ($q) {
@@ -82,7 +87,7 @@ trait HandlesExtracurricularAssessment
             })->get();
 
         foreach ($students as $student) {
-            if (!isset($this->assessments_data[$student->id])) {
+            if (! isset($this->assessments_data[$student->id])) {
                 $this->assessments_data[$student->id] = [
                     'level' => 'Baik',
                     'description' => '',
@@ -93,24 +98,28 @@ trait HandlesExtracurricularAssessment
 
     public function save(): void
     {
-        if (!$this->canEditAssessments()) {
+        if (! $this->canEditAssessments()) {
             \Flux::toast(variant: 'danger', text: 'Anda tidak memiliki izin untuk menyimpan data.');
+
             return;
         }
 
-        if (!$this->classroom_id || !$this->activity_id || !$this->academic_year_id) {
+        if (! $this->classroom_id || ! $this->activity_id || ! $this->academic_year_id) {
             return;
         }
 
         // Security check for Guru
-        if (auth()->user()->isGuru() && !auth()->user()->hasAccessToClassroom((int)$this->classroom_id)) {
+        if (auth()->user()->isGuru() && ! auth()->user()->hasAccessToClassroom((int) $this->classroom_id)) {
             \Flux::toast(variant: 'danger', text: 'Anda tidak memiliki akses untuk menyimpan penilaian ini.');
+
             return;
         }
 
         DB::transaction(function () {
             foreach ($this->assessments_data as $studentId => $data) {
-                if (empty($data['level'])) continue;
+                if (empty($data['level'])) {
+                    continue;
+                }
 
                 ExtracurricularAssessment::updateOrCreate(
                     [
@@ -160,7 +169,7 @@ trait HandlesExtracurricularAssessment
             'activities' => $activities,
             'students' => $students,
             'selectedActivity' => $this->activity_id ? ExtracurricularActivity::find($this->activity_id) : null,
-            'isReadonly' => !$this->canEditAssessments(),
+            'isReadonly' => ! $this->canEditAssessments(),
         ];
     }
 }

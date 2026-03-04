@@ -51,7 +51,7 @@ class Classroom extends Model
      */
     public function getPhase(): ?string
     {
-        if (! $this->class_level || ! $this->level) {
+        if ($this->class_level === null || ! $this->level) {
             return null;
         }
 

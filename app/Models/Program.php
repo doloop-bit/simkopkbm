@@ -4,15 +4,16 @@ namespace App\Models;
 
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\Relations\BelongsTo;
 
 class Program extends Model
 {
     use HasFactory;
 
     protected $fillable = [
+        'level_id',
         'name',
         'slug',
-        'level',
         'description',
         'curriculum_overview',
         'duration',
@@ -33,6 +34,11 @@ class Program extends Model
             'is_active' => 'boolean',
             'order' => 'integer',
         ];
+    }
+
+    public function level(): BelongsTo
+    {
+        return $this->belongsTo(Level::class);
     }
 
     public function scopeActive($query)

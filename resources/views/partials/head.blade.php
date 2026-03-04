@@ -17,5 +17,40 @@
 
 
 @vite(['resources/css/app.css', 'resources/js/app.js'])
-@fluxAppearance
+
+<script>
+    (function() {
+        const applyTheme = () => {
+            const theme = localStorage.getItem('theme') || 'system';
+            if (theme === 'system') {
+                if (window.matchMedia('(prefers-color-scheme: dark)').matches) {
+                    document.documentElement.classList.add('dark');
+                } else {
+                    document.documentElement.classList.remove('dark');
+                }
+            } else if (theme === 'dark') {
+                document.documentElement.classList.add('dark');
+            } else {
+                document.documentElement.classList.remove('dark');
+            }
+        };
+
+        const applySidebar = () => {
+            const collapsed = localStorage.getItem('sidebarCollapsed') === 'true';
+            if (collapsed) {
+                document.documentElement.classList.add('sidebar-collapsed');
+            } else {
+                document.documentElement.classList.remove('sidebar-collapsed');
+            }
+        };
+
+        applyTheme();
+        applySidebar();
+
+        document.addEventListener('livewire:navigated', () => {
+            applyTheme();
+            applySidebar();
+        });
+    })();
+</script>
 

@@ -1,6 +1,6 @@
 <?php
 
-use Livewire\Volt\Component;
+use Livewire\Component;
 use App\Models\StandardBudgetItem;
 use App\Models\BudgetCategory;
 use Livewire\WithPagination;
@@ -18,6 +18,7 @@ new class extends Component {
     public $is_active = true;
     
     public ?StandardBudgetItem $editing = null;
+    public bool $itemModal = false;
 
     public function with(): array
     {
@@ -34,8 +35,9 @@ new class extends Component {
     public function createNew(): void
     {
         $this->reset(['budget_category_id', 'name', 'unit', 'default_price', 'is_active', 'editing']);
+        $this->is_active = true;
         $this->resetValidation();
-        $this->dispatch('open-item-modal');
+        $this->itemModal = true;
     }
 
     public function edit(StandardBudgetItem $item): void
@@ -46,7 +48,7 @@ new class extends Component {
         $this->unit = $item->unit;
         $this->default_price = $item->default_price;
         $this->is_active = $item->is_active;
-        $this->dispatch('open-item-modal');
+        $this->itemModal = true;
     }
 
     public function save(): void
@@ -69,106 +71,127 @@ new class extends Component {
 
         if ($this->editing) {
             $this->editing->update($data);
+            session()->flash('success', 'Item standar anggaran berhasil diperbarui.');
         } else {
             StandardBudgetItem::create($data);
+            session()->flash('success', 'Item standar anggaran berhasil ditambahkan.');
         }
 
-        $this->dispatch('item-saved');
+        $this->itemModal = false;
         $this->reset(['budget_category_id', 'name', 'unit', 'default_price', 'is_active', 'editing']);
     }
 
     public function delete(StandardBudgetItem $item): void
     {
         $item->delete();
+        session()->flash('success', 'Item standar anggaran berhasil dihapus.');
     }
 }; ?>
 
-<div class="flex flex-col gap-6">
-    <div class="flex flex-col md:flex-row gap-4 items-center justify-between">
-        <div>
-            <flux:heading size="xl">Item Standar Anggaran</flux:heading>
-            <flux:subheading>Kelola daftar item standar dan harga satuan untuk RAB.</flux:subheading>
+<div class="p-6 space-y-6 text-slate-900 dark:text-white pb-24 md:pb-6">
+    @if (session('success'))
+        <x-ui.alert :title="__('Sukses')" icon="o-check-circle" class="bg-emerald-50 text-emerald-800 border-emerald-100" dismissible>
+            {{ session('success') }}
+        </x-ui.alert>
+    @endif
+
+    <x-ui.header :title="__('Item Standar Anggaran')" :subtitle="__('Kelola daftar item standar dan estimasi harga satuan untuk mempermudah pembuatan RAB.')" separator>
+        <x-slot:actions>
+            <x-ui.button :label="__('Tambah Item Baru')" icon="o-plus" class="btn-primary" wire:click="createNew" />
+        </x-slot:actions>
+    </x-ui.header>
+
+    <div class="flex flex-col md:flex-row gap-4">
+        <div class="flex-1 max-w-md">
+            <x-ui.input 
+                wire:model.live.debounce.300ms="search" 
+                :placeholder="__('Cari nama item...')" 
+                icon="o-magnifying-glass" 
+            />
         </div>
-        <flux:button variant="primary" icon="plus" wire:click="createNew">Tambah Item</flux:button>
-    </div>
-
-    <div class="flex flex-col md:flex-row gap-4 mb-6 items-center justify-between">
-        <div class="flex gap-2 w-full md:w-auto">
-            <flux:input wire:model.live="search" icon="magnifying-glass" placeholder="Cari item..." class="w-full md:w-64" />
-            <flux:select wire:model.live="category_filter" placeholder="Filter Kategori" class="w-full md:w-48">
-                <option value="">Semua Kategori</option>
-                @foreach($categories as $cat)
-                    <option value="{{ $cat->id }}">{{ $cat->name }}</option>
-                @endforeach
-            </flux:select>
+        <div class="w-full md:w-64">
+            <x-ui.select 
+                wire:model.live="category_filter" 
+                :placeholder="__('Filter Kategori')" 
+                :options="$categories" 
+            />
         </div>
     </div>
 
-    <div class="overflow-x-auto">
-        <table class="min-w-full divide-y divide-zinc-200 dark:divide-zinc-700">
-            <thead>
-                <tr>
-                    <th class="px-4 py-3 text-left text-xs font-medium text-zinc-500 uppercase tracking-wider">Nama Item</th>
-                    <th class="px-4 py-3 text-left text-xs font-medium text-zinc-500 uppercase tracking-wider">Kategori</th>
-                    <th class="px-4 py-3 text-left text-xs font-medium text-zinc-500 uppercase tracking-wider">Satuan</th>
-                    <th class="px-4 py-3 text-right text-xs font-medium text-zinc-500 uppercase tracking-wider">Harga Standar</th>
-                    <th class="px-4 py-3 text-left text-xs font-medium text-zinc-500 uppercase tracking-wider">Status</th>
-                    <th class="px-4 py-3 text-right text-xs font-medium text-zinc-500 uppercase tracking-wider">Aksi</th>
-                </tr>
-            </thead>
-            <tbody class="divide-y divide-zinc-200 dark:divide-zinc-700">
-                @foreach($items as $item)
-                    <tr class="hover:bg-zinc-50 dark:hover:bg-zinc-800">
-                        <td class="px-4 py-3 whitespace-nowrap text-sm font-medium text-zinc-900 dark:text-zinc-100">{{ $item->name }}</td>
-                        <td class="px-4 py-3 whitespace-nowrap text-sm text-zinc-500 dark:text-zinc-400">{{ $item->category->name }}</td>
-                        <td class="px-4 py-3 whitespace-nowrap text-sm text-zinc-500 dark:text-zinc-400">{{ $item->unit }}</td>
-                        <td class="px-4 py-3 whitespace-nowrap text-sm text-right text-zinc-900 dark:text-zinc-100">
-                            {{ $item->default_price ? 'Rp ' . number_format($item->default_price, 0, ',', '.') : '-' }}
-                        </td>
-                        <td class="px-4 py-3 whitespace-nowrap">
-                            <flux:badge variant="{{ $item->is_active ? 'success' : 'danger' }}" size="sm">
-                                {{ $item->is_active ? 'Aktif' : 'Non-Aktif' }}
-                            </flux:badge>
-                        </td>
-                        <td class="px-4 py-3 text-right space-x-2">
-                            <flux:button size="sm" variant="ghost" icon="pencil-square" wire:click="edit({{ $item->id }})" />
-                            <flux:button size="sm" variant="ghost" icon="trash" class="text-red-500" wire:confirm="Hapus item ini?" wire:click="delete({{ $item->id }})" />
-                        </td>
-                    </tr>
-                @endforeach
-            </tbody>
-        </table>
-    </div>
-    
-    <div class="mt-4">
-        {{ $items->links() }}
-    </div>
+    <x-ui.card shadow padding="false">
+        <x-ui.table 
+            :headers="[
+                ['key' => 'name_label', 'label' => __('Nama Item')],
+                ['key' => 'category_name', 'label' => __('Kategori')],
+                ['key' => 'unit_label', 'label' => __('Satuan')],
+                ['key' => 'price_label', 'label' => __('Harga Standar'), 'class' => 'text-right'],
+                ['key' => 'status_label', 'label' => __('Status'), 'class' => 'text-center'],
+                ['key' => 'actions', 'label' => __('Aksi'), 'class' => 'text-right']
+            ]" 
+            :rows="$items"
+        >
+            @scope('cell_name_label', $item)
+                <span class="font-bold text-slate-900 dark:text-white">{{ $item->name }}</span>
+            @endscope
 
-    <flux:modal name="item-modal" class="max-w-md" @open-item-modal.window="$flux.modal('item-modal').show()" x-on:item-saved.window="$flux.modal('item-modal').close()">
+            @scope('cell_category_name', $item)
+                <x-ui.badge :label="$item->category->name" class="bg-indigo-50 text-indigo-600 border-none text-[8px] font-black italic shadow-sm" />
+            @endscope
+
+            @scope('cell_unit_label', $item)
+                <span class="text-[10px] font-black text-slate-400 uppercase tracking-widest">{{ $item->unit }}</span>
+            @endscope
+
+            @scope('cell_price_label', $item)
+                <span class="font-mono text-sm font-black text-slate-700 dark:text-slate-300 italic tracking-tighter">
+                    {{ $item->default_price ? 'Rp ' . number_format($item->default_price, 0, ',', '.') : '-' }}
+                </span>
+            @endscope
+
+            @scope('cell_status_label', $item)
+                <x-ui.badge 
+                    :label="$item->is_active ? __('Aktif') : __('Non-Aktif')" 
+                    class="{{ $item->is_active ? 'bg-emerald-50 text-emerald-700' : 'bg-rose-50 text-rose-700' }} border-none text-[8px] font-black italic tracking-widest px-2 py-0.5" 
+                />
+            @endscope
+
+            @scope('cell_actions', $item)
+                <div class="flex justify-end gap-2">
+                    <x-ui.button icon="o-pencil-square" wire:click="edit({{ $item->id }})" class="btn-ghost btn-sm text-slate-400 hover:text-primary transition-colors" />
+                    <x-ui.button icon="o-trash" wire:click="delete({{ $item->id }})" wire:confirm="{{ __('Hapus item standar ini?') }}" class="btn-ghost btn-sm text-slate-400 hover:text-rose-600 transition-colors" />
+                </div>
+            @endscope
+        </x-ui.table>
+
+        @if($items->isEmpty())
+            <div class="py-12 text-center text-slate-400 italic text-sm">
+                {{ __('Tidak ada data item standar yang ditemukan.') }}
+            </div>
+        @endif
+
+        <div class="p-4 border-t border-slate-100 dark:border-slate-800">
+            {{ $items->links() }}
+        </div>
+    </x-ui.card>
+
+    <x-ui.modal wire:model="itemModal">
+        <x-ui.header :title="$editing ? __('Edit Item Standar') : __('Tambah Item Standar')" :subtitle="__('Kelola master item standar untuk referensi pengisian RAB.')" separator />
+
         <form wire:submit="save" class="space-y-6">
-            <div>
-                <flux:heading size="lg">{{ $editing ? 'Edit Item' : 'Tambah Item' }}</flux:heading>
-            </div>
-
-            <flux:select wire:model="budget_category_id" label="Kategori" placeholder="Pilih Kategori" required>
-                @foreach($categories as $cat)
-                    <option value="{{ $cat->id }}">{{ $cat->name }}</option>
-                @endforeach
-            </flux:select>
-
-            <flux:input wire:model="name" label="Nama Item" placeholder="Contoh: Kertas A4" required />
+            <x-ui.select wire:model="budget_category_id" :label="__('Pilih Kategori POS')" :placeholder="__('Pilih Kategori')" :options="$categories" required />
+            <x-ui.input wire:model="name" :label="__('Nama Item Deskriptif')" :placeholder="__('Contoh: Kertas A4 80gr')" required />
             
-            <div class="grid grid-cols-2 gap-4">
-                <flux:input wire:model="unit" label="Satuan" placeholder="Contoh: Rim" required />
-                <flux:input wire:model="default_price" type="number" label="Harga Standar (Rp)" placeholder="0" />
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-6 p-4 bg-slate-50 dark:bg-slate-900/50 rounded-2xl border border-slate-100 dark:border-slate-800">
+                <x-ui.input wire:model="unit" :label="__('Satuan Ukuran')" :placeholder="__('Contoh: Rim, Box, Pack')" required />
+                <x-ui.input wire:model="default_price" type="number" :label="__('Estimasi Harga Unit (Rp)')" placeholder="0" />
             </div>
             
-            <flux:switch wire:model="is_active" label="Aktif" />
+            <x-ui.checkbox wire:model="is_active" :label="__('Item ini aktif & muncul di pencarian RAB')" />
 
-            <div class="flex justify-end gap-2">
-                <flux:button variant="ghost" x-on:click="$flux.modal('item-modal').close()">Batal</flux:button>
-                <flux:button type="submit" variant="primary">Simpan</flux:button>
+            <div class="flex justify-end gap-3 pt-6 border-t border-slate-100 dark:border-slate-800">
+                <x-ui.button :label="__('Batal')" wire:click="$set('itemModal', false)" />
+                <x-ui.button :label="__('Simpan Perubahan')" type="submit" class="btn-primary" spinner="save" />
             </div>
         </form>
-    </flux:modal>
+    </x-ui.modal>
 </div>

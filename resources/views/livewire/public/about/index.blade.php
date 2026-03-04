@@ -1,7 +1,7 @@
 <?php
 
 use App\Models\SchoolProfile;
-use Livewire\Volt\Component;
+use Livewire\Component;
 use Livewire\Attributes\Layout;
 
 new #[Layout('components.public.layouts.public')] class extends Component

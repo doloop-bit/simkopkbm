@@ -3,7 +3,6 @@
 namespace App\Traits;
 
 use App\Models\Classroom;
-use App\Models\AcademicYear;
 
 trait HasAssessmentLogic
 {
@@ -13,10 +12,10 @@ trait HasAssessmentLogic
     public function getFilteredClassrooms()
     {
         $user = auth()->user();
-        
+
         return Classroom::query()
-            ->when($this->academic_year_id, fn($q) => $q->where('academic_year_id', $this->academic_year_id))
-            ->when($user->isGuru(), fn($q) => $q->whereIn('id', $user->getAssignedClassroomIds()))
+            ->when($this->academic_year_id, fn ($q) => $q->where('academic_year_id', $this->academic_year_id))
+            ->when($user->isGuru(), fn ($q) => $q->whereIn('id', $user->getAssignedClassroomIds()))
             ->orderBy('name')
             ->get();
     }
@@ -27,7 +26,7 @@ trait HasAssessmentLogic
     public function getFilteredSubjects(?int $classroomId = null)
     {
         $user = auth()->user();
-        
+
         return \App\Models\Subject::query()
             ->when($classroomId, function ($query) use ($classroomId) {
                 $classroom = Classroom::find($classroomId);
@@ -41,7 +40,7 @@ trait HasAssessmentLogic
                     });
                 }
             })
-            ->when($user->isGuru(), fn($q) => $q->whereIn('id', $user->getAssignedSubjectIds()))
+            ->when($user->isGuru(), fn ($q) => $q->whereIn('id', $user->getAssignedSubjectIds()))
             ->orderBy('name')
             ->get();
     }
@@ -53,7 +52,7 @@ trait HasAssessmentLogic
     public function canEditAssessments(): bool
     {
         $user = auth()->user();
-        
+
         if (in_array($user->role, ['kepala_sekolah', 'yayasan'])) {
             return false;
         }
@@ -70,7 +69,7 @@ trait HasAssessmentLogic
         if (request()->is('teacher*')) {
             return 'components.teacher.layouts.app';
         }
-        
+
         if (request()->is('admin*')) {
             return 'components.admin.layouts.app';
         }
@@ -86,8 +85,9 @@ trait HasAssessmentLogic
 
         // 3. Fallback: User Role-based
         $role = strtolower(trim(auth()->user()->role ?? ''));
+
         return ($role === 'guru' || $role === 'teacher')
-            ? 'components.teacher.layouts.app' 
+            ? 'components.teacher.layouts.app'
             : 'components.admin.layouts.app';
     }
 }

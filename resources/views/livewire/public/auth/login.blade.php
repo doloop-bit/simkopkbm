@@ -9,50 +9,50 @@
             @csrf
 
             <!-- Email Address -->
-            <flux:input
-                name="email"
-                :label="__('Email address')"
-                :value="old('email')"
-                type="email"
-                required
-                autofocus
-                autocomplete="email"
-                placeholder="email@example.com"
-            />
+            <div>
+                <x-ui.input
+                    name="email"
+                    :label="__('Email address')"
+                    :value="old('email')"
+                    type="email"
+                    required
+                    autofocus
+                    autocomplete="email"
+                    placeholder="email@example.com"
+                />
+            </div>
 
             <!-- Password -->
-            <div class="relative">
-                <flux:input
+            <div class="space-y-1">
+                <div class="flex items-center justify-between">
+                    <label class="text-sm font-medium text-slate-700 dark:text-slate-300">{{ __('Password') }}</label>
+                    @if (Route::has('password.request'))
+                        <a class="text-xs text-primary hover:underline opacity-70" href="{{ route('password.request') }}" wire:navigate>
+                            {{ __('Lupa password?') }}
+                        </a>
+                    @endif
+                </div>
+                <x-ui.input
                     name="password"
-                    :label="__('Password')"
                     type="password"
                     required
                     autocomplete="current-password"
                     :placeholder="__('Password')"
-                    viewable
                 />
-
-                @if (Route::has('password.request'))
-                    <flux:link class="absolute top-0 text-sm end-0" :href="route('password.request')" wire:navigate>
-                        {{ __('Lupa password?') }}
-                    </flux:link>
-                @endif
             </div>
 
             <!-- Remember Me -->
-            <flux:checkbox name="remember" :label="__('Remember me')" :checked="old('remember')" />
+            <x-ui.checkbox name="remember" :label="__('Remember me')" :checked="old('remember')" />
 
             <div class="flex items-center justify-end">
-                <flux:button variant="primary" type="submit" class="w-full" data-test="login-button">
-                    {{ __('Log in') }}
-                </flux:button>
+                <x-ui.button type="submit" class="btn-primary w-full" data-test="login-button" :label="__('Log in')" />
             </div>
         </form>
 
         @if (Route::has('register'))
             <div class="space-x-1 text-sm text-center rtl:space-x-reverse text-zinc-600 dark:text-zinc-400">
                 <span>{{ __('Don\'t have an account?') }}</span>
-                <flux:link :href="route('register')" wire:navigate>{{ __('Sign up') }}</flux:link>
+                <a href="{{ route('register') }}" class="text-primary font-semibold hover:underline" wire:navigate>{{ __('Sign up') }}</a>
             </div>
         @endif
     </div>

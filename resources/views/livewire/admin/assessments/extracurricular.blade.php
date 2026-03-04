@@ -1,6 +1,6 @@
 <?php
 
-use Livewire\Volt\Component;
+use Livewire\Component;
 use App\Traits\Assessments\HandlesExtracurricularAssessment;
 use Livewire\Attributes\Layout;
 

@@ -2,15 +2,14 @@
 
 namespace App\Traits\Assessments;
 
-use App\Models\User;
+use App\Models\AcademicYear;
+use App\Models\Classroom;
+use App\Models\LearningAchievement;
+use App\Models\Subject;
 use App\Models\SubjectGrade;
 use App\Models\SubjectTp;
-use App\Models\Classroom;
-use App\Models\Subject;
-use App\Models\AcademicYear;
-use App\Models\LearningAchievement;
+use App\Models\User;
 use Illuminate\Support\Facades\DB;
-use Illuminate\Support\Str;
 
 trait HandlesGradingAssessment
 {
@@ -18,8 +17,11 @@ trait HandlesGradingAssessment
     use \App\Traits\HasAssessmentLogic;
 
     public ?int $academic_year_id = null;
+
     public ?int $classroom_id = null;
+
     public ?int $subject_id = null;
+
     public string $semester = '1';
 
     // Data containers
@@ -27,8 +29,6 @@ trait HandlesGradingAssessment
 
     // Phase info for display
     public ?string $currentPhase = null;
-
-
 
     public function mountHandlesGradingAssessment(): void
     {
@@ -55,7 +55,7 @@ trait HandlesGradingAssessment
                     }
                 })->exists();
 
-            if (!$isValid) {
+            if (! $isValid) {
                 $this->subject_id = null;
             }
         }
@@ -73,8 +73,9 @@ trait HandlesGradingAssessment
 
     public function resolvePhase(): void
     {
-        if (!$this->classroom_id) {
+        if (! $this->classroom_id) {
             $this->currentPhase = null;
+
             return;
         }
 
@@ -84,16 +85,18 @@ trait HandlesGradingAssessment
 
     public function loadGrades(): void
     {
-        if (!$this->classroom_id || !$this->subject_id || !$this->academic_year_id) {
+        if (! $this->classroom_id || ! $this->subject_id || ! $this->academic_year_id) {
             $this->grades_data = [];
+
             return;
         }
 
         // Security check for Guru
-        if (auth()->user()->isGuru() && (!auth()->user()->hasAccessToClassroom((int)$this->classroom_id) || !auth()->user()->hasAccessToSubject((int)$this->subject_id))) {
-             $this->grades_data = [];
-             \Flux::toast(variant: 'danger', text: 'Anda tidak memiliki akses ke data ini.');
-             return;
+        if (auth()->user()->isGuru() && (! auth()->user()->hasAccessToClassroom((int) $this->classroom_id) || ! auth()->user()->hasAccessToSubject((int) $this->subject_id))) {
+            $this->grades_data = [];
+            \Flux::toast(variant: 'danger', text: 'Anda tidak memiliki akses ke data ini.');
+
+            return;
         }
 
         $grades = SubjectGrade::where([
@@ -121,7 +124,7 @@ trait HandlesGradingAssessment
             })->get();
 
         foreach ($students as $student) {
-            if (!isset($scores[$student->id])) {
+            if (! isset($scores[$student->id])) {
                 $scores[$student->id] = [
                     'grade' => null,
                     'best_tp_ids' => [],
@@ -135,27 +138,30 @@ trait HandlesGradingAssessment
 
     public function save(): void
     {
-        if (!$this->canEditAssessments()) {
+        if (! $this->canEditAssessments()) {
             \Flux::toast(variant: 'danger', text: 'Anda tidak memiliki izin untuk menyimpan data.');
+
             return;
         }
 
-        if (!$this->classroom_id || !$this->subject_id || !$this->academic_year_id) {
+        if (! $this->classroom_id || ! $this->subject_id || ! $this->academic_year_id) {
             return;
         }
 
         // Security check for Guru
-        if (auth()->user()->isGuru() && (!auth()->user()->hasAccessToClassroom((int)$this->classroom_id) || !auth()->user()->hasAccessToSubject((int)$this->subject_id))) {
+        if (auth()->user()->isGuru() && (! auth()->user()->hasAccessToClassroom((int) $this->classroom_id) || ! auth()->user()->hasAccessToSubject((int) $this->subject_id))) {
             \Flux::toast(variant: 'danger', text: 'Akses ditolak.');
+
             return;
         }
 
         // Validate duplicates locally
         foreach ($this->grades_data as $studentId => $data) {
-            if (!empty($data['best_tp_ids']) && !empty($data['improvement_tp_ids'])) {
+            if (! empty($data['best_tp_ids']) && ! empty($data['improvement_tp_ids'])) {
                 if (array_intersect($data['best_tp_ids'], $data['improvement_tp_ids'])) {
                     $studentName = User::find($studentId)?->name ?? 'Siswa';
                     \Flux::toast(variant: 'danger', text: "TP yang sama tidak boleh dipilih sebagai Terbaik dan Perlu Peningkatan sekaligus untuk $studentName.");
+
                     return;
                 }
             }
@@ -164,11 +170,12 @@ trait HandlesGradingAssessment
         DB::transaction(function () {
             foreach ($this->grades_data as $studentId => $data) {
                 $hasGrade = isset($data['grade']) && $data['grade'] !== '';
-                $hasBestTp = !empty($data['best_tp_ids']);
-                $hasImpTp = !empty($data['improvement_tp_ids']);
+                $hasBestTp = ! empty($data['best_tp_ids']);
+                $hasImpTp = ! empty($data['improvement_tp_ids']);
 
-                if (!$hasGrade && !$hasBestTp && !$hasImpTp)
+                if (! $hasGrade && ! $hasBestTp && ! $hasImpTp) {
                     continue;
+                }
 
                 SubjectGrade::updateOrCreate(
                     [
@@ -192,7 +199,7 @@ trait HandlesGradingAssessment
 
     public function getFilteredTps()
     {
-        if (!$this->subject_id) {
+        if (! $this->subject_id) {
             return collect();
         }
 
@@ -212,8 +219,6 @@ trait HandlesGradingAssessment
             $q->where('subject_id', $this->subject_id);
         })->orderBy('code')->get();
     }
-
-
 
     public function with(): array
     {
@@ -235,7 +240,7 @@ trait HandlesGradingAssessment
             'subjects' => $this->getFilteredSubjects($this->classroom_id),
             'students' => $students,
             'tps' => $this->getFilteredTps(),
-            'isReadonly' => !$this->canEditAssessments(),
+            'isReadonly' => ! $this->canEditAssessments(),
         ];
     }
 }

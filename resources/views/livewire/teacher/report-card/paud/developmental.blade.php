@@ -8,7 +8,7 @@ use App\Models\AcademicYear;
 use App\Models\DevelopmentalAspect;
 use App\Models\DevelopmentalAssessment;
 use Livewire\Attributes\Layout;
-use Livewire\Volt\Component;
+use Livewire\Component;
 use Illuminate\Support\Facades\DB;
 
 new #[Layout('components.teacher.layouts.app')] class extends Component {
@@ -85,7 +85,7 @@ new #[Layout('components.teacher.layouts.app')] class extends Component {
         // Verify teacher has access
         $teacher = auth()->user();
         if (!$teacher->hasAccessToClassroom($this->classroom_id)) {
-            \Flux::toast(variant: 'danger', text: 'Anda tidak memiliki akses untuk menyimpan penilaian ini.');
+            session()->flash('error', __('Anda tidak memiliki akses untuk menyimpan penilaian ini.'));
             return;
         }
 
@@ -108,7 +108,7 @@ new #[Layout('components.teacher.layouts.app')] class extends Component {
             }
         });
 
-        \Flux::toast('Penilaian perkembangan anak berhasil disimpan.');
+        session()->flash('success', __('Penilaian perkembangan anak berhasil disimpan.'));
     }
 
     public function with(): array
@@ -145,54 +145,57 @@ new #[Layout('components.teacher.layouts.app')] class extends Component {
     }
 }; ?>
 
-<div class="p-6">
-    <div class="flex items-center justify-between mb-6">
-        <div>
-            <flux:heading size="xl" level="1">Penilaian PAUD</flux:heading>
-            <flux:subheading>Input penilaian perkembangan anak (6 aspek perkembangan).</flux:subheading>
-        </div>
+<div class="p-6 space-y-8 text-slate-900 dark:text-white pb-24 md:pb-6">
+    @if (session('success'))
+        <x-ui.alert :title="__('Sukses')" icon="o-check-circle" class="bg-emerald-50 text-emerald-800 border-emerald-100" dismissible>
+            {{ session('success') }}
+        </x-ui.alert>
+    @endif
+
+    @if (session('error'))
+        <x-ui.alert :title="__('Kesalahan')" icon="o-x-circle" class="bg-rose-50 text-rose-800 border-rose-100" dismissible>
+            {{ session('error') }}
+        </x-ui.alert>
+    @endif
+
+    <x-ui.header :title="__('Naratif Penilaian PAUD')" :subtitle="__('Input narasi penilaian perkembangan anak untuk 6 aspek perkembangan utama.')" separator />
+
+    <div class="grid grid-cols-1 md:grid-cols-4 gap-6">
+        <x-ui.select wire:model.live="academic_year_id" :label="__('Tahun Ajaran')" :options="$years" />
+        <x-ui.select 
+            wire:model.live="semester" 
+            :label="__('Semester')" 
+            :options="[
+                ['id' => '1', 'name' => __('Semester 1')],
+                ['id' => '2', 'name' => __('Semester 2')],
+            ]" 
+        />
+        <x-ui.select 
+            wire:model.live="classroom_id" 
+            :label="__('Kelas / Rombel')" 
+            :placeholder="__('Pilih Kelas')"
+            :options="$classrooms"
+        />
+        <x-ui.select 
+            wire:model.live="student_id" 
+            :label="__('Nama Anak')" 
+            :placeholder="__('Pilih Anak')"
+            :options="$students"
+        />
     </div>
 
-    <div class="grid grid-cols-1 md:grid-cols-4 gap-4 mb-6">
-        <flux:select wire:model.live="academic_year_id" label="Tahun Ajaran">
-            @foreach($years as $year)
-                <option value="{{ $year->id }}">{{ $year->name }}</option>
-            @endforeach
-        </flux:select>
-
-        <flux:select wire:model.live="semester" label="Semester">
-            <option value="1">Semester 1</option>
-            <option value="2">Semester 2</option>
-        </flux:select>
-
-        <flux:select wire:model.live="classroom_id" label="Kelas">
-            <option value="">Pilih Kelas</option>
-            @foreach($classrooms as $room)
-                <option value="{{ $room->id }}">{{ $room->name }}</option>
-            @endforeach
-        </flux:select>
-
-        <flux:select wire:model.live="student_id" label="Anak">
-            <option value="">Pilih Anak</option>
-            @foreach($students as $student)
-                <option value="{{ $student->id }}">{{ $student->name }}</option>
-            @endforeach
-        </flux:select>
-    </div>
-
-    <!-- Student Info Card -->
+    {{-- Student Info Card --}}
     @if($selectedStudent)
-        <div class="mb-6 p-4 rounded-lg bg-gradient-to-r from-pink-50 to-purple-50 dark:from-pink-900/20 dark:to-purple-900/20 border border-pink-200 dark:border-pink-800">
-            <div class="flex items-center gap-4">
-                <div class="flex-shrink-0">
-                    <div class="w-12 h-12 rounded-full bg-pink-500 flex items-center justify-center text-white font-bold text-lg">
-                        {{ substr($selectedStudent->name, 0, 1) }}
-                    </div>
-                </div>
-                <div class="flex-1">
-                    <h3 class="text-lg font-semibold text-zinc-900 dark:text-white">{{ $selectedStudent->name }}</h3>
-                    <p class="text-sm text-zinc-600 dark:text-zinc-400">Laporan Perkembangan Semester {{ $semester }}</p>
-                </div>
+        <div class="p-6 rounded-[2rem] bg-indigo-50 dark:bg-indigo-900/20 border border-indigo-100 dark:border-indigo-800/50 flex items-center gap-6 shadow-sm">
+            <div class="size-16 rounded-3xl bg-white dark:bg-indigo-800 flex items-center justify-center font-black text-2xl text-indigo-600 dark:text-indigo-400 shadow-sm ring-1 ring-indigo-100 dark:ring-indigo-700">
+                {{ substr($selectedStudent->name, 0, 1) }}
+            </div>
+            <div class="flex-1 min-w-0">
+                <h3 class="text-2xl font-black text-slate-900 dark:text-white tracking-tight leading-none mb-1 capitalize">{{ $selectedStudent->name }}</h3>
+                <p class="text-[10px] font-bold text-slate-500 uppercase tracking-widest flex items-center gap-1.5 italic">
+                    <span class="size-1.5 bg-indigo-400 rounded-full animate-pulse"></span>
+                    {{ __('Laporan Perkembangan Semester') }} {{ $semester }}
+                </p>
             </div>
         </div>
     @endif
@@ -200,60 +203,60 @@ new #[Layout('components.teacher.layouts.app')] class extends Component {
     @if($student_id)
         @php
             $aspectTypeLabels = [
-                'nilai_agama' => ['label' => 'Nilai Agama dan Budi Pekerti', 'color' => 'from-purple-500 to-indigo-500', 'icon' => 'heart'],
-                'fisik_motorik' => ['label' => 'Fisik-Motorik', 'color' => 'from-green-500 to-emerald-500', 'icon' => 'hand-raised'],
-                'kognitif' => ['label' => 'Kognitif', 'color' => 'from-blue-500 to-cyan-500', 'icon' => 'light-bulb'],
-                'bahasa' => ['label' => 'Bahasa', 'color' => 'from-orange-500 to-amber-500', 'icon' => 'chat-bubble-left-right'],
-                'sosial_emosional' => ['label' => 'Sosial-Emosional', 'color' => 'from-pink-500 to-rose-500', 'icon' => 'users'],
-                'seni' => ['label' => 'Seni', 'color' => 'from-violet-500 to-purple-500', 'icon' => 'paint-brush'],
+                'nilai_agama' => ['label' => 'Nilai Agama & Budi Pekerti', 'color' => 'bg-emerald-500', 'text' => 'text-emerald-700', 'bg' => 'bg-emerald-50', 'icon' => 'o-heart'],
+                'fisik_motorik' => ['label' => 'Fisik-Motorik', 'color' => 'bg-teal-500', 'text' => 'text-teal-700', 'bg' => 'bg-teal-50', 'icon' => 'o-hand-raised'],
+                'kognitif' => ['label' => 'Kognitif', 'color' => 'bg-blue-500', 'text' => 'text-blue-700', 'bg' => 'bg-blue-50', 'icon' => 'o-light-bulb'],
+                'bahasa' => ['label' => 'Bahasa', 'color' => 'bg-amber-500', 'text' => 'text-amber-700', 'bg' => 'bg-amber-50', 'icon' => 'o-chat-bubble-left-right'],
+                'sosial_emosional' => ['label' => 'Sosial-Emosional', 'color' => 'bg-rose-500', 'text' => 'text-rose-700', 'bg' => 'bg-rose-50', 'icon' => 'o-users'],
+                'seni' => ['label' => 'Seni & Kreativitas', 'color' => 'bg-indigo-500', 'text' => 'text-indigo-700', 'bg' => 'bg-indigo-50', 'icon' => 'o-paint-brush'],
             ];
         @endphp
 
-        <div class="space-y-6">
+        <div class="space-y-8">
             @foreach($aspectsByType as $aspectType => $aspects)
                 @php
-                    $typeInfo = $aspectTypeLabels[$aspectType] ?? ['label' => $aspectType, 'color' => 'from-gray-500 to-gray-600', 'icon' => 'document'];
+                    $typeInfo = $aspectTypeLabels[$aspectType] ?? ['label' => $aspectType, 'color' => 'bg-slate-500', 'text' => 'text-slate-700', 'bg' => 'bg-slate-50', 'icon' => 'o-document-text'];
                 @endphp
-                <div class="border rounded-lg bg-white dark:bg-zinc-900 overflow-hidden">
-                    <!-- Aspect Type Header -->
-                    <div class="p-4 bg-gradient-to-r {{ $typeInfo['color'] }} text-white">
-                        <div class="flex items-center gap-3">
-                            <flux:icon icon="{{ $typeInfo['icon'] }}" class="w-6 h-6" />
-                            <h3 class="text-lg font-semibold">{{ $typeInfo['label'] }}</h3>
+                <x-ui.card shadow padding="false" class="overflow-hidden border-none ring-1 ring-slate-100 dark:ring-slate-800">
+                    {{-- Aspect Type Header --}}
+                    <div class="p-6 {{ $typeInfo['bg'] }} dark:bg-slate-800/50 flex items-center justify-between border-b border-slate-100 dark:border-slate-800">
+                        <div class="flex items-center gap-4">
+                            <div class="size-10 rounded-xl {{ $typeInfo['color'] }} flex items-center justify-center shadow-lg shadow-{{ str_replace('bg-', '', $typeInfo['color']) }}/20">
+                                <x-ui.icon name="{{ $typeInfo['icon'] }}" class="size-5 text-white" />
+                            </div>
+                            <h3 class="text-lg font-black tracking-tight {{ $typeInfo['text'] }} italic">{{ $typeInfo['label'] }}</h3>
                         </div>
+                        <x-ui.badge :label="count($aspects) . ' ' . __('Indikator')" class="bg-white/50 text-slate-500 border-none font-bold italic text-[9px]" />
                     </div>
 
-                    <!-- Aspects -->
-                    <div class="divide-y divide-zinc-200 dark:divide-zinc-700">
+                    {{-- Aspects --}}
+                    <div class="p-8 space-y-6">
                         @foreach($aspects as $aspect)
-                            <div class="p-4" wire:key="aspect-{{ $aspect->id }}">
-                                <label class="block text-sm font-medium text-zinc-900 dark:text-white mb-2">
-                                    {{ $aspect->name }}
-                                </label>
-                                @if($aspect->description)
-                                    <p class="text-xs text-zinc-500 dark:text-zinc-400 mb-2">{{ $aspect->description }}</p>
-                                @endif
-                                <flux:textarea 
+                            <div wire:key="aspect-{{ $aspect->id }}" class="group">
+                                <x-ui.textarea 
                                     wire:model="assessments_data.{{ $aspect->id }}" 
-                                    rows="3"
-                                    placeholder="Tuliskan deskripsi perkembangan anak pada aspek ini..."
+                                    :label="$aspect->name" 
+                                    rows="4"
+                                    :placeholder="__('Tuliskan deskripsi naratif untuk indikator ini...')"
+                                    class="border-none bg-slate-50/50 dark:bg-slate-900 group-hover:bg-white dark:group-hover:bg-slate-800 transition-colors shadow-none focus:ring-1 italic text-sm"
                                 />
+                                @if($aspect->description)
+                                    <p class="mt-2 text-[10px] text-slate-400 italic px-1 leading-relaxed">{{ $aspect->description }}</p>
+                                @endif
                             </div>
                         @endforeach
                     </div>
-                </div>
+                </x-ui.card>
             @endforeach
 
-            <div class="flex justify-end">
-                <flux:button variant="primary" icon="check" wire:click="save">
-                    Simpan Penilaian Perkembangan
-                </flux:button>
+            <div class="sticky bottom-6 flex justify-end">
+                <x-ui.button :label="__('Simpan Seluruh Penilaian')" icon="o-check" class="btn-primary shadow-2xl shadow-primary/30 py-4 px-8" wire:click="save" spinner="save" />
             </div>
         </div>
     @else
-        <div class="flex flex-col items-center justify-center py-12 text-zinc-500 border-2 border-dashed rounded-xl">
-            <flux:icon icon="face-smile" class="w-12 h-12 mb-2 opacity-20" />
-            <p>Silakan pilih kelas dan anak untuk memulai penilaian perkembangan.</p>
+        <div class="flex flex-col items-center justify-center py-32 text-slate-300 dark:text-slate-700 border-2 border-dashed border-slate-200 dark:border-slate-800 rounded-[32px] bg-slate-50/50 dark:bg-slate-900/50 transition-all">
+            <x-ui.icon name="o-face-smile" class="size-20 mb-6 opacity-20" />
+            <p class="text-sm font-black uppercase tracking-widest italic animate-pulse">{{ __('Pilih Kelas & Anak Untuk Memulai Penilaian') }}</p>
         </div>
     @endif
 </div>

@@ -2,9 +2,9 @@
 
 namespace App\Services;
 
-use Intervention\Image\Encoders\WebpEncoder;
 use Illuminate\Http\UploadedFile;
 use Illuminate\Support\Facades\Storage;
+use Intervention\Image\Encoders\WebpEncoder;
 use Intervention\Image\Laravel\Facades\Image;
 
 class ImageOptimizationService
@@ -14,9 +14,9 @@ class ImageOptimizationService
      */
     public function processImage(UploadedFile $file, string $directory, array $sizes = []): array
     {
-        $filename = uniqid() . '.' . $file->extension();
-        $webpFilename = uniqid() . '.webp';
-        
+        $filename = uniqid().'.'.$file->extension();
+        $webpFilename = uniqid().'.webp';
+
         // Default sizes if none provided
         if (empty($sizes)) {
             $sizes = [
@@ -29,11 +29,11 @@ class ImageOptimizationService
         }
 
         $paths = [];
-        
+
         foreach ($sizes as $sizeName => $width) {
             // Create JPEG/PNG version
             $image = Image::read($file->getRealPath());
-            
+
             if ($width && $sizeName !== 'original') {
                 if ($sizeName === 'thumbnail') {
                     // Square thumbnail
@@ -43,14 +43,14 @@ class ImageOptimizationService
                     $image = $image->scaleDown(width: $width);
                 }
             }
-            
+
             $originalPath = "{$directory}/{$sizeName}/{$filename}";
             Storage::disk('public')->put($originalPath, $image->encode());
             $paths[$sizeName] = $originalPath;
-            
+
             // Create WebP version
             $webpImage = Image::read($file->getRealPath());
-            
+
             if ($width && $sizeName !== 'original') {
                 if ($sizeName === 'thumbnail') {
                     $webpImage = $webpImage->cover($width, $width);
@@ -58,12 +58,12 @@ class ImageOptimizationService
                     $webpImage = $webpImage->scaleDown(width: $width);
                 }
             }
-            
+
             $webpPath = "{$directory}/{$sizeName}/{$webpFilename}";
             Storage::disk('public')->put($webpPath, $webpImage->encode(new WebpEncoder(quality: 85)));
             $paths["{$sizeName}_webp"] = $webpPath;
         }
-        
+
         return $paths;
     }
 
@@ -86,7 +86,7 @@ class ImageOptimizationService
         }
 
         $sources = [];
-        
+
         // Generate WebP sources
         foreach ($breakpoints as $size => $media) {
             if (isset($imagePaths["{$size}_webp"])) {
@@ -97,7 +97,7 @@ class ImageOptimizationService
                 );
             }
         }
-        
+
         // Generate fallback sources
         foreach ($breakpoints as $size => $media) {
             if (isset($imagePaths[$size])) {
@@ -108,14 +108,14 @@ class ImageOptimizationService
                 );
             }
         }
-        
+
         // Fallback image
-        $fallbackSrc = isset($imagePaths['medium']) 
+        $fallbackSrc = isset($imagePaths['medium'])
             ? Storage::url($imagePaths['medium'])
             : (isset($imagePaths['large']) ? Storage::url($imagePaths['large']) : Storage::url($imagePaths['original']));
-        
+
         $lazyAttributes = $lazy ? 'loading="lazy" decoding="async"' : '';
-        
+
         return sprintf(
             '<picture>%s<img src="%s" alt="%s" class="%s" %s></picture>',
             implode('', $sources),
@@ -132,8 +132,8 @@ class ImageOptimizationService
     public function deleteImageVersions(array $imagePaths): void
     {
         $pathsToDelete = array_filter($imagePaths);
-        
-        if (!empty($pathsToDelete)) {
+
+        if (! empty($pathsToDelete)) {
             Storage::disk('public')->delete($pathsToDelete);
         }
     }
@@ -145,20 +145,20 @@ class ImageOptimizationService
     {
         $srcset = [];
         $suffix = $webp ? '_webp' : '';
-        
+
         $sizeMap = [
             'small' => '400w',
             'medium' => '800w',
             'large' => '1200w',
         ];
-        
+
         foreach ($sizeMap as $size => $descriptor) {
-            $key = $size . $suffix;
+            $key = $size.$suffix;
             if (isset($imagePaths[$key])) {
-                $srcset[] = Storage::url($imagePaths[$key]) . ' ' . $descriptor;
+                $srcset[] = Storage::url($imagePaths[$key]).' '.$descriptor;
             }
         }
-        
+
         return implode(', ', $srcset);
     }
 }

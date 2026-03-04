@@ -8,7 +8,7 @@ use App\Models\StudentBilling;
 use App\Models\AcademicYear;
 use App\Models\Classroom;
 use Livewire\Attributes\Layout;
-use Livewire\Volt\Component;
+use Livewire\Component;
 use Livewire\WithPagination;
 
 new #[Layout('components.admin.layouts.app')] class extends Component {
@@ -21,6 +21,7 @@ new #[Layout('components.admin.layouts.app')] class extends Component {
     public ?float $amount = null;
 
     public string $search = '';
+    public bool $billingModal = false;
 
     public function mount(): void
     {
@@ -35,7 +36,9 @@ new #[Layout('components.admin.layouts.app')] class extends Component {
     {
         if ($value) {
             $category = FeeCategory::find($value);
-            $this->amount = (float) $category->default_amount;
+            if ($category) {
+                $this->amount = (float) $category->default_amount;
+            }
         }
     }
 
@@ -56,8 +59,10 @@ new #[Layout('components.admin.layouts.app')] class extends Component {
                           ->orWhereNull('fee_category_id');
                 });
             }])
-            ->whereHas('profiles.profileable', function ($q) {
-                $q->where('classroom_id', $this->classroom_id);
+            ->whereHas('profiles', function ($q) {
+                $q->whereHasMorph('profileable', [\App\Models\StudentProfile::class], function ($sq) {
+                    $sq->where('classroom_id', $this->classroom_id);
+                });
             })->get();
 
         $count = 0;
@@ -112,16 +117,18 @@ new #[Layout('components.admin.layouts.app')] class extends Component {
             }
         }
 
-        \Flux::toast("$count Tagihan berhasil di-generate.");
-        $this->dispatch('close-modal');
+        session()->flash('success', __(":count Tagihan berhasil di-generate.", ['count' => $count]));
+        $this->billingModal = false;
     }
 
     public function with(): array
     {
         $billings = StudentBilling::with(['student', 'feeCategory'])
             ->when($this->classroom_id, function($q) {
-                $q->whereHas('student.profiles.profileable', function($sq) {
-                    $sq->where('classroom_id', $this->classroom_id);
+                $q->whereHas('student.profiles', function($pq) {
+                    $pq->whereHasMorph('profileable', [\App\Models\StudentProfile::class], function($sq) {
+                        $sq->where('classroom_id', $this->classroom_id);
+                    });
                 });
             })
             ->when($this->search, function($q) {
@@ -152,99 +159,106 @@ new #[Layout('components.admin.layouts.app')] class extends Component {
     }
 }; ?>
 
-<div class="p-6">
-    <div class="flex items-center justify-between mb-6">
-        <div>
-            <flux:heading size="xl" level="1">Tagihan Siswa</flux:heading>
-            <flux:subheading>Manajemen penagihan biaya pendidikan siswa.</flux:subheading>
-        </div>
-        <flux:modal.trigger name="generate-billing">
-            <flux:button variant="primary" icon="document-plus">Generate Tagihan Kelas</flux:button>
-        </flux:modal.trigger>
-    </div>
+<div class="p-6 space-y-6 text-slate-900 dark:text-white pb-24 md:pb-6">
+    @if (session('success'))
+        <x-ui.alert :title="__('Sukses')" icon="o-check-circle" class="bg-emerald-50 text-emerald-800 border-emerald-100" dismissible>
+            {{ session('success') }}
+        </x-ui.alert>
+    @endif
 
-    <div class="flex gap-4 mb-6">
+    <x-ui.header :title="__('Tagihan Siswa')" :subtitle="__('Manajemen penagihan biaya pendidikan siswa secara kolektif.')" separator>
+        <x-slot:actions>
+            <x-ui.button :label="__('Generate Tagihan Kelas')" icon="o-document-plus" class="btn-primary" wire:click="$set('billingModal', true)" />
+        </x-slot:actions>
+    </x-ui.header>
+
+    <div class="flex flex-col md:flex-row gap-4">
         <div class="flex-1">
-            <flux:input wire:model.live.debounce.300ms="search" placeholder="Cari siswa..." icon="magnifying-glass" />
+            <x-ui.input 
+                wire:model.live.debounce.300ms="search" 
+                :placeholder="__('Cari nama siswa...')" 
+                icon="o-magnifying-glass" 
+            />
         </div>
-        <flux:select wire:model.live="classroom_id" class="w-64">
-            <option value="">Semua Kelas</option>
-            @foreach($classrooms as $room)
-                <option value="{{ $room->id }}">{{ $room->name }}</option>
-            @endforeach
-        </flux:select>
+        <x-ui.select 
+            wire:model.live="classroom_id" 
+            :placeholder="__('Semua Kelas')" 
+            class="w-full md:w-64" 
+            :options="$classrooms" 
+        />
     </div>
 
-    <div class="border rounded-lg bg-white dark:bg-zinc-900 overflow-hidden">
-        <table class="w-full text-sm text-left border-collapse">
-            <thead class="bg-zinc-50 dark:bg-zinc-800">
-                <tr>
-                    <th class="px-4 py-3 font-medium text-zinc-700 dark:text-zinc-300 border-b">Siswa</th>
-                    <th class="px-4 py-3 font-medium text-zinc-700 dark:text-zinc-300 border-b">Kategori</th>
-                    <th class="px-4 py-3 font-medium text-zinc-700 dark:text-zinc-300 border-b">Bulan</th>
-                    <th class="px-4 py-3 font-medium text-zinc-700 dark:text-zinc-300 border-b text-right">Nominal</th>
-                    <th class="px-4 py-3 font-medium text-zinc-700 dark:text-zinc-300 border-b text-center">Status</th>
-                </tr>
-            </thead>
-            <tbody class="divide-y divide-zinc-200 dark:divide-zinc-700">
-                @foreach($billings as $billing)
-                    <tr wire:key="{{ $billing->id }}">
-                        <td class="px-4 py-3 font-medium text-zinc-900 dark:text-white">
-                            {{ $billing->student?->name ?? 'Siswa Dihapus' }}
-                        </td>
-                        <td class="px-4 py-3 text-zinc-600 dark:text-zinc-400">
-                            {{ $billing->feeCategory?->name ?? 'Kategori Dihapus' }}
-                        </td>
-                        <td class="px-4 py-3 text-zinc-600 dark:text-zinc-400">
-                            {{ $billing->month ?? '-' }}
-                        </td>
-                        <td class="px-4 py-3 text-right text-zinc-900 dark:text-white">
-                            Rp {{ number_format($billing->amount, 0, ',', '.') }}
-                        </td>
-                        <td class="px-4 py-3 text-center">
-                            <flux:badge size="sm" :variant="$billing->status === 'paid' ? 'success' : ($billing->status === 'partial' ? 'warning' : 'danger')">
-                                {{ strtoupper($billing->status) }}
-                            </flux:badge>
-                        </td>
-                    </tr>
-                @endforeach
-            </tbody>
-        </table>
-        <div class="p-4 border-t">
+    <x-ui.card shadow padding="false">
+        <x-ui.table 
+            :headers="[
+                ['key' => 'student_name', 'label' => __('Siswa')],
+                ['key' => 'category', 'label' => __('Kategori')],
+                ['key' => 'month_label', 'label' => __('Bulan')],
+                ['key' => 'amount_label', 'label' => __('Nominal'), 'class' => 'text-right'],
+                ['key' => 'status_label', 'label' => __('Status'), 'class' => 'text-center']
+            ]" 
+            :rows="$billings"
+        >
+            @scope('cell_student_name', $billing)
+                <div class="flex flex-col">
+                    <span class="font-bold text-slate-900 dark:text-white">{{ $billing->student?->name ?? __('Siswa Dihapus') }}</span>
+                    <span class="text-[10px] text-slate-400 font-mono tracking-tighter">{{ $billing->student?->profiles?->first()?->profileable?->name ?? '-' }}</span>
+                </div>
+            @endscope
+
+            @scope('cell_category', $billing)
+                <span class="text-xs text-slate-500 font-medium uppercase tracking-tight">{{ $billing->feeCategory?->name ?? __('Kategori Dihapus') }}</span>
+            @endscope
+
+            @scope('cell_month_label', $billing)
+                <span class="text-xs font-black text-slate-400 font-mono">{{ $billing->month ?? '-' }}</span>
+            @endscope
+
+            @scope('cell_amount_label', $billing)
+                <span class="font-mono text-sm font-bold text-slate-700 dark:text-slate-300 italic ring-1 ring-slate-100 dark:ring-slate-800 px-2 py-0.5 rounded-lg bg-slate-50 dark:bg-slate-900/50">
+                    Rp {{ number_format($billing->amount, 0, ',', '.') }}
+                </span>
+            @endscope
+
+            @scope('cell_status_label', $billing)
+                @if($billing->status === 'paid')
+                    <x-ui.badge :label="strtoupper($billing->status)" class="bg-emerald-100 text-emerald-700 border-none text-[8px] font-black px-2 py-0.5" />
+                @elseif($billing->status === 'partial')
+                    <x-ui.badge :label="strtoupper($billing->status)" class="bg-amber-100 text-amber-700 border-none text-[8px] font-black px-2 py-0.5" />
+                @else
+                    <x-ui.badge :label="strtoupper($billing->status)" class="bg-rose-100 text-rose-700 border-none text-[8px] font-black px-2 py-0.5" />
+                @endif
+            @endscope
+        </x-ui.table>
+
+        @if($billings->isEmpty())
+            <div class="py-12 text-center text-slate-400 italic text-sm">
+                {{ __('Tidak ada data tagihan yang ditemukan.') }}
+            </div>
+        @endif
+
+        <div class="p-4 border-t border-slate-100 dark:border-slate-800">
             {{ $billings->links() }}
         </div>
-    </div>
+    </x-ui.card>
 
-    <flux:modal name="generate-billing" class="md:w-[450px]">
+    <x-ui.modal wire:model="billingModal">
+        <x-ui.header :title="__('Generate Tagihan Massal')" :subtitle="__('Buat tagihan untuk satu kelas sekaligus.')" separator />
+
         <div class="space-y-6">
-            <div>
-                <flux:heading size="lg">Generate Tagihan</flux:heading>
-                <flux:subheading>Buat tagihan untuk satu kelas sekaligus.</flux:subheading>
-            </div>
-
-            <flux:select wire:model="classroom_id" label="Kelas">
-                <option value="">Pilih Kelas</option>
-                @foreach($classrooms as $room)
-                    <option value="{{ $room->id }}">{{ $room->name }}</option>
-                @endforeach
-            </flux:select>
-
-            <flux:select wire:model.live="fee_category_id" label="Jenis Biaya">
-                <option value="">Pilih Biaya</option>
-                @foreach($categories as $cat)
-                    <option value="{{ $cat->id }}">{{ $cat->name }}</option>
-                @endforeach
-            </flux:select>
-
-            <flux:input wire:model="month" type="month" label="Bulan (Khusus SPP)" />
-            <flux:input wire:model="amount" type="number" label="Nominal" icon="banknotes" />
-
-            <div class="flex justify-end gap-2">
-                <flux:modal.close>
-                    <flux:button variant="ghost">Batal</flux:button>
-                </flux:modal.close>
-                <flux:button variant="primary" wire:click="generateBillings">Generate</flux:button>
-            </div>
+            <x-ui.select wire:model="classroom_id" :label="__('Kelas Target')" :placeholder="__('Pilih Kelas')" :options="$classrooms" required />
+            <x-ui.select wire:model.live="fee_category_id" :label="__('Jenis Biaya')" :placeholder="__('Pilih Kategori Biaya')" :options="$categories" required />
+            <x-ui.input wire:model="month" type="month" :label="__('Bulan Tagihan')" :placeholder="__('Hanya untuk biaya bulanan/SPP')" />
+            <x-ui.input wire:model="amount" type="number" :label="__('Nominal Tagihan (Rp)')" icon="o-banknotes" required />
+            
+            <x-ui.alert icon="o-information-circle" class="bg-blue-50 text-blue-700 border-blue-100 mt-4 font-medium text-[10px]">
+                {{ __('Sistem akan menerapkan potongan/beasiswa secara otomatis berdasarkan profil siswa yang terdaftar.') }}
+            </x-ui.alert>
         </div>
-    </flux:modal>
+
+        <div class="flex justify-end gap-3 mt-8 pt-6 border-t border-slate-100 dark:border-slate-800">
+            <x-ui.button :label="__('Batal')" wire:click="$set('billingModal', false)" />
+            <x-ui.button :label="__('Generate Sekarang')" class="btn-primary" wire:click="generateBillings" spinner="generateBillings" />
+        </div>
+    </x-ui.modal>
 </div>

@@ -5,7 +5,7 @@ declare(strict_types=1);
 use App\Models\{Registration, Classroom, Level, AcademicYear, User, StudentProfile, Profile};
 use Illuminate\Support\Facades\{DB, Hash};
 use Livewire\Attributes\Layout;
-use Livewire\Volt\Component;
+use Livewire\Component;
 use Livewire\WithPagination;
 
 new #[Layout('components.admin.layouts.app')] class extends Component {
@@ -14,6 +14,10 @@ new #[Layout('components.admin.layouts.app')] class extends Component {
     public string $search = '';
     public string $filterStatus = '';
     public ?int $filterLevelId = null;
+
+    // Modals
+    public bool $detailModal = false;
+    public bool $enrollModal = false;
 
     // Viewing details
     public ?Registration $viewing = null;
@@ -40,7 +44,7 @@ new #[Layout('components.admin.layouts.app')] class extends Component {
     public function viewDetails(Registration $registration): void
     {
         $this->viewing = $registration->load(['preferredLevel', 'academicYear', 'enrolledByUser']);
-        $this->dispatch('open-modal', 'detail-modal');
+        $this->detailModal = true;
     }
 
     public function accept(Registration $registration): void
@@ -59,7 +63,7 @@ new #[Layout('components.admin.layouts.app')] class extends Component {
     {
         $this->enrolling = $registration;
         $this->enrollClassroomId = null;
-        $this->dispatch('open-modal', 'enroll-modal');
+        $this->enrollModal = true;
     }
 
     public function enroll(): void
@@ -130,6 +134,7 @@ new #[Layout('components.admin.layouts.app')] class extends Component {
         });
 
         $this->reset(['enrolling', 'enrollClassroomId']);
+        $this->enrollModal = false;
         session()->flash('success', 'Siswa berhasil di-enroll ke kelas!');
         $this->dispatch('enrollment-saved');
     }
@@ -167,283 +172,314 @@ new #[Layout('components.admin.layouts.app')] class extends Component {
     }
 }; ?>
 
-<div class="p-6">
+<div class="p-6 space-y-8 text-slate-900 dark:text-white pb-24 md:pb-6">
     @if (session('success'))
-        <div x-data="{ show: true }" x-show="show" x-init="setTimeout(() => show = false, 4000)"
-            class="mb-6 p-4 bg-green-50 dark:bg-green-900/20 border border-green-200 dark:border-green-800 rounded-lg">
-            <div class="flex items-center gap-3">
-                <flux:icon icon="check-circle" class="w-5 h-5 text-green-600 dark:text-green-400" />
-                <span class="text-green-800 dark:text-green-200">{{ session('success') }}</span>
-            </div>
-        </div>
+        <x-ui.alert :title="__('Sukses')" icon="o-check-circle" class="bg-emerald-50 text-emerald-800 border-emerald-100" dismissible>
+            {{ session('success') }}
+        </x-ui.alert>
     @endif
 
     @if (session('error'))
-        <div x-data="{ show: true }" x-show="show"
-            class="mb-6 p-4 bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded-lg">
-            <div class="flex items-center gap-3">
-                <flux:icon icon="exclamation-circle" class="w-5 h-5 text-red-600 dark:text-red-400" />
-                <span class="text-red-800 dark:text-red-200">{{ session('error') }}</span>
-            </div>
-        </div>
+        <x-ui.alert :title="__('Gagal')" icon="o-exclamation-circle" class="bg-rose-50 text-rose-800 border-rose-100" dismissible>
+            {{ session('error') }}
+        </x-ui.alert>
     @endif
 
-    <!-- Header -->
-    <div class="flex items-center justify-between mb-6">
-        <div>
-            <flux:heading size="xl" level="1">Manajemen Pendaftaran</flux:heading>
-            <flux:subheading>Kelola pendaftaran siswa baru.</flux:subheading>
+    <x-ui.header :title="__('Pendaftaran Siswa Baru (PPDB)')" :subtitle="__('Pantau dan proses data calon siswa yang mendaftar melalui portal pendaftaran daring.')" separator>
+        <x-slot:actions>
+            <x-ui.input 
+                wire:model.live.debounce.300ms="search" 
+                :placeholder="__('Cari nama atau nomor daftar...')" 
+                icon="o-magnifying-glass" 
+                class="w-80" 
+            />
+        </x-slot:actions>
+    </x-ui.header>
+
+    {{-- Status Dashboard & Navigation --}}
+    <x-ui.card shadow padding="false" class="border-none ring-1 ring-slate-100 dark:ring-slate-800 overflow-hidden">
+        <div class="p-4 bg-slate-50/50 dark:bg-slate-900/50 flex flex-wrap items-center gap-3">
+            <x-ui.button 
+                wire:click="$set('filterStatus', '')"
+                :label="__('Semua')"
+                size="sm"
+                class="rounded-full px-5 font-black italic tracking-tight {{ !$filterStatus ? 'bg-slate-900 text-white border-none shadow-lg' : 'btn-ghost hover:bg-slate-100 dark:hover:bg-slate-800' }}"
+            >
+                <x-slot:append>
+                    <span class="ml-2 text-[10px] opacity-60">({{ $statusCounts['all'] }})</span>
+                </x-slot:append>
+            </x-ui.button>
+            <x-ui.button 
+                wire:click="$set('filterStatus', 'pending')"
+                :label="__('Pending')"
+                size="sm"
+                class="rounded-full px-5 font-black italic tracking-tight {{ $filterStatus === 'pending' ? 'bg-amber-500 text-white border-none shadow-lg' : 'btn-ghost text-amber-600 hover:bg-amber-50' }}"
+            >
+                <x-slot:append>
+                    <span class="ml-2 text-[10px] opacity-60">({{ $statusCounts['pending'] }})</span>
+                </x-slot:append>
+            </x-ui.button>
+            <x-ui.button 
+                wire:click="$set('filterStatus', 'accepted')"
+                :label="__('Diterima')"
+                size="sm"
+                class="rounded-full px-5 font-black italic tracking-tight {{ $filterStatus === 'accepted' ? 'bg-sky-500 text-white border-none shadow-lg' : 'btn-ghost text-sky-600 hover:bg-sky-50' }}"
+            >
+                <x-slot:append>
+                    <span class="ml-2 text-[10px] opacity-60">({{ $statusCounts['accepted'] }})</span>
+                </x-slot:append>
+            </x-ui.button>
+            <x-ui.button 
+                wire:click="$set('filterStatus', 'enrolled')"
+                :label="__('Telah Enroll')"
+                size="sm"
+                class="rounded-full px-5 font-black italic tracking-tight {{ $filterStatus === 'enrolled' ? 'bg-emerald-500 text-white border-none shadow-lg' : 'btn-ghost text-emerald-600 hover:bg-emerald-50' }}"
+            >
+                <x-slot:append>
+                    <span class="ml-2 text-[10px] opacity-60">({{ $statusCounts['enrolled'] }})</span>
+                </x-slot:append>
+            </x-ui.button>
+            <x-ui.button 
+                wire:click="$set('filterStatus', 'rejected')"
+                :label="__('Ditolak')"
+                size="sm"
+                class="rounded-full px-5 font-black italic tracking-tight {{ $filterStatus === 'rejected' ? 'bg-rose-500 text-white border-none shadow-lg' : 'btn-ghost text-rose-600 hover:bg-rose-50' }}"
+            >
+                <x-slot:append>
+                    <span class="ml-2 text-[10px] opacity-60">({{ $statusCounts['rejected'] }})</span>
+                </x-slot:append>
+            </x-ui.button>
         </div>
-        <flux:input wire:model.live.debounce.300ms="search" placeholder="Cari pendaftar..." icon="magnifying-glass" class="w-64" />
-    </div>
 
-    <!-- Status Tabs -->
-    <div class="flex flex-wrap gap-2 mb-6">
-        <button wire:click="$set('filterStatus', '')"
-            class="px-4 py-2 rounded-lg text-sm font-medium transition-colors {{ !$filterStatus ? 'bg-zinc-900 text-white dark:bg-white dark:text-zinc-900' : 'bg-zinc-100 text-zinc-600 hover:bg-zinc-200 dark:bg-zinc-800 dark:text-zinc-400' }}">
-            Semua ({{ $statusCounts['all'] }})
-        </button>
-        <button wire:click="$set('filterStatus', 'pending')"
-            class="px-4 py-2 rounded-lg text-sm font-medium transition-colors {{ $filterStatus === 'pending' ? 'bg-yellow-500 text-white' : 'bg-yellow-50 text-yellow-700 hover:bg-yellow-100 dark:bg-yellow-900/30 dark:text-yellow-400' }}">
-            Menunggu ({{ $statusCounts['pending'] }})
-        </button>
-        <button wire:click="$set('filterStatus', 'accepted')"
-            class="px-4 py-2 rounded-lg text-sm font-medium transition-colors {{ $filterStatus === 'accepted' ? 'bg-blue-500 text-white' : 'bg-blue-50 text-blue-700 hover:bg-blue-100 dark:bg-blue-900/30 dark:text-blue-400' }}">
-            Diterima ({{ $statusCounts['accepted'] }})
-        </button>
-        <button wire:click="$set('filterStatus', 'rejected')"
-            class="px-4 py-2 rounded-lg text-sm font-medium transition-colors {{ $filterStatus === 'rejected' ? 'bg-red-500 text-white' : 'bg-red-50 text-red-700 hover:bg-red-100 dark:bg-red-900/30 dark:text-red-400' }}">
-            Ditolak ({{ $statusCounts['rejected'] }})
-        </button>
-        <button wire:click="$set('filterStatus', 'enrolled')"
-            class="px-4 py-2 rounded-lg text-sm font-medium transition-colors {{ $filterStatus === 'enrolled' ? 'bg-green-500 text-white' : 'bg-green-50 text-green-700 hover:bg-green-100 dark:bg-green-900/30 dark:text-green-400' }}">
-            Terdaftar ({{ $statusCounts['enrolled'] }})
-        </button>
-    </div>
+        {{-- Table View --}}
+        <x-ui.table :rows="$registrations" :headers="[
+            ['key' => 'id_reg', 'label' => __('No. Registrasi')],
+            ['key' => 'registrant', 'label' => __('Pendaftar')],
+            ['key' => 'preferred_level.name', 'label' => __('Jenjang'), 'class' => 'text-center'],
+            ['key' => 'reg_date', 'label' => __('Waktu Daftar'), 'class' => 'text-right'],
+            ['key' => 'reg_status', 'label' => __('Status'), 'class' => 'text-center'],
+            ['key' => 'actions', 'label' => '']
+        ]">
+            @scope('cell_id_reg', $reg)
+                <div class="flex items-center gap-2">
+                    <span class="font-mono text-[10px] bg-slate-50 dark:bg-slate-900 border border-slate-100 dark:border-slate-800 px-3 py-1 rounded-full font-black text-slate-500 tracking-tighter">{{ $reg->registration_number }}</span>
+                </div>
+            @endscope
 
-    <!-- Table -->
-    <div class="overflow-hidden border rounded-xl border-zinc-200 dark:border-zinc-700 bg-white dark:bg-zinc-900 shadow-sm">
-        <table class="w-full text-sm text-left border-collapse">
-            <thead class="bg-zinc-50 dark:bg-zinc-800/50">
-                <tr>
-                    <th class="px-4 py-3 font-semibold text-zinc-900 dark:text-zinc-100 border-b border-zinc-200 dark:border-zinc-700">No. Daftar</th>
-                    <th class="px-4 py-3 font-semibold text-zinc-900 dark:text-zinc-100 border-b border-zinc-200 dark:border-zinc-700">Pendaftar</th>
-                    <th class="px-4 py-3 font-semibold text-zinc-900 dark:text-zinc-100 border-b border-zinc-200 dark:border-zinc-700">Jenjang</th>
-                    <th class="px-4 py-3 font-semibold text-zinc-900 dark:text-zinc-100 border-b border-zinc-200 dark:border-zinc-700">Tanggal</th>
-                    <th class="px-4 py-3 font-semibold text-zinc-900 dark:text-zinc-100 border-b border-zinc-200 dark:border-zinc-700">Status</th>
-                    <th class="px-4 py-3 font-semibold text-zinc-900 dark:text-zinc-100 border-b border-zinc-200 dark:border-zinc-700 text-right">Aksi</th>
-                </tr>
-            </thead>
-            <tbody class="divide-y divide-zinc-200 dark:divide-zinc-700">
-                @forelse ($registrations as $reg)
-                    <tr wire:key="reg-{{ $reg->id }}" class="hover:bg-zinc-50/80 dark:hover:bg-zinc-800/30 transition-colors group">
-                        <td class="px-4 py-4">
-                            <span class="font-mono text-xs bg-zinc-100 dark:bg-zinc-800 px-2 py-1 rounded">{{ $reg->registration_number }}</span>
-                        </td>
-                        <td class="px-4 py-4">
-                            <button type="button" wire:click="viewDetails({{ $reg->id }})" 
-                                x-on:click="$flux.modal('detail-modal').show()"
-                                class="text-left cursor-pointer focus:outline-none">
-                                <div class="font-semibold text-zinc-900 dark:text-white group-hover:text-primary-600 dark:group-hover:text-primary-400 transition-colors">{{ $reg->name }}</div>
-                                <div class="text-xs text-zinc-500">{{ $reg->phone ?? $reg->email ?? '-' }}</div>
-                            </button>
-                        </td>
-                        <td class="px-4 py-4 text-zinc-600 dark:text-zinc-400">
-                            {{ $reg->preferredLevel?->name ?? '-' }}
-                        </td>
-                        <td class="px-4 py-4 text-zinc-500 dark:text-zinc-400 text-xs">
-                            {{ $reg->created_at->format('d M Y') }}
-                        </td>
-                        <td class="px-4 py-4">
-                            <flux:badge size="sm"
-                                color="{{ $reg->status_color }}">
-                                {{ $reg->status_label }}
-                            </flux:badge>
-                        </td>
-                        <td class="px-4 py-4 text-right">
-                            <div class="flex items-center justify-end gap-1">
-                                <flux:button size="sm" variant="ghost" icon="eye"
-                                    wire:click="viewDetails({{ $reg->id }})" 
-                                    x-on:click="$flux.modal('detail-modal').show()"
-                                    tooltip="Lihat Detail" />
+            @scope('cell_registrant', $reg)
+                <div class="flex flex-col min-w-0 cursor-pointer group" wire:click="viewDetails({{ $reg->id }})">
+                    <div class="font-black text-slate-800 dark:text-white group-hover:text-primary transition-colors italic uppercase tracking-tighter">{{ $reg->name }}</div>
+                    <div class="text-[10px] font-bold text-slate-400 font-mono tracking-tighter truncate">{{ $reg->phone ?? $reg->email ?? '-' }}</div>
+                </div>
+            @endscope
 
-                                @if($reg->status === 'pending')
-                                    <flux:button size="sm" variant="ghost" icon="check"
-                                        class="text-green-600 hover:bg-green-50 dark:hover:bg-green-900/20"
-                                        wire:click="accept({{ $reg->id }})" tooltip="Terima" />
-                                    <flux:button size="sm" variant="ghost" icon="x-mark"
-                                        class="text-red-500 hover:bg-red-50 dark:hover:bg-red-900/20"
-                                        wire:confirm="Yakin ingin menolak pendaftaran ini?"
-                                        wire:click="reject({{ $reg->id }})" tooltip="Tolak" />
-                                @endif
+            @scope('cell_reg_date', $reg)
+                <div class="text-right">
+                    <span class="text-[10px] font-bold text-slate-500 font-mono tracking-tighter italic uppercase">
+                        {{ $reg->created_at->format('d/M/Y') }}
+                    </span>
+                </div>
+            @endscope
 
-                                @if($reg->status === 'accepted')
-                                    <flux:button size="sm" variant="primary" icon="academic-cap"
-                                        wire:click="openEnroll({{ $reg->id }})" 
-                                        x-on:click="$flux.modal('enroll-modal').show()"
-                                        tooltip="Enroll ke Kelas" />
-                                @endif
+            @scope('cell_reg_status', $reg)
+                <div class="flex justify-center">
+                    @php
+                        $statusClasses = [
+                            'pending' => 'bg-amber-50 text-amber-600 ring-amber-100',
+                            'accepted' => 'bg-sky-50 text-sky-600 ring-sky-100',
+                            'enrolled' => 'bg-emerald-50 text-emerald-600 ring-emerald-100',
+                            'rejected' => 'bg-rose-50 text-rose-600 ring-rose-100',
+                        ];
+                    @endphp
+                    <x-ui.badge 
+                        :label="strtoupper($reg->status_label)" 
+                        class="border-none font-black italic text-[9px] px-3 py-1 ring-1 shadow-sm {{ $statusClasses[$reg->status] ?? 'bg-slate-50 text-slate-400 ring-slate-100' }}" 
+                    />
+                </div>
+            @endscope
 
-                                @if($reg->status !== 'enrolled')
-                                    <flux:button size="sm" variant="ghost" icon="trash"
-                                        class="text-red-500 hover:bg-red-50 dark:hover:bg-red-900/20"
-                                        wire:confirm="Yakin ingin menghapus pendaftaran ini?"
-                                        wire:click="delete({{ $reg->id }})" tooltip="Hapus" />
-                                @endif
-                            </div>
-                        </td>
-                    </tr>
-                @empty
-                    <tr>
-                        <td colspan="6" class="px-4 py-12 text-center text-zinc-500 dark:text-zinc-400">
-                            <div class="flex flex-col items-center gap-2">
-                                <flux:icon icon="inbox" class="w-10 h-10 text-zinc-300 dark:text-zinc-600" />
-                                <span class="italic">Belum ada data pendaftaran.</span>
-                            </div>
-                        </td>
-                    </tr>
-                @endforelse
-            </tbody>
-        </table>
-    </div>
+            @scope('cell_actions', $reg)
+                <div class="flex items-center justify-end gap-1">
+                    <x-ui.button icon="o-eye" wire:click="viewDetails({{ $reg->id }})" class="btn-ghost btn-xs text-slate-400 hover:text-indigo-500" />
 
-    <div class="mt-4">
-        {{ $registrations->links() }}
-    </div>
+                    @if($reg->status === 'pending')
+                        <x-ui.button icon="o-check" class="btn-ghost btn-xs text-slate-400 hover:text-emerald-500" wire:click="accept({{ $reg->id }})" />
+                        <x-ui.button icon="o-x-mark" class="btn-ghost btn-xs text-slate-300 hover:text-rose-500" wire:confirm="{{ __('Yakin ingin menolak pendaftaran ini?') }}" wire:click="reject({{ $reg->id }})" />
+                    @endif
 
-    <!-- Detail Modal -->
-    <flux:modal name="detail-modal" class="max-w-2xl">
+                    @if($reg->status === 'accepted')
+                        <x-ui.button icon="o-academic-cap" class="btn-ghost btn-xs text-sky-600 hover:bg-sky-50 animate-pulse font-black italic py-0 h-7" :label="__('ENROLL')" wire:click="openEnroll({{ $reg->id }})" />
+                    @endif
+
+                    @if($reg->status !== 'enrolled')
+                        <x-ui.button icon="o-trash" class="btn-ghost btn-xs text-slate-300 hover:text-rose-500" wire:confirm="{{ __('Hapus data pendaftaran secara permanen?') }}" wire:click="delete({{ $reg->id }})" />
+                    @endif
+                </div>
+            @endscope
+        </x-ui.table>
+
+        <div class="p-6 border-t border-slate-50 dark:border-slate-800">
+            {{ $registrations->links() }}
+        </div>
+    </x-ui.card>
+
+    {{-- Detail Modal --}}
+    <x-ui.modal wire:model="detailModal" class="backdrop-blur-sm">
         @if($viewing)
-            <div class="space-y-6">
-                <div class="flex items-start justify-between">
+            <div class="p-2">
+                <div class="flex items-center gap-4 mb-8">
+                    <div class="size-16 rounded-[2rem] bg-indigo-500/10 flex items-center justify-center border border-indigo-100 dark:border-indigo-900 shadow-inner">
+                        <x-ui.icon name="o-user" class="size-8 text-indigo-500" />
+                    </div>
                     <div>
-                        <flux:heading size="lg">Detail Pendaftaran</flux:heading>
-                        <flux:subheading>{{ $viewing->registration_number }}</flux:subheading>
-                    </div>
-                    <flux:badge size="sm" color="{{ $viewing->status_color }}">{{ $viewing->status_label }}</flux:badge>
-                </div>
-
-                <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
-                    <!-- Data Pribadi -->
-                    <div class="space-y-3">
-                        <flux:heading size="sm" class="border-b pb-1">Data Pribadi</flux:heading>
-                        <div class="space-y-2 text-sm">
-                            <div><span class="text-zinc-500 w-24 inline-block">Nama</span> <span class="font-medium">{{ $viewing->name }}</span></div>
-                            <div><span class="text-zinc-500 w-24 inline-block">NIK</span> <span class="font-medium">{{ $viewing->nik ?? '-' }}</span></div>
-                            <div><span class="text-zinc-500 w-24 inline-block">TTL</span> <span class="font-medium">{{ $viewing->pob ?? '-' }}, {{ $viewing->dob?->format('d/m/Y') ?? '-' }}</span></div>
-                            <div><span class="text-zinc-500 w-24 inline-block">JK</span> <span class="font-medium">{{ $viewing->gender === 'L' ? 'Laki-laki' : ($viewing->gender === 'P' ? 'Perempuan' : '-') }}</span></div>
-                            <div><span class="text-zinc-500 w-24 inline-block">HP</span> <span class="font-medium">{{ $viewing->phone ?? '-' }}</span></div>
-                            <div><span class="text-zinc-500 w-24 inline-block">Email</span> <span class="font-medium">{{ $viewing->email ?? '-' }}</span></div>
-                        </div>
-                    </div>
-
-                    <!-- Alamat -->
-                    <div class="space-y-3">
-                        <flux:heading size="sm" class="border-b pb-1">Alamat</flux:heading>
-                        <div class="space-y-2 text-sm">
-                            <div><span class="text-zinc-500 w-24 inline-block">Alamat</span> <span class="font-medium">{{ $viewing->address ?? '-' }}</span></div>
-                            <div><span class="text-zinc-500 w-24 inline-block">Desa</span> <span class="font-medium">{{ $viewing->village_name ?? '-' }}</span></div>
-                            <div><span class="text-zinc-500 w-24 inline-block">Kecamatan</span> <span class="font-medium">{{ $viewing->district_name ?? '-' }}</span></div>
-                            <div><span class="text-zinc-500 w-24 inline-block">Kab/Kota</span> <span class="font-medium">{{ $viewing->regency_name ?? '-' }}</span></div>
-                            <div><span class="text-zinc-500 w-24 inline-block">Provinsi</span> <span class="font-medium">{{ $viewing->province_name ?? '-' }}</span></div>
-                        </div>
-                    </div>
-
-                    <!-- Orang Tua -->
-                    <div class="space-y-3">
-                        <flux:heading size="sm" class="border-b pb-1">Orang Tua/Wali</flux:heading>
-                        <div class="space-y-2 text-sm">
-                            <div><span class="text-zinc-500 w-24 inline-block">Ayah</span> <span class="font-medium">{{ $viewing->father_name ?? '-' }}</span></div>
-                            <div><span class="text-zinc-500 w-24 inline-block">NIK Ayah</span> <span class="font-medium">{{ $viewing->nik_ayah ?? '-' }}</span></div>
-                            <div><span class="text-zinc-500 w-24 inline-block">Ibu</span> <span class="font-medium">{{ $viewing->mother_name ?? '-' }}</span></div>
-                            <div><span class="text-zinc-500 w-24 inline-block">NIK Ibu</span> <span class="font-medium">{{ $viewing->nik_ibu ?? '-' }}</span></div>
-                            <div><span class="text-zinc-500 w-24 inline-block">Wali</span> <span class="font-medium">{{ $viewing->guardian_name ?? '-' }}</span></div>
-                            <div><span class="text-zinc-500 w-24 inline-block">HP Wali</span> <span class="font-medium">{{ $viewing->guardian_phone ?? '-' }}</span></div>
-                            <div><span class="text-zinc-500 w-24 inline-block">No. KK</span> <span class="font-medium">{{ $viewing->no_kk ?? '-' }}</span></div>
-                            <div><span class="text-zinc-500 w-24 inline-block">No. Akta</span> <span class="font-medium">{{ $viewing->no_akta ?? '-' }}</span></div>
-                        </div>
-                    </div>
-
-                    <!-- Akademik -->
-                    <div class="space-y-3">
-                        <flux:heading size="sm" class="border-b pb-1">Data Akademik</flux:heading>
-                        <div class="space-y-2 text-sm">
-                            <div><span class="text-zinc-500 w-24 inline-block">NISN</span> <span class="font-medium">{{ $viewing->nisn ?? '-' }}</span></div>
-                            <div><span class="text-zinc-500 w-24 inline-block">Asal Sekolah</span> <span class="font-medium">{{ $viewing->previous_school ?? '-' }}</span></div>
-                            <div><span class="text-zinc-500 w-24 inline-block">Jenjang</span> <span class="font-medium">{{ $viewing->preferredLevel?->name ?? '-' }}</span></div>
-                            <div><span class="text-zinc-500 w-24 inline-block">TA</span> <span class="font-medium">{{ $viewing->academicYear?->name ?? '-' }}</span></div>
-                            <div><span class="text-zinc-500 w-24 inline-block">Anak ke-</span> <span class="font-medium">{{ $viewing->birth_order ?? '-' }} dari {{ $viewing->total_siblings ?? '-' }}</span></div>
-                        </div>
+                        <h2 class="font-black text-2xl text-slate-900 dark:text-white italic uppercase tracking-tighter">{{ $viewing->name }}</h2>
+                        <span class="font-mono text-[11px] font-bold text-slate-400 uppercase tracking-widest">{{ $viewing->registration_number }}</span>
                     </div>
                 </div>
+                
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-10 max-h-[60vh] overflow-y-auto pr-4 custom-scrollbar">
+                    {{-- Personal Information --}}
+                    <div class="space-y-6">
+                        <div class="flex items-center gap-2 border-b border-slate-100 dark:border-slate-800 pb-2">
+                            <x-ui.icon name="o-identification" class="size-4 text-primary" />
+                            <h4 class="font-black text-[11px] text-slate-500 uppercase tracking-widest italic">{{ __('Identitas Pendaftar') }}</h4>
+                        </div>
+                        <div class="space-y-4">
+                            <div>
+                                <label class="text-[10px] font-black italic text-slate-400 uppercase tracking-widest mb-1 block">{{ __('NIK / Nomor Identitas') }}</label>
+                                <p class="text-sm font-bold text-slate-700 dark:text-slate-300">{{ $viewing->nik ?: '---' }}</p>
+                            </div>
+                            <div>
+                                <label class="text-[10px] font-black italic text-slate-400 uppercase tracking-widest mb-1 block">{{ __('Tempat, Tgl Lahir') }}</label>
+                                <p class="text-sm font-bold text-slate-700 dark:text-slate-300">{{ $viewing->pob ?: '---' }}, {{ $viewing->dob?->format('d/m/Y') ?: '---' }}</p>
+                            </div>
+                            <div class="grid grid-cols-2 gap-4">
+                                <div>
+                                    <label class="text-[10px] font-black italic text-slate-400 uppercase tracking-widest mb-1 block">{{ __('Telepon / WA') }}</label>
+                                    <p class="text-sm font-bold text-slate-700 dark:text-slate-300">{{ $viewing->phone ?: '---' }}</p>
+                                </div>
+                                <div>
+                                    <label class="text-[10px] font-black italic text-slate-400 uppercase tracking-widest mb-1 block">{{ __('Email') }}</label>
+                                    <p class="text-sm font-bold text-slate-700 dark:text-slate-300">{{ $viewing->email ?: '---' }}</p>
+                                </div>
+                            </div>
+                        </div>
 
-                @if($viewing->notes)
-                    <div class="p-3 bg-zinc-50 dark:bg-zinc-800 rounded-lg text-sm">
-                        <span class="font-semibold">Catatan:</span> {{ $viewing->notes }}
+                        <div class="flex items-center gap-2 border-b border-slate-100 dark:border-slate-800 pb-2 pt-4">
+                            <x-ui.icon name="o-map-pin" class="size-4 text-primary" />
+                            <h4 class="font-black text-[11px] text-slate-500 uppercase tracking-widest italic">{{ __('Informasi Domisili') }}</h4>
+                        </div>
+                        <div class="space-y-3">
+                            <p class="text-sm font-medium text-slate-600 dark:text-slate-400 bg-slate-50 dark:bg-slate-800/50 p-4 rounded-2xl italic leading-relaxed border border-slate-100 dark:border-slate-700 shadow-inner">
+                                {{ $viewing->address ?: __('Alamat tidak terdata') }}
+                            </p>
+                            <div class="grid grid-cols-2 gap-4 text-[11px] font-bold">
+                                <div class="bg-indigo-50/50 dark:bg-indigo-900/10 px-4 py-2 rounded-xl text-indigo-600 border border-indigo-100/50 italic text-center uppercase tracking-tighter">{{ $viewing->village_name ?: '---' }}</div>
+                                <div class="bg-emerald-50/50 dark:bg-emerald-900/10 px-4 py-2 rounded-xl text-emerald-600 border border-emerald-100/50 italic text-center uppercase tracking-tighter">{{ $viewing->district_name ?: '---' }}</div>
+                            </div>
+                        </div>
                     </div>
-                @endif
 
-                <div class="flex justify-end gap-2 pt-4 border-t">
+                    {{-- Academic & Parents --}}
+                    <div class="space-y-6">
+                        <div class="flex items-center gap-2 border-b border-slate-100 dark:border-slate-800 pb-2">
+                            <x-ui.icon name="o-academic-cap" class="size-4 text-primary" />
+                            <h4 class="font-black text-[11px] text-slate-500 uppercase tracking-widest italic">{{ __('Data Akademik') }}</h4>
+                        </div>
+                        <div class="space-y-4">
+                            <div class="grid grid-cols-2 gap-4">
+                                <div>
+                                    <label class="text-[10px] font-black italic text-slate-400 uppercase tracking-widest mb-1 block">{{ __('Nomor NISN') }}</label>
+                                    <p class="text-sm font-mono font-black text-slate-900 dark:text-white px-3 py-1 bg-slate-100 dark:bg-slate-800 rounded-lg inline-block">{{ $viewing->nisn ?: '---' }}</p>
+                                </div>
+                                <div>
+                                    <label class="text-[10px] font-black italic text-slate-400 uppercase tracking-widest mb-1 block">{{ __('Target Jenjang') }}</label>
+                                    <x-ui.badge :label="$viewing->preferredLevel?->name ?? '---'" class="bg-indigo-50 text-indigo-600 border-none font-black italic text-[10px] tracking-tighter" />
+                                </div>
+                            </div>
+                            <div>
+                                <label class="text-[10px] font-black italic text-slate-400 uppercase tracking-widest mb-1 block">{{ __('Asal Satuan Pendidikan') }}</label>
+                                <p class="text-sm font-bold text-slate-700 dark:text-slate-300 italic">{{ $viewing->previous_school ?: '---' }}</p>
+                            </div>
+                        </div>
+
+                        <div class="flex items-center gap-2 border-b border-slate-100 dark:border-slate-800 pb-2 pt-4">
+                            <x-ui.icon name="o-users" class="size-4 text-primary" />
+                            <h4 class="font-black text-[11px] text-slate-500 uppercase tracking-widest italic">{{ __('Orang Tua / Wali') }}</h4>
+                        </div>
+                        <div class="space-y-4">
+                            <div class="p-4 bg-white dark:bg-slate-800 border-l-4 border-slate-200 dark:border-slate-700 rounded-r-2xl shadow-sm space-y-3">
+                                <div class="flex justify-between items-center text-xs">
+                                    <span class="text-slate-400 font-bold italic uppercase tracking-widest text-[9px]">{{ __('Nama Ayah Kandung') }}</span>
+                                    <span class="font-black text-slate-700 dark:text-slate-200">{{ $viewing->father_name ?: '---' }}</span>
+                                </div>
+                                <div class="flex justify-between items-center text-xs">
+                                    <span class="text-slate-400 font-bold italic uppercase tracking-widest text-[9px]">{{ __('Nama Ibu Kandung') }}</span>
+                                    <span class="font-black text-slate-700 dark:text-slate-200">{{ $viewing->mother_name ?: '---' }}</span>
+                                </div>
+                                <div class="h-px bg-slate-50 dark:bg-slate-700 my-2"></div>
+                                <div class="flex justify-between items-center text-xs">
+                                    <span class="text-slate-400 font-bold italic uppercase tracking-widest text-[9px]">{{ __('Nomor Kartu Keluarga') }}</span>
+                                    <span class="font-mono font-bold text-indigo-500">{{ $viewing->no_kk ?: '---' }}</span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="flex items-center justify-end gap-3 mt-10 pt-6 border-t border-slate-50 dark:border-slate-800">
+                    <x-ui.button :label="__('Tutup')" @click="show = false" class="btn-ghost font-bold py-0" />
                     @if($viewing->status === 'pending')
-                        <flux:button variant="primary" icon="check" wire:click="accept({{ $viewing->id }})"
-                            x-on:click="$flux.modal('detail-modal').close()">Terima</flux:button>
-                        <flux:button variant="danger" icon="x-mark"
-                            wire:click="reject({{ $viewing->id }})"
-                            wire:confirm="Yakin ingin menolak?"
-                            x-on:click="$flux.modal('detail-modal').close()">Tolak</flux:button>
+                        <x-ui.button :label="__('Tolak Pendaftaran')" icon="o-x-mark" class="btn-ghost text-rose-500 font-bold italic" wire:click="reject({{ $viewing->id }})" wire:confirm="{{ __('Yakin ingin menolak pendaftaran ini?') }}" @click="show = false" />
+                        <x-ui.button :label="__('Terima & Acc')" icon="o-check" class="btn-primary shadow-xl shadow-primary/20" wire:click="accept({{ $viewing->id }})" @click="show = false" />
                     @endif
                     @if($viewing->status === 'accepted')
-                        <flux:button variant="primary" icon="academic-cap"
-                            wire:click="openEnroll({{ $viewing->id }})"
-                            x-on:click="$flux.modal('detail-modal').close(); $flux.modal('enroll-modal').show()">Enroll ke Kelas</flux:button>
+                        <x-ui.button :label="__('Lanjutkan ke Enroll')" icon="o-academic-cap" class="btn-primary shadow-xl shadow-primary/20" wire:click="openEnroll({{ $viewing->id }})" @click="show = false" />
                     @endif
-                    <flux:modal.close>
-                        <flux:button variant="ghost">Tutup</flux:button>
-                    </flux:modal.close>
                 </div>
             </div>
         @endif
-    </flux:modal>
+    </x-ui.modal>
 
-    <!-- Enroll Modal -->
-    <flux:modal name="enroll-modal" class="max-w-md" x-on:enrollment-saved.window="$flux.modal('enroll-modal').close()">
+    {{-- Enroll Modal --}}
+    <x-ui.modal wire:model="enrollModal" class="backdrop-blur-sm">
         @if($enrolling)
-            <form wire:submit="enroll" class="space-y-6">
-                <div>
-                    <flux:heading size="lg">Enroll Siswa ke Kelas</flux:heading>
-                    <flux:subheading>{{ $enrolling->name }} ({{ $enrolling->registration_number }})</flux:subheading>
+            <div class="p-2">
+                <div class="flex items-center gap-4 mb-8">
+                    <div class="size-16 rounded-[2rem] bg-emerald-500/10 flex items-center justify-center border border-emerald-100 dark:border-emerald-900 shadow-inner">
+                        <x-ui.icon name="o-academic-cap" class="size-8 text-emerald-500" />
+                    </div>
+                    <div>
+                        <h2 class="font-black text-2xl text-slate-900 dark:text-white italic uppercase tracking-tighter">{{ __('Enrollment Siswa') }}</h2>
+                        <span class="font-bold text-slate-400 italic text-xs uppercase tracking-widest">{{ $enrolling->name }}</span>
+                    </div>
                 </div>
+                
+                <form wire:submit="enroll" class="space-y-8">
+                    <div class="p-6 rounded-[2rem] bg-indigo-50 dark:bg-indigo-900/10 border border-indigo-100 dark:border-indigo-800/50 flex gap-4 shadow-inner">
+                        <x-ui.icon name="o-information-circle" class="size-6 text-indigo-500 shrink-0" />
+                        <div class="space-y-1">
+                            <p class="text-[11px] font-black text-indigo-600 uppercase tracking-widest italic">{{ __('Prosedur Sistem Otomatis') }}</p>
+                            <p class="text-xs text-slate-500 dark:text-slate-400 font-medium leading-relaxed italic">
+                                {{ __('Sistem akan secara otomatis membuat akun login (User) dan mengaitkannya dengan Profil Siswa yang akan dihubungkan ke kelas terpilih berikut ini.') }}
+                            </p>
+                        </div>
+                    </div>
 
-                <div class="p-4 bg-amber-50 dark:bg-amber-900/20 rounded-lg text-sm space-y-1">
-                    <p class="font-semibold text-amber-800 dark:text-amber-200">Proses enrollment akan:</p>
-                    <ul class="text-amber-700 dark:text-amber-300 list-disc ml-4 space-y-0.5">
-                        <li>Membuat akun User (role: siswa, password: <code class="bg-amber-100 dark:bg-amber-900 px-1 rounded">password</code>)</li>
-                        <li>Membuat profil siswa lengkap</li>
-                        <li>Menempatkan siswa di kelas yang dipilih</li>
-                    </ul>
-                </div>
+                    <x-ui.select 
+                        wire:model="enrollClassroomId" 
+                        :label="__('Target Penempatan Kelas')" 
+                        :options="$classrooms" 
+                        :placeholder="__('-- Pilih Kelas Definitif --')"
+                        class="font-black italic uppercase tracking-tighter"
+                    />
 
-                <flux:select wire:model="enrollClassroomId" label="Pilih Kelas" required>
-                    <option value="">-- Pilih Kelas --</option>
-                    @foreach($classrooms as $room)
-                        <option value="{{ $room->id }}">{{ $room->name }} ({{ $room->level?->name }} - {{ $room->academicYear?->name ?? '' }})</option>
-                    @endforeach
-                </flux:select>
-
-                @error('enrollClassroomId')
-                    <p class="text-sm text-red-600">{{ $message }}</p>
-                @enderror
-
-                <div class="flex justify-end gap-2">
-                    <flux:modal.close>
-                        <flux:button variant="ghost">Batal</flux:button>
-                    </flux:modal.close>
-                    <flux:button type="submit" variant="primary" icon="academic-cap" wire:loading.attr="disabled">
-                        <span wire:loading.remove>Enroll Siswa</span>
-                        <span wire:loading>Memproses...</span>
-                    </flux:button>
-                </div>
-            </form>
+                    <div class="flex items-center justify-end gap-3 pt-6 border-t border-slate-50 dark:border-slate-800">
+                        <x-ui.button :label="__('Batalkan')" @click="show = false" class="btn-ghost font-bold" />
+                        <x-ui.button :label="__('Konfirmasi & Enroll')" type="submit" class="btn-primary shadow-xl shadow-primary/20 px-10" spinner="enroll" />
+                    </div>
+                </form>
+            </div>
         @endif
-    </flux:modal>
+    </x-ui.modal>
 </div>

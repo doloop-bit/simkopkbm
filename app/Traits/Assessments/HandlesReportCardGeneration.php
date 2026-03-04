@@ -2,35 +2,40 @@
 
 namespace App\Traits\Assessments;
 
-use App\Models\SubjectGrade;
 use App\Models\AcademicYear;
 use App\Models\Classroom;
-use App\Models\ReportCard;
-use App\Models\Score;
-use App\Models\StudentProfile;
 use App\Models\CompetencyAssessment;
-use App\Models\P5Assessment;
+use App\Models\DevelopmentalAssessment;
 use App\Models\ExtracurricularAssessment;
 use App\Models\ReportAttendance;
-use App\Models\DevelopmentalAssessment;
+use App\Models\ReportCard;
+use App\Models\StudentProfile;
+use App\Models\SubjectGrade;
 use Barryvdh\DomPDF\Facade\Pdf;
 use Illuminate\Support\Facades\DB;
-use Illuminate\Support\Collection;
 
 trait HandlesReportCardGeneration
 {
     // Selection and Form Props
     public $academicYearId = null;
+
     public $classroomId = null;
+
     public $semester = '1';
+
     public $curriculumType = 'merdeka';
+
     public $teacherNotes = '';
+
     public $characterNotes = '';
+
     public $principalNotes = ''; // Admin only usually
+
     public $selectedStudents = [];
 
     // UI Props
     public $showPreview = false;
+
     public $previewData = null;
 
     // Data Loading Props (Populated by with())
@@ -79,19 +84,21 @@ trait HandlesReportCardGeneration
             ]);
 
             // Security check hook
-            $this->ensureAccessToClassroom((int)$this->classroomId);
+            $this->ensureAccessToClassroom((int) $this->classroomId);
 
             DB::transaction(function () {
                 foreach ($this->selectedStudents as $studentProfileId) {
                     $studentProfile = StudentProfile::with('profile.user')->find($studentProfileId);
-                    
+
                     // Verify the student belongs to the selected classroom (security)
-                    if (!$studentProfile || $studentProfile->classroom_id != $this->classroomId) {
+                    if (! $studentProfile || $studentProfile->classroom_id != $this->classroomId) {
                         continue;
                     }
 
                     $student = $studentProfile->profile?->user;
-                    if (!$student) continue;
+                    if (! $student) {
+                        continue;
+                    }
 
                     $aggregatedData = [];
                     $gpa = 0;
@@ -103,7 +110,7 @@ trait HandlesReportCardGeneration
                         'classroom_id' => $this->classroomId,
                         'academic_year_id' => $this->academicYearId,
                         'semester' => $this->semester,
-                    ])->with('subject')->get()->map(function($g) {
+                    ])->with('subject')->get()->map(function ($g) {
                         return [
                             'subject_name' => $g->subject?->name ?? 'N/A',
                             'grade' => $g->grade,
@@ -118,7 +125,7 @@ trait HandlesReportCardGeneration
                         'classroom_id' => $this->classroomId,
                         'academic_year_id' => $this->academicYearId,
                         'semester' => $this->semester,
-                    ])->with('subject')->get()->map(fn($c) => [
+                    ])->with('subject')->get()->map(fn ($c) => [
                         'subject_name' => $c->subject?->name ?? 'N/A',
                         'level' => $c->competency_level,
                         'description' => $c->achievement_description,
@@ -129,7 +136,7 @@ trait HandlesReportCardGeneration
                         'student_id' => $student->id,
                         'academic_year_id' => $this->academicYearId,
                         'semester' => $this->semester,
-                    ])->with('extracurricularActivity')->get()->map(fn($e) => [
+                    ])->with('extracurricularActivity')->get()->map(fn ($e) => [
                         'name' => $e->extracurricularActivity?->name ?? 'N/A',
                         'level' => $e->achievement_level,
                         'description' => $e->description,
@@ -158,7 +165,7 @@ trait HandlesReportCardGeneration
                     ])->with('developmentalAspect')->get();
 
                     if ($paud->isNotEmpty()) {
-                        $aggregatedData['paud'] = $paud->map(fn($p) => [
+                        $aggregatedData['paud'] = $paud->map(fn ($p) => [
                             'aspect_name' => $p->developmentalAspect?->name ?? 'N/A',
                             'description' => $p->description,
                         ])->toArray();
@@ -190,7 +197,7 @@ trait HandlesReportCardGeneration
                 }
             });
 
-            \Flux::toast('Rapor berhasil dibuat untuk ' . count($this->selectedStudents) . ' siswa.');
+            \Flux::toast('Rapor berhasil dibuat untuk '.count($this->selectedStudents).' siswa.');
             $this->reset(['selectedStudents', 'teacherNotes', 'characterNotes']);
             if (property_exists($this, 'principalNotes')) {
                 $this->reset(['principalNotes']);
@@ -205,14 +212,15 @@ trait HandlesReportCardGeneration
     {
         $reportCard = ReportCard::with(['student', 'classroom.level', 'academicYear'])->find($reportCardId);
 
-        if (!$reportCard) {
+        if (! $reportCard) {
             \Flux::toast(variant: 'danger', text: 'Rapor tidak ditemukan.');
+
             return;
         }
 
-        $this->ensureAccessToClassroom((int)$reportCard->classroom_id);
+        $this->ensureAccessToClassroom((int) $reportCard->classroom_id);
 
-        $studentProfile = StudentProfile::whereHas('profile', function($q) use ($reportCard) {
+        $studentProfile = StudentProfile::whereHas('profile', function ($q) use ($reportCard) {
             $q->where('user_id', $reportCard->student_id);
         })->first();
 
@@ -238,14 +246,15 @@ trait HandlesReportCardGeneration
     {
         $reportCard = ReportCard::with(['student', 'classroom.level', 'academicYear'])->find($reportCardId);
 
-        if (!$reportCard) {
+        if (! $reportCard) {
             \Flux::toast(variant: 'danger', text: 'Rapor tidak ditemukan.');
+
             return;
         }
 
-        $this->ensureAccessToClassroom((int)$reportCard->classroom_id);
+        $this->ensureAccessToClassroom((int) $reportCard->classroom_id);
 
-        $studentProfile = StudentProfile::whereHas('profile', function($q) use ($reportCard) {
+        $studentProfile = StudentProfile::whereHas('profile', function ($q) use ($reportCard) {
             $q->where('user_id', $reportCard->student_id);
         })->first();
 
@@ -262,9 +271,10 @@ trait HandlesReportCardGeneration
 
         try {
             $pdf = Pdf::loadView($view, $data);
+
             return response()->streamDownload(
-                fn () => print($pdf->output()),
-                'rapor-' . str($reportCard->student->name)->slug() . '-' . $reportCard->semester . '.pdf',
+                fn () => print ($pdf->output()),
+                'rapor-'.str($reportCard->student->name)->slug().'-'.$reportCard->semester.'.pdf',
                 ['Content-Type' => 'application/pdf']
             );
         } catch (\Exception $e) {
@@ -277,12 +287,12 @@ trait HandlesReportCardGeneration
         $reportCard = ReportCard::find($id);
 
         if ($reportCard) {
-            $this->ensureAccessToClassroom((int)$reportCard->classroom_id);
+            $this->ensureAccessToClassroom((int) $reportCard->classroom_id);
             $reportCard->delete();
             $this->loadExistingReports();
             \Flux::toast('Rapor berhasil dihapus.');
         } else {
-             \Flux::toast(variant: 'danger', text: 'Rapor tidak ditemukan.');
+            \Flux::toast(variant: 'danger', text: 'Rapor tidak ditemukan.');
         }
     }
 
@@ -293,12 +303,13 @@ trait HandlesReportCardGeneration
 
     // Abstract methods to implement in component
     abstract protected function ensureAccessToClassroom(int $classroomId): void;
-    
+
     // Helper to get allowed classrooms for dropdown
     abstract protected function getAllowedClassrooms();
 
     // Helper to get teacher name for preview (differs for admin/teacher view)
-    protected function getTeacherForPreview($reportCard) {
+    protected function getTeacherForPreview($reportCard)
+    {
         return auth()->user(); // Default to current user, override in Admin if needed
     }
 

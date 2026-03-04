@@ -8,7 +8,7 @@ use App\Models\Classroom;
 use App\Models\Subject;
 use App\Models\User;
 use Livewire\Attributes\Layout;
-use Livewire\Volt\Component;
+use Livewire\Component;
 
 new #[Layout('components.admin.layouts.app')] class extends Component {
     public ?int $academic_year_id = null;
@@ -16,6 +16,7 @@ new #[Layout('components.admin.layouts.app')] class extends Component {
     public ?int $teacher_id = null;
     public ?int $subject_id = null;
     public string $type = 'subject_teacher';
+    public bool $assignmentModal = false;
 
     public ?TeacherAssignment $editing = null;
 
@@ -38,6 +39,12 @@ new #[Layout('components.admin.layouts.app')] class extends Component {
         ];
     }
 
+    public function createNew(): void
+    {
+        $this->reset(['teacher_id', 'subject_id', 'type', 'editing']);
+        $this->assignmentModal = true;
+    }
+
     public function save(): void
     {
         $this->validate();
@@ -57,7 +64,8 @@ new #[Layout('components.admin.layouts.app')] class extends Component {
         }
 
         $this->reset(['teacher_id', 'subject_id', 'type', 'editing']);
-        $this->dispatch('assignment-saved');
+        $this->assignmentModal = false;
+        session()->flash('success', 'Penugasan guru berhasil disimpan.');
     }
 
     public function edit(TeacherAssignment $assignment): void
@@ -68,12 +76,13 @@ new #[Layout('components.admin.layouts.app')] class extends Component {
         $this->type = $assignment->type;
         $this->classroom_id = $assignment->classroom_id;
 
-        $this->dispatch('open-assignment-modal');
+        $this->assignmentModal = true;
     }
 
     public function delete(TeacherAssignment $assignment): void
     {
         $assignment->delete();
+        session()->flash('success', 'Penugasan guru berhasil dihapus.');
     }
 
     public function with(): array
@@ -91,133 +100,123 @@ new #[Layout('components.admin.layouts.app')] class extends Component {
     }
 }; ?>
 
-<div class="p-6">
-    <div class="flex items-center justify-between mb-6">
-        <div>
-            <flux:heading size="xl" level="1">Penugasan Guru</flux:heading>
-            <flux:subheading>Atur penugasan guru untuk mata pelajaran dan kelas.</flux:subheading>
-        </div>
+<div class="p-6 space-y-6 text-slate-900 dark:text-white">
+    <x-ui.header :title="__('Penugasan Guru')" :subtitle="__('Atur penugasan guru untuk mata pelajaran dan kelas.')" separator>
+        <x-slot:actions>
+            <div class="flex items-center gap-3">
+                <x-ui.select wire:model.live="academic_year_id" :options="$years" :placeholder="__('Tahun Ajaran')" class="w-40" />
+                <x-ui.select wire:model.live="classroom_id" :options="$classrooms" :placeholder="__('Semua Kelas')" class="w-48" />
+                <x-ui.button :label="__('Tambah Penugasan')" icon="o-plus" class="btn-primary" wire:click="createNew" />
+            </div>
+        </x-slot:actions>
+    </x-ui.header>
 
-        <div class="flex gap-2">
-            <flux:select wire:model.live="academic_year_id" class="w-48">
-                <option value="">Semua Tahun</option>
-                @foreach($years as $year)
-                    <option value="{{ $year->id }}">{{ $year->name }} {{ $year->is_active ? '(Aktif)' : '' }}</option>
-                @endforeach
-            </flux:select>
+    @if (session('success'))
+        <x-ui.alert :title="__('Berhasil')" icon="o-check-circle" class="bg-emerald-50 text-emerald-800 border-emerald-100 mb-6" dismissible>
+            {{ session('success') }}
+        </x-ui.alert>
+    @endif
 
-            <flux:select wire:model.live="classroom_id" class="w-48">
-                <option value="">Semua Kelas</option>
-                @foreach($classrooms as $room)
-                    <option value="{{ $room->id }}">{{ $room->name }}</option>
-                @endforeach
-            </flux:select>
+    <x-ui.card shadow padding="false">
+        <x-ui.table 
+            :headers="[
+                ['key' => 'teacher', 'label' => __('Guru')],
+                ['key' => 'classroom', 'label' => __('Kelas')],
+                ['key' => 'subject', 'label' => __('Mata Pelajaran')],
+                ['key' => 'type', 'label' => __('Tipe')],
+                ['key' => 'actions', 'label' => '', 'class' => 'text-right']
+            ]" 
+            :rows="$assignments"
+        >
+            @scope('cell_teacher', $assignment)
+                <div class="flex flex-col">
+                    <span class="font-bold text-slate-900 dark:text-white">{{ $assignment->teacher->name }}</span>
+                    <span class="text-[10px] text-slate-400 font-mono tracking-tighter">{{ $assignment->teacher->email }}</span>
+                </div>
+            @endscope
 
-            <flux:modal.trigger name="assignment-modal">
-                <flux:button variant="primary" icon="plus" wire:click="$set('editing', null)">Tambah Penugasan</flux:button>
-            </flux:modal.trigger>
-        </div>
-    </div>
+            @scope('cell_classroom', $assignment)
+                <div class="flex flex-col">
+                    <span class="text-sm font-medium">{{ $assignment->classroom->name }}</span>
+                    <span class="text-[10px] text-slate-400">{{ $assignment->classroom->academicYear->name }}</span>
+                </div>
+            @endscope
 
-    <div class="overflow-hidden border rounded-lg border-zinc-200 dark:border-zinc-700">
-        <table class="w-full text-sm text-left border-collapse">
-            <thead class="bg-zinc-50 dark:bg-zinc-800">
-                <tr>
-                    <th class="px-4 py-3 font-medium text-zinc-700 dark:text-zinc-300 border-b border-zinc-200 dark:border-zinc-700">Guru</th>
-                    <th class="px-4 py-3 font-medium text-zinc-700 dark:text-zinc-300 border-b border-zinc-200 dark:border-zinc-700">Kelas</th>
-                    <th class="px-4 py-3 font-medium text-zinc-700 dark:text-zinc-300 border-b border-zinc-200 dark:border-zinc-700">Mata Pelajaran</th>
-                    <th class="px-4 py-3 font-medium text-zinc-700 dark:text-zinc-300 border-b border-zinc-200 dark:border-zinc-700">Tipe</th>
-                    <th class="px-4 py-3 font-medium text-zinc-700 dark:text-zinc-300 border-b border-zinc-200 dark:border-zinc-700 text-right">Aksi</th>
-                </tr>
-            </thead>
-            <tbody class="divide-y divide-zinc-200 dark:divide-zinc-700">
-                @forelse ($assignments as $assignment)
-                    <tr wire:key="{{ $assignment->id }}" class="hover:bg-zinc-50 dark:hover:bg-zinc-800/50">
-                        <td class="px-4 py-3 font-medium text-zinc-900 dark:text-white">
-                            {{ $assignment->teacher->name }}
-                        </td>
-                        <td class="px-4 py-3 text-zinc-600 dark:text-zinc-400">
-                            {{ $assignment->classroom->name }} ({{ $assignment->classroom->academicYear->name }})
-                        </td>
-                        <td class="px-4 py-3 text-zinc-600 dark:text-zinc-400">
-                            {{ $assignment->subject?->name ?? '-' }}
-                        </td>
-                        <td class="px-4 py-3 text-zinc-600 dark:text-zinc-400">
-                            <flux:badge size="sm" variant="outline">
-                                {{ match($assignment->type) {
-                                    'class_teacher' => 'Guru Kelas',
-                                    'subject_teacher' => 'Guru Mapel',
-                                    'homeroom' => 'Wali Kelas',
-                                    default => $assignment->type
-                                } }}
-                            </flux:badge>
-                        </td>
-                        <td class="px-4 py-3 text-right space-x-2">
-                            <flux:button size="sm" variant="ghost" icon="pencil-square" wire:click="edit({{ $assignment->id }})" x-on:click="$flux.modal('assignment-modal').show()" />
-                            <flux:button size="sm" variant="ghost" icon="trash" class="text-red-500" wire:confirm="Yakin ingin menghapus penugasan ini?" wire:click="delete({{ $assignment->id }})" />
-                        </td>
-                    </tr>
-                @empty
-                    <tr>
-                        <td colspan="5" class="px-4 py-8 text-center text-zinc-500 dark:text-zinc-400 italic">
-                            Belum ada penugasan guru yang ditemukan.
-                        </td>
-                    </tr>
-                @endforelse
-            </tbody>
-        </table>
-    </div>
+            @scope('cell_subject', $assignment)
+                <span class="text-sm text-slate-600 dark:text-slate-400">
+                    {{ $assignment->subject?->name ?? '-' }}
+                </span>
+            @endscope
 
-    <flux:modal name="assignment-modal" class="max-w-md" @open-assignment-modal.window="$flux.modal('assignment-modal').show()" x-on:assignment-saved.window="$flux.modal('assignment-modal').close()">
+            @scope('cell_type', $assignment)
+                <x-ui.badge 
+                    :label="match($assignment->type) {
+                        'class_teacher' => __('Guru Kelas'),
+                        'subject_teacher' => __('Guru Mapel'),
+                        'homeroom' => __('Wali Kelas'),
+                        default => $assignment->type
+                    }" 
+                    class="{{ match($assignment->type) {
+                        'class_teacher' => 'bg-emerald-50 text-emerald-700 dark:bg-emerald-900/20 dark:text-emerald-400',
+                        'subject_teacher' => 'bg-blue-50 text-blue-700 dark:bg-blue-900/20 dark:text-blue-400',
+                        'homeroom' => 'bg-amber-50 text-amber-700 dark:bg-amber-900/20 dark:text-amber-400',
+                        default => 'bg-slate-100'
+                    } }} text-[10px] font-bold" 
+                />
+            @endscope
+
+            @scope('cell_actions', $assignment)
+                <div class="flex justify-end gap-1">
+                    <x-ui.button icon="o-pencil-square" wire:click="edit({{ $assignment->id }})" ghost />
+                    <x-ui.button 
+                        icon="o-trash" 
+                        class="text-red-500 dark:text-red-400 hover:bg-red-50 dark:hover:bg-red-900/10" 
+                        wire:confirm="{{ __('Yakin ingin menghapus penugasan ini?') }}" 
+                        wire:click="delete({{ $assignment->id }})" 
+                        ghost 
+                    />
+                </div>
+            @endscope
+        </x-ui.table>
+
+        @if(collect($assignments)->isEmpty())
+            <div class="py-12 text-center text-slate-400 italic text-sm">
+                {{ __('Belum ada penugasan guru yang ditemukan.') }}
+            </div>
+        @endif
+    </x-ui.card>
+
+    <x-ui.modal wire:model="assignmentModal" persistent>
+        <x-ui.header :title="$editing ? __('Edit Penugasan') : __('Tambah Penugasan Baru')" :subtitle="__('Lengkapi detail penugasan guru di bawah ini.')" separator />
+
         <form wire:submit="save" class="space-y-6">
-            <div>
-                <flux:heading size="lg">{{ $editing ? 'Edit Penugasan' : 'Tambah Penugasan Baru' }}</flux:heading>
-                <flux:subheading>Lengkapi detail penugasan guru di bawah ini.</flux:subheading>
-            </div>
-
             <div class="grid grid-cols-2 gap-4">
-                <flux:select wire:model="academic_year_id" label="Tahun Ajaran" required>
-                    @foreach($years as $year)
-                        <option value="{{ $year->id }}">{{ $year->name }}</option>
-                    @endforeach
-                </flux:select>
-
-                <flux:select wire:model.live="classroom_id" label="Kelas" required>
-                    <option value="">Pilih Kelas</option>
-                    @foreach(Classroom::where('academic_year_id', $academic_year_id)->get() as $room)
-                        <option value="{{ $room->id }}">{{ $room->name }}</option>
-                    @endforeach
-                </flux:select>
+                <x-ui.select wire:model="academic_year_id" :label="__('Tahun Ajaran')" :options="$years" required />
+                <x-ui.select wire:model.live="classroom_id" :label="__('Kelas')" :options="App\Models\Classroom::where('academic_year_id', $academic_year_id)->get()" :placeholder="__('Pilih Kelas')" required />
             </div>
 
-            <flux:select wire:model="teacher_id" label="Guru" required>
-                <option value="">Pilih Guru</option>
-                @foreach($teachers as $teacher)
-                    <option value="{{ $teacher->id }}">{{ $teacher->name }}</option>
-                @endforeach
-            </flux:select>
+            <x-ui.select wire:model="teacher_id" :label="__('Guru')" :options="$teachers" :placeholder="__('Pilih Guru')" required />
 
-            <flux:radio.group wire:model.live="type" label="Tipe Penugasan" class="flex flex-col gap-2">
-                <flux:radio value="subject_teacher" label="Guru Mata Pelajaran" />
-                <flux:radio value="class_teacher" label="Guru Kelas" />
-                <flux:radio value="homeroom" label="Wali Kelas" />
-            </flux:radio.group>
+            <div class="space-y-3">
+                <div class="text-sm font-bold text-slate-900 dark:text-white">{{ __('Tipe Penugasan') }}</div>
+                <x-ui.radio 
+                    wire:model.live="type" 
+                    :options="[
+                        ['id' => 'subject_teacher', 'label' => __('Guru Mata Pelajaran')],
+                        ['id' => 'class_teacher', 'label' => __('Guru Kelas')],
+                        ['id' => 'homeroom', 'label' => __('Wali Kelas')],
+                    ]"
+                />
+            </div>
 
             @if($type === 'subject_teacher')
-                <flux:select wire:model="subject_id" label="Mata Pelajaran" required>
-                    <option value="">Pilih Mata Pelajaran</option>
-                    @foreach($subjects as $subject)
-                        <option value="{{ $subject->id }}">{{ $subject->code }} - {{ $subject->name }}</option>
-                    @endforeach
-                </flux:select>
+                <x-ui.select wire:model="subject_id" :label="__('Mata Pelajaran')" :options="$subjects" :placeholder="__('Pilih Mata Pelajaran')" required />
             @endif
 
-            <div class="flex justify-end gap-2">
-                <flux:modal.close>
-                    <flux:button variant="ghost">Batal</flux:button>
-                </flux:modal.close>
-                <flux:button type="submit" variant="primary">Simpan</flux:button>
+            <div class="flex justify-end gap-2 pt-4">
+                <x-ui.button :label="__('Batal')" ghost @click="show = false" />
+                <x-ui.button :label="__('Simpan')" type="submit" class="btn-primary" spinner="save" />
             </div>
         </form>
-    </flux:modal>
+    </x-ui.modal>
 </div>

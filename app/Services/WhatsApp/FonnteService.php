@@ -8,6 +8,7 @@ use Illuminate\Support\Facades\Log;
 class FonnteService implements WhatsAppService
 {
     protected string $token;
+
     protected string $baseUrl = 'https://api.fonnte.com';
 
     public function __construct()
@@ -19,6 +20,7 @@ class FonnteService implements WhatsAppService
     {
         if (empty($this->token)) {
             Log::warning('Fonnte Token is missing.');
+
             return false;
         }
 
@@ -32,7 +34,8 @@ class FonnteService implements WhatsAppService
 
             return $response->json();
         } catch (\Exception $e) {
-            Log::error('Fonnte Send Message Error: ' . $e->getMessage());
+            Log::error('Fonnte Send Message Error: '.$e->getMessage());
+
             return false;
         }
     }
@@ -41,25 +44,27 @@ class FonnteService implements WhatsAppService
     {
         if (empty($this->token)) {
             Log::warning('Fonnte Token is missing.');
+
             return false;
         }
 
         try {
             // Updated Strategy: Upload file to public storage and send link
             // because Fonnte Free plan doesn't support direct file uploads efficiently.
-            
-            $path = 'whatsapp-files/' . date('Y-m-d') . '/' . $fileName;
+
+            $path = 'whatsapp-files/'.date('Y-m-d').'/'.$fileName;
             \Illuminate\Support\Facades\Storage::disk('public')->put($path, $fileContent);
-            
+
             $url = \Illuminate\Support\Facades\Storage::disk('public')->url($path);
-            
+
             // Format message with explicit spacing for link recognition
-            $message = ($caption ? $caption . "\n\n" : "") . "Link Download:\n" . $url . "\n\n(Harap dibuka di browser)";
+            $message = ($caption ? $caption."\n\n" : '')."Link Download:\n".$url."\n\n(Harap dibuka di browser)";
 
             return $this->sendMessage($target, $message);
 
         } catch (\Exception $e) {
-            Log::error('Fonnte Send Document Error: ' . $e->getMessage());
+            Log::error('Fonnte Send Document Error: '.$e->getMessage());
+
             return false;
         }
     }

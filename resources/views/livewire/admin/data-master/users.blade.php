@@ -4,7 +4,7 @@ use App\Models\User;
 use App\Models\Level;
 use Illuminate\Validation\Rule;
 use Illuminate\Support\Facades\Hash;
-use Livewire\Volt\Component;
+use Livewire\Component;
 use Livewire\WithPagination;
 
 new class extends Component {
@@ -12,6 +12,7 @@ new class extends Component {
 
     public $search = '';
     public $role_filter = '';
+    public bool $userModal = false;
 
     public $name = '';
     public $email = '';
@@ -41,7 +42,7 @@ new class extends Component {
         $this->role = 'user';
         $this->is_active = true;
         $this->resetValidation();
-        $this->dispatch('open-user-modal');
+        $this->userModal = true;
     }
 
     public function edit(User $user): void
@@ -55,7 +56,7 @@ new class extends Component {
         $this->is_active = $user->is_active;
         $this->password = ''; // Don't fill password
         
-        $this->dispatch('open-user-modal');
+        $this->userModal = true;
     }
 
     public function save(): void
@@ -97,7 +98,7 @@ new class extends Component {
         }
 
         $this->dispatch('user-saved');
-        $this->dispatch('close-modal', 'user-modal');
+        $this->userModal = false;
         $this->reset(['name', 'email', 'phone', 'password', 'role', 'managed_level_id', 'is_active', 'editing']);
     }
 
@@ -124,113 +125,118 @@ new class extends Component {
     }
 }; ?>
 
-<div class="flex flex-col gap-6">
+<div class="p-6 space-y-6 text-slate-900 dark:text-white">
+    <x-ui.header :title="__('Manajemen Pengguna')" :subtitle="__('Kelola akun pengguna, role, dan akses sistem.')" separator>
+        <x-slot:actions>
+             <x-ui.button :label="__('Tambah User')" icon="o-plus" class="btn-primary" wire:click="createNew" />
+        </x-slot:actions>
+    </x-ui.header>
+
     <div class="flex flex-col md:flex-row gap-4 items-center justify-between">
-        <div>
-            <flux:heading size="xl">Manajemen Pengguna</flux:heading>
-            <flux:subheading>Kelola akun pengguna, role, dan akses sistem.</flux:subheading>
-        </div>
-        <flux:button variant="primary" icon="plus" wire:click="createNew">Tambah User</flux:button>
-    </div>
-
-    <div class="flex flex-col md:flex-row gap-4 mb-6 items-center justify-between">
         <div class="flex gap-2 w-full md:w-auto">
-            <flux:input wire:model.live="search" icon="magnifying-glass" placeholder="Cari user..." class="w-full md:w-64" />
-            <flux:select wire:model.live="role_filter" placeholder="Semua Role" class="w-full md:w-48">
-                <option value="">Semua Role</option>
-                @foreach($this->roles as $key => $label)
-                    <option value="{{ $key }}">{{ $label }}</option>
-                @endforeach
-            </flux:select>
+            <x-ui.input wire:model.live="search" icon="o-magnifying-glass" :placeholder="__('Cari user...')" class="w-full md:w-64" />
+            <x-ui.select wire:model.live="role_filter" :placeholder="__('Semua Role')" class="w-full md:w-48" :options="collect($this->roles)->map(fn($v, $k) => ['id' => $k, 'name' => $v])->values()->toArray()" />
         </div>
     </div>
 
-    <div class="overflow-x-auto border rounded-xl border-zinc-200 dark:border-zinc-700 bg-white dark:bg-zinc-900 shadow-sm">
-        <table class="w-full text-sm text-left border-collapse">
-            <thead class="bg-zinc-50 dark:bg-zinc-800/50">
-                <tr>
-                    <th class="px-4 py-3 font-semibold text-zinc-900 dark:text-zinc-100 border-b border-zinc-200 dark:border-zinc-700">Nama & Email</th>
-                    <th class="px-4 py-3 font-semibold text-zinc-900 dark:text-zinc-100 border-b border-zinc-200 dark:border-zinc-700 whitespace-nowrap">Role</th>
-                    <th class="px-4 py-3 font-semibold text-zinc-900 dark:text-zinc-100 border-b border-zinc-200 dark:border-zinc-700 whitespace-nowrap">No. HP (WA)</th>
-                    <th class="px-4 py-3 font-semibold text-zinc-900 dark:text-zinc-100 border-b border-zinc-200 dark:border-zinc-700 whitespace-nowrap">Level</th>
-                    <th class="px-4 py-3 font-semibold text-zinc-900 dark:text-zinc-100 border-b border-zinc-200 dark:border-zinc-700 whitespace-nowrap">Status</th>
-                    <th class="px-4 py-3 font-semibold text-zinc-900 dark:text-zinc-100 border-b border-zinc-200 dark:border-zinc-700 text-right whitespace-nowrap">Aksi</th>
-                </tr>
-            </thead>
-            <tbody class="divide-y divide-zinc-200 dark:divide-zinc-700">
-                @foreach($users as $user)
-                    <tr class="hover:bg-zinc-50/80 dark:hover:bg-zinc-800/30 transition-colors">
-                        <td class="px-4 py-4">
-                            <div class="flex flex-col">
-                                <span class="font-semibold text-zinc-900 dark:text-white">{{ $user->name }}</span>
-                                <span class="text-xs text-zinc-500">{{ $user->email }}</span>
-                            </div>
-                        </td>
-                        <td class="px-4 py-4 whitespace-nowrap text-zinc-600 dark:text-zinc-400">
-                            <span class="capitalize">{{ $this->roles[$user->role] ?? $user->role }}</span>
-                        </td>
-                        <td class="px-4 py-4 whitespace-nowrap text-zinc-600 dark:text-zinc-400">
-                            {{ $user->phone ?? '-' }}
-                        </td>
-                        <td class="px-4 py-4 whitespace-nowrap text-zinc-600 dark:text-zinc-400">
-                            {{ $user->managedLevel->name ?? '-' }}
-                        </td>
-                        <td class="px-4 py-4 whitespace-nowrap">
-                            <flux:badge variant="{{ $user->is_active ? 'success' : 'danger' }}" size="sm">
-                                {{ $user->is_active ? 'Aktif' : 'Non-Aktif' }}
-                            </flux:badge>
-                        </td>
-                        <td class="px-4 py-4 text-right space-x-1">
-                            <flux:button size="sm" variant="ghost" icon="pencil-square" wire:click="edit({{ $user->id }})" />
-                            @if($user->id !== auth()->id())
-                                <flux:button size="sm" variant="ghost" icon="trash" class="text-red-500 hover:bg-red-50 dark:hover:bg-red-900/20" wire:confirm="Hapus user ini?" wire:click="delete({{ $user->id }})" />
-                            @endif
-                        </td>
-                    </tr>
-                @endforeach
-            </tbody>
-        </table>
-    </div>
+    @if (session('success'))
+        <x-ui.alert :title="__('Berhasil')" icon="o-check-circle" class="bg-emerald-50 text-emerald-800 border-emerald-100" dismissible>
+            {{ session('success') }}
+        </x-ui.alert>
+    @endif
+
+    <x-ui.card shadow padding="false">
+        <x-ui.table 
+            :headers="[
+                ['key' => 'name', 'label' => __('Nama & Email')],
+                ['key' => 'role', 'label' => __('Role')],
+                ['key' => 'phone', 'label' => __('No. HP')],
+                ['key' => 'managed_level_id', 'label' => __('Jenjang')],
+                ['key' => 'is_active', 'label' => __('Status')],
+                ['key' => 'actions', 'label' => '', 'class' => 'text-right']
+            ]" 
+            :rows="$users"
+        >
+            @scope('cell_name', $user)
+                <div class="flex flex-col">
+                    <span class="font-bold text-slate-900 dark:text-white">{{ $user->name }}</span>
+                    <span class="text-[10px] text-slate-400 font-mono tracking-tighter">{{ $user->email }}</span>
+                </div>
+            @endscope
+
+            @scope('cell_role', $user)
+                <x-ui.badge :label="$this->roles[$user->role] ?? $user->role" class="bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-400 text-[10px] font-bold" />
+            @endscope
+
+            @scope('cell_phone', $user)
+                <span class="text-sm text-slate-600 dark:text-slate-400 font-mono italic">
+                    {{ $user->phone ?? '-' }}
+                </span>
+            @endscope
+
+            @scope('cell_managed_level_id', $user)
+                <span class="text-xs text-slate-500 font-medium">
+                    {{ $user->managedLevel->name ?? '-' }}
+                </span>
+            @endscope
+
+            @scope('cell_is_active', $user)
+                @if($user->is_active)
+                    <x-ui.badge :label="__('Aktif')" class="bg-emerald-100 text-emerald-700 dark:bg-emerald-900/30 dark:text-emerald-400 text-[10px] font-black" />
+                @else
+                    <x-ui.badge :label="__('Non-Aktif')" class="bg-rose-100 text-rose-700 dark:bg-rose-900/30 dark:text-rose-400 text-[10px] font-black" />
+                @endif
+            @endscope
+
+            @scope('cell_actions', $user)
+                <div class="flex justify-end gap-1">
+                    <x-ui.button icon="o-pencil-square" wire:click="edit({{ $user->id }})" ghost />
+                    @if($user->id !== auth()->id())
+                        <x-ui.button 
+                            icon="o-trash" 
+                            class="text-red-500 dark:text-red-400 hover:bg-red-50 dark:hover:bg-red-900/10" 
+                            wire:confirm="{{ __('Hapus user ini?') }}" 
+                            wire:click="delete({{ $user->id }})" 
+                            ghost 
+                        />
+                    @endif
+                </div>
+            @endscope
+        </x-ui.table>
+
+        @if(collect($users)->isEmpty())
+            <div class="py-12 text-center text-slate-400 italic text-sm">
+                {{ __('Belum ada data pengguna.') }}
+            </div>
+        @endif
+    </x-ui.card>
     
     <div class="mt-4">
         {{ $users->links() }}
     </div>
 
-    <flux:modal name="user-modal" class="max-w-md" @open-user-modal.window="$flux.modal('user-modal').show()" x-on:user-saved.window="$flux.modal('user-modal').close()">
+    <x-ui.modal wire:model="userModal" persistent>
+        <x-ui.header :title="$editing ? __('Edit User') : __('Tambah User Baru')" separator />
+        
         <form wire:submit="save" class="space-y-6">
-            <div>
-                <flux:heading size="lg">{{ $editing ? 'Edit User' : 'Tambah User Baru' }}</flux:heading>
-            </div>
+            <x-ui.input wire:model="name" :label="__('Nama Lengkap')" required />
+            <x-ui.input wire:model="email" type="email" :label="__('Email Address')" required />
+            <x-ui.input wire:model="phone" type="tel" :label="__('No. HP / WhatsApp')" :placeholder="__('08xxxxxxxx')" />
+            
+            <x-ui.select wire:model.live="role" :label="__('Role / Peran')" :options="collect($this->roles)->map(fn($v, $k) => ['id' => $k, 'name' => $v])->values()->toArray()" />
 
-            <div class="grid grid-cols-1 gap-4">
-                <flux:input wire:model="name" label="Nama Lengkap" required />
-                <flux:input wire:model="email" type="email" label="Email Address" required />
-                <flux:input wire:model="phone" type="tel" label="No. HP / WhatsApp" placeholder="08xxxxxxxx" />
-                
-                <flux:select wire:model.live="role" label="Role / Peran">
-                    @foreach($this->roles as $key => $label)
-                        <option value="{{ $key }}">{{ $label }}</option>
-                    @endforeach
-                </flux:select>
+            @if(in_array($role, ['bendahara', 'kepsek']))
+                <x-ui.select wire:model="managed_level_id" :label="__('Kelola Jenjang')" :placeholder="__('Pilih Jenjang')" :options="$levels" />
+            @endif
+            
+            <x-ui.input wire:model="password" type="password" :label="$editing ? __('Password (Kosongkan jika tidak diubah)') : __('Password')" :required="!$editing" />
+            
+            <x-ui.checkbox wire:model="is_active" :label="__('Status Aktif')" />
 
-                @if(in_array($role, ['bendahara', 'kepsek']))
-                    <flux:select wire:model="managed_level_id" label="Kelola Jenjang" placeholder="Pilih Jenjang">
-                        <option value="">Pilih Jenjang</option>
-                        @foreach($levels as $level)
-                            <option value="{{ $level->id }}">{{ $level->name }}</option>
-                        @endforeach
-                    </flux:select>
-                @endif
-                
-                <flux:input wire:model="password" type="password" label="{{ $editing ? 'Password (Kosongkan jika tidak diubah)' : 'Password' }}" :required="!$editing" />
-                
-                <flux:switch wire:model="is_active" label="Status Aktif" />
-            </div>
-
-            <div class="flex justify-end gap-2">
-                <flux:button variant="ghost" x-on:click="$flux.modal('user-modal').close()">Batal</flux:button>
-                <flux:button type="submit" variant="primary">Simpan</flux:button>
+            <div class="flex justify-end gap-2 pt-4">
+                <x-ui.button :label="__('Batal')" ghost @click="show = false" />
+                <x-ui.button :label="__('Simpan')" type="submit" class="btn-primary" spinner="save" />
             </div>
         </form>
-    </flux:modal>
+    </x-ui.modal>
 </div>

@@ -1,52 +1,36 @@
-<flux:modal name="periodic-modal" class="max-w-md"
-    x-on:periodic-saved.window="$flux.modal('periodic-modal').close()">
-    <form wire:submit.prevent="savePeriodic({{ $editing?->latestProfile?->profileable_id ?? 0 }})"
-        class="space-y-6">
-        <div>
-            <flux:heading size="lg">Data Periodik Siswa</flux:heading>
-            <flux:subheading>Input data berat badan, tinggi, dan lingkar kepala.</flux:subheading>
+<x-ui.modal wire:model="periodicModal" persistent>
+    <x-ui.header :title="__('Data Periodik Siswa')" :subtitle="__('Input data berat badan, tinggi, dan lingkar kepala.')" separator />
 
-            @if($hasExistingPeriodicData)
-                <div
-                    class="mt-3 p-3 bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-800 rounded-lg">
-                    <div class="flex items-center gap-2">
-                        <flux:icon icon="information-circle" class="w-5 h-5 text-blue-600 dark:text-blue-400" />
-                        <div>
-                            <span class="text-sm font-medium text-blue-800 dark:text-blue-200">Data sudah ada</span>
-                            <span class="text-xs text-blue-600 dark:text-blue-400 block">Terakhir diupdate
-                                {{ $periodicDataLastUpdated }}</span>
-                        </div>
-                    </div>
-                </div>
-            @else
-                <div
-                    class="mt-3 p-3 bg-amber-50 dark:bg-amber-900/20 border border-amber-200 dark:border-amber-800 rounded-lg">
-                    <div class="flex items-center gap-2">
-                        <flux:icon icon="exclamation-triangle" class="w-5 h-5 text-amber-600 dark:text-amber-400" />
-                        <span class="text-sm font-medium text-amber-800 dark:text-amber-200">Belum ada data untuk
-                            semester ini</span>
-                    </div>
-                </div>
-            @endif
-        </div>
+    <form wire:submit.prevent="savePeriodic({{ $editing?->latestProfile?->profileable_id ?? 0 }})" class="space-y-6">
+        @if($hasExistingPeriodicData)
+            <x-ui.alert :title="__('Data sudah ada')" icon="o-information-circle" class="bg-blue-50 text-blue-800 border-blue-100 shadow-sm">
+                {{ __('Terakhir diupdate') }} {{ $periodicDataLastUpdated }}
+            </x-ui.alert>
+        @else
+            <x-ui.alert :title="__('Belum ada data')" icon="o-exclamation-triangle" class="bg-amber-50 text-amber-800 border-amber-100 shadow-sm">
+                {{ __('Belum ada data untuk semester ini.') }}
+            </x-ui.alert>
+        @endif
 
         <div class="space-y-4">
-            <flux:select wire:model.live="semester" label="Semester">
-                <option value="1">Ganjil (1)</option>
-                <option value="2">Genap (2)</option>
-            </flux:select>
+            <x-ui.select 
+                wire:model.live="semester" 
+                :label="__('Semester')" 
+                :options="[
+                    ['id' => 1, 'name' => __('Ganjil (1)')],
+                    ['id' => 2, 'name' => __('Genap (2)')],
+                ]"
+                required
+            />
 
-            <flux:input type="number" step="0.5" wire:model="weight" label="Berat Badan (kg)" suffix="kg" />
-            <flux:input type="number" step="1" wire:model="height" label="Tinggi Badan (cm)" suffix="cm" />
-            <flux:input type="number" step="0.1" wire:model="head_circumference" label="Lingkar Kepala (cm)"
-                suffix="cm" />
+            <x-ui.input type="number" step="0.5" wire:model="weight" :label="__('Berat Badan (kg)')" suffix="kg" required />
+            <x-ui.input type="number" step="1" wire:model="height" :label="__('Tinggi Badan (cm)')" suffix="cm" required />
+            <x-ui.input type="number" step="0.1" wire:model="head_circumference" :label="__('Lingkar Kepala (cm)')" suffix="cm" required />
         </div>
 
-        <div class="flex justify-end gap-2">
-            <flux:modal.close>
-                <flux:button variant="ghost">Batal</flux:button>
-            </flux:modal.close>
-            <flux:button type="submit" variant="primary">Simpan Data</flux:button>
+        <div class="flex justify-end gap-2 pt-4 border-t border-slate-100 dark:border-slate-800">
+            <x-ui.button :label="__('Batal')" ghost @click="show = false" />
+            <x-ui.button :label="__('Simpan Data')" type="submit" class="btn-primary" spinner="savePeriodic" />
         </div>
     </form>
-</flux:modal>
+</x-ui.modal>

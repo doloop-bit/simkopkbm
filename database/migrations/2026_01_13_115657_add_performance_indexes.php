@@ -19,7 +19,7 @@ return new class extends Migration
             $table->index('payment_date');
             $table->index('student_billing_id');
             // user_id is often queried for filtering transactions by user
-            $table->index('user_id'); 
+            $table->index('user_id');
         });
 
         Schema::table('attendances', function (Blueprint $table) {

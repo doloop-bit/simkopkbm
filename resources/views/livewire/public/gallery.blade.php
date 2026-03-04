@@ -1,6 +1,6 @@
 <?php
 
-use Livewire\Volt\Component;
+use Livewire\Component;
 use Livewire\Attributes\Layout;
 use Illuminate\Support\Facades\Storage;
 use App\Models\GalleryPhoto;

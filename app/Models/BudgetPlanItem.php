@@ -8,7 +8,7 @@ class BudgetPlanItem extends Model
 {
     protected $fillable = [
         'budget_plan_id', 'standard_budget_item_id', 'name',
-        'quantity', 'unit', 'amount', 'total'
+        'quantity', 'unit', 'amount', 'total',
     ];
 
     protected $casts = [

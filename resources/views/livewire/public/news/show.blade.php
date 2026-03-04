@@ -1,7 +1,7 @@
 <?php
 
 use App\Models\NewsArticle;
-use Livewire\Volt\Component;
+use Livewire\Component;
 use Livewire\Attributes\Layout;
 use Illuminate\Support\Facades\Storage;
 

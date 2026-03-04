@@ -25,7 +25,7 @@
 
 ### **What is SIMKOPKBM?**
 
-**Sistem Informasi Manajemen Koperasi Pendidikan KB/TK Baitusyukur Malang** - A comprehensive school management system for KB/TK (Kelompok Bermain/Taman Kanak-kanak) Baitusyukur Malang.
+**Sistem Informasi Manajemen PKBM (Pusat Kegiatan Belajar Masyarakat)** - A comprehensive school management system for PKBM Pusat Kegiatan Belajar Masyarakat, with features for student management, academic assessment, financial tracking, and public website.
 
 ### **Core Features**
 
@@ -49,28 +49,26 @@
 
 ### **Backend**
 
-| Technology      | Version          | Purpose                  | Notes                                      |
-| --------------- | ---------------- | ------------------------ | ------------------------------------------ |
-| PHP             | **8.4.11**       | Runtime                  | -                                          |
-| Laravel         | **12.48.1**      | Framework                | -                                          |
-| Livewire        | **4.0.0**        | Reactive Components      | ⚠️ Major upgrade from v3                   |
-| Livewire Volt   | **1.10.1**       | Single-file components   | Optional with Livewire 4 (see notes below) |
-| Livewire Blaze  | **1.0.0-beta.1** | Performance optimization | New addition                               |
-| Laravel Fortify | **1.33.0**       | Authentication           | -                                          |
+| Technology      | Version     | Purpose             | Notes              |
+| --------------- | ----------- | ------------------- | ------------------ |
+| PHP             | **8.4.18**  | Runtime             | -                  |
+| Laravel         | **12.52.1** | Framework           | -                  |
+| Livewire        | **4.x**     | Reactive Components | Native SFC Support |
+| Laravel Fortify | **1.33.0**  | Authentication      | -                  |
 
-#### 📝 Notes on Livewire 4 vs Volt
+#### 📝 Notes on Livewire 4
 
 **Livewire 4 Native Single-File Components:**
 
 - Livewire 4 now natively supports combining logic and HTML in single files
-- Volt is **optional** but still useful for its syntactic sugar and functional API
-- Current codebase uses **Volt pattern** for consistency
 
 **Recommended approach:**
 
 ```blade
-{{-- Continue using Volt pattern for new components --}}
 <?php
+use Livewire\Attributes\Layout;
+use Livewire\Component;
+
 new #[Layout('components.admin.layouts.app')] class extends Component {
     // Component logic here
 }; ?>
@@ -82,20 +80,18 @@ new #[Layout('components.admin.layouts.app')] class extends Component {
 
 ### **Frontend**
 
-| Technology   | Version    | Purpose              | Notes                                 |
-| ------------ | ---------- | -------------------- | ------------------------------------- |
-| Tailwind CSS | **4.1.11** | Styling              | v4 with new config syntax             |
-| Flux UI      | **2.10.2** | Primary UI Library   | **FREE version** (limited components) |
-| TallStack UI | **2.15.1** | Secondary UI Library | Supplements Flux limitations          |
-| Alpine.js    | **3.x**    | JavaScript           | Included via Livewire                 |
-| Vite         | **7.x**    | Asset Bundling       | -                                     |
+| Technology   | Version | Purpose        | Notes                     |
+| ------------ | ------- | -------------- | ------------------------- |
+| Tailwind CSS | **4.x** | Styling        | v4 with new config syntax |
+| Alpine.js    | **3.x** | JavaScript     | Included via Livewire     |
+| Vite         | **6.x** | Asset Bundling | -                         |
 
 ### **Database**
 
-| Environment           | Engine       | Notes                         |
-| --------------------- | ------------ | ----------------------------- |
-| **Local/Development** | SQLite 3.49+ | URL: `http://simkopkbm.test1` |
-| **Production**        | MySQL 8.x    | Full RDBMS features           |
+| Environment           | Engine       | Notes                                          |
+| --------------------- | ------------ | ---------------------------------------------- |
+| **Local/Development** | SQLite 3.49+ | URL: `http://simkopkbm.test` or localhost:8000 |
+| **Production**        | MySQL 8.x    | Full RDBMS features                            |
 
 ⚠️ **Cross-Database Compatibility Notes:**
 
@@ -116,105 +112,32 @@ new #[Layout('components.admin.layouts.app')] class extends Component {
 
 ## 🎨 UI Library Guide
 
-### **Component Hierarchy**
+### **Component Library**
 
-This project uses **TWO UI libraries**. Follow this priority:
+using custom tailwind and custom components
 
-```
-1. Flux UI (Primary)     → Use first if component available
-2. TallStack UI (Secondary) → Use when Flux doesn't have the component
-3. Custom Blade (Last Resort) → Only if neither has what you need
-```
+### **Iconography**
 
-### **Flux UI Free - Available Components**
-
-> Flux Free has limited components. Available ones include:
-
-```blade
-{{-- Buttons --}}
-<flux:button variant="primary" icon="check">Save</flux:button>
-<flux:button variant="danger" icon="trash">Delete</flux:button>
-<flux:button variant="ghost">Cancel</flux:button>
-
-{{-- Form Inputs --}}
-<flux:input wire:model="name" label="Name" />
-<flux:select wire:model="option" label="Option">
-    <option value="">Select...</option>
-</flux:select>
-<flux:textarea wire:model="description" label="Description" rows="3" />
-
-{{-- Typography --}}
-<flux:heading size="xl" level="1">Page Title</flux:heading>
-<flux:subheading>Description text</flux:subheading>
-
-{{-- Icons --}}
-<flux:icon icon="check" class="w-5 h-5" />
-
-{{-- Modals --}}
-<flux:modal wire:model="showModal">
-    <flux:modal.header>Title</flux:modal.header>
-    <flux:modal.body>Content</flux:modal.body>
-</flux:modal>
-
-{{-- Toast notifications (from PHP) --}}
-\Flux::toast('Message here');
-```
-
-### **TallStack UI - Secondary Library**
-
-> TallStack UI v2.15 is installed as a complement to Flux Free.  
-> 📖 **Full documentation:** https://tallstackui.com/docs
-
-**Available Components Include:**
-
-- **Form:** Date Picker, Time Picker, Color Picker, PIN Input, Range, Upload, Select (searchable)
-- **UI:** Table, Card, Avatar, Badge, Alert, Banner, Dropdown, Tooltip, Stats
-- **Navigation:** Tabs, Steps/Wizard, Slide, Drawer
-- **Feedback:** Rating, Progress, Loading, Reactions
-- **Utility:** Clipboard, Floating, Errors
-
-**Usage Pattern:**
-
-```blade
-{{-- TallStack components use x-ts- prefix --}}
-<x-ts-date-picker wire:model="date" label="Date" />
-<x-ts-table :headers="$headers" :rows="$rows" />
-<x-ts-card>Content here</x-ts-card>
-<x-ts-badge text="Active" color="green" />
-```
-
-### **When to Use Which**
-
-| Need                                   | First Choice  | Fallback        |
-| -------------------------------------- | ------------- | --------------- |
-| Button, Input, Select, Modal, Textarea | **Flux**      | -               |
-| Date/Time Picker, Searchable Select    | **TallStack** | -               |
-| Table, Card, Badge, Avatar, Stats      | **TallStack** | Custom Tailwind |
-| Toast/Notification                     | **Flux**      | TallStack       |
-| Tabs, Steps, Wizard                    | **TallStack** | -               |
+We use **Heroicons**
 
 ### **Page Structure Template**
 
 ```blade
 <div class="p-6">
-    {{-- Header --}}
-    <div class="flex items-center justify-between mb-6">
-        <div>
-            <flux:heading size="xl" level="1">Page Title</flux:heading>
-            <flux:subheading>Page description.</flux:subheading>
+    <x-ui.header title="Page Title" subtitle="Page description.">
+        <x-slot:actions>
+            <x-ui.button label="Add New" icon="o-plus" class="btn-primary" spinner />
+        </x-slot:actions>
+    </x-ui.header>
+
+    <x-ui.card shadow padding="false">
+        {{-- Filters/Content --}}
+        <div class="p-6 grid grid-cols-1 md:grid-cols-4 gap-4 mb-6">
+            <x-ui.input label="Search" wire:model.live="search" icon="o-magnifying-glass" />
         </div>
-        <flux:button variant="primary" icon="plus">Add New</flux:button>
-    </div>
 
-    {{-- Filters --}}
-    <div class="grid grid-cols-1 md:grid-cols-4 gap-4 mb-6">
-        {{-- Filter inputs --}}
-    </div>
-
-    {{-- Content --}}
-    <div class="border rounded-lg bg-white dark:bg-zinc-900 overflow-hidden">
-        {{-- Table or content --}}
-    </div>
+        <x-ui.table :headers="$headers" :rows="$rows" />
+    </x-ui.card>
 </div>
 ```
 
@@ -354,7 +277,7 @@ Level (Paket A/B/C) → has phase_map JSON
 
 ## 🔄 Development Patterns
 
-### **Livewire Volt Component Pattern**
+### **Livewire 4 Component Pattern use blaze if needed and be carefull to use blaze**
 
 ```blade
 <?php
@@ -363,7 +286,7 @@ declare(strict_types=1);
 
 use App\Models\User;
 use Livewire\Attributes\Layout;
-use Livewire\Volt\Component;
+use Livewire\Component;
 
 new #[Layout('components.admin.layouts.app')] class extends Component {
     // Properties
@@ -386,7 +309,7 @@ new #[Layout('components.admin.layouts.app')] class extends Component {
     public function save(): void
     {
         // Validate and save
-        \Flux::toast('Saved successfully.');
+        $this->success('Saved successfully.');
     }
 
     // Computed data for view
@@ -401,7 +324,7 @@ new #[Layout('components.admin.layouts.app')] class extends Component {
 <div class="p-6">
     {{-- View content --}}
 </div>
-````
+```
 
 ### **Loading Related Data Pattern**
 
@@ -420,7 +343,7 @@ public function loadStudents(): void
     }
 
     $this->students = User::where('role', 'siswa')
-        ->whereHas('profiles.profileable', fn($q) =>
+        ->whereHas('latestProfile.profileable', fn($q) =>
             $q->where('classroom_id', $this->classroom_id)
         )
         ->get();
@@ -441,7 +364,7 @@ public function save(): void
         }
     });
 
-    \Flux::toast('Data saved successfully.');
+    $this->success('Data saved successfully.');
 }
 ```
 
@@ -688,8 +611,8 @@ php artisan make:migration create_table_name_table
 # Create model
 php artisan make:model ModelName
 
-# Create Volt component
-php artisan make:volt path/component-name --class
+# Create Livewire SFC component
+php artisan make:livewire path/component-name --sfc
 ```
 
 ---
@@ -813,7 +736,7 @@ All public content is manageable via admin panel:
 ### **When Creating New Features:**
 
 1. [ ] Check existing patterns in similar files
-2. [ ] Use Flux components first, TallStack if needed
+2. [ ] Use Mary UI components
 3. [ ] Follow naming conventions
 4. [ ] Add route to appropriate route file
 5. [ ] Add menu item to sidebar (if needed)
@@ -866,14 +789,13 @@ $user->isGuru(): bool
 ```php
 // In sidebar - show competency assessment only for PAUD teachers
 @if(auth()->user()->isAdmin() || auth()->user()->teachesPaudLevel())
-    <flux:sidebar.item :href="route('admin.assessments.competency')">
-        {{ __('Penilaian Kompetensi') }}
-    </flux:sidebar.item>
+    <x-menu-item icon="o-academic-cap" :href="route('admin.assessments.competency')" label="{{ __('Penilaian Kompetensi') }}" />
 @endif
 ```
 
 ---
 
-**Last Updated:** 2026-02-15
-**Version:** 2.2
+**Last Updated:** 2026-02-27
+**Version:** 2.3
 **Maintained By:** Antigravity AI Assistant
+````

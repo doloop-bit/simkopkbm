@@ -1,8 +1,7 @@
 <?php
 
-use Livewire\Volt\Volt;
 use Illuminate\Support\Facades\Route;
 
 Route::middleware(['auth', 'verified', 'role:admin'])->prefix('admin/data-master')->group(function () {
-    Volt::route('users', 'admin.data-master.users')->name('users.index');
+    Route::livewire('users', 'admin.data-master.users')->name('users.index');
 });

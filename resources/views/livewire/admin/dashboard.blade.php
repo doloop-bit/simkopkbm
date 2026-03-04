@@ -7,7 +7,7 @@ use App\Models\Transaction;
 use App\Models\StudentBilling;
 use App\Models\Classroom;
 use App\Models\Attendance;
-use Livewire\Volt\Component;
+use Livewire\Component;
 
 new class extends Component {
     public function with(): array
@@ -52,134 +52,108 @@ new class extends Component {
 
 <div class="space-y-6">
     <!-- Header -->
-    <div class="flex items-center justify-between">
-        <div>
-            <flux:heading size="xl" level="1">Selamat Datang, {{ auth()->user()->name }}</flux:heading>
-            <flux:subheading>Ringkasan aktivitas PKBM hari ini.</flux:subheading>
-        </div>
-        <div class="text-right hidden md:block">
-            <div class="text-sm font-medium text-zinc-500">{{ now()->translatedFormat('l, d F Y') }}</div>
-        </div>
-    </div>
+    <x-ui.header :title="__('Selamat Datang, :name', ['name' => auth()->user()->name])" :subtitle="__('Ringkasan aktivitas PKBM hari ini.')">
+        <x-slot:actions>
+            <div class="text-sm font-semibold text-slate-500 bg-slate-100 dark:bg-slate-800 px-3 py-1.5 rounded-lg border border-slate-200 dark:border-slate-700">
+                {{ now()->translatedFormat('l, d F Y') }}
+            </div>
+        </x-slot:actions>
+    </x-ui.header>
 
     <!-- Stats Grid -->
-    <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
-        <div class="p-4 bg-white dark:bg-zinc-900 border rounded-xl shadow-sm">
-            <div class="flex items-center gap-3">
-                <div class="p-2 bg-blue-50 dark:bg-blue-900/30 rounded-lg">
-                    <flux:icon icon="users" class="text-blue-600 dark:text-blue-400" />
-                </div>
-                <div>
-                    <div class="text-xs text-zinc-500 uppercase tracking-wider font-semibold">Total Siswa</div>
-                    <div class="text-2xl font-bold dark:text-white">{{ $stats['students'] }}</div>
-                </div>
-            </div>
-        </div>
+    <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+        <x-ui.stat
+            :title="__('Total Siswa')"
+            :value="$stats['students']"
+            icon="o-users"
+            color="text-blue-600 dark:text-blue-400"
+        />
 
-        <div class="p-4 bg-white dark:bg-zinc-900 border rounded-xl shadow-sm">
-            <div class="flex items-center gap-3">
-                <div class="p-2 bg-purple-50 dark:bg-purple-900/30 rounded-lg">
-                    <flux:icon icon="academic-cap" class="text-purple-600 dark:text-purple-400" />
-                </div>
-                <div>
-                    <div class="text-xs text-zinc-500 uppercase tracking-wider font-semibold">Total Guru</div>
-                    <div class="text-2xl font-bold dark:text-white">{{ $stats['teachers'] }}</div>
-                </div>
-            </div>
-        </div>
+        <x-ui.stat
+            :title="__('Total Guru')"
+            :value="$stats['teachers']"
+            icon="o-academic-cap"
+            color="text-indigo-600 dark:text-indigo-400"
+        />
 
-        <div class="p-4 bg-white dark:bg-zinc-900 border rounded-xl shadow-sm">
-            <div class="flex items-center gap-3">
-                <div class="p-2 bg-green-50 dark:bg-green-900/30 rounded-lg">
-                    <flux:icon icon="banknotes" class="text-green-600 dark:text-green-400" />
-                </div>
-                <div>
-                    <div class="text-xs text-zinc-500 uppercase tracking-wider font-semibold">Pendapatan (Bulan Ini)</div>
-                    <div class="text-2xl font-bold text-green-600 dark:text-green-400">
-                        Rp {{ number_format($stats['income_month'] / 1000, 0) }}k
-                    </div>
-                </div>
-            </div>
-        </div>
+        <x-ui.stat
+            :title="__('Pendapatan (Bulan Ini)')"
+            :value="'Rp ' . number_format($stats['income_month'] / 1000, 0) . 'k'"
+            icon="o-banknotes"
+            color="text-emerald-600 dark:text-emerald-400"
+        />
 
-        <div class="p-4 bg-white dark:bg-zinc-900 border rounded-xl shadow-sm">
-            <div class="flex items-center gap-3">
-                <div class="p-2 bg-orange-50 dark:bg-orange-900/30 rounded-lg">
-                    <flux:icon icon="document-minus" class="text-orange-600 dark:text-orange-400" />
-                </div>
-                <div>
-                    <div class="text-xs text-zinc-500 uppercase tracking-wider font-semibold">Piutang Tagihan</div>
-                    <div class="text-2xl font-bold text-orange-600 dark:text-orange-400">
-                        Rp {{ number_format($stats['pending_billings'] / 1000000, 1) }}M
-                    </div>
-                </div>
-            </div>
-        </div>
+        <x-ui.stat
+            :title="__('Piutang Tagihan')"
+            :value="'Rp ' . number_format($stats['pending_billings'] / 1000000, 1) . 'M'"
+            icon="o-document-minus"
+            color="text-amber-600 dark:text-amber-400"
+        />
     </div>
 
     <!-- Main Content -->
     <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
         <!-- Recent Transactions -->
-        <div class="border rounded-xl bg-white dark:bg-zinc-900 overflow-hidden shadow-sm">
-            <div class="px-4 py-3 border-b bg-zinc-50 dark:bg-zinc-800 flex justify-between items-center">
-                <flux:heading size="md">Transaksi Terakhir</flux:heading>
-                <flux:button variant="ghost" size="sm" :href="route('financial.transactions')" wire:navigate>Lihat Semua</flux:button>
-            </div>
-            <div class="divide-y">
+        <x-ui.card :title="__('Transaksi Terakhir')" separator shadow>
+            <x-slot:actions>
+                <x-ui.button :label="__('Lihat Semua')" :link="route('financial.transactions')" wire:navigate ghost />
+            </x-slot:actions>
+            
+            <div class="divide-y divide-slate-100 dark:divide-slate-800/50">
                 @forelse($recentTransactions as $tx)
-                    <div class="p-4 hover:bg-zinc-50 dark:hover:bg-zinc-800/50 transition">
-                        <div class="flex justify-between items-start">
-                            <div class="flex gap-3">
-                                <div class="w-10 h-10 rounded-full bg-zinc-100 dark:bg-zinc-800 flex items-center justify-center font-bold text-zinc-500">
+                    <div class="py-4 flex justify-between items-center transition-all hover:bg-slate-50/50 dark:hover:bg-slate-800/30 -mx-4 px-4 rounded-xl group">
+                        <x-ui.list-item no-separator no-hover class="!p-0 w-full">
+                            <x-slot:avatar>
+                                <div class="w-10 h-10 rounded-xl bg-slate-100 dark:bg-slate-800 flex items-center justify-center font-bold text-slate-500 dark:text-slate-400 shadow-inner group-hover:scale-105 transition-transform">
                                     {{ substr($tx->billing?->student?->name ?? '?', 0, 1) }}
                                 </div>
-                                <div>
-                                    <div class="font-medium dark:text-white">{{ $tx->billing?->student?->name ?? 'Siswa Dihapus' }}</div>
-                                    <div class="text-xs text-zinc-500">{{ $tx->billing?->feeCategory?->name ?? 'Kategori Dihapus' }} - {{ $tx->payment_method }}</div>
-                                </div>
-                            </div>
-                            <div class="text-right">
-                                <div class="font-bold text-green-600 dark:text-green-400 font-mono">+ Rp {{ number_format($tx->amount, 0, ',', '.') }}</div>
-                                <div class="text-[10px] text-zinc-400">{{ $tx->payment_date->diffForHumans() }}</div>
-                            </div>
+                            </x-slot:avatar>
+                            <x-slot:value>
+                                {{ $tx->billing?->student?->name ?? 'Siswa Dihapus' }}
+                            </x-slot:value>
+                            <x-slot:sub-value>
+                                {{ $tx->billing?->feeCategory?->name ?? 'Kategori Dihapus' }} - {{ $tx->payment_method }}
+                            </x-slot:sub-value>
+                        </x-ui.list-item>
+                        <div class="text-right">
+                            <div class="font-bold text-emerald-600 dark:text-emerald-400 font-mono">+ Rp {{ number_format($tx->amount, 0, ',', '.') }}</div>
+                            <div class="text-[10px] uppercase font-bold text-slate-400">{{ $tx->payment_date->diffForHumans() }}</div>
                         </div>
                     </div>
                 @empty
-                    <div class="p-8 text-center text-zinc-500 text-sm">Belum ada transaksi masuk.</div>
+                    <div class="py-12 text-center text-slate-500 italic">Belum ada transaksi masuk.</div>
                 @endforelse
             </div>
-        </div>
+        </x-ui.card>
 
         <!-- Recent Attendance -->
-        <div class="border rounded-xl bg-white dark:bg-zinc-900 overflow-hidden shadow-sm">
-            <div class="px-4 py-3 border-b bg-zinc-50 dark:bg-zinc-800 flex justify-between items-center">
-                <flux:heading size="md">Input Presensi Terakhir</flux:heading>
-                <flux:button variant="ghost" size="sm" :href="route('academic.attendance')" wire:navigate>Lihat Semua</flux:button>
-            </div>
-            <div class="divide-y">
+        <x-ui.card :title="__('Input Presensi Terakhir')" separator shadow>
+            <x-slot:actions>
+                <x-ui.button :label="__('Lihat Semua')" :link="route('academic.attendance')" wire:navigate ghost />
+            </x-slot:actions>
+            
+            <div class="divide-y divide-slate-100 dark:divide-slate-800/50">
                 @forelse($recentAttendance as $att)
-                    <div class="p-4 hover:bg-zinc-50 dark:hover:bg-zinc-800/50 transition">
-                        <div class="flex justify-between items-center">
-                            <div class="flex gap-3 items-center">
-                                <div class="p-2 bg-blue-50 dark:bg-blue-900/30 rounded-lg">
-                                    <flux:icon icon="clipboard-document-check" variant="micro" class="text-blue-600 dark:text-blue-400" />
-                                </div>
-                                <div>
-                                    <div class="font-medium dark:text-white">Kelas {{ $att->classroom->name }}</div>
-                                    <div class="text-xs text-zinc-500">
-                                        {{ $att->subject?->name ?? 'Harian' }} • {{ $att->date->format('d/m/Y') }}
-                                    </div>
+                    <div class="py-4 flex justify-between items-center transition-all hover:bg-slate-50/50 dark:hover:bg-slate-800/30 -mx-4 px-4 rounded-xl group">
+                        <div class="flex gap-4 items-center">
+                            <div class="p-2.5 bg-blue-50 dark:bg-blue-900/20 text-blue-600 dark:text-blue-400 rounded-xl shadow-sm group-hover:bg-blue-100 dark:group-hover:bg-blue-900/40 transition-colors">
+                                <x-ui.icon name="o-clipboard-document-check" class="size-6" />
+                            </div>
+                            <div>
+                                <div class="font-bold text-slate-900 dark:text-white">Kelas {{ $att->classroom->name }}</div>
+                                <div class="text-xs font-medium text-slate-500 dark:text-slate-400">
+                                    {{ $att->subject?->name ?? 'Harian' }} • {{ $att->date->format('d M Y') }}
                                 </div>
                             </div>
-                            <div class="text-xs text-zinc-400">
-                                {{ $att->items_count ?? $att->items()->count() }} Siswa
-                            </div>
+                        </div>
+                        <div class="text-xs font-bold px-2 py-0.5 rounded-md bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-400 border border-slate-200 dark:border-slate-700">
+                            {{ $att->items_count ?? $att->items()->count() }} SISWA
                         </div>
                     </div>
                 @empty
-                    <div class="p-8 text-center text-zinc-500 text-sm">Belum ada data presensi.</div>
+                    <div class="py-12 text-center text-slate-500 italic">Belum ada data presensi.</div>
                 @endforelse
             </div>
-        </div>
+        </x-ui.card>
     </div>
 </div>

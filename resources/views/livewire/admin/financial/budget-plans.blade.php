@@ -1,6 +1,6 @@
 <?php
 
-use Livewire\Volt\Component;
+use Livewire\Component;
 use App\Models\BudgetPlan;
 use App\Models\BudgetPlanItem;
 use App\Models\BudgetCategory;
@@ -29,6 +29,7 @@ new class extends Component {
 
     // Master Data Cache
     public $standardItems = [];
+    public bool $planModal = false;
     
     public function mount()
     {
@@ -63,9 +64,8 @@ new class extends Component {
         
         if (!$user->can('create', BudgetPlan::class) && !$user->managed_level_id && !$user->isAdmin()) {
              // Basic check if user has no level assigned and is not admin
-             // Ideally use Policy, but for now simple check
              if (!$user->managed_level_id && !$user->isAdmin()) {
-                 $this->dispatch('notify', variant: 'danger', message: 'Anda tidak memiliki akses untuk membuat RAB.');
+                 session()->flash('error', 'Anda tidak memiliki akses untuk membuat RAB.');
                  return;
              }
         }
@@ -76,7 +76,7 @@ new class extends Component {
         $this->formItems = [];
         $this->itemSearches = [''];
         $this->addItemRow(); // Start with 1 empty row
-        $this->dispatch('open-plan-modal');
+        $this->planModal = true;
     }
 
     public function edit(BudgetPlan $plan): void
@@ -108,8 +108,7 @@ new class extends Component {
         })->toArray();
 
         $this->itemSearches = collect($this->formItems)->pluck('name')->toArray();
-
-        $this->dispatch('open-plan-modal');
+        $this->planModal = true;
     }
 
     public function addItemRow(): void
@@ -197,7 +196,7 @@ new class extends Component {
                 'status' => $action === 'submit' ? 'submitted' : 'draft',
             ]);
             
-            // Sync Items (Delete all and recreate is easiest for now, or careful sync)
+            // Sync Items
             $plan->items()->delete();
         } else {
             $plan = BudgetPlan::create([
@@ -247,21 +246,19 @@ new class extends Component {
                 }
             } catch (\Exception $e) {
                 \Illuminate\Support\Facades\Log::error('WA Notification Error: ' . $e->getMessage());
-                // Don't block the UI flow, just log
             }
         }
 
-        $this->dispatch('plan-saved');
-        $this->dispatch('notify', variant: 'success', message: 'RAB berhasil disimpan.');
+        $this->planModal = false;
+        session()->flash('success', 'RAB berhasil disimpan.');
     }
     
     // Workflow Actions
     public function updateStatus(BudgetPlan $plan, string $status): void
     {
-        // Authorization Check
         $user = Auth::user();
         if (!$user->isYayasan() && !$user->isAdmin()) {
-             $this->dispatch('notify', variant: 'danger', message: 'Unauthorized action.');
+             session()->flash('error', 'Unauthorized action.');
              return;
         }
         
@@ -279,17 +276,18 @@ new class extends Component {
         }
         
         $plan->update($updateData);
-        $this->dispatch('plan-saved'); // Refresh list
-        $this->dispatch('notify', variant: 'success', message: "Status RAB diperbarui menjadi " . ucfirst($status));
+        session()->flash('success', 'Status RAB diperbarui menjadi ' . ucfirst($status));
+        $this->planModal = false;
     }
 
     public function delete(BudgetPlan $plan): void
     {
         if ($plan->status !== 'draft' && !Auth::user()->isAdmin()) {
-             $this->dispatch('notify', variant: 'danger', message: 'Hanya draft yang dapat dihapus.');
+             session()->flash('error', 'Hanya draft yang dapat dihapus.');
              return;
         }
         $plan->delete();
+        session()->flash('success', 'RAB berhasil dihapus.');
     }
 
     public function createSubItem($index, $name): void
@@ -318,261 +316,261 @@ new class extends Component {
     }
 }; ?>
 
-<div class="flex flex-col gap-6">
-    <div class="flex flex-col md:flex-row gap-4 items-center justify-between">
-        <div>
-            <flux:heading size="xl">RAB / Rencana Anggaran Biaya</flux:heading>
-            <flux:subheading>Kelola pengajuan dan persetujuan anggaran.</flux:subheading>
+<div class="p-6 space-y-5 text-slate-900 dark:text-white pb-24 md:pb-6">
+    @if (session('success'))
+        <x-ui.alert :title="__('Sukses')" icon="o-check-circle" class="bg-emerald-50 text-emerald-800 border-emerald-100" dismissible>
+            {{ session('success') }}
+        </x-ui.alert>
+    @endif
+
+    @if (session('error'))
+        <x-ui.alert :title="__('Gagal')" icon="o-exclamation-circle" class="bg-rose-50 text-rose-800 border-rose-100" dismissible>
+            {{ session('error') }}
+        </x-ui.alert>
+    @endif
+
+    <x-ui.header :title="__('RAB / Rencana Anggaran Biaya')" :subtitle="__('Kelola pengajuan, persetujuan, dan pencairan anggaran operasional sekolah.')" separator>
+        <x-slot:actions>
+            @if(Auth::user()->isTreasurer() || Auth::user()->isHeadmaster() || Auth::user()->isAdmin())
+                <x-ui.button :label="__('Buat RAB Baru')" icon="o-plus" class="btn-primary" wire:click="createNew" />
+            @endif
+        </x-slot:actions>
+    </x-ui.header>
+
+    <div class="flex flex-col md:flex-row gap-4">
+        <div class="flex-1">
+            <x-ui.input 
+                wire:model.live.debounce.300ms="search" 
+                :placeholder="__('Cari judul RAB...')" 
+                icon="o-magnifying-glass" 
+            />
         </div>
-        @if(Auth::user()->isTreasurer() || Auth::user()->isHeadmaster() || Auth::user()->isAdmin())
-            <flux:button variant="primary" icon="plus" wire:click="createNew">Buat RAB Baru</flux:button>
+        
+        @if(Auth::user()->isAdmin() || Auth::user()->isYayasan())
+            <x-ui.select 
+                wire:model.live="level_filter" 
+                :placeholder="__('Semua Jenjang')" 
+                :options="$levels" 
+                class="w-full md:w-48" 
+            />
         @endif
     </div>
 
-    <!-- Filters -->
-    <div class="flex flex-col md:flex-row gap-4 mb-6 items-center justify-between">
-        <div class="flex gap-2 w-full md:w-auto">
-            <flux:input wire:model.live="search" icon="magnifying-glass" placeholder="Cari RAB..." class="w-full md:w-64" />
-            
-            @if(Auth::user()->isAdmin() || Auth::user()->isYayasan())
-                <flux:select wire:model.live="level_filter" placeholder="Semua Jenjang" class="w-full md:w-48">
-                    <option value="">Semua Jenjang</option>
-                    @foreach($levels as $level)
-                        <option value="{{ $level->id }}">{{ $level->name }}</option>
-                    @endforeach
-                </flux:select>
-            @endif
+    <x-ui.card shadow padding="false">
+        <x-ui.table 
+            :headers="[
+                ['key' => 'title_info', 'label' => __('Judul / Tahun')],
+                ['key' => 'level_name', 'label' => __('Jenjang')],
+                ['key' => 'amount_label', 'label' => __('Total Anggaran'), 'class' => 'text-right'],
+                ['key' => 'status_label', 'label' => __('Status'), 'class' => 'text-center'],
+                ['key' => 'actions', 'label' => __('Aksi'), 'class' => 'text-right']
+            ]" 
+            :rows="$plans"
+        >
+            @scope('cell_title_info', $plan)
+                <div class="flex flex-col">
+                    <span class="font-bold text-slate-900 dark:text-white">{{ $plan->title }}</span>
+                    <span class="text-[10px] text-slate-400 font-mono tracking-tighter uppercase">{{ $plan->academicYear?->name ?? '-' }}</span>
+                </div>
+            @endscope
+
+            @scope('cell_level_name', $plan)
+                <span class="text-[10px] font-black text-slate-500 uppercase tracking-widest">{{ $plan->level?->name ?? '-' }}</span>
+            @endscope
+
+            @scope('cell_amount_label', $plan)
+                <span class="font-mono text-sm font-black text-slate-900 dark:text-white italic tracking-tighter">
+                    Rp {{ number_format($plan->total_amount, 0, ',', '.') }}
+                </span>
+            @endscope
+
+            @scope('cell_status_label', $plan)
+                @php
+                    $statusClass = match($plan->status) {
+                        'draft' => 'bg-slate-100 text-slate-600',
+                        'submitted' => 'bg-amber-100 text-amber-700',
+                        'approved' => 'bg-emerald-100 text-emerald-700',
+                        'transferred' => 'bg-blue-100 text-blue-700',
+                        'rejected' => 'bg-rose-100 text-rose-700',
+                        default => 'bg-slate-100 text-slate-500'
+                    };
+                @endphp
+                <x-ui.badge :label="strtoupper($plan->status)" class="{{ $statusClass }} border-none text-[8px] font-black px-2 py-0.5" />
+            @endscope
+
+            @scope('cell_actions', $plan)
+                <div class="flex justify-end gap-2">
+                    <x-ui.button icon="o-eye" wire:click="edit({{ $plan->id }})" class="btn-ghost btn-sm text-slate-400 hover:text-primary transition-colors" />
+                    <x-ui.button icon="o-printer" wire:click="exportPdf({{ $plan->id }})" class="btn-ghost btn-sm text-slate-400 hover:text-slate-600 transition-colors" />
+                    @if($plan->status === 'draft' || Auth::user()->isAdmin())
+                        <x-ui.button icon="o-trash" wire:click="delete({{ $plan->id }})" wire:confirm="{{ __('Hapus RAB ini?') }}" class="btn-ghost btn-sm text-slate-400 hover:text-rose-600 transition-colors" />
+                    @endif
+                </div>
+            @endscope
+        </x-ui.table>
+
+        @if($plans->isEmpty())
+            <div class="py-12 text-center text-slate-400 italic text-sm">
+                {{ __('Tidak ada data RAB yang ditemukan.') }}
+            </div>
+        @endif
+
+        <div class="p-4 border-t border-slate-100 dark:border-slate-800">
+            {{ $plans->links() }}
         </div>
-    </div>
+    </x-ui.card>
 
-    <!-- List -->
-    <div class="overflow-x-auto">
-        <table class="min-w-full divide-y divide-zinc-200 dark:divide-zinc-700">
-            <thead>
-                <tr>
-                    <th class="px-4 py-3 text-left text-xs font-medium text-zinc-500 uppercase tracking-wider">Judul</th>
-                    <th class="px-4 py-3 text-left text-xs font-medium text-zinc-500 uppercase tracking-wider">Jenjang</th>
-                    <th class="px-4 py-3 text-left text-xs font-medium text-zinc-500 uppercase tracking-wider">Tahun Ajaran</th>
-                    <th class="px-4 py-3 text-right text-xs font-medium text-zinc-500 uppercase tracking-wider">Total Anggaran</th>
-                    <th class="px-4 py-3 text-center text-xs font-medium text-zinc-500 uppercase tracking-wider">Status</th>
-                    <th class="px-4 py-3 text-right text-xs font-medium text-zinc-500 uppercase tracking-wider">Aksi</th>
-                </tr>
-            </thead>
-            <tbody class="divide-y divide-zinc-200 dark:divide-zinc-700">
-                @foreach($plans as $plan)
-                    <tr wire:key="plan-{{ $plan->id }}" class="hover:bg-zinc-50 dark:hover:bg-zinc-800">
-                        <td class="px-4 py-3 whitespace-nowrap text-sm font-medium text-zinc-900 dark:text-zinc-100">{{ $plan->title }}</td>
-                        <td class="px-4 py-3 whitespace-nowrap text-sm text-zinc-500">{{ $plan->level->name }}</td>
-                        <td class="px-4 py-3 whitespace-nowrap text-sm text-zinc-500">{{ $plan->academicYear->name }}</td>
-                        <td class="px-4 py-3 whitespace-nowrap text-sm text-right font-bold text-zinc-900 dark:text-zinc-100">
-                            Rp {{ number_format($plan->total_amount, 0, ',', '.') }}
-                        </td>
-                        <td class="px-4 py-3 whitespace-nowrap text-center">
-                            @php
-                                $variant = match($plan->status) {
-                                    'draft' => 'zinc',
-                                    'submitted' => 'warning',
-                                    'approved' => 'success',
-                                    'transferred' => 'info',
-                                    'rejected' => 'danger',
-                                };
-                            @endphp
-                            <flux:badge variant="{{ $variant }}" size="sm">{{ ucfirst($plan->status) }}</flux:badge>
-                        </td>
-                        <td class="px-4 py-3 text-right space-x-2">
-                            <!-- View/Edit -->
-                            <flux:button size="sm" variant="ghost" icon="eye" wire:click="edit({{ $plan->id }})" wire:target="edit({{ $plan->id }})" />
+    <x-ui.modal wire:model="planModal" maxWidth="max-w-5xl">
+        <x-ui.header :title="$editing ? __('Edit RAB') : __('Buat RAB Baru')" :subtitle="__('Rencana Anggaran diajukan untuk disetujui oleh Yayasan.')" separator />
 
-                            <!-- Preview PDF -->
-                            <flux:button size="sm" variant="ghost" icon="printer" wire:click="exportPdf({{ $plan->id }})" wire:target="exportPdf({{ $plan->id }})" />
-                            
-                            <!-- Delete (Draft Only) -->
-                            @if($plan->status === 'draft' || Auth::user()->isAdmin())
-                                <flux:button size="sm" variant="ghost" icon="trash" class="text-red-500" wire:confirm="Hapus RAB ini?" wire:click="delete({{ $plan->id }})" wire:target="delete({{ $plan->id }})" />
-                            @endif
-                            
-                            <!-- Approval Actions (Yayasan) -->
-                            @if((Auth::user()->isYayasan() || Auth::user()->isAdmin()) && $plan->status === 'submitted')
-                                <flux:button size="sm" variant="primary" icon="check" wire:click="updateStatus({{ $plan->id }}, 'approved')" wire:target="updateStatus({{ $plan->id }}, 'approved')" />
-                                <flux:button size="sm" variant="danger" icon="x-mark" wire:click="updateStatus({{ $plan->id }}, 'rejected')" wire:target="updateStatus({{ $plan->id }}, 'rejected')" />
-                            @endif
-                            
-                            <!-- Transfer Action (Yayasan) -->
-                            @if((Auth::user()->isYayasan() || Auth::user()->isAdmin()) && $plan->status === 'approved')
-                                <flux:button size="sm" variant="primary" icon="banknotes" wire:click="updateStatus({{ $plan->id }}, 'transferred')" wire:target="updateStatus({{ $plan->id }}, 'transferred')" title="Tandai Sudah Transfer" />
-                            @endif
-                        </td>
-                    </tr>
-                @endforeach
-            </tbody>
-        </table>
-    </div>
-    
-    <div class="mt-4">
-        {{ $plans->links() }}
-    </div>
-
-    <!-- RAB Modal (Large) -->
-    <flux:modal name="plan-modal" class="w-full max-w-6xl max-h-[95vh] overflow-y-auto" @open-plan-modal.window="$flux.modal('plan-modal').show()" x-on:plan-saved.window="$flux.modal('plan-modal').close()">
         <div class="space-y-6">
-            <div>
-                <flux:heading size="lg">{{ $editing ? 'Edit RAB' : 'Buat RAB Baru' }}</flux:heading>
-                <flux:subheading>Anggaran diajukan oleh Bendahara/Kepsek untuk disetujui Yayasan.</flux:subheading>
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+                <x-ui.select wire:model="academic_year_id" :label="__('Tahun Ajaran')" :placeholder="__('Pilih Tahun')" :options="$years" required />
+                <x-ui.select wire:model="level_id" :label="__('Jenjang / Level')" :placeholder="__('Pilih Jenjang')" :options="$levels" required />
+                <x-ui.input wire:model="title" :label="__('Judul RAB')" :placeholder="__('Contoh: Operasional Januari 2026')" required />
             </div>
 
-            <div class="grid grid-cols-1 md:grid-cols-3 gap-4 items-start">
-                <flux:select wire:model="academic_year_id" label="Tahun Ajaran" placeholder="Pilih Tahun Ajaran">
-                    @foreach($years as $year)
-                        <option value="{{ $year->id }}">{{ $year->name }}</option>
-                    @endforeach
-                </flux:select>
-
-                <flux:select wire:model="level_id" label="Jenjang / Level" placeholder="Pilih Jenjang">
-                    @foreach($levels as $level)
-                        <option value="{{ $level->id }}">{{ $level->name }}</option>
-                    @endforeach
-                </flux:select>
+            <div class="rounded-3xl border border-slate-200 dark:border-slate-800 bg-slate-50/30 dark:bg-slate-900/30 overflow-hidden">
+                <div class="p-4 border-b border-slate-200 dark:border-slate-800 flex items-center justify-between bg-white dark:bg-slate-900">
+                    <span class="text-[11px] font-black uppercase text-slate-400 tracking-widest italic">{{ __('Daftar Rincian Item Anggaran') }}</span>
+                    <x-ui.button :label="__('Tambah Baris')" icon="o-plus" wire:click="addItemRow" class="btn-sm btn-ghost text-xs font-black uppercase" />
+                </div>
                 
-                <flux:input wire:model="title" label="Judul RAB" placeholder="Contoh: RAB Operasional Januari 2026" />
-            </div>
-
-            <!-- Items Table -->
-            <div class="border rounded-lg bg-zinc-50 dark:bg-zinc-800/50 p-1">
-                <table class="min-w-full divide-y divide-zinc-200">
-                    <thead class="bg-zinc-50 dark:bg-zinc-800">
-                        <tr>
-                            <th class="px-3 py-2 text-left text-xs font-medium text-zinc-500 uppercase">Item Standar / Baru</th>
-                            <th class="px-3 py-2 text-left text-xs font-medium text-zinc-500 uppercase w-32">Kategori</th>
-                            <th class="px-3 py-2 text-center text-xs font-medium text-zinc-500 uppercase w-28">Qty</th>
-                            <th class="px-3 py-2 text-center text-xs font-medium text-zinc-500 uppercase w-24">Satuan</th>
-                            <th class="px-3 py-2 text-right text-xs font-medium text-zinc-500 uppercase w-40">Harga Satuan</th>
-                            <th class="px-3 py-2 text-right text-xs font-medium text-zinc-500 uppercase w-40">Total</th>
-                            <th class="px-3 py-2 w-10"></th>
-                        </tr>
-                    </thead>
-                    <tbody class="divide-y divide-zinc-200 dark:divide-zinc-700 bg-white dark:bg-zinc-900">
-                        @foreach($formItems as $index => $item)
-                        <tr wire:key="item-{{ $index }}">
-                            <td class="px-3 py-2">
-                                <div class="relative items-select" 
-                                    x-data="{ 
-                                        open: false, 
-                                        search: @entangle('itemSearches.' . $index),
-                                        options: {{ $standardItems->map(fn($i) => ['id' => $i->id, 'name' => $i->name])->toJson() }},
-                                        get filteredOptions() {
-                                            if (!this.search) return this.options.slice(0, 10);
-                                            return this.options.filter(o => o.name.toLowerCase().includes(this.search.toLowerCase())).slice(0, 10);
-                                        },
-                                        get exactMatch() {
-                                            return this.options.some(o => o.name.toLowerCase() === this.search.toLowerCase());
-                                        },
-                                        select(opt) {
-                                            $wire.set('formItems.{{ $index }}.standard_item_id', opt.id);
-                                            this.search = opt.name;
-                                            this.open = false;
-                                        },
-                                        create() {
-                                            $wire.createSubItem({{ $index }}, this.search);
-                                            this.open = false;
-                                        }
-                                    }"
-                                    x-on:click.away="open = false"
-                                >
-                                    <flux:input 
-                                        x-model="search" 
-                                        x-on:focus="open = true"
-                                        x-on:input="open = true"
-                                        placeholder="Cari atau ketik nama baru..."
-                                        size="sm"
-                                    />
-                                    
-                                    <div x-show="open" 
-                                        class="absolute z-50 w-full mt-1 bg-white dark:bg-zinc-800 border rounded shadow-lg max-h-60 overflow-auto"
-                                        x-transition
-                                        style="display: none;"
+                <div class="overflow-x-auto min-h-[200px]">
+                    <table class="w-full text-left text-sm border-collapse">
+                        <thead class="bg-slate-100/50 dark:bg-slate-800/50 text-[10px] font-black uppercase text-slate-500 tracking-tighter">
+                            <tr>
+                                <th class="px-3 py-2.5">{{ __('Item Deskripsi') }}</th>
+                                <th class="px-3 py-2.5 text-center w-20">{{ __('Qty') }}</th>
+                                <th class="px-3 py-2.5 text-center w-20">{{ __('Satuan') }}</th>
+                                <th class="px-3 py-2.5 text-right w-36">{{ __('Harga Satuan') }}</th>
+                                <th class="px-3 py-2.5 text-right w-32">{{ __('Total') }}</th>
+                                <th class="px-3 py-2.5 w-8"></th>
+                            </tr>
+                        </thead>
+                        <tbody class="divide-y divide-slate-100 dark:divide-slate-800">
+                            @foreach($formItems as $index => $item)
+                            <tr wire:key="item-{{ $index }}" class="hover:bg-white/50 dark:hover:bg-slate-800/30 transition-colors">
+                                <td class="px-3 py-2">
+                                    <div class="relative" 
+                                        x-data="{ 
+                                            open: false, 
+                                            search: @entangle('itemSearches.' . $index),
+                                            options: {{ $standardItems->map(fn($i) => ['id' => $i->id, 'name' => $i->name])->toJson() }},
+                                            get filteredOptions() {
+                                                if (!this.search) return this.options.slice(0, 10);
+                                                return this.options.filter(o => o.name.toLowerCase().includes(this.search.toLowerCase())).slice(0, 10);
+                                            },
+                                            get exactMatch() {
+                                                return this.options.some(o => o.name.toLowerCase() === this.search.toLowerCase());
+                                            },
+                                            select(opt) {
+                                                $wire.set('formItems.{{ $index }}.standard_item_id', opt.id);
+                                                this.search = opt.name;
+                                                this.open = false;
+                                            },
+                                            create() {
+                                                $wire.createSubItem({{ $index }}, this.search);
+                                                this.open = false;
+                                            }
+                                        }"
+                                        x-on:click.away="open = false"
                                     >
-                                        <template x-for="opt in filteredOptions" :key="opt.id">
-                                            <div x-on:click="select(opt)" 
-                                                class="px-3 py-2 hover:bg-zinc-100 dark:hover:bg-zinc-700 cursor-pointer text-sm"
-                                                x-text="opt.name">
-                                            </div>
-                                        </template>
+                                        <x-ui.input 
+                                            x-model="search" 
+                                            x-on:focus="open = true"
+                                            x-on:input="open = true"
+                                            :placeholder="__('Cari atau ketik item baru...')"
+                                            class="!py-1 !text-xs"
+                                        />
                                         
-                                        <div x-show="search && search.length > 1 && !exactMatch" 
-                                            x-on:click="create()"
-                                            class="px-3 py-2 hover:bg-zinc-100 dark:hover:bg-zinc-700 cursor-pointer text-sm border-t font-medium text-emerald-600 dark:text-emerald-400 flex items-center gap-2"
+                                        <div x-show="open" 
+                                            class="absolute z-[60] w-full mt-1 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-xl shadow-2xl max-h-48 overflow-auto"
+                                            x-transition
+                                            style="display: none;"
                                         >
-                                            <flux:icon name="plus" size="xs" />
-                                            <span>Tambah "<span x-text="search"></span>"</span>
-                                        </div>
-                                        
-                                        <div x-show="search && filteredOptions.length === 0 && !exactMatch" 
-                                            class="p-4 text-zinc-400 italic text-xs text-center">
-                                            Tekan "Tambah" di atas untuk item baru
+                                            <template x-for="opt in filteredOptions" :key="opt.id">
+                                                <div x-on:click="select(opt)" 
+                                                    class="px-3 py-1.5 hover:bg-slate-50 dark:hover:bg-slate-800 cursor-pointer text-xs text-slate-700 dark:text-slate-300 border-b border-slate-50 dark:border-slate-800 last:border-0"
+                                                    x-text="opt.name">
+                                                </div>
+                                            </template>
+                                            
+                                            <div x-show="search && search.length > 1 && !exactMatch" 
+                                                x-on:click="create()"
+                                                class="px-3 py-1.5 hover:bg-slate-100 dark:hover:bg-slate-800 cursor-pointer text-[10px] font-black text-primary flex items-center gap-1.5 italic"
+                                            >
+                                                <x-ui.icon name="o-plus" class="size-3" />
+                                                <span>{{ __('Buat') }}: "<span x-text="search" class="underline underline-offset-2"></span>"</span>
+                                            </div>
                                         </div>
                                     </div>
-                                </div>
-                            </td>
-                            <td class="px-3 py-2 text-xs text-zinc-500">{{ $item['category_name'] }}</td>
-                            <td class="px-3 py-2 text-center">
-                                <flux:input type="number" wire:model.live.debounce.1000ms="formItems.{{ $index }}.quantity" class="text-center w-28 mx-auto" min="1" />
-                            </td>
-                            <td class="px-3 py-2 text-center">
-                                <flux:input wire:model="formItems.{{ $index }}.unit" placeholder="Satuan" class="text-center w-16 mx-auto" />
-                            </td>
-                            <td class="px-3 py-2">
-                                <flux:input type="number" wire:model.live.debounce.1300ms="formItems.{{ $index }}.amount" class="text-right w-32 ml-auto" min="0" />
-                            </td>
-                            <td class="px-3 py-2 text-right font-medium">
-                                <div wire:loading.remove wire:target="formItems.{{ $index }}.quantity, formItems.{{ $index }}.amount">
-                                    Rp {{ number_format($item['total'], 0, ',', '.') }}
-                                </div>
-                                <div wire:loading wire:target="formItems.{{ $index }}.quantity, formItems.{{ $index }}.amount">
-                                    <div class="flex justify-end">
-                                        <div class="animate-spin h-4 w-4 border-2 border-zinc-300 border-t-zinc-600 rounded-full"></div>
+                                    <div class="mt-0.5">
+                                        <span class="text-[9px] text-slate-400 uppercase tracking-tight">{{ $item['category_name'] ?: __('Umum') }}</span>
                                     </div>
-                                </div>
-                            </td>
-                            <td class="px-3 py-2 text-center">
-                                <button type="button" wire:click="removeItemRow({{ $index }})" class="text-red-500 hover:text-red-700">
-                                    <flux:icon name="trash" class="size-4" />
-                                </button>
-                            </td>
-                        </tr>
-                        @endforeach
-                    </tbody>
-                    <tfoot class="bg-zinc-50 dark:bg-zinc-800 font-bold">
-                        <tr>
-                            <td colspan="5" class="px-4 py-3 text-right">Total Anggaran</td>
-                            <td class="px-4 py-3 text-right">Rp {{ number_format($this->totalAmount, 0, ',', '.') }}</td>
-                            <td></td>
-                        </tr>
-                    </tfoot>
-                </table>
-                <div class="p-2 bg-zinc-50 dark:bg-zinc-800 border-t">
-                    <flux:button size="sm" icon="plus" wire:click="addItemRow">Tambah Baris</flux:button>
+                                </td>
+                                <td class="px-3 py-2">
+                                    <x-ui.input type="number" wire:model.live.debounce.1000ms="formItems.{{ $index }}.quantity" class="text-center !py-1 font-mono text-xs w-20" min="1" />
+                                </td>
+                                <td class="px-3 py-2">
+                                    <x-ui.input wire:model="formItems.{{ $index }}.unit" :placeholder="__('Pcs')" class="text-center !py-1 text-xs w-20" />
+                                </td>
+                                <td class="px-3 py-2">
+                                    <x-ui.input type="number" wire:model.live.debounce.1300ms="formItems.{{ $index }}.amount" class="text-right !py-1 font-mono text-xs" min="0" />
+                                </td>
+                                <td class="px-3 py-2 text-right">
+                                    <div class="font-mono text-xs font-bold text-slate-900 dark:text-white whitespace-nowrap" wire:loading.remove wire:target="formItems.{{ $index }}.quantity, formItems.{{ $index }}.amount">
+                                        Rp {{ number_format($item['total'], 0, ',', '.') }}
+                                    </div>
+                                    <div wire:loading wire:target="formItems.{{ $index }}.quantity, formItems.{{ $index }}.amount" class="flex justify-end">
+                                        <span class="loading loading-spinner loading-xs text-primary"></span>
+                                    </div>
+                                </td>
+                                <td class="px-2 py-2 text-center">
+                                    <button wire:click="removeItemRow({{ $index }})" class="p-1 rounded-lg text-slate-300 hover:text-rose-500 hover:bg-rose-50 dark:hover:bg-rose-950/30 transition-colors">
+                                        <x-ui.icon name="o-trash" class="size-4" />
+                                    </button>
+                                </td>
+                            </tr>
+                            @endforeach
+                        </tbody>
+                        <tfoot class="bg-slate-100 dark:bg-slate-800/80 border-t-2 border-slate-200 dark:border-slate-700">
+                            <tr>
+                                <td colspan="4" class="px-4 py-3 text-right text-xs font-black uppercase tracking-widest text-slate-500 dark:text-slate-400">{{ __('Total Estimasi Anggaran') }}</td>
+                                <td class="px-3 py-3 text-right">
+                                    <span class="font-mono text-base font-black text-emerald-600 dark:text-emerald-400 whitespace-nowrap">
+                                        Rp {{ number_format($this->totalAmount, 0, ',', '.') }}
+                                    </span>
+                                </td>
+                                <td></td>
+                            </tr>
+                        </tfoot>
+                    </table>
                 </div>
             </div>
 
-            <flux:textarea wire:model="notes" label="Catatan" placeholder="Catatan tambahan..." />
+            <x-ui.textarea wire:model="notes" :label="__('Catatan / Justifikasi')" :placeholder="__('Jelaskan tujuan pengajuan RAB ini secara singkat...')" rows="2" />
             
-            <div class="flex justify-between items-center pt-4 border-t">
-                <div>
+            <div class="flex flex-col md:flex-row justify-between items-center gap-4 pt-4 border-t border-slate-100 dark:border-slate-800">
+                <div class="flex gap-3">
                     @if($editing && ($editing->status === 'submitted' && (Auth::user()->isYayasan() || Auth::user()->isAdmin())))
-                        <div class="flex gap-2">
-                            <flux:button variant="primary" wire:click="updateStatus({{ $editing->id }}, 'approved')">Setujui (Approve)</flux:button>
-                            <flux:button variant="danger" wire:click="updateStatus({{ $editing->id }}, 'rejected')">Tolak (Reject)</flux:button>
-                        </div>
+                        <x-ui.button :label="__('Setujui Pengajuan')" class="btn-primary" wire:click="updateStatus({{ $editing->id }}, 'approved')" icon="o-check-circle" />
+                        <x-ui.button :label="__('Tolak Pengajuan')" class="btn-ghost text-rose-600 hover:bg-rose-50" wire:click="updateStatus({{ $editing->id }}, 'rejected')" icon="o-x-circle" />
+                    @endif
+
+                    @if($editing && $editing->status === 'approved' && (Auth::user()->isYayasan() || Auth::user()->isAdmin()))
+                        <x-ui.button :label="__('Konfirmasi Transfer Dana')" icon="o-banknotes" class="btn-primary" wire:click="updateStatus({{ $editing->id }}, 'transferred')" />
                     @endif
                 </div>
-                <div class="flex gap-2">
-                    <flux:button variant="ghost" x-on:click="$flux.modal('plan-modal').close()">Tutup</flux:button>
+
+                <div class="flex gap-3 w-full md:w-auto">
+                    <x-ui.button :label="__('Tutup')" wire:click="$set('planModal', false)" class="md:grow-0 grow" />
                     @if(!$editing || $editing->status === 'draft' || $editing->status === 'rejected')
-                        <flux:button variant="subtle" wire:click="save('draft')">Simpan Draft</flux:button>
-                        <flux:button variant="primary" wire:click="save('submit')">Simpan & Ajukan</flux:button>
+                        <x-ui.button :label="__('Simpan Draft')" class="btn-ghost border-slate-200 text-slate-600 md:grow-0 grow" wire:click="save('draft')" spinner="save" />
+                        <x-ui.button :label="__('Simpan & Ajukan ke Yayasan')" class="btn-primary md:grow-0 grow shadow-lg shadow-primary/20" wire:click="save('submit')" spinner="save" />
                     @endif
                 </div>
             </div>
         </div>
-</flux:modal>
+    </x-ui.modal>
 </div>

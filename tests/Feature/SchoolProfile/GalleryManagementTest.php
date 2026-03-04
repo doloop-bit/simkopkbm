@@ -15,7 +15,7 @@ test('admin can access gallery management page', function () {
     $this->actingAs($this->admin)
         ->get(route('admin.gallery.index'))
         ->assertOk()
-        ->assertSeeLivewire('admin.gallery.index');
+        ->assertSeeLivewire('admin.web-content.gallery.index');
 });
 
 test('non-admin cannot access gallery management page', function () {

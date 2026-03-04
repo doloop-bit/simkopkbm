@@ -1,16 +1,19 @@
 # Fitur Report Card (Rapor)
 
 ## Deskripsi
+
 Fitur Report Card memungkinkan admin untuk membuat, mengelola, dan mengekspor rapor siswa dalam format PDF. Nilai dihitung otomatis dari data penilaian yang sudah diinput.
 
 ## Komponen yang Dibuat
 
 ### 1. Model & Database
+
 - **Model**: `App\Models\ReportCard`
 - **Migration**: `2026_01_21_125659_create_report_cards_table`
 - **Tabel**: `report_cards`
 
 Struktur tabel:
+
 ```
 - id (bigint, primary key)
 - student_id (foreign key → users)
@@ -27,10 +30,12 @@ Struktur tabel:
 
 Unique constraint: `(student_id, classroom_id, academic_year_id, semester)`
 
-### 2. Livewire Volt Component
+### 2. Livewire SFC Component
+
 **Path**: `resources/views/livewire/admin/report-card/create.blade.php`
 
 Fitur:
+
 - Pilih tahun ajaran, kelas, dan semester
 - Pilih siswa yang akan dibuat rapornya (multi-select)
 - Input catatan guru dan kepala sekolah (opsional)
@@ -39,15 +44,18 @@ Fitur:
 - Export ke PDF dari preview
 
 **Methods:**
+
 - `generateReportCards()` - Generate rapor untuk siswa terpilih
 - `previewReportCard($studentProfileId)` - Tampilkan preview rapor
 - `closePreview()` - Tutup modal preview
 - `exportPdf($reportCardId)` - Export rapor ke PDF
 
 ### 3. PDF Template
+
 **Path**: `resources/views/pdf/report-card.blade.php`
 
 Template PDF berisi:
+
 - Header dengan judul "RAPOR SISWA" dan informasi tahun ajaran/semester
 - Data siswa (nama, NIS, NISN, kelas, tahun ajaran)
 - Tabel nilai per mata pelajaran dengan kolom: No, Mata Pelajaran, Nilai, Keterangan (Grade A/B/C/D)
@@ -58,9 +66,11 @@ Template PDF berisi:
 - Footer dengan informasi sistem dan waktu cetak
 
 ### 4. Routes
+
 **Path**: `routes/report-card.php`
 
 Routes:
+
 ```
 GET /admin/report-card/create
   - Halaman pembuatan rapor
@@ -69,14 +79,17 @@ GET /admin/report-card/create
 ```
 
 ### 5. Factory
+
 **Path**: `database/factories/ReportCardFactory.php`
 
 Untuk testing dan seeding dengan data dummy.
 
 ### 6. Tests
+
 **Path**: `tests/Feature/ReportCardTest.php`
 
 Test cases:
+
 - Admin dapat mengakses halaman pembuatan rapor
 - Rapor dapat dibuat untuk siswa
 - Rapor dapat diexport ke PDF
@@ -86,6 +99,7 @@ Test cases:
 ## Cara Penggunaan
 
 ### 1. Membuat Rapor
+
 1. Login sebagai admin
 2. Klik menu "Buat Rapor" di sidebar (grup "Penilaian & Raport")
 3. Pilih tahun ajaran dari dropdown
@@ -98,14 +112,17 @@ Test cases:
 10. Sistem akan menampilkan notifikasi sukses
 
 ### 2. Preview Rapor
+
 Setelah rapor dibuat, admin dapat melihat preview dengan:
+
 1. Klik tombol preview (jika ada) atau buat rapor baru
 2. Modal akan menampilkan:
-   - Informasi siswa (nama, NIS, kelas, IPK)
-   - Tabel nilai per mata pelajaran
-   - Catatan guru dan kepala sekolah (jika ada)
+    - Informasi siswa (nama, NIS, kelas, IPK)
+    - Tabel nilai per mata pelajaran
+    - Catatan guru dan kepala sekolah (jika ada)
 
 ### 3. Export ke PDF
+
 1. Dari preview modal, klik tombol "Export PDF"
 2. File PDF akan diunduh dengan nama format: `rapor-[nama-siswa]-[semester].pdf`
 3. PDF siap untuk dicetak atau disimpan
@@ -113,10 +130,12 @@ Setelah rapor dibuat, admin dapat melihat preview dengan:
 ## Kalkulasi Nilai
 
 ### Proses Kalkulasi:
+
 1. **Nilai per Mata Pelajaran**: Rata-rata dari semua kategori penilaian untuk mata pelajaran tersebut
 2. **IPK (GPA)**: Rata-rata dari semua nilai mata pelajaran
 
 ### Contoh:
+
 ```
 Matematika:
   - Kategori 1: 85
@@ -151,7 +170,8 @@ StudentProfile
 
 ## Authorization
 
-Authorization di-handle langsung di Volt component menggunakan `$this->authorize()`:
+Authorization di-handle langsung di komponen Livewire menggunakan `$this->authorize()`:
+
 - **Admin**: Dapat membuat, melihat, dan export semua rapor
 - **Student**: Hanya dapat melihat dan export rapor mereka sendiri
 - **Guru**: Tidak dapat mengakses halaman pembuatan rapor
@@ -159,6 +179,7 @@ Authorization di-handle langsung di Volt component menggunakan `$this->authorize
 ## Integrasi dengan Sidebar
 
 Menu "Buat Rapor" sudah ditambahkan ke sidebar:
+
 - **Lokasi**: Grup "Penilaian & Raport"
 - **Icon**: document-text
 - **Route Name**: admin.report-card.create
@@ -166,7 +187,7 @@ Menu "Buat Rapor" sudah ditambahkan ke sidebar:
 
 ## Catatan Teknis
 
-- Menggunakan Livewire Volt (class-based component)
+- Menggunakan Livewire Native SFC (Single File Component)
 - PDF generation menggunakan Barryvdh DomPDF
 - Scores disimpan dalam format JSON untuk fleksibilitas
 - Unique constraint mencegah duplikasi rapor untuk siswa yang sama di kelas/tahun/semester yang sama

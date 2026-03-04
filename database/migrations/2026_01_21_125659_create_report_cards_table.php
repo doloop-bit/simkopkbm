@@ -23,7 +23,7 @@ return new class extends Migration
             $table->text('principal_notes')->nullable();
             $table->string('status')->default('draft'); // draft, finalized, printed
             $table->timestamps();
-            
+
             $table->unique(['student_id', 'classroom_id', 'academic_year_id', 'semester'], 'rc_student_class_year_sem_unique');
             $table->index(['academic_year_id', 'classroom_id']);
         });
