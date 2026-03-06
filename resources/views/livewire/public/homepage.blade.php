@@ -111,10 +111,10 @@ new #[Layout('components.public.layouts.public')] class extends Component {
                     <div class="absolute inset-0 bg-gradient-to-t from-zinc-950/95 via-zinc-950/50 to-transparent"></div>
                     <div class="absolute bottom-0 left-0 w-full px-6 py-12 sm:p-16 text-center sm:text-left text-white">
                         <div class="max-w-7xl mx-auto sm:px-6 lg:px-8">
-                            <span class="inline-block px-3 py-1 mb-4 text-xs font-semibold tracking-wider text-amber-500 uppercase bg-amber-500/10 rounded-full border border-amber-500/20 shadow-sm backdrop-blur-sm">Penerimaan Siswa Baru</span>
+                            <!-- <span class="inline-block px-3 py-1 mb-4 text-xs font-semibold tracking-wider text-amber-500 uppercase bg-amber-500/10 rounded-full border border-amber-500/20 shadow-sm backdrop-blur-sm">Penerimaan Siswa Baru</span>
                             <h3 class="text-3xl sm:text-4xl lg:text-5xl font-bold font-heading mb-4 drop-shadow-lg tracking-tight" x-text="slide.title"></h3>
                             <p class="text-base sm:text-lg lg:text-xl text-zinc-100 drop-shadow-md max-w-2xl lg:max-w-3xl font-light leading-relaxed mb-8" x-text="slide.desc"></p>
-                            
+                             -->
                             <a href="{{ route('public.register') }}" class="inline-flex items-center justify-center px-6 py-3 bg-amber-500 text-white font-semibold rounded-full hover:bg-amber-400 transition-colors shadow-lg shadow-amber-500/20">
                                 Daftar Sekarang
                                 <svg class="w-4 h-4 ml-2" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M14 5l7 7m0 0l-7 7m7-7H3"></path></svg>
