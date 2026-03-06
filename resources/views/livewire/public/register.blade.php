@@ -204,7 +204,7 @@ new #[Layout('components.public.layouts.public')] class extends Component {
     {
         return [
             'levels' => Level::orderBy('name')->get(),
-            'academicYears' => AcademicYear::orderByDesc('start_year')->get(),
+            'academicYears' => AcademicYear::orderByDesc('start_date')->get(),
             'wilayahApiUrl' => config('services.wilayah.api_url', 'https://emsifa.github.io/api-wilayah-indonesia/api'),
             'title' => 'Pendaftaran - ' . config('app.name'),
             'description' => 'Daftar sebagai siswa baru di ' . config('app.name'),
@@ -671,7 +671,7 @@ new #[Layout('components.public.layouts.public')] class extends Component {
                                         <div class="flex justify-between items-center py-2 border-b border-slate-200 dark:border-slate-800 border-dashed">
                                             <span class="text-[10px] font-bold text-slate-400 uppercase tracking-wider">{{ __('Tahun Ajaran') }}</span>
                                             @php $selectedYear = $academic_year_id ? collect($academicYears)->firstWhere('id', (int)$academic_year_id) : null; @endphp
-                                            <span class="text-xs font-black text-primary italic uppercase tracking-tighter text-right">{{ $selectedYear?->name ?? ($selectedYear?->start_year . '/' . $selectedYear?->end_year ?? '-') }}</span>
+                                            <span class="text-xs font-black text-primary italic uppercase tracking-tighter text-right">{{ $selectedYear?->name ?? '-' }}</span>
                                         </div>
                                     </div>
                                 </div>
