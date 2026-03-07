@@ -5,6 +5,9 @@ use Illuminate\Support\Facades\Route;
 // Homepage
 Route::livewire('/', 'public.homepage')->name('home');
 
+// PAUD Landing Page
+Route::view('/paud', 'paud')->name('public.paud');
+
 // About pages
 Route::livewire('/tentang-kami', 'public.about.index')->name('public.about');
 Route::livewire('/struktur-organisasi', 'public.about.staff')->name('public.organizational-structure');
