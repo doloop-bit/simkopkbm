@@ -3,7 +3,9 @@
     import { fade, fly, scale } from 'svelte/transition';
     import { bounceOut } from 'svelte/easing';
 
-    let visible = false;
+    let { programName = 'PAUD Ceria', programLogo = null } = $props();
+
+    let visible = $state(false);
     onMount(() => {
         visible = true;
     });
@@ -55,10 +57,14 @@
     <!-- Navigation -->
     <nav class="p-6 flex justify-between items-center" in:fly={{ y: -20, duration: 1000 }}>
         <div class="flex items-center gap-3">
-            <div class="w-12 h-12 bg-white rounded-2xl shadow-lg flex items-center justify-center text-2xl animate-bounce">
-                🏫
+            <div class="w-14 h-14 bg-white/50 backdrop-blur-sm rounded-2xl shadow-lg flex items-center justify-center overflow-hidden animate-bounce border-2 border-white">
+                {#if programLogo}
+                    <img src={programLogo} alt={programName} class="w-full h-full object-contain p-1" />
+                {:else}
+                    <span class="text-2xl">🏫</span>
+                {/if}
             </div>
-            <span class="text-2xl font-bold text-sky-600 tracking-tight">PAUD <span class="text-rose-500">Ceria</span></span>
+            <span class="text-2xl font-bold text-sky-600 tracking-tight">{programName}</span>
         </div>
         <div class="flex gap-4">
             <button class="px-6 py-2 rounded-full bg-white text-sky-600 font-bold shadow-sm hover:shadow-md transition-all">Tentang</button>
@@ -69,6 +75,13 @@
     <!-- Hero Section -->
     <header class="container mx-auto px-6 py-12 text-center lg:py-24">
         <div in:scale={{ duration: 1000, easing: bounceOut }}>
+            {#if programLogo}
+                <div class="mb-8 flex justify-center">
+                    <div class="w-32 h-32 md:w-48 md:h-48 bg-white rounded-[40px] shadow-2xl p-4 flex items-center justify-center rotate-3 hover:rotate-0 transition-all duration-500 border-8 border-white">
+                        <img src={programLogo} alt={programName} class="w-full h-full object-contain" />
+                    </div>
+                </div>
+            {/if}
             <span class="px-4 py-1 rounded-full bg-yellow-100 text-yellow-700 text-sm font-bold uppercase tracking-widest mb-4 inline-block">
                 Tempat Belajar Paling Seru!
             </span>
@@ -143,7 +156,7 @@
 
     <!-- Footer -->
     <footer class="bg-white py-12 text-center text-slate-500 border-t border-slate-100">
-        <p class="font-bold">© 2026 PAUD Ceria. Made with 💖 for Kids.</p>
+        <p class="font-bold">© 2026 {programName}. Made with 💖 for Kids.</p>
     </footer>
 </div>
 {/if}

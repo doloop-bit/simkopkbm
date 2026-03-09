@@ -99,7 +99,7 @@ new #[Layout('components.public.layouts.public')] class extends Component
                                 </p>
 
                                 <a 
-                                    href="{{ route('public.programs.show', $program->slug) }}" 
+                                    href="{{ str_contains(Str::lower($program->slug), 'paud') ? route('public.paud') : route('public.programs.show', $program->slug) }}" 
                                     class="mt-auto inline-flex items-center gap-2 rounded-2xl bg-zinc-900 px-6 py-3 text-sm font-semibold text-white transition-all hover:bg-amber-500 hover:shadow-xl hover:shadow-amber-500/20 group/btn"
                                 >
                                     Lihat Detail

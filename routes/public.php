@@ -6,7 +6,12 @@ use Illuminate\Support\Facades\Route;
 Route::livewire('/', 'public.homepage')->name('home');
 
 // PAUD Landing Page
-Route::view('/paud', 'paud')->name('public.paud');
+Route::get('/paud', function () {
+    $program = \App\Models\Program::where('slug', 'like', '%paud%')->first() 
+        ?? new \App\Models\Program(['name' => 'PAUD Ceria']);
+        
+    return view('paud', compact('program'));
+})->name('public.paud');
 
 // About pages
 Route::livewire('/tentang-kami', 'public.about.index')->name('public.about');
