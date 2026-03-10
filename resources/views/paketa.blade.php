@@ -1,0 +1,23 @@
+<!DOCTYPE html>
+<html lang="{{ str_replace('_', '-', app()->getLocale()) }}">
+    <head>
+        <meta charset="utf-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1">
+        <title>{{ $program->name ?? 'Paket A (Setara SD)' }} - Eksplorasi & Belajar</title>
+
+        <!-- Fonts -->
+        <link rel="preconnect" href="https://fonts.googleapis.com">
+        <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+        <link href="https://fonts.googleapis.com/css2?family=Quicksand:wght@300..700&display=swap" rel="stylesheet">
+
+        <script>
+            window.programName = @json($program->name ?? 'Paket A (Setara SD)');
+            window.programLogo = @json($program->image_path ? Storage::url($program->image_path) : null);
+        </script>
+
+        @vite(['resources/css/app.css', 'resources/js/paketa.js'])
+    </head>
+    <body class="antialiased">
+        <div id="paketa-app"></div>
+    </body>
+</html>

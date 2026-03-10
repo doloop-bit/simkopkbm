@@ -7,12 +7,19 @@ Route::livewire('/', 'public.homepage')->name('home');
 
 // PAUD Landing Page
 Route::get('/paud', function () {
-    $program = \App\Models\Program::where('slug', 'like', '%paud%')->first() 
+    $program = \App\Models\Program::where('slug', 'like', '%paud%')->first()
         ?? new \App\Models\Program(['name' => 'PAUD Ceria']);
-        
+
     return view('paud', compact('program'));
 })->name('public.paud');
 
+// Paket A Landing Page
+Route::get('/paket-a', function () {
+    $program = \App\Models\Program::where('slug', 'like', '%paket-a%')->first()
+        ?? new \App\Models\Program(['name' => 'Paket A (Setara SD)']);
+
+    return view('paketa', compact('program'));
+})->name('public.paketa');
 // About pages
 Route::livewire('/tentang-kami', 'public.about.index')->name('public.about');
 Route::livewire('/struktur-organisasi', 'public.about.staff')->name('public.organizational-structure');
