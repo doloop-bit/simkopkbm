@@ -58,6 +58,15 @@ test('users with two factor enabled are redirected to two factor challenge', fun
     $this->assertGuest();
 });
 
+test('login screen has password visibility toggle', function () {
+    $response = $this->get(route('login'));
+
+    $response->assertOk()
+        ->assertSee('x-data=', false)
+        ->assertSee('showPassword', false)
+        ->assertSee('data-test="toggle-password"', false);
+});
+
 test('users can logout', function () {
     $user = User::factory()->admin()->create();
 
