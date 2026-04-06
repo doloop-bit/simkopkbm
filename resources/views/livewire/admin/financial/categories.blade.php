@@ -140,14 +140,14 @@ new #[Layout('components.admin.layouts.app')] class extends Component {
             :rows="$categories"
         >
             @scope('cell_code', $category)
-                <span class="text-[10px] font-mono font-black text-slate-400 uppercase tracking-tighter">{{ $category->code }}</span>
+                <span class="text-[11px] font-mono font-semibold text-slate-500 uppercase">{{ $category->code }}</span>
             @endscope
 
             @scope('cell_name_label', $category)
                 <div class="flex flex-col">
-                    <span class="font-bold text-slate-900 dark:text-white">{{ $category->name }}</span>
+                    <span class="font-semibold text-slate-900 dark:text-white">{{ $category->name }}</span>
                     @if($category->description)
-                        <span class="text-[10px] text-slate-400 italic line-clamp-1 max-w-[200px]">{{ $category->description }}</span>
+                        <span class="text-[11px] text-slate-500 italic line-clamp-1 max-w-[200px]">{{ $category->description }}</span>
                     @endif
                 </div>
             @endscope
@@ -155,12 +155,12 @@ new #[Layout('components.admin.layouts.app')] class extends Component {
             @scope('cell_level_name', $category)
                 <x-ui.badge 
                     :label="$category->level?->name ?? __('Semua Jenjang')" 
-                    class="{{ $category->level_id ? 'bg-slate-100 text-slate-600' : 'bg-amber-100 text-amber-700 font-bold' }} border-none text-[8px] uppercase tracking-widest px-2 py-0.5" 
+                    class="{{ $category->level_id ? 'bg-slate-100 text-slate-600' : 'bg-amber-100 text-amber-700 font-bold' }} border-none text-[10px] uppercase tracking-wider px-2 py-0.5" 
                 />
             @endscope
 
             @scope('cell_amount_label', $category)
-                <span class="font-mono text-sm font-black text-slate-700 dark:text-slate-300">
+                <span class="font-mono text-sm font-bold text-slate-900 dark:text-white">
                     Rp {{ number_format($category->default_amount, 0, ',', '.') }}
                 </span>
             @endscope
@@ -206,7 +206,7 @@ new #[Layout('components.admin.layouts.app')] class extends Component {
             <div class="w-16 h-16 bg-rose-50 text-rose-600 rounded-full flex items-center justify-center mx-auto mb-4">
                 <x-ui.icon name="o-exclamation-triangle" class="size-8" />
             </div>
-            <h3 class="text-lg font-black text-slate-900 dark:text-white mb-2">{{ __('Konfirmasi Hapus') }}</h3>
+            <h3 class="text-lg font-bold text-slate-900 dark:text-white mb-2">{{ __('Konfirmasi Hapus') }}</h3>
             <p class="text-xs text-slate-500 font-medium leading-relaxed">
                 {{ __('Apakah Anda yakin ingin menghapus kategori biaya ini? Tindakan ini tidak dapat dibatalkan jika kategori belum digunakan.') }}
             </p>

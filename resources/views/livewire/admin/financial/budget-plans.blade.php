@@ -369,17 +369,17 @@ new class extends Component {
         >
             @scope('cell_title_info', $plan)
                 <div class="flex flex-col">
-                    <span class="font-bold text-slate-900 dark:text-white">{{ $plan->title }}</span>
-                    <span class="text-[10px] text-slate-400 font-mono tracking-tighter uppercase">{{ $plan->academicYear?->name ?? '-' }}</span>
+                    <span class="font-semibold text-slate-900 dark:text-white">{{ $plan->title }}</span>
+                    <span class="text-[11px] text-slate-500 font-mono italic">{{ $plan->academicYear?->name ?? '-' }}</span>
                 </div>
             @endscope
 
             @scope('cell_level_name', $plan)
-                <span class="text-[10px] font-black text-slate-500 uppercase tracking-widest">{{ $plan->level?->name ?? '-' }}</span>
+                <span class="text-xs font-medium text-slate-600 dark:text-slate-400 uppercase tracking-wider">{{ $plan->level?->name ?? '-' }}</span>
             @endscope
 
             @scope('cell_amount_label', $plan)
-                <span class="font-mono text-sm font-black text-slate-900 dark:text-white italic tracking-tighter">
+                <span class="font-mono text-sm font-bold text-slate-900 dark:text-white whitespace-nowrap">
                     Rp {{ number_format($plan->total_amount, 0, ',', '.') }}
                 </span>
             @endscope
@@ -395,7 +395,7 @@ new class extends Component {
                         default => 'bg-slate-100 text-slate-500'
                     };
                 @endphp
-                <x-ui.badge :label="strtoupper($plan->status)" class="{{ $statusClass }} border-none text-[8px] font-black px-2 py-0.5" />
+                <x-ui.badge :label="strtoupper($plan->status)" class="{{ $statusClass }} border-none text-[10px] font-bold px-2 py-0.5 tracking-wider" />
             @endscope
 
             @scope('cell_actions', $plan)
@@ -430,22 +430,22 @@ new class extends Component {
                 <x-ui.input wire:model="title" :label="__('Judul RAB')" :placeholder="__('Contoh: Operasional Januari 2026')" required />
             </div>
 
-            <div class="rounded-3xl border border-slate-200 dark:border-slate-800 bg-slate-50/30 dark:bg-slate-900/30 overflow-hidden">
+            <div class="rounded-3xl border border-slate-200 dark:border-slate-800 bg-slate-50/10 dark:bg-slate-900/10 overflow-hidden">
                 <div class="p-4 border-b border-slate-200 dark:border-slate-800 flex items-center justify-between bg-white dark:bg-slate-900">
-                    <span class="text-[11px] font-black uppercase text-slate-400 tracking-widest italic">{{ __('Daftar Rincian Item Anggaran') }}</span>
-                    <x-ui.button :label="__('Tambah Baris')" icon="o-plus" wire:click="addItemRow" class="btn-sm btn-ghost text-xs font-black uppercase" />
+                    <span class="text-xs font-bold uppercase text-slate-500 tracking-wider">{{ __('Rincian Item Anggaran') }}</span>
+                    <x-ui.button :label="__('Tambah Baris')" icon="o-plus" wire:click="addItemRow" class="btn-sm btn-ghost text-xs font-bold" />
                 </div>
                 
                 <div class="overflow-x-auto min-h-[200px]">
                     <table class="w-full text-left text-sm border-collapse">
-                        <thead class="bg-slate-100/50 dark:bg-slate-800/50 text-[10px] font-black uppercase text-slate-500 tracking-tighter">
+                        <thead class="bg-slate-100/50 dark:bg-slate-800/50 text-[11px] font-bold uppercase text-slate-500 tracking-wider">
                             <tr>
-                                <th class="px-3 py-2.5">{{ __('Item Deskripsi') }}</th>
-                                <th class="px-3 py-2.5 text-center w-20">{{ __('Qty') }}</th>
-                                <th class="px-3 py-2.5 text-center w-20">{{ __('Satuan') }}</th>
-                                <th class="px-3 py-2.5 text-right w-36">{{ __('Harga Satuan') }}</th>
-                                <th class="px-3 py-2.5 text-right w-32">{{ __('Total') }}</th>
-                                <th class="px-3 py-2.5 w-8"></th>
+                                <th class="px-3 py-3">{{ __('Item Deskripsi') }}</th>
+                                <th class="px-3 py-3 text-center w-20">{{ __('Qty') }}</th>
+                                <th class="px-3 py-3 text-center w-20">{{ __('Satuan') }}</th>
+                                <th class="px-3 py-3 text-right w-36">{{ __('Harga Satuan') }}</th>
+                                <th class="px-3 py-3 text-right w-32">{{ __('Total') }}</th>
+                                <th class="px-3 py-3 w-8"></th>
                             </tr>
                         </thead>
                         <tbody class="divide-y divide-slate-100 dark:divide-slate-800">
@@ -498,7 +498,7 @@ new class extends Component {
                                             
                                             <div x-show="search && search.length > 1 && !exactMatch" 
                                                 x-on:click="create()"
-                                                class="px-3 py-1.5 hover:bg-slate-100 dark:hover:bg-slate-800 cursor-pointer text-[10px] font-black text-primary flex items-center gap-1.5 italic"
+                                                class="px-3 py-1.5 hover:bg-slate-100 dark:hover:bg-slate-800 cursor-pointer text-xs font-bold text-primary flex items-center gap-1.5 italic"
                                             >
                                                 <x-ui.icon name="o-plus" class="size-3" />
                                                 <span>{{ __('Buat') }}: "<span x-text="search" class="underline underline-offset-2"></span>"</span>
@@ -506,7 +506,7 @@ new class extends Component {
                                         </div>
                                     </div>
                                     <div class="mt-0.5">
-                                        <span class="text-[9px] text-slate-400 uppercase tracking-tight">{{ $item['category_name'] ?: __('Umum') }}</span>
+                                        <span class="text-[10px] text-slate-500 font-medium tracking-wide">{{ $item['category_name'] ?: __('Umum') }}</span>
                                     </div>
                                 </td>
                                 <td class="px-3 py-2">
@@ -536,9 +536,9 @@ new class extends Component {
                         </tbody>
                         <tfoot class="bg-slate-100 dark:bg-slate-800/80 border-t-2 border-slate-200 dark:border-slate-700">
                             <tr>
-                                <td colspan="4" class="px-4 py-3 text-right text-xs font-black uppercase tracking-widest text-slate-500 dark:text-slate-400">{{ __('Total Estimasi Anggaran') }}</td>
-                                <td class="px-3 py-3 text-right">
-                                    <span class="font-mono text-base font-black text-emerald-600 dark:text-emerald-400 whitespace-nowrap">
+                                <td colspan="4" class="px-4 py-4 text-right text-xs font-bold uppercase tracking-wider text-slate-500">{{ __('Total Estimasi Anggaran') }}</td>
+                                <td class="px-3 py-4 text-right">
+                                    <span class="font-mono text-lg font-bold text-emerald-600 dark:text-emerald-400 whitespace-nowrap">
                                         Rp {{ number_format($this->totalAmount, 0, ',', '.') }}
                                     </span>
                                 </td>

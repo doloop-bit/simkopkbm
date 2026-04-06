@@ -77,13 +77,13 @@ new #[Layout('components.admin.layouts.app')] class extends Component {
             wire:click="$set('tab', 'financial')" 
             :label="__('Keuangan')" 
             icon="o-banknotes" 
-            class="rounded-xl px-6 font-black italic tracking-tight py-2 h-auto {{ $tab === 'financial' ? 'bg-white text-primary shadow-sm border-none' : 'btn-ghost text-slate-400' }}" 
+            class="rounded-xl px-6 font-semibold py-2 h-auto {{ $tab === 'financial' ? 'bg-white text-primary shadow-sm border-none' : 'btn-ghost text-slate-500' }}" 
         />
         <x-ui.button 
             wire:click="$set('tab', 'attendance')" 
             :label="__('Presensi')" 
             icon="o-clipboard-document-check" 
-            class="rounded-xl px-6 font-black italic tracking-tight py-2 h-auto {{ $tab === 'attendance' ? 'bg-white text-primary shadow-sm border-none' : 'btn-ghost text-slate-400' }}" 
+            class="rounded-xl px-6 font-semibold py-2 h-auto {{ $tab === 'attendance' ? 'bg-white text-primary shadow-sm border-none' : 'btn-ghost text-slate-500' }}" 
         />
     </div>
 
@@ -91,23 +91,22 @@ new #[Layout('components.admin.layouts.app')] class extends Component {
     <div class="space-y-8 animate-in fade-in slide-in-from-bottom-4 duration-700">
         {{-- Specialized Filters Card --}}
         <x-ui.card shadow padding="false" class="border-none ring-1 ring-slate-100 dark:ring-slate-800 bg-slate-50/30 dark:bg-slate-900/10">
-            <div class="p-8">
+            <div class="p-6">
                 <div class="grid grid-cols-1 md:grid-cols-12 gap-6 items-end">
                     @if($tab === 'financial')
                         <div class="md:col-span-4">
                             <x-ui.select 
                                 wire:model.live="fee_category_id" 
-                                :label="__('Spesifikasi Kategori Biaya')" 
+                                :label="__('Kategori Biaya')" 
                                 :placeholder="__('Seluruh Item Pembayaran')"
                                 :options="$categories"
-                                class="font-bold italic uppercase tracking-tighter"
                             />
                         </div>
                         <div class="md:col-span-3">
-                            <x-ui.input wire:model.live="start_date" type="date" :label="__('Rentang Awal')" class="font-mono" />
+                            <x-ui.input wire:model.live="start_date" type="date" :label="__('Rentang Awal')" />
                         </div>
                         <div class="md:col-span-3">
-                            <x-ui.input wire:model.live="end_date" type="date" :label="__('Rentang Akhir')" class="font-mono" />
+                            <x-ui.input wire:model.live="end_date" type="date" :label="__('Rentang Akhir')" />
                         </div>
                     @endif
 
@@ -115,18 +114,16 @@ new #[Layout('components.admin.layouts.app')] class extends Component {
                         <div class="md:col-span-5">
                             <x-ui.select 
                                 wire:model.live="academic_year_id" 
-                                :label="__('Periode Akademik Aktif')" 
+                                :label="__('Tahun Ajaran')" 
                                 :options="$years"
-                                class="font-black italic uppercase tracking-tighter"
                             />
                         </div>
                         <div class="md:col-span-5">
                             <x-ui.select 
                                 wire:model.live="classroom_id" 
-                                :label="__('Fokus Grup / Rombel')" 
-                                :placeholder="__('Seluruh Kelas & Level')"
+                                :label="__('Kelas / Rombel')" 
+                                :placeholder="__('Seluruh Kelas')"
                                 :options="$classrooms"
-                                class="font-black italic uppercase tracking-tighter"
                             />
                         </div>
                     @endif
@@ -142,39 +139,39 @@ new #[Layout('components.admin.layouts.app')] class extends Component {
         <x-ui.card shadow padding="false" class="border-none ring-1 ring-slate-100 dark:ring-slate-800 overflow-hidden">
             @if($tab === 'financial')
                 <x-ui.table :headers="[
-                    ['key' => 'payment_date', 'label' => __('Waktu Transaksi')],
-                    ['key' => 'student_name', 'label' => __('Entitas Siswa')],
-                    ['key' => 'category_name', 'label' => __('Klasifikasi')],
-                    ['key' => 'payment_method', 'label' => __('Metode'), 'class' => 'uppercase text-[9px] font-black italic tracking-widest'],
-                    ['key' => 'amount', 'label' => __('Volume Nominal'), 'class' => 'text-right font-black italic uppercase tracking-tighter']
+                    ['key' => 'payment_date', 'label' => __('Tanggal')],
+                    ['key' => 'student_name', 'label' => __('Nama Siswa')],
+                    ['key' => 'category_name', 'label' => __('Kategori')],
+                    ['key' => 'payment_method', 'label' => __('Metode'), 'class' => 'text-xs uppercase font-bold tracking-wider'],
+                    ['key' => 'amount', 'label' => __('Nominal'), 'class' => 'text-right font-bold']
                 ]" :rows="$financialData">
                     @scope('cell_payment_date', $tx)
-                        <span class="text-[10px] font-bold text-slate-400 font-mono tracking-tighter uppercase italic">{{ $tx->payment_date->format('d / M / Y') }}</span>
+                        <span class="text-xs font-medium text-slate-500 font-mono italic">{{ $tx->payment_date->format('d/m/Y') }}</span>
                     @endscope
 
                     @scope('cell_student_name', $tx)
-                        <div class="font-black text-slate-800 dark:text-white uppercase tracking-tighter italic">{{ $tx->billing?->student?->name ?? __('Siswa Terhapus') }}</div>
+                        <div class="font-semibold text-slate-800 dark:text-slate-100">{{ $tx->billing?->student?->name ?? __('Siswa Terhapus') }}</div>
                     @endscope
 
                     @scope('cell_category_name', $tx)
-                        <x-ui.badge :label="$tx->billing?->feeCategory?->name ?? __('Umum')" class="bg-indigo-50 text-indigo-600 border-none font-black italic text-[8px] px-3 uppercase tracking-tighter" />
+                        <span class="text-xs text-slate-600 dark:text-slate-400">{{ $tx->billing?->feeCategory?->name ?? __('Umum') }}</span>
                     @endscope
 
                     @scope('cell_amount', $tx)
                         <div class="text-right flex flex-col">
-                            <span class="text-xs font-black text-slate-900 dark:text-white font-mono tracking-tighter">Rp {{ number_format($tx->amount, 0, ',', '.') }}</span>
-                            <span class="text-[9px] font-bold text-emerald-500 italic uppercase tracking-widest">{{ __('TERKONFIRMASI') }}</span>
+                            <span class="text-sm font-bold text-slate-900 dark:text-white font-mono">Rp {{ number_format($tx->amount, 0, ',', '.') }}</span>
+                            <span class="text-[10px] font-semibold text-emerald-500 uppercase tracking-wider">{{ __('Berhasil') }}</span>
                         </div>
                     @endscope
 
                     <x-slot:append>
                         @php $totalIncome = $financialData->sum('amount'); @endphp
-                        <tr class="bg-slate-50 dark:bg-slate-900/50">
-                            <td colspan="4" class="p-6 text-right">
-                                <span class="font-black italic text-slate-400 uppercase tracking-[0.2em] text-[10px]">{{ __('Total Akumulasi Pendapatan') }}</span>
+                        <tr class="bg-slate-50 dark:bg-slate-800/50">
+                            <td colspan="4" class="p-4 text-right">
+                                <span class="font-bold text-slate-500 uppercase tracking-wider text-xs">{{ __('Total Akumulasi') }}</span>
                             </td>
-                            <td class="p-6 text-right">
-                                <span class="text-xl font-black text-primary italic font-mono tracking-tighter drop-shadow-sm">
+                            <td class="p-4 text-right">
+                                <span class="text-lg font-bold text-primary font-mono whitespace-nowrap">
                                     Rp {{ number_format($totalIncome, 0, ',', '.') }}
                                 </span>
                             </td>
@@ -185,21 +182,21 @@ new #[Layout('components.admin.layouts.app')] class extends Component {
 
             @if($tab === 'attendance')
                 <x-ui.table :headers="[
-                    ['key' => 'date', 'label' => __('Tanggal Presensi')],
-                    ['key' => 'classroom.name', 'label' => __('Grup / Kelas')],
-                    ['key' => 'subject_name', 'label' => __('Materi / Mapel')],
-                    ['key' => 'percentage', 'label' => __('Rasio Kehadiran'), 'class' => 'text-center']
+                    ['key' => 'date', 'label' => __('Tanggal')],
+                    ['key' => 'classroom.name', 'label' => __('Kelas')],
+                    ['key' => 'subject_name', 'label' => __('Materi')],
+                    ['key' => 'percentage', 'label' => __('Kehadiran'), 'class' => 'text-center']
                 ]" :rows="$attendanceData">
                     @scope('cell_date', $att)
-                        <span class="text-[10px] font-bold text-slate-400 font-mono tracking-tighter uppercase italic">{{ $att->date->format('d / M / Y') }}</span>
+                        <span class="text-xs font-medium text-slate-500 font-mono italic">{{ $att->date->format('d/m/Y') }}</span>
                     @endscope
 
                     @scope('cell_classroom_name', $att)
-                         <span class="font-black text-slate-700 dark:text-slate-300 uppercase tracking-tighter italic">{{ $att->classroom?->name }}</span>
+                         <span class="font-semibold text-slate-700 dark:text-slate-300">{{ $att->classroom?->name }}</span>
                     @endscope
 
                     @scope('cell_subject_name', $att)
-                        <span class="text-xs font-bold text-slate-500 italic">{{ $att->subject?->name ?? __('Presensi Harian / Apel') }}</span>
+                        <span class="text-xs text-slate-500">{{ $att->subject?->name ?? __('Presensi Harian') }}</span>
                     @endscope
 
                     @scope('cell_percentage', $att)
@@ -210,12 +207,12 @@ new #[Layout('components.admin.layouts.app')] class extends Component {
                             $percent = $total > 0 ? round(($present / $total) * 100) : 0;
                             $barColor = $percent >= 80 ? 'bg-emerald-500' : ($percent >= 60 ? 'bg-amber-500' : 'bg-rose-500');
                         @endphp
-                        <div class="flex flex-col items-center gap-2">
-                            <div class="flex items-end gap-1">
-                                <span class="text-lg font-black text-slate-900 dark:text-white italic tracking-tighter leading-none">{{ $percent }}%</span>
-                                <span class="text-[9px] font-bold text-slate-400 uppercase tracking-widest mb-0.5">({{ $present }}/{{ $total }})</span>
+                        <div class="flex flex-col items-center gap-1.5">
+                            <div class="flex items-baseline gap-1">
+                                <span class="text-base font-bold text-slate-900 dark:text-white">{{ $percent }}%</span>
+                                <span class="text-[10px] font-medium text-slate-400">({{ $present }}/{{ $total }})</span>
                             </div>
-                            <div class="w-32 h-1.5 bg-slate-100 dark:bg-slate-800 rounded-full overflow-hidden shadow-inner flex">
+                            <div class="w-24 h-1.5 bg-slate-100 dark:bg-slate-800 rounded-full overflow-hidden shadow-inner flex">
                                 <div class="h-full {{ $barColor }} transition-all duration-1000 ease-out" style="width: {{ $percent }}%"></div>
                             </div>
                         </div>

@@ -242,11 +242,11 @@ new #[Layout('components.admin.layouts.app')] class extends Component {
         <x-ui.header :title="__('Transaksi Keuangan')" :subtitle="__('Catat Pemasukan (Pembayaran Siswa) dan Pengeluaran (Realisasi RAB).')" separator />
         
         <x-ui.alert :title="__('Tips Alur Keuangan')" icon="o-information-circle" class="bg-blue-50 text-blue-800 border-blue-100">
-            <ol class="list-decimal pl-5 space-y-1 text-xs font-medium">
-                <li>{{ __('Buat') }} <strong class="font-black underline decoration-blue-200 uppercase tracking-tighter">{{ __('Kategori Biaya') }}</strong> (SPP, Pendaftaran, dll).</li>
-                <li>{{ __('Generate') }} <strong class="font-black underline decoration-blue-200 uppercase tracking-tighter">{{ __('Tagihan Siswa') }}</strong> {{ __('untuk menagih biaya ke siswa (opsional).') }}</li>
-                <li>{{ __('Berikan') }} <strong class="font-black underline decoration-blue-200 uppercase tracking-tighter">{{ __('Potongan & Beasiswa') }}</strong> {{ __('jika diperlukan.') }}</li>
-                <li>{{ __('Gunakan halaman ini untuk') }} <strong class="font-black underline decoration-blue-200 uppercase tracking-tighter">{{ __('Input Transaksi') }}</strong>.</li>
+            <ol class="list-decimal pl-5 space-y-1 text-[11px] font-medium leading-relaxed">
+                <li>{{ __('Buat') }} <strong class="font-bold underline decoration-blue-200 uppercase tracking-tighter">{{ __('Kategori Biaya') }}</strong> (SPP, Pendaftaran, dll).</li>
+                <li>{{ __('Generate') }} <strong class="font-bold underline decoration-blue-200 uppercase tracking-tighter">{{ __('Tagihan Siswa') }}</strong> {{ __('untuk menagih biaya ke siswa (opsional).') }}</li>
+                <li>{{ __('Berikan') }} <strong class="font-bold underline decoration-blue-200 uppercase tracking-tighter">{{ __('Potongan & Beasiswa') }}</strong> {{ __('jika diperlukan.') }}</li>
+                <li>{{ __('Gunakan halaman ini untuk') }} <strong class="font-bold underline decoration-blue-200 uppercase tracking-tighter">{{ __('Input Transaksi') }}</strong>.</li>
             </ol>
         </x-ui.alert>
     </div>
@@ -254,12 +254,12 @@ new #[Layout('components.admin.layouts.app')] class extends Component {
     <div class="grid grid-cols-1 lg:grid-cols-3 gap-8">
         <div class="lg:col-span-1 space-y-8">
             <x-ui.card shadow>
-                <div class="text-[10px] font-black uppercase text-slate-400 tracking-widest mb-4">{{ __('Jenis Transaksi') }}</div>
+                <div class="text-xs font-bold uppercase text-slate-500 tracking-wider mb-4">{{ __('Jenis Transaksi') }}</div>
                 <div class="flex gap-2 p-1.5 bg-slate-100 dark:bg-slate-800 rounded-2xl">
                     <button 
                         type="button"
                         wire:click="switchType('income')"
-                        class="flex-1 py-2.5 text-xs font-black rounded-xl transition-all flex items-center justify-center gap-2 {{ $type === 'income' ? 'bg-white dark:bg-slate-900 text-emerald-600 shadow-sm ring-1 ring-slate-200 dark:ring-slate-700' : 'text-slate-400 hover:text-slate-600 dark:hover:text-slate-200' }}"
+                        class="flex-1 py-2.5 text-xs font-bold rounded-xl transition-all flex items-center justify-center gap-2 {{ $type === 'income' ? 'bg-white dark:bg-slate-900 text-emerald-600 shadow-sm ring-1 ring-slate-200 dark:ring-slate-700' : 'text-slate-400 hover:text-slate-600 dark:hover:text-slate-200' }}"
                     >
                         <x-ui.icon name="o-arrow-down-tray" class="size-4" />
                         {{ __('Pemasukan') }}
@@ -267,7 +267,7 @@ new #[Layout('components.admin.layouts.app')] class extends Component {
                     <button 
                         type="button"
                         wire:click="switchType('expense')"
-                        class="flex-1 py-2.5 text-xs font-black rounded-xl transition-all flex items-center justify-center gap-2 {{ $type === 'expense' ? 'bg-white dark:bg-slate-900 text-rose-600 shadow-sm ring-1 ring-slate-200 dark:ring-slate-700' : 'text-slate-400 hover:text-slate-600 dark:hover:text-slate-200' }}"
+                        class="flex-1 py-2.5 text-xs font-bold rounded-xl transition-all flex items-center justify-center gap-2 {{ $type === 'expense' ? 'bg-white dark:bg-slate-900 text-rose-600 shadow-sm ring-1 ring-slate-200 dark:ring-slate-700' : 'text-slate-400 hover:text-slate-600 dark:hover:text-slate-200' }}"
                     >
                         <x-ui.icon name="o-arrow-up-tray" class="size-4" />
                         {{ __('Pengeluaran') }}
@@ -277,7 +277,7 @@ new #[Layout('components.admin.layouts.app')] class extends Component {
 
             @if($type === 'income')
                 <x-ui.card shadow>
-                    <div class="text-[10px] font-black uppercase text-slate-400 tracking-widest mb-6">{{ __('Detail Pemasukan') }}</div>
+                    <div class="text-xs font-bold uppercase text-slate-500 tracking-wider mb-6">{{ __('Detail Pemasukan') }}</div>
                     <div class="space-y-6">
                         <x-ui.select 
                             wire:model.live="fee_category_id" 
@@ -315,10 +315,10 @@ new #[Layout('components.admin.layouts.app')] class extends Component {
                             @if($selectedBilling)
                                 <div class="p-5 bg-emerald-50 dark:bg-emerald-950/20 rounded-2xl border border-emerald-100 dark:border-emerald-900/50 space-y-4 shadow-sm">
                                     <div class="flex justify-between items-center pb-2 border-b border-emerald-100 dark:border-emerald-900/30">
-                                        <div class="text-[10px] font-black uppercase text-emerald-700 dark:text-emerald-400 tracking-widest">{{ __('Tagihan Ditemukan') }}</div>
+                                        <div class="text-[10px] font-bold uppercase text-emerald-700 dark:text-emerald-400 tracking-wider">{{ __('Tagihan Ditemukan') }}</div>
                                         <x-ui.badge 
                                             :label="strtoupper($selectedBilling->status)" 
-                                            class="bg-emerald-100 text-emerald-800 dark:bg-emerald-900 dark:text-emerald-300 text-[8px] font-black" 
+                                            class="bg-emerald-100 text-emerald-800 dark:bg-emerald-900 dark:text-emerald-300 text-[10px] font-bold tracking-wide" 
                                         />
                                     </div>
                                     <div class="space-y-2">
@@ -381,7 +381,7 @@ new #[Layout('components.admin.layouts.app')] class extends Component {
                         @if ($errors->any())
                             <div class="mb-6">
                                 <x-ui.alert :title="__('Perhatian')" icon="o-exclamation-triangle" class="bg-rose-50 text-rose-800 border-rose-100">
-                                    <ul class="text-xs font-bold list-disc pl-5 mt-1">
+                                    <ul class="text-xs font-semibold list-disc pl-5 mt-1">
                                         @foreach ($errors->all() as $error)
                                             <li>{{ $error }}</li>
                                         @endforeach
@@ -448,10 +448,10 @@ new #[Layout('components.admin.layouts.app')] class extends Component {
                                                 <div class="flex flex-col items-center justify-center pt-5 pb-6">
                                                     <x-ui.icon name="o-cloud-arrow-up" class="w-8 h-8 mb-3 text-slate-400" />
                                                     <p class="mb-1 text-xs text-slate-500">
-                                                        <span class="font-black text-primary uppercase tracking-tighter">{{ __('Klik untuk upload') }}</span>
+                                                        <span class="font-bold text-primary uppercase tracking-wide">{{ __('Klik untuk upload') }}</span>
                                                         {{ __('atau drag and drop') }}
                                                     </p>
-                                                    <p class="text-[10px] items-center italic text-slate-400">PNG, JPG, PDF (Max. 2MB)</p>
+                                                    <p class="text-[11px] items-center italic text-slate-400">PNG, JPG, PDF (Max. 2MB)</p>
                                                 </div>
                                                 <input wire:model="attachment" type="file" class="hidden" accept="image/*,.pdf" />
                                             </label>
@@ -482,17 +482,17 @@ new #[Layout('components.admin.layouts.app')] class extends Component {
                     <div class="w-16 h-16 bg-white dark:bg-slate-900 rounded-3xl shadow-xl flex items-center justify-center mb-6 ring-1 ring-slate-100 dark:ring-slate-800">
                         <x-ui.icon name="o-document-text" class="size-8 text-slate-300" />
                     </div>
-                    <h3 class="text-lg font-black text-slate-800 dark:text-slate-200 mb-2">{{ __('Siap Mencatat Transaksi') }}</h3>
-                    <p class="text-xs text-slate-400 max-w-xs leading-relaxed font-medium">
-                        {{ __('Silakan pilih detail') }} <span class="font-black underline decoration-slate-200 uppercase tracking-tighter">{{ $type === 'income' ? __('Pemasukan') : __('RAB Pengeluaran') }}</span> {{ __('di panel sebelah kiri untuk memunculkan form transaksi.') }}
+                    <h3 class="text-lg font-bold text-slate-800 dark:text-slate-200 mb-2">{{ __('Siap Mencatat Transaksi') }}</h3>
+                    <p class="text-xs text-slate-500 max-w-xs leading-relaxed font-normal">
+                        {{ __('Silakan pilih detail') }} <span class="font-bold underline decoration-slate-200 uppercase tracking-wide">{{ $type === 'income' ? __('Pemasukan') : __('RAB Pengeluaran') }}</span> {{ __('di panel sebelah kiri untuk memunculkan form transaksi.') }}
                     </p>
                 </div>
             @endif
 
             <x-ui.card shadow padding="false">
                 <div class="p-5 border-b border-slate-100 dark:border-slate-800 bg-slate-50/50 dark:bg-slate-900/50 flex items-center justify-between">
-                    <div class="text-[11px] font-black uppercase text-slate-400 tracking-widest">{{ __('Riwayat Transaksi Terbaru') }}</div>
-                    <div class="text-[9px] font-black text-slate-400 uppercase tracking-widest bg-white dark:bg-slate-800 px-3 py-1 rounded-full ring-1 ring-slate-100 dark:ring-slate-700 shadow-sm">{{ __('Real-time Update') }}</div>
+                    <div class="text-xs font-bold uppercase text-slate-500 tracking-wider">{{ __('Riwayat Transaksi Terbaru') }}</div>
+                    <div class="text-[10px] font-bold text-slate-500 uppercase tracking-wider bg-white dark:bg-slate-800 px-3 py-1 rounded-full ring-1 ring-slate-100 dark:ring-slate-700 shadow-sm">{{ __('Real-time Update') }}</div>
                 </div>
 
                 <x-ui.table 
@@ -510,33 +510,33 @@ new #[Layout('components.admin.layouts.app')] class extends Component {
 
                     @scope('cell_type_label', $tx)
                         @if($tx->type === 'income')
-                            <x-ui.badge :label="__('In')" class="bg-emerald-100 text-emerald-700 border-none text-[8px] font-black px-1.5 py-0.5" />
+                            <x-ui.badge :label="__('In')" class="bg-emerald-100 text-emerald-700 border-none text-[10px] font-bold px-2 py-0.5 tracking-wide" />
                         @else
-                            <x-ui.badge :label="__('Out')" class="bg-rose-100 text-rose-700 border-none text-[8px] font-black px-1.5 py-0.5" />
+                            <x-ui.badge :label="__('Out')" class="bg-rose-100 text-rose-700 border-none text-[10px] font-bold px-2 py-0.5 tracking-wide" />
                         @endif
                     @endscope
 
                     @scope('cell_description', $tx)
                         <div class="flex flex-col">
                             @if($tx->type === 'income')
-                                <span class="font-bold text-slate-900 dark:text-white">{{ $tx->billing?->student?->name ?? __('Siswa Tidak Diketahui') }}</span>
-                                <span class="text-[9px] font-black uppercase tracking-widest text-slate-400">{{ $tx->billing?->feeCategory?->name ?? __('Tarif') }}</span>
+                                <span class="font-semibold text-slate-900 dark:text-white">{{ $tx->billing?->student?->name ?? __('Siswa Tidak Diketahui') }}</span>
+                                <span class="text-[10px] font-semibold uppercase tracking-wide text-slate-500">{{ $tx->billing?->feeCategory?->name ?? __('Tarif') }}</span>
                             @else
                                 <div class="flex items-center gap-2">
-                                    <span class="font-bold text-slate-900 dark:text-white">{{ $tx->budgetItem?->name ?? __('RAB Item') }}</span>
+                                    <span class="font-semibold text-slate-900 dark:text-white">{{ $tx->budgetItem?->name ?? __('RAB Item') }}</span>
                                     @if($tx->attachment)
                                         <a href="{{ Storage::url($tx->attachment) }}" target="_blank" class="p-1 bg-emerald-50 text-emerald-600 rounded-lg hover:bg-emerald-100 transition-colors" title="{{ __('Lihat Bukti') }}">
                                             <x-ui.icon name="o-paper-clip" class="size-3" />
                                         </a>
                                     @endif
                                 </div>
-                                <span class="text-[9px] font-black uppercase tracking-widest text-slate-400 truncate max-w-[150px]">{{ $tx->budgetPlan?->title ?? __('RAB Terpadu') }}</span>
+                                <span class="text-[10px] font-semibold uppercase tracking-wide text-slate-500 truncate max-w-[150px]">{{ $tx->budgetPlan?->title ?? __('RAB Terpadu') }}</span>
                             @endif
                         </div>
                     @endscope
 
                     @scope('cell_amount', $tx)
-                        <div class="font-mono text-sm tracking-tighter font-black {{ $tx->type === 'income' ? 'text-emerald-600' : 'text-rose-600' }}">
+                        <div class="font-mono text-sm font-bold {{ $tx->type === 'income' ? 'text-emerald-600' : 'text-rose-600' }}">
                             {{ $tx->type === 'income' ? '+' : '-' }} Rp {{ number_format($tx->amount, 0, ',', '.') }}
                         </div>
                     @endscope
