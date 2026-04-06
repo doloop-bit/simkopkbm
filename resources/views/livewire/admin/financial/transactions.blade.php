@@ -11,9 +11,12 @@ use App\Models\BudgetPlanItem;
 use App\Models\AcademicYear;
 use Livewire\Attributes\Layout;
 use Livewire\Component;
+use Livewire\WithFileUploads;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Storage;
 
 new #[Layout('components.admin.layouts.app')] class extends Component {
+    use WithFileUploads;
     // General Form
     public string $type = 'income'; // 'income' or 'expense'
     public float $pay_amount = 0;
@@ -21,6 +24,7 @@ new #[Layout('components.admin.layouts.app')] class extends Component {
     public string $payment_date = '';
     public string $reference_number = '';
     public string $notes = '';
+    public $attachment;
 
     // Income Specific
     public ?int $fee_category_id = null;
@@ -42,8 +46,16 @@ new #[Layout('components.admin.layouts.app')] class extends Component {
         }
     }
 
-    public function updatedType() {
-        $this->reset(['student_id', 'student_search', 'selectedBilling', 'fee_category_id', 'budget_plan_item_id', 'pay_amount', 'reference_number', 'notes']);
+    public function switchType(string $type) {
+        $this->type = $type;
+        $this->reset(['student_id', 'student_search', 'selectedBilling', 'fee_category_id', 'budget_plan_item_id', 'pay_amount', 'reference_number', 'notes', 'attachment']);
+        
+        if ($type === 'expense') {
+            $activePlan = BudgetPlan::where('is_active', true)->first();
+            if ($activePlan) {
+                $this->budget_plan_id = $activePlan->id;
+            }
+        }
     }
 
     public function selectStudent(int $id): void
@@ -86,80 +98,104 @@ new #[Layout('components.admin.layouts.app')] class extends Component {
 
     public function recordTransaction(): void
     {
-        $this->validate([
+        // 1. Basic Validation (Shared)
+        $rules = [
             'pay_amount' => 'required|numeric|min:1',
             'payment_method' => 'required|string',
             'payment_date' => 'required|date',
-        ]);
+            'attachment' => 'nullable|file|max:2048|mimes:jpg,jpeg,png,pdf',
+        ];
 
         if ($this->type === 'income') {
-            $this->validate([
-                'student_id' => 'required',
-                'fee_category_id' => 'required',
-            ]);
-
-            DB::transaction(function () {
-                $billing = $this->selectedBilling;
-                
-                // Auto create billing if it doesn't exist
-                if (!$billing) {
-                    $activeYear = AcademicYear::where('is_active', true)->first();
-                    $billing = StudentBilling::create([
-                        'student_id' => $this->student_id,
-                        'fee_category_id' => $this->fee_category_id,
-                        'academic_year_id' => $activeYear ? $activeYear->id : null,
-                        'amount' => $this->pay_amount,
-                        'paid_amount' => 0,
-                        'status' => 'unpaid'
-                    ]);
-                }
-
-                Transaction::create([
-                    'type' => 'income',
-                    'student_billing_id' => $billing->id,
-                    'user_id' => auth()->id(),
-                    'amount' => $this->pay_amount,
-                    'payment_date' => $this->payment_date,
-                    'payment_method' => $this->payment_method,
-                    'reference_number' => $this->reference_number,
-                    'notes' => $this->notes,
-                ]);
-
-                $newPaidAmount = $billing->paid_amount + $this->pay_amount;
-                $status = 'paid';
-                if ($newPaidAmount < $billing->amount) {
-                    $status = 'partial';
-                }
-
-                $billing->update([
-                    'paid_amount' => $newPaidAmount,
-                    'status' => $status,
-                ]);
-            });
-
-            session()->flash('success', __('Pemasukan berhasil dicatat.'));
+            $rules['student_id'] = 'required';
+            $rules['fee_category_id'] = 'required';
         } else {
-            $this->validate([
-                'budget_plan_id' => 'required',
-                'budget_plan_item_id' => 'required',
-            ]);
-
-            Transaction::create([
-                'type' => 'expense',
-                'budget_plan_id' => $this->budget_plan_id,
-                'budget_plan_item_id' => $this->budget_plan_item_id,
-                'user_id' => auth()->id(),
-                'amount' => $this->pay_amount,
-                'payment_date' => $this->payment_date,
-                'payment_method' => $this->payment_method,
-                'reference_number' => $this->reference_number,
-                'notes' => $this->notes,
-            ]);
-
-            session()->flash('success', __('Pengeluaran berhasil dicatat.'));
+            $rules['budget_plan_id'] = 'required';
+            $rules['budget_plan_item_id'] = 'required';
         }
 
-        $this->reset(['selectedBilling', 'student_id', 'student_search', 'fee_category_id', 'budget_plan_item_id', 'pay_amount', 'reference_number', 'notes']);
+        $this->validate($rules);
+
+        try {
+            DB::transaction(function () {
+                $attachmentPath = null;
+                if ($this->attachment) {
+                    $attachmentPath = $this->attachment->store('transaction-proofs', 'public');
+                }
+
+                if ($this->type === 'income') {
+                    $billing = $this->selectedBilling;
+                    
+                    // Auto create billing if it doesn't exist
+                    if (!$billing) {
+                        $activeYear = AcademicYear::where('is_active', true)->first();
+                        $billing = StudentBilling::create([
+                            'student_id' => $this->student_id,
+                            'fee_category_id' => $this->fee_category_id,
+                            'academic_year_id' => $activeYear ? $activeYear->id : null,
+                            'amount' => $this->pay_amount,
+                            'paid_amount' => 0,
+                            'status' => 'unpaid'
+                        ]);
+                    }
+
+                    // Record Transaction
+                    Transaction::create([
+                        'type' => 'income',
+                        'student_billing_id' => $billing->id,
+                        'user_id' => auth()->id(),
+                        'amount' => $this->pay_amount,
+                        'payment_date' => $this->payment_date,
+                        'payment_method' => $this->payment_method,
+                        'reference_number' => $this->reference_number,
+                        'notes' => $this->notes,
+                        'attachment' => $attachmentPath,
+                    ]);
+
+                    // Update Billing
+                    $newPaidAmount = $billing->paid_amount + $this->pay_amount;
+                    $status = 'paid';
+                    if ($newPaidAmount < $billing->amount) {
+                        $status = 'partial';
+                    }
+
+                    $billing->update([
+                        'paid_amount' => $newPaidAmount,
+                        'status' => $status,
+                    ]);
+
+                    session()->flash('success', __('Pemasukan berhasil dicatat.'));
+                } else {
+                    // Record Expense
+                    Transaction::create([
+                        'type' => 'expense',
+                        'budget_plan_id' => $this->budget_plan_id,
+                        'budget_plan_item_id' => $this->budget_plan_item_id,
+                        'user_id' => auth()->id(),
+                        'amount' => $this->pay_amount,
+                        'payment_date' => $this->payment_date,
+                        'payment_method' => $this->payment_method,
+                        'reference_number' => $this->reference_number,
+                        'notes' => $this->notes,
+                        'attachment' => $attachmentPath,
+                    ]);
+
+                    session()->flash('success', __('Pengeluaran berhasil dicatat.'));
+                }
+            });
+
+            // 3. Reset Form on Success
+            $this->reset(['selectedBilling', 'student_id', 'student_search', 'fee_category_id', 'budget_plan_item_id', 'pay_amount', 'reference_number', 'notes', 'attachment']);
+            
+            // Re-select budget plan if was set before reset but only if we want to stay on expense form
+            if ($this->type === 'expense') {
+                $this->switchType('expense');
+            }
+            
+        } catch (\Exception $e) {
+            session()->flash('error', __('Terjadi kesalahan: ') . $e->getMessage());
+            \Illuminate\Support\Facades\Log::error('Transaction Error: ' . $e->getMessage());
+        }
     }
 
     public function with(): array
@@ -221,14 +257,16 @@ new #[Layout('components.admin.layouts.app')] class extends Component {
                 <div class="text-[10px] font-black uppercase text-slate-400 tracking-widest mb-4">{{ __('Jenis Transaksi') }}</div>
                 <div class="flex gap-2 p-1.5 bg-slate-100 dark:bg-slate-800 rounded-2xl">
                     <button 
-                        wire:click="$set('type', 'income')"
+                        type="button"
+                        wire:click="switchType('income')"
                         class="flex-1 py-2.5 text-xs font-black rounded-xl transition-all flex items-center justify-center gap-2 {{ $type === 'income' ? 'bg-white dark:bg-slate-900 text-emerald-600 shadow-sm ring-1 ring-slate-200 dark:ring-slate-700' : 'text-slate-400 hover:text-slate-600 dark:hover:text-slate-200' }}"
                     >
                         <x-ui.icon name="o-arrow-down-tray" class="size-4" />
                         {{ __('Pemasukan') }}
                     </button>
                     <button 
-                        wire:click="$set('type', 'expense')"
+                        type="button"
+                        wire:click="switchType('expense')"
                         class="flex-1 py-2.5 text-xs font-black rounded-xl transition-all flex items-center justify-center gap-2 {{ $type === 'expense' ? 'bg-white dark:bg-slate-900 text-rose-600 shadow-sm ring-1 ring-slate-200 dark:ring-slate-700' : 'text-slate-400 hover:text-slate-600 dark:hover:text-slate-200' }}"
                     >
                         <x-ui.icon name="o-arrow-up-tray" class="size-4" />
@@ -336,39 +374,109 @@ new #[Layout('components.admin.layouts.app')] class extends Component {
 
         <div class="lg:col-span-2 space-y-8">
             @if(($type === 'income' && $student_id && $fee_category_id) || ($type === 'expense' && $budget_plan_id && $budget_plan_item_id))
-                <x-ui.card shadow class="{{ $type === 'income' ? 'bg-emerald-50/20 border-emerald-100' : 'bg-rose-50/20 border-rose-100' }}">
-                    <x-ui.header :title="($type === 'income' ? __('Form Pemasukan') : __('Form Pengeluaran'))" separator />
-                    
-                    <div class="grid grid-cols-1 md:grid-cols-2 gap-8">
-                        <x-ui.input wire:model="pay_amount" type="number" :label="__('Nominal Realisasi (Rp)')" icon="o-currency-dollar" required />
-                        <x-ui.select 
-                            wire:model="payment_method" 
-                            :label="__('Metode Pembayaran')" 
-                            :options="[
-                                ['id' => 'cash', 'name' => __('Tunai (Cash)')],
-                                ['id' => 'transfer', 'name' => __('Transfer Bank')],
-                                ['id' => 'other', 'name' => __('Lainnya')]
-                            ]"
-                            required
-                        />
-                        <x-ui.input wire:model="payment_date" type="date" :label="__('Tanggal Transaksi')" required />
-                        <x-ui.input wire:model="reference_number" :label="__('Ref Transaksi (Opsional)')" :placeholder="__('No. Slip/Referensi')" />
-                    </div>
+                <form wire:submit="recordTransaction">
+                    <x-ui.card shadow class="{{ $type === 'income' ? 'bg-emerald-50/20 border-emerald-100' : 'bg-rose-50/20 border-rose-100' }}">
+                        <x-ui.header :title="($type === 'income' ? __('Form Pemasukan') : __('Form Pengeluaran'))" separator />
+                        
+                        @if ($errors->any())
+                            <div class="mb-6">
+                                <x-ui.alert :title="__('Perhatian')" icon="o-exclamation-triangle" class="bg-rose-50 text-rose-800 border-rose-100">
+                                    <ul class="text-xs font-bold list-disc pl-5 mt-1">
+                                        @foreach ($errors->all() as $error)
+                                            <li>{{ $error }}</li>
+                                        @endforeach
+                                    </ul>
+                                </x-ui.alert>
+                            </div>
+                        @endif
 
-                    <div class="mt-8">
-                        <x-ui.textarea wire:model="notes" :label="__('Keterangan Tambahan')" rows="3" :placeholder="__('Catatan detail transaksi...')" />
-                    </div>
+                        <div class="grid grid-cols-1 md:grid-cols-2 gap-8">
+                            <x-ui.input wire:model="pay_amount" type="number" :label="__('Nominal Realisasi (Rp)')" icon="o-currency-dollar" required />
+                            <x-ui.select 
+                                wire:model="payment_method" 
+                                :label="__('Metode Pembayaran')" 
+                                :options="[
+                                    ['id' => 'cash', 'name' => __('Tunai (Cash)')],
+                                    ['id' => 'transfer', 'name' => __('Transfer Bank')],
+                                    ['id' => 'other', 'name' => __('Lainnya')]
+                                ]"
+                                required
+                            />
+                            <x-ui.input wire:model="payment_date" type="date" :label="__('Tanggal Transaksi')" required />
+                            <x-ui.input wire:model="reference_number" :label="__('Ref Transaksi (Opsional)')" :placeholder="__('No. Slip/Referensi')" />
+                        </div>
 
-                    <div class="flex justify-end pt-6 border-t border-slate-100 dark:border-slate-800 mt-6">
-                        <x-ui.button 
-                            :label="__('Simpan Record Transaksi')" 
-                            icon="o-check" 
-                            class="grow md:grow-0 {{ $type === 'income' ? 'btn-primary' : 'bg-rose-600 hover:bg-rose-700 text-white border-rose-700 shadow-rose-200' }}" 
-                            wire:click="recordTransaction" 
-                            spinner="recordTransaction"
-                        />
-                    </div>
-                </x-ui.card>
+                        <div class="mt-8 grid grid-cols-1 md:grid-cols-2 gap-8 items-start">
+                            <x-ui.textarea wire:model="notes" :label="__('Keterangan Tambahan')" rows="3" :placeholder="__('Catatan detail transaksi...')" />
+                            
+                            <div class="space-y-4">
+                                <label class="text-sm font-medium text-slate-700 dark:text-slate-300">
+                                    {{ __('Bukti Belanja / Kwitansi') }}
+                                </label>
+                                
+                                <div class="space-y-3">
+                                    @if($attachment && method_exists($attachment, 'temporaryUrl'))
+                                        <div class="relative w-full aspect-video rounded-2xl overflow-hidden bg-slate-100 dark:bg-slate-800 border border-slate-200 dark:border-slate-700">
+                                            @if(in_array($attachment->getClientOriginalExtension(), ['jpg', 'jpeg', 'png']))
+                                                <img src="{{ $attachment->temporaryUrl() }}" class="w-full h-full object-cover">
+                                            @else
+                                                <div class="flex flex-col items-center justify-center h-full">
+                                                    <x-ui.icon name="o-document-check" class="size-12 text-emerald-500 mb-2" />
+                                                    <span class="text-xs font-black uppercase text-slate-400 tracking-widest">{{ $attachment->getClientOriginalName() }}</span>
+                                                </div>
+                                            @endif
+                                            <button 
+                                                type="button"
+                                                wire:click="$set('attachment', null)" 
+                                                class="absolute top-2 right-2 size-8 bg-rose-500 hover:bg-rose-600 text-white rounded-full shadow-lg flex items-center justify-center transition-all"
+                                            >
+                                                <x-ui.icon name="o-x-mark" class="size-4" />
+                                            </button>
+                                        </div>
+                                    @else
+                                        <div 
+                                            x-data="{ isDragging: false }"
+                                            @dragover.prevent="isDragging = true"
+                                            @dragleave.prevent="isDragging = false"
+                                            @drop.prevent="isDragging = false"
+                                            class="relative"
+                                        >
+                                            <label 
+                                                class="flex flex-col items-center justify-center w-full h-32 px-4 transition-all duration-200 bg-white dark:bg-slate-900 border-2 border-dashed rounded-2xl cursor-pointer hover:bg-slate-50 dark:hover:bg-slate-800/50"
+                                                :class="isDragging ? 'border-primary ring-4 ring-primary/10 bg-primary/5' : 'border-slate-200 dark:border-slate-700'"
+                                            >
+                                                <div class="flex flex-col items-center justify-center pt-5 pb-6">
+                                                    <x-ui.icon name="o-cloud-arrow-up" class="w-8 h-8 mb-3 text-slate-400" />
+                                                    <p class="mb-1 text-xs text-slate-500">
+                                                        <span class="font-black text-primary uppercase tracking-tighter">{{ __('Klik untuk upload') }}</span>
+                                                        {{ __('atau drag and drop') }}
+                                                    </p>
+                                                    <p class="text-[10px] items-center italic text-slate-400">PNG, JPG, PDF (Max. 2MB)</p>
+                                                </div>
+                                                <input wire:model="attachment" type="file" class="hidden" accept="image/*,.pdf" />
+                                            </label>
+                                            @error('attachment') <span class="text-xs text-rose-500 mt-1 block">{{ $message }}</span> @enderror
+                                        </div>
+                                    @endif
+                                    
+                                    <div wire:loading wire:target="attachment" class="text-[10px] font-black uppercase text-emerald-600 tracking-widest animate-pulse">
+                                        {{ __('Sedang mengunggah file...') }}
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="flex justify-end pt-6 border-t border-slate-100 dark:border-slate-800 mt-6">
+                            <x-ui.button 
+                                :label="__('Simpan Record Transaksi')" 
+                                type="submit"
+                                icon="o-check" 
+                                class="grow md:grow-0 {{ $type === 'income' ? 'btn-primary' : 'bg-rose-600 hover:bg-rose-700 text-white border-rose-700 shadow-rose-200' }}" 
+                                spinner="recordTransaction"
+                            />
+                        </div>
+                    </x-ui.card>
+                </form>
             @else
                 <div class="border-2 border-dashed border-slate-200 dark:border-slate-800 rounded-2xl p-16 text-center opacity-70 bg-slate-50/50 dark:bg-slate-950/20 flex flex-col items-center justify-center h-full min-h-[350px]">
                     <div class="w-16 h-16 bg-white dark:bg-slate-900 rounded-3xl shadow-xl flex items-center justify-center mb-6 ring-1 ring-slate-100 dark:ring-slate-800">
@@ -414,7 +522,14 @@ new #[Layout('components.admin.layouts.app')] class extends Component {
                                 <span class="font-bold text-slate-900 dark:text-white">{{ $tx->billing?->student?->name ?? __('Siswa Tidak Diketahui') }}</span>
                                 <span class="text-[9px] font-black uppercase tracking-widest text-slate-400">{{ $tx->billing?->feeCategory?->name ?? __('Tarif') }}</span>
                             @else
-                                <span class="font-bold text-slate-900 dark:text-white">{{ $tx->budgetItem?->name ?? __('RAB Item') }}</span>
+                                <div class="flex items-center gap-2">
+                                    <span class="font-bold text-slate-900 dark:text-white">{{ $tx->budgetItem?->name ?? __('RAB Item') }}</span>
+                                    @if($tx->attachment)
+                                        <a href="{{ Storage::url($tx->attachment) }}" target="_blank" class="p-1 bg-emerald-50 text-emerald-600 rounded-lg hover:bg-emerald-100 transition-colors" title="{{ __('Lihat Bukti') }}">
+                                            <x-ui.icon name="o-paper-clip" class="size-3" />
+                                        </a>
+                                    @endif
+                                </div>
                                 <span class="text-[9px] font-black uppercase tracking-widest text-slate-400 truncate max-w-[150px]">{{ $tx->budgetPlan?->title ?? __('RAB Terpadu') }}</span>
                             @endif
                         </div>

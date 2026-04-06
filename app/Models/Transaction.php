@@ -17,6 +17,7 @@ class Transaction extends Model
         'payment_method',
         'reference_number',
         'notes',
+        'attachment',
     ];
 
     protected function casts(): array
