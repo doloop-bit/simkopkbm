@@ -1,50 +1,81 @@
-<div class="p-6 space-y-6 text-slate-900 dark:text-white">
-    <x-ui.header :title="__('Presensi Siswa')" :subtitle="__('Rekap kehadiran siswa per kelas dan mata pelajaran.')" separator />
+<div class="p-4 md:p-6 space-y-4 md:space-y-6 text-slate-900 dark:text-white" wire:key="attendance-container-{{ $classroom_id }}-{{ $date }}">
+    @php
+        $selectedClassroomName = $classrooms->firstWhere('id', (int)$classroom_id)?->name;
+    @endphp
+    <x-ui.header :title="__('Presensi :class', ['class' => $selectedClassroomName ?? __('Siswa')])" :subtitle="__('Rekap kehadiran harian siswa.')" class="mb-0 md:mb-6" />
 
-    <div class="grid grid-cols-1 md:grid-cols-4 gap-4">
+    @php
+        $statuses = [
+            'h' => ['label' => __('Hadir'), 'color' => 'bg-emerald-500', 'ring' => 'ring-emerald-500/20', 'shadow' => 'shadow-emerald-500/30'],
+            's' => ['label' => __('Sakit'), 'color' => 'bg-amber-400', 'ring' => 'ring-amber-400/20', 'shadow' => 'shadow-amber-400/30'],
+            'i' => ['label' => __('Izin'), 'color' => 'bg-sky-500', 'ring' => 'ring-sky-500/20', 'shadow' => 'shadow-sky-500/30'],
+            'a' => ['label' => __('Alpa'), 'color' => 'bg-rose-500', 'ring' => 'ring-rose-500/20', 'shadow' => 'shadow-rose-500/30']
+        ];
+    @endphp
+
+    <div class="grid grid-cols-1 md:grid-cols-{{ count($classrooms) > 1 ? 3 : 2 }} gap-4">
         <x-ui.select wire:model.live="academic_year_id" :label="__('Tahun Ajaran')" :options="$years" />
-        <x-ui.select wire:model.live="classroom_id" :label="__('Kelas')" :placeholder="__('Pilih Kelas')" :options="$classrooms" />
-        <x-ui.select wire:model.live="subject_id" :label="__('Mata Pelajaran (Opsional)')" :placeholder="__('Semua-Harian')" :options="$subjects" />
+        
+        @if($classrooms->count() > 1)
+            <x-ui.select wire:model.live="classroom_id" :label="__('Kelas')" :placeholder="__('Pilih Kelas')" :options="$classrooms" />
+        @endif
+
         <x-ui.input wire:model.live="date" type="date" :label="__('Tanggal')" />
     </div>
 
     @if($classroom_id)
-        <x-ui.card shadow padding="false">
+        <x-ui.card shadow padding="false" wire:key="attendance-card-{{ $classroom_id }}" class="overflow-visible">
+            <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center px-6 py-4 gap-4 bg-slate-50/50 dark:bg-slate-800/20 border-b border-slate-100 dark:border-slate-800">
+                <div>
+                    <h3 class="text-base font-black text-slate-900 dark:text-white tracking-tight">{{ __('Daftar Kehadiran') }}</h3>
+                    <p class="text-[10px] uppercase font-black tracking-widest text-slate-400 mt-0.5">{{ __('Silakan sesuaikan status jika ada yang tidak hadir') }}</p>
+                </div>
+                <x-ui.button 
+                    wire:click="setAllStatus('h')" 
+                    icon="o-check-circle" 
+                    :label="__('Semua Hadir')" 
+                    class="btn-sm bg-emerald-500 text-white border-none hover:bg-emerald-600 shadow-lg shadow-emerald-500/20 px-4" 
+                    spinner="setAllStatus"
+                    wire:key="btn-all-present"
+                />
+            </div>
+
             <x-ui.table 
                 :headers="[
-                    ['key' => 'name', 'label' => __('Nama Siswa')],
-                    ['key' => 'status', 'label' => __('Status Kehadiran'), 'class' => 'text-center']
+                    ['key' => 'name', 'label' => __('Siswa')],
+                    ['key' => 'status', 'label' => __('Status'), 'class' => 'text-center']
                 ]" 
-                :rows="$students"
+                :rows="$this->students"
             >
                 @scope('cell_name', $student)
-                    <div class="flex items-center gap-3">
-                        <div class="size-8 rounded-full bg-slate-100 dark:bg-slate-800 flex items-center justify-center font-bold text-slate-400 text-xs">
+                    <div class="flex items-center gap-2 sm:gap-3" wire:key="student-name-{{ $student->id }}">
+                        <div class="size-8 rounded-full bg-slate-50 dark:bg-slate-800 hidden sm:flex items-center justify-center font-bold text-slate-300 text-[10px] uppercase">
                             {{ substr($student->name, 0, 1) }}
                         </div>
-                        <span class="font-bold text-slate-900 dark:text-white">{{ $student->name }}</span>
+                        <span class="font-bold text-slate-900 dark:text-white text-[11px] sm:text-sm leading-tight">{{ $student->name }}</span>
                     </div>
                 @endscope
 
-                @scope('cell_status', $student, $attendance_data)
-                    <div class="flex justify-center items-center gap-2">
+                @scope('cell_status', $student)
+                    <div class="flex justify-center items-center gap-1.5 sm:gap-2" 
+                         wire:key="student-status-{{ $student->id }}-{{ $this->attendance_data[(string)$student->id] ?? 'h' }}"
+                         x-data="{ current: '{{ $this->attendance_data[(string)$student->id] ?? 'h' }}' }">
                         @foreach([
-                            'h' => ['label' => __('Hadir'), 'class' => 'bg-emerald-500 text-white shadow-emerald-500/30'],
-                            's' => ['label' => __('Sakit'), 'class' => 'bg-amber-400 text-white shadow-amber-400/30'],
-                            'i' => ['label' => __('Izin'), 'class' => 'bg-sky-500 text-white shadow-sky-500/30'],
-                            'a' => ['label' => __('Alpa'), 'class' => 'bg-rose-500 text-white shadow-rose-500/30']
+                            'h' => ['label' => __('Hadir'), 'color' => 'bg-emerald-500', 'ring' => 'ring-emerald-500/30'],
+                            's' => ['label' => __('Sakit'), 'color' => 'bg-amber-400', 'ring' => 'ring-amber-400/30'],
+                            'i' => ['label' => __('Izin'), 'color' => 'bg-sky-500', 'ring' => 'ring-sky-500/30'],
+                            'a' => ['label' => __('Alpa'), 'color' => 'bg-rose-500', 'ring' => 'ring-rose-500/30']
                         ] as $val => $meta)
-                            @php
-                                $isSelected = ($attendance_data[$student->id] ?? '') === $val;
-                            @endphp
                             <button type="button" 
-                                wire:click="setStatus({{ $student->id }}, '{{ $val }}')"
-                                @class([
-                                    'flex items-center gap-1.5 px-4 py-1.5 rounded-xl transition-all duration-300 text-xs font-black uppercase tracking-wider border-2',
-                                    $meta['class'] . ' border-transparent scale-105 ring-2 ring-primary/20' => $isSelected,
-                                    'bg-white dark:bg-slate-900 border-slate-100 dark:border-slate-800 text-slate-400 dark:text-slate-500 hover:border-slate-300 dark:hover:border-slate-600' => !$isSelected,
-                                ])>
-                                {{ $meta['label'] }}
+                                @click="current = '{{ $val }}'; $wire.setStatus({{ $student->id }}, '{{ $val }}')"
+                                wire:key="btn-{{ $student->id }}-{{ $val }}"
+                                :class="current === '{{ $val }}' 
+                                    ? '{{ $meta['color'] }} text-white border-transparent ring-2 {{ $meta['ring'] }}' 
+                                    : 'bg-white dark:bg-slate-900 border-slate-100 dark:border-slate-800 text-slate-400 dark:text-slate-500 hover:border-slate-300 dark:hover:border-slate-600'"
+                                class="flex items-center justify-center size-8 sm:size-auto sm:px-4 sm:py-1.5 rounded-lg sm:rounded-xl transition-all duration-300 text-[10px] sm:text-xs font-black uppercase tracking-wider border-2"
+                            >
+                                <span class="sm:hidden">{{ substr($meta['label'], 0, 1) }}</span>
+                                <span class="hidden sm:inline">{{ $meta['label'] }}</span>
                             </button>
                         @endforeach
                     </div>
@@ -54,7 +85,7 @@
             <div class="p-6 bg-slate-50/50 dark:bg-slate-800/20 border-t border-slate-100 dark:border-slate-800 space-y-4">
                 <x-ui.textarea wire:model="notes" :label="__('Catatan Tambahan')" :placeholder="__('Catatan kejadian hari ini (jika ada)...')" rows="2" />
                 <div class="flex justify-end gap-2">
-                    <x-ui.button :label="__('Batal')" ghost @click="$refresh" />
+                    <x-ui.button :label="__('Batal')" ghost wire:click="$refresh" />
                     <x-ui.button :label="__('Simpan Presensi')" icon="o-check" class="btn-primary" wire:click="save" spinner="save" />
                 </div>
             </div>

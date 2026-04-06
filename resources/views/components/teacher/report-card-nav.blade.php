@@ -59,12 +59,12 @@
     </div>
 
     {{-- Mobile: Fixed bottom navigation with icons only --}}
-    <div class="lg:hidden fixed bottom-0 left-0 right-0 z-40 bg-base-100 border-t border-base-300 safe-area-inset-bottom">
-        <nav class="flex items-center justify-around px-2 py-2">
+    <div class="lg:hidden fixed bottom-0 left-0 right-0 z-50 bg-white border-t border-slate-200 dark:bg-slate-900 dark:border-slate-800 shadow-[0_-2px_15px_rgba(0,0,0,0.06)] safe-area-inset-bottom">
+        <nav class="flex items-center justify-around h-16">
             @foreach($tabs as $key => $tab)
                 <a href="{{ route($tab['route']) }}" wire:navigate
-                    class="flex flex-col items-center justify-center gap-1 px-3 py-1 rounded-lg transition-colors {{ request()->routeIs($tab['route']) ? 'text-primary' : 'opacity-60' }}">
-                    <x-ui.icon name="o-{{ $tab['icon'] }}" class="size-6" />
+                    class="flex flex-col items-center justify-center gap-1 w-full h-full transition-colors {{ request()->routeIs($tab['route']) ? 'text-primary' : 'text-slate-400' }}">
+                    <x-ui.icon name="o-{{ $tab['icon'] }}" class="size-6 mb-1" />
                     <span class="text-[10px] uppercase font-bold tracking-tighter">{{ $tab['label_short'] }}</span>
                 </a>
             @endforeach

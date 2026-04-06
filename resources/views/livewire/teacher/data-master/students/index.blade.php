@@ -90,8 +90,14 @@ new #[Layout('components.teacher.layouts.app')] class extends Component {
         $assignedClassroomIds = $teacher->getAssignedClassroomIds();
 
         $students = StudentProfile::whereIn('classroom_id', $assignedClassroomIds)
+            ->join('profiles', function($j) {
+                $j->on('student_profiles.id', '=', 'profiles.profileable_id')
+                  ->where('profiles.profileable_type', '=', \App\Models\StudentProfile::class);
+            })
+            ->join('users', 'profiles.user_id', '=', 'users.id')
             ->with(['profile.user', 'classroom.level', 'classroom.academicYear'])
-            ->orderBy('classroom_id')
+            ->orderBy('users.name')
+            ->select('student_profiles.*')
             ->get();
 
         return [
@@ -126,15 +132,14 @@ new #[Layout('components.teacher.layouts.app')] class extends Component {
     </x-ui.alert>
 
     {{-- Students Table --}}
-    <x-ui.card shadow padding="false">
+    <x-ui.card shadow padding="false" class="overflow-hidden">
         <x-ui.table 
             :headers="[
-                ['key' => 'name', 'label' => __('Nama Siswa')],
-                ['key' => 'nis', 'label' => __('NIS / NISN')],
-                ['key' => 'classroom_name', 'label' => __('Kelas')],
-                ['key' => 'level_name', 'label' => __('Jenjang')],
-                ['key' => 'status', 'label' => __('Status')],
-                ['key' => 'actions', 'label' => '', 'class' => 'text-right']
+                ['key' => 'name', 'label' => __('Siswa')],
+                ['key' => 'nis', 'label' => __('NIS'), 'class' => 'hidden lg:table-cell'],
+                ['key' => 'classroom_name', 'label' => __('Kelas'), 'class' => 'hidden sm:table-cell'],
+                ['key' => 'status', 'label' => __('Status'), 'class' => 'hidden md:table-cell'],
+                ['key' => 'actions', 'label' => '', 'class' => 'text-right w-16']
             ]" 
             :rows="$students"
         >
@@ -142,42 +147,41 @@ new #[Layout('components.teacher.layouts.app')] class extends Component {
                 <div class="flex items-center gap-3">
                     <x-ui.avatar 
                         :image="($student->photo && Storage::disk('public')->exists($student->photo)) ? '/storage/'.$student->photo : null" 
-                        fallback="o-user" 
-                        class="!w-10 !h-10 rounded-lg shadow-sm"
+                        icon="o-user" 
+                        class="!w-10 !h-10 rounded-xl shadow-sm hidden sm:grid flex-none"
                     />
                     <div class="flex flex-col">
-                        <span class="font-bold text-slate-900 dark:text-white">{{ $student->profile->user->name }}</span>
-                        <span class="text-[10px] text-slate-400 font-mono tracking-tighter">{{ $student->profile->user->email }}</span>
+                        <span class="font-bold text-slate-900 dark:text-white text-xs sm:text-sm leading-tight">{{ $student->profile->user->name }}</span>
+                        <div class="flex items-center gap-1.5 mt-0.5">
+                            <span class="text-[9px] text-slate-400 font-mono tracking-tighter">{{ $student->nisn ?? $student->nis }}</span>
+                            <span class="sm:hidden text-[9px] bg-slate-100 dark:bg-slate-800 text-slate-500 px-1 rounded font-black uppercase">{{ $student->classroom->name }}</span>
+                        </div>
                     </div>
                 </div>
             @endscope
 
             @scope('cell_nis', $student)
-                <div class="flex flex-col">
-                    <span class="text-sm font-medium text-slate-700 dark:text-slate-300 font-mono italic">{{ $student->nis ?? '-' }}</span>
-                    <span class="text-[10px] uppercase font-bold text-slate-400 tracking-tight">NISN: {{ $student->nisn ?? '-' }}</span>
-                </div>
+                <span class="text-xs font-medium text-slate-600 dark:text-slate-400 font-mono">{{ $student->nis ?? '-' }}</span>
             @endscope
 
             @scope('cell_classroom_name', $student)
-                <x-ui.badge :label="$student->classroom->name" class="bg-slate-100 text-slate-700 dark:bg-slate-800 dark:text-slate-300 text-[10px] font-black" />
-            @endscope
-
-            @scope('cell_level_name', $student)
-                <span class="text-xs text-slate-500 font-medium">{{ $student->classroom->level->name }}</span>
+                <x-ui.badge :label="$student->classroom->name" class="bg-blue-50 text-blue-600 dark:bg-blue-900/30 dark:text-blue-400 text-[10px] font-black border-none" />
             @endscope
 
             @scope('cell_status', $student)
-                @if($student->profile->user->is_active)
-                    <x-ui.badge :label="__('Aktif')" class="bg-emerald-100 text-emerald-700 dark:bg-emerald-900/30 dark:text-emerald-400 text-[10px] font-black" />
-                @else
-                    <x-ui.badge :label="__('Non-Aktif')" class="bg-slate-100 text-slate-500 dark:bg-slate-800 dark:text-slate-500 text-[10px] font-black" />
-                @endif
+                <div class="flex items-center gap-1.5">
+                    <div class="size-1.5 rounded-full {{ $student->profile->user->is_active ? 'bg-emerald-500' : 'bg-slate-300' }}"></div>
+                    <span class="text-[10px] uppercase font-black tracking-widest text-slate-500">{{ $student->profile->user->is_active ? __('Aktif') : __('Non-Aktif') }}</span>
+                </div>
             @endscope
 
             @scope('cell_actions', $student)
-                <div class="flex justify-end gap-1">
-                    <x-ui.button icon="o-chart-bar" wire:click="openPeriodic({{ $student->id }})" ghost class="hover:text-primary" />
+                <div class="flex justify-end pr-2">
+                    <x-ui.button 
+                        icon="o-chart-bar" 
+                        wire:click="openPeriodic({{ $student->id }})" 
+                        class="btn-sm btn-ghost hover:bg-primary/10 hover:text-primary transition-colors h-8 w-8" 
+                    />
                 </div>
             @endscope
         </x-ui.table>
