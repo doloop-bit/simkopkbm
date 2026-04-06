@@ -5,6 +5,85 @@ use Livewire\Attributes\Layout;
 use Livewire\Component;
 
 new #[Layout('components.teacher.layouts.app')] class extends Component {
+    public bool $periodicModal = false;
+    public float $weight = 0;
+    public float $height = 0;
+    public float $head_circumference = 0;
+    public int $semester = 1;
+    public ?int $current_academic_year_id = null;
+    public bool $hasExistingPeriodicData = false;
+    public ?string $periodicDataLastUpdated = null;
+    public ?StudentProfile $editingStudent = null;
+
+    public function mount(): void
+    {
+        $this->current_academic_year_id = \App\Models\AcademicYear::where('is_active', true)->first()?->id;
+    }
+
+    public function openPeriodic(StudentProfile $student): void
+    {
+        $this->editingStudent = $student;
+        $this->loadPeriodicData();
+        $this->periodicModal = true;
+    }
+
+    public function updatedSemester(): void
+    {
+        $this->loadPeriodicData();
+    }
+
+    protected function loadPeriodicData(): void
+    {
+        if ($this->editingStudent) {
+            $existingRecord = \App\Models\StudentPeriodicRecord::where('student_profile_id', $this->editingStudent->id)
+                ->where('academic_year_id', $this->current_academic_year_id)
+                ->where('semester', $this->semester)
+                ->first();
+
+            if ($existingRecord) {
+                $this->weight = $existingRecord->weight;
+                $this->height = $existingRecord->height;
+                $this->head_circumference = $existingRecord->head_circumference;
+                $this->hasExistingPeriodicData = true;
+                $this->periodicDataLastUpdated = $existingRecord->updated_at->diffForHumans();
+            } else {
+                $this->weight = 0;
+                $this->height = 0;
+                $this->head_circumference = 0;
+                $this->hasExistingPeriodicData = false;
+                $this->periodicDataLastUpdated = null;
+            }
+        }
+    }
+
+    public function savePeriodic(int $studentProfileId): void
+    {
+        $this->validate([
+            'weight' => 'required|numeric|min:0',
+            'height' => 'required|numeric|min:0',
+            'head_circumference' => 'required|numeric|min:0',
+            'semester' => 'required|integer|in:1,2',
+        ]);
+
+        \App\Models\StudentPeriodicRecord::updateOrCreate(
+            [
+                'student_profile_id' => $studentProfileId,
+                'academic_year_id' => $this->current_academic_year_id,
+                'semester' => $this->semester,
+            ],
+            [
+                'weight' => $this->weight,
+                'height' => $this->height,
+                'head_circumference' => $this->head_circumference,
+                'recorded_by' => auth()->id(),
+            ],
+        );
+
+        $this->periodicModal = false;
+        $this->reset(['weight', 'height', 'head_circumference', 'semester', 'hasExistingPeriodicData', 'periodicDataLastUpdated']);
+        session()->flash('success', __('Data periodik berhasil disimpan!'));
+    }
+
     public function with(): array
     {
         $teacher = auth()->user();
@@ -25,6 +104,12 @@ new #[Layout('components.teacher.layouts.app')] class extends Component {
 <div class="p-6 space-y-6 text-slate-900 dark:text-white pb-24 md:pb-6">
     {{-- Header --}}
     <x-ui.header :title="__('Daftar Siswa')" :subtitle="__('Siswa di kelas yang Anda ampu')" separator />
+
+    @if (session('success'))
+        <x-ui.alert :title="__('Berhasil')" icon="o-check-circle" class="bg-emerald-50 text-emerald-800 border-emerald-100" dismissible>
+            {{ session('success') }}
+        </x-ui.alert>
+    @endif
 
     {{-- Classroom Filter Info --}}
     <x-ui.alert icon="o-information-circle" class="bg-blue-50 text-blue-800 border-blue-100 shadow-sm">
@@ -48,7 +133,8 @@ new #[Layout('components.teacher.layouts.app')] class extends Component {
                 ['key' => 'nis', 'label' => __('NIS / NISN')],
                 ['key' => 'classroom_name', 'label' => __('Kelas')],
                 ['key' => 'level_name', 'label' => __('Jenjang')],
-                ['key' => 'status', 'label' => __('Status')]
+                ['key' => 'status', 'label' => __('Status')],
+                ['key' => 'actions', 'label' => '', 'class' => 'text-right']
             ]" 
             :rows="$students"
         >
@@ -88,6 +174,12 @@ new #[Layout('components.teacher.layouts.app')] class extends Component {
                     <x-ui.badge :label="__('Non-Aktif')" class="bg-slate-100 text-slate-500 dark:bg-slate-800 dark:text-slate-500 text-[10px] font-black" />
                 @endif
             @endscope
+
+            @scope('cell_actions', $student)
+                <div class="flex justify-end gap-1">
+                    <x-ui.button icon="o-chart-bar" wire:click="openPeriodic({{ $student->id }})" ghost class="hover:text-primary" />
+                </div>
+            @endscope
         </x-ui.table>
 
         @if($students->isEmpty())
@@ -102,4 +194,42 @@ new #[Layout('components.teacher.layouts.app')] class extends Component {
             </div>
         @endif
     </x-ui.card>
+
+    {{-- Periodic Data Modal --}}
+    <x-ui.modal wire:model="periodicModal" persistent>
+        <x-ui.header :title="__('Data Periodik Siswa')" :subtitle="__('Input data berat badan, tinggi, dan lingkar kepala.')" separator />
+
+        <form wire:submit.prevent="savePeriodic({{ $editingStudent->id ?? 0 }})" class="space-y-6">
+            @if($hasExistingPeriodicData)
+                <x-ui.alert :title="__('Data sudah ada')" icon="o-information-circle" class="bg-blue-50 text-blue-800 border-blue-100 shadow-sm">
+                    {{ __('Terakhir diupdate') }} {{ $periodicDataLastUpdated }}
+                </x-ui.alert>
+            @else
+                <x-ui.alert :title="__('Belum ada data')" icon="o-exclamation-triangle" class="bg-amber-50 text-amber-800 border-amber-100 shadow-sm">
+                    {{ __('Belum ada data untuk semester ini.') }}
+                </x-ui.alert>
+            @endif
+
+            <div class="space-y-4">
+                <x-ui.select 
+                    wire:model.live="semester" 
+                    :label="__('Semester')" 
+                    :options="[
+                        ['id' => 1, 'name' => __('Ganjil (1)')],
+                        ['id' => 2, 'name' => __('Genap (2)')],
+                    ]"
+                    required
+                />
+
+                <x-ui.input type="number" step="0.5" wire:model="weight" :label="__('Berat Badan (kg)')" suffix="kg" required />
+                <x-ui.input type="number" step="1" wire:model="height" :label="__('Tinggi Badan (cm)')" suffix="cm" required />
+                <x-ui.input type="number" step="0.1" wire:model="head_circumference" :label="__('Lingkar Kepala (cm)')" suffix="cm" required />
+            </div>
+
+            <div class="flex justify-end gap-2 pt-4 border-t border-slate-100 dark:border-slate-800">
+                <x-ui.button :label="__('Batal')" ghost @click="show = false" />
+                <x-ui.button :label="__('Simpan Data')" type="submit" class="btn-primary" spinner="savePeriodic" />
+            </div>
+        </form>
+    </x-ui.modal>
 </div>

@@ -10,11 +10,20 @@ class ExtracurricularActivity extends Model
 {
     protected $fillable = [
         'level_id',
+        'teacher_id',
         'name',
         'description',
         'instructor',
         'is_active',
     ];
+
+    /**
+     * Get the teacher that owns the activity.
+     */
+    public function teacher(): BelongsTo
+    {
+        return $this->belongsTo(User::class, 'teacher_id');
+    }
 
     protected $casts = [
         'is_active' => 'boolean',

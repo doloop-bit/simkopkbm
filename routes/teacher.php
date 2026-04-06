@@ -17,8 +17,13 @@ Route::middleware(['auth', 'verified', 'role:guru'])->prefix('teacher')->name('t
     // Dashboard
     Route::livewire('/dashboard', 'teacher.dashboard')->name('dashboard');
 
-    // Students - filtered by assigned classrooms
+    // Data Master
+    Route::livewire('/profile', 'teacher.profile')->name('profile');
     Route::livewire('/students', 'teacher.data-master.students.index')->name('students.index');
+
+    // Academic
+    Route::livewire('/subjects', 'teacher.academic.subjects')->name('academic.subjects');
+    Route::livewire('/extracurriculars', 'teacher.academic.extracurriculars')->name('academic.extracurriculars');
 
     // Report Card & Assessments
     Route::livewire('/report-cards', 'teacher.report-card.index')->name('report-cards');
