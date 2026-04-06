@@ -2,12 +2,18 @@
     'item' => null,
     'value' => null,
     'subValue' => null,
+    'sub_value' => null, // Support for alternate name
     'avatar' => null,
     'icon' => null,
+    'actions' => null,
 ])
 
+@php
+    $subValue = $subValue ?? $sub_value;
+@endphp
+
 <div {{ $attributes->merge(['class' => 'flex items-center gap-3 py-1 bg-transparent']) }}>
-    @if($avatar || $avatar = $slot->name === 'avatar')
+    @if($avatar)
         <div class="shrink-0">
             {{ $avatar }}
         </div>
@@ -21,14 +27,14 @@
         <div class="text-sm font-semibold text-slate-900 dark:text-white truncate">
             {{ $value ?? $slot }}
         </div>
-        @if($subValue || $subValue = $slot->name === 'sub-value')
+        @if($subValue)
             <div class="text-xs text-slate-500 dark:text-slate-400 truncate">
                 {{ $subValue }}
             </div>
         @endif
     </div>
 
-    @if($actions = $slot->name === 'actions')
+    @if($actions)
         <div class="shrink-0 flex items-center gap-1">
             {{ $actions }}
         </div>

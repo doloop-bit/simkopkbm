@@ -36,20 +36,25 @@
         </x-ui.menu-sub>
     @endif
 
-    <x-ui.menu-sub title="Penilaian & Raport" icon="o-pencil-square" :active="request()->routeIs('admin.assessments.*') || request()->routeIs('admin.report-card.*')">
-        @if(auth()->user()->isAdmin() || auth()->user()->teachesPaudLevel())
-            <x-ui.menu-item title="Penilaian PAUD" icon="o-clipboard-document-check" :link="route('admin.assessments.competency')" />
-        @endif
-        <x-ui.menu-item title="Raport Kesetaraan" icon="o-document-chart-bar" :link="route('admin.report-card.grading')" />
-    </x-ui.menu-sub>
+    @if(auth()->user()->isAdmin() || auth()->user()->isGuru())
+        <x-ui.menu-sub title="Penilaian & Raport" icon="o-pencil-square" :active="request()->routeIs('admin.assessments.*') || request()->routeIs('admin.report-card.*')">
+            @if(auth()->user()->isAdmin() || auth()->user()->teachesPaudLevel())
+                <x-ui.menu-item title="Penilaian PAUD" icon="o-clipboard-document-check" :link="route('admin.assessments.competency')" />
+            @endif
+            <x-ui.menu-item title="Raport Kesetaraan" icon="o-document-chart-bar" :link="route('admin.report-card.grading')" />
+        </x-ui.menu-sub>
+    @endif
 
-    @if(auth()->user()->isAdmin())
+    @if(auth()->user()->isAdmin() || auth()->user()->isTreasurer())
         <x-ui.menu-sub title="Keuangan" icon="o-banknotes" :active="request()->routeIs('financial.*')">
             <x-ui.menu-item title="Transaksi Keuangan" icon="o-wallet" :link="route('financial.transactions')" />
             <x-ui.menu-item title="RAB / Anggaran" icon="o-document-currency-dollar" :link="route('financial.budget-plans')" />
         </x-ui.menu-sub>
 
-        <x-ui.menu-item title="Konten Web" icon="o-globe-alt" :link="route('admin.school-profile.edit')" />
+        @if(auth()->user()->isAdmin())
+            <x-ui.menu-item title="Konten Web" icon="o-globe-alt" :link="route('admin.school-profile.edit')" />
+        @endif
+
         <x-ui.menu-item title="Laporan" icon="o-chart-bar" :link="route('reports')" />
     @endif
 </x-ui.menu>
