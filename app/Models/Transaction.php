@@ -25,6 +25,7 @@ class Transaction extends Model
         return [
             'payment_date' => 'date',
             'amount' => 'decimal:2',
+            'attachment' => 'array',
         ];
     }
 

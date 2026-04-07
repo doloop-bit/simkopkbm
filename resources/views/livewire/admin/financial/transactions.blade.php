@@ -24,7 +24,7 @@ new #[Layout('components.admin.layouts.app')] class extends Component {
     public string $payment_date = '';
     public string $reference_number = '';
     public string $notes = '';
-    public $attachment;
+    public $attachments = [];
 
     // Income Specific
     public ?int $fee_category_id = null;
@@ -48,7 +48,7 @@ new #[Layout('components.admin.layouts.app')] class extends Component {
 
     public function switchType(string $type) {
         $this->type = $type;
-        $this->reset(['student_id', 'student_search', 'selectedBilling', 'fee_category_id', 'budget_plan_item_id', 'pay_amount', 'reference_number', 'notes', 'attachment']);
+        $this->reset(['student_id', 'student_search', 'selectedBilling', 'fee_category_id', 'budget_plan_item_id', 'pay_amount', 'reference_number', 'notes', 'attachments']);
         
         if ($type === 'expense') {
             $activePlan = BudgetPlan::where('is_active', true)->first();
@@ -103,7 +103,8 @@ new #[Layout('components.admin.layouts.app')] class extends Component {
             'pay_amount' => 'required|numeric|min:1',
             'payment_method' => 'required|string',
             'payment_date' => 'required|date',
-            'attachment' => 'nullable|file|max:2048|mimes:jpg,jpeg,png,pdf',
+            'attachments' => 'required|array|min:1',
+            'attachments.*' => 'file|max:2048|mimes:jpg,jpeg,png,pdf',
         ];
 
         if ($this->type === 'income') {
@@ -118,9 +119,11 @@ new #[Layout('components.admin.layouts.app')] class extends Component {
 
         try {
             DB::transaction(function () {
-                $attachmentPath = null;
-                if ($this->attachment) {
-                    $attachmentPath = $this->attachment->store('transaction-proofs', 'public');
+                $attachmentPaths = [];
+                if ($this->attachments) {
+                    foreach ($this->attachments as $file) {
+                        $attachmentPaths[] = $file->store('transaction-proofs', 'public');
+                    }
                 }
 
                 if ($this->type === 'income') {
@@ -149,7 +152,7 @@ new #[Layout('components.admin.layouts.app')] class extends Component {
                         'payment_method' => $this->payment_method,
                         'reference_number' => $this->reference_number,
                         'notes' => $this->notes,
-                        'attachment' => $attachmentPath,
+                        'attachment' => $attachmentPaths,
                     ]);
 
                     // Update Billing
@@ -177,7 +180,7 @@ new #[Layout('components.admin.layouts.app')] class extends Component {
                         'payment_method' => $this->payment_method,
                         'reference_number' => $this->reference_number,
                         'notes' => $this->notes,
-                        'attachment' => $attachmentPath,
+                        'attachment' => $attachmentPaths,
                     ]);
 
                     session()->flash('success', __('Pengeluaran berhasil dicatat.'));
@@ -185,7 +188,7 @@ new #[Layout('components.admin.layouts.app')] class extends Component {
             });
 
             // 3. Reset Form on Success
-            $this->reset(['selectedBilling', 'student_id', 'student_search', 'fee_category_id', 'budget_plan_item_id', 'pay_amount', 'reference_number', 'notes', 'attachment']);
+            $this->reset(['selectedBilling', 'student_id', 'student_search', 'fee_category_id', 'budget_plan_item_id', 'pay_amount', 'reference_number', 'notes', 'attachments']);
             
             // Re-select budget plan if was set before reset but only if we want to stay on expense form
             if ($this->type === 'expense') {
@@ -415,51 +418,63 @@ new #[Layout('components.admin.layouts.app')] class extends Component {
                                 </label>
                                 
                                 <div class="space-y-3">
-                                    @if($attachment && method_exists($attachment, 'temporaryUrl'))
-                                        <div class="relative w-full aspect-video rounded-2xl overflow-hidden bg-slate-100 dark:bg-slate-800 border border-slate-200 dark:border-slate-700">
-                                            @if(in_array($attachment->getClientOriginalExtension(), ['jpg', 'jpeg', 'png']))
-                                                <img src="{{ $attachment->temporaryUrl() }}" class="w-full h-full object-cover">
-                                            @else
-                                                <div class="flex flex-col items-center justify-center h-full">
-                                                    <x-ui.icon name="o-document-check" class="size-12 text-emerald-500 mb-2" />
-                                                    <span class="text-xs font-black uppercase text-slate-400 tracking-widest">{{ $attachment->getClientOriginalName() }}</span>
+                                    @if(count($attachments) > 0)
+                                        <div class="grid grid-cols-2 gap-3 mb-3">
+                                            @foreach($attachments as $index => $file)
+                                                <div class="relative w-full aspect-video rounded-xl overflow-hidden bg-slate-100 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 group">
+                                                    @if(in_array($file->getClientOriginalExtension(), ['jpg', 'jpeg', 'png']))
+                                                        <img src="{{ $file->temporaryUrl() }}" class="w-full h-full object-cover">
+                                                    @else
+                                                        <div class="flex flex-col items-center justify-center h-full">
+                                                            <x-ui.icon name="o-document-check" class="size-6 text-emerald-500 mb-1" />
+                                                            <span class="text-[8px] font-black uppercase text-slate-400 tracking-widest text-center px-1 truncate w-full">{{ $file->getClientOriginalName() }}</span>
+                                                        </div>
+                                                    @endif
+                                                    <button 
+                                                        type="button"
+                                                        wire:click="$set('attachments.{{ $index }}', null)" 
+                                                        class="absolute top-1 right-1 size-6 bg-rose-500 hover:bg-rose-600 text-white rounded-full shadow-lg flex items-center justify-center transition-all opacity-0 group-hover:opacity-100"
+                                                    >
+                                                        <x-ui.icon name="o-x-mark" class="size-3" />
+                                                    </button>
                                                 </div>
-                                            @endif
-                                            <button 
-                                                type="button"
-                                                wire:click="$set('attachment', null)" 
-                                                class="absolute top-2 right-2 size-8 bg-rose-500 hover:bg-rose-600 text-white rounded-full shadow-lg flex items-center justify-center transition-all"
-                                            >
-                                                <x-ui.icon name="o-x-mark" class="size-4" />
-                                            </button>
+                                            @endforeach
                                         </div>
-                                    @else
-                                        <div 
-                                            x-data="{ isDragging: false }"
-                                            @dragover.prevent="isDragging = true"
-                                            @dragleave.prevent="isDragging = false"
-                                            @drop.prevent="isDragging = false"
-                                            class="relative"
-                                        >
-                                            <label 
-                                                class="flex flex-col items-center justify-center w-full h-32 px-4 transition-all duration-200 bg-white dark:bg-slate-900 border-2 border-dashed rounded-2xl cursor-pointer hover:bg-slate-50 dark:hover:bg-slate-800/50"
-                                                :class="isDragging ? 'border-primary ring-4 ring-primary/10 bg-primary/5' : 'border-slate-200 dark:border-slate-700'"
-                                            >
-                                                <div class="flex flex-col items-center justify-center pt-5 pb-6">
-                                                    <x-ui.icon name="o-cloud-arrow-up" class="w-8 h-8 mb-3 text-slate-400" />
-                                                    <p class="mb-1 text-xs text-slate-500">
-                                                        <span class="font-bold text-primary uppercase tracking-wide">{{ __('Klik untuk upload') }}</span>
-                                                        {{ __('atau drag and drop') }}
-                                                    </p>
-                                                    <p class="text-[11px] items-center italic text-slate-400">PNG, JPG, PDF (Max. 2MB)</p>
-                                                </div>
-                                                <input wire:model="attachment" type="file" class="hidden" accept="image/*,.pdf" />
-                                            </label>
-                                            @error('attachment') <span class="text-xs text-rose-500 mt-1 block">{{ $message }}</span> @enderror
-                                        </div>
+
+                                        @php
+                                            // Cleanup nulls from the array if user deletes some files
+                                            $this->attachments = array_filter($this->attachments);
+                                        @endphp
                                     @endif
+
+                                    <div 
+                                        x-data="{ isDragging: false }"
+                                        @dragover.prevent="isDragging = true"
+                                        @dragleave.prevent="isDragging = false"
+                                        @drop.prevent="isDragging = false"
+                                        class="relative"
+                                    >
+                                        <label 
+                                            class="flex flex-col items-center justify-center w-full h-32 px-4 transition-all duration-200 bg-white dark:bg-slate-900 border-2 border-dashed rounded-2xl cursor-pointer hover:bg-slate-50 dark:hover:bg-slate-800/50"
+                                            :class="isDragging ? 'border-primary ring-4 ring-primary/10 bg-primary/5' : 'border-slate-200 dark:border-slate-700'"
+                                        >
+                                            <div class="flex flex-col items-center justify-center pt-5 pb-6">
+                                                <x-ui.icon name="o-cloud-arrow-up" class="w-8 h-8 mb-3 text-slate-400" />
+                                                <p class="mb-1 text-xs text-slate-500 text-center">
+                                                    <span class="font-bold text-primary uppercase tracking-wide">{{ __('Klik untuk upload') }}</span>
+                                                    {{ __('atau drag and drop') }}
+                                                    <br>
+                                                    <span class="text-[10px] font-bold text-slate-400">{{ __('(Boleh pilih banyak file sekaligus)') }}</span>
+                                                </p>
+                                                <p class="text-[11px] items-center italic text-slate-400">PNG, JPG, PDF (Max. 2MB)</p>
+                                            </div>
+                                            <input wire:model="attachments" type="file" class="hidden" accept="image/*,.pdf" multiple />
+                                        </label>
+                                        @error('attachments') <span class="text-xs text-rose-500 mt-1 block font-bold">{{ $message }}</span> @enderror
+                                        @error('attachments.*') <span class="text-xs text-rose-500 mt-1 block">{{ $message }}</span> @enderror
+                                    </div>
                                     
-                                    <div wire:loading wire:target="attachment" class="text-[10px] font-black uppercase text-emerald-600 tracking-widest animate-pulse">
+                                    <div wire:loading wire:target="attachments" class="text-[10px] font-black uppercase text-emerald-600 tracking-widest animate-pulse">
                                         {{ __('Sedang mengunggah file...') }}
                                     </div>
                                 </div>
@@ -525,9 +540,13 @@ new #[Layout('components.admin.layouts.app')] class extends Component {
                                 <div class="flex items-center gap-2">
                                     <span class="font-semibold text-slate-900 dark:text-white">{{ $tx->budgetItem?->name ?? __('RAB Item') }}</span>
                                     @if($tx->attachment)
-                                        <a href="{{ Storage::url($tx->attachment) }}" target="_blank" class="p-1 bg-emerald-50 text-emerald-600 rounded-lg hover:bg-emerald-100 transition-colors" title="{{ __('Lihat Bukti') }}">
-                                            <x-ui.icon name="o-paper-clip" class="size-3" />
-                                        </a>
+                                        <div class="flex gap-1">
+                                            @foreach((array)$tx->attachment as $file)
+                                                <a href="{{ Storage::url($file) }}" target="_blank" class="p-1 bg-emerald-50 text-emerald-600 rounded-lg hover:bg-emerald-100 transition-colors" title="{{ __('Lihat Bukti') }}">
+                                                    <x-ui.icon name="o-paper-clip" class="size-3" />
+                                                </a>
+                                            @endforeach
+                                        </div>
                                     @endif
                                 </div>
                                 <span class="text-[10px] font-semibold uppercase tracking-wide text-slate-500 truncate max-w-[150px]">{{ $tx->budgetPlan?->title ?? __('RAB Terpadu') }}</span>
