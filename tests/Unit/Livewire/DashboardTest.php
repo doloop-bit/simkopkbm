@@ -1,14 +1,16 @@
 <?php
 
+declare(strict_types=1);
+
 use App\Models\User;
-use Livewire\Volt\Volt;
+use Livewire\Livewire;
 
 it('can render', function () {
-    $user = User::factory()->create();
+    $this->withoutVite();
+    $user = User::factory()->create(['role' => 'admin']);
 
     $this->actingAs($user);
 
-    $component = Volt::test('dashboard');
-
-    $component->assertSee('Selamat Datang, '.$user->name);
+    Livewire::test('admin.dashboard')
+        ->assertSee('Selamat Datang, '.$user->name);
 });

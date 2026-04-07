@@ -94,7 +94,7 @@ trait HandlesGradingAssessment
         // Security check for Guru
         if (auth()->user()->isGuru() && (! auth()->user()->hasAccessToClassroom((int) $this->classroom_id) || ! auth()->user()->hasAccessToSubject((int) $this->subject_id))) {
             $this->grades_data = [];
-            \Flux::toast(variant: 'danger', text: 'Anda tidak memiliki akses ke data ini.');
+            $this->dispatch('toast', type: 'error', message: 'Anda tidak memiliki akses ke data ini.');
 
             return;
         }
@@ -139,7 +139,7 @@ trait HandlesGradingAssessment
     public function save(): void
     {
         if (! $this->canEditAssessments()) {
-            \Flux::toast(variant: 'danger', text: 'Anda tidak memiliki izin untuk menyimpan data.');
+            $this->dispatch('toast', type: 'error', message: 'Anda tidak memiliki izin untuk menyimpan data.');
 
             return;
         }
@@ -150,7 +150,7 @@ trait HandlesGradingAssessment
 
         // Security check for Guru
         if (auth()->user()->isGuru() && (! auth()->user()->hasAccessToClassroom((int) $this->classroom_id) || ! auth()->user()->hasAccessToSubject((int) $this->subject_id))) {
-            \Flux::toast(variant: 'danger', text: 'Akses ditolak.');
+            $this->dispatch('toast', type: 'error', message: 'Akses ditolak.');
 
             return;
         }
@@ -160,7 +160,7 @@ trait HandlesGradingAssessment
             if (! empty($data['best_tp_ids']) && ! empty($data['improvement_tp_ids'])) {
                 if (array_intersect($data['best_tp_ids'], $data['improvement_tp_ids'])) {
                     $studentName = User::find($studentId)?->name ?? 'Siswa';
-                    \Flux::toast(variant: 'danger', text: "TP yang sama tidak boleh dipilih sebagai Terbaik dan Perlu Peningkatan sekaligus untuk $studentName.");
+            $this->dispatch('toast', type: 'error', message: "TP yang sama tidak boleh dipilih sebagai Terbaik dan Perlu Peningkatan sekaligus untuk $studentName.");
 
                     return;
                 }
@@ -194,7 +194,7 @@ trait HandlesGradingAssessment
             }
         });
 
-        \Flux::toast('Data penilaian rapor berhasil disimpan.');
+        $this->dispatch('toast', type: 'success', message: 'Data penilaian rapor berhasil disimpan.');
     }
 
     public function getFilteredTps()

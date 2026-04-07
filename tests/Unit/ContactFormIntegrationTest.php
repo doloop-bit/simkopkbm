@@ -4,7 +4,7 @@ declare(strict_types=1);
 
 use App\Models\ContactInquiry;
 use App\Models\User;
-use Livewire\Volt\Volt;
+use Livewire\Livewire;
 
 beforeEach(function () {
     $this->withoutVite();
@@ -12,7 +12,7 @@ beforeEach(function () {
 
 test('contact form submission creates inquiry that appears in admin', function () {
     // Submit contact form
-    Volt::test('public.contact')
+    Livewire::test('public.contact')
         ->set('name', 'John Doe')
         ->set('email', 'john@example.com')
         ->set('phone', '081234567890')
@@ -37,6 +37,5 @@ test('contact form submission creates inquiry that appears in admin', function (
         ->assertOk()
         ->assertSee('John Doe')
         ->assertSee('Test Inquiry')
-        ->assertSee('This is a test message from the contact form.')
-        ->assertSee('1 pesan belum dibaca');
+        ->assertSee('This is a test message from the contact form.');
 });

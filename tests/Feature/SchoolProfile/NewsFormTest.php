@@ -1,30 +1,31 @@
 <?php
 
+
+
 declare(strict_types=1);
 
 use App\Models\NewsArticle;
 use App\Models\User;
 use Illuminate\Http\UploadedFile;
 use Illuminate\Support\Facades\Storage;
-use Livewire\Volt\Volt;
-
+use Livewire\Livewire;
 use function Pest\Laravel\actingAs;
 
 beforeEach(function () {
     $this->withoutVite();
     $this->user = User::factory()->create(['role' => 'admin']);
-    actingAs($this->user);
+    $this->actingAs($this->user);
 });
 
 test('admin can access news create form', function () {
-    Volt::test('admin.news.form')
+    Livewire::test('admin.web-content.news.form')
         ->assertOk()
-        ->assertSee('Tambah Berita')
-        ->assertSee('Judul Artikel');
+        ->assertSee('Tulis Berita Baru')
+        ->assertSee('Judul Utama Berita');
 });
 
 test('admin can create news article', function () {
-    Volt::test('admin.news.form')
+    Livewire::test('admin.web-content.news.form')
         ->set('title', 'Artikel Berita Baru')
         ->set('content', 'Ini adalah konten artikel berita yang baru.')
         ->set('status', 'draft')
@@ -41,7 +42,7 @@ test('admin can create news article with featured image', function () {
 
     $file = UploadedFile::fake()->image('featured.jpg', 1200, 800);
 
-    Volt::test('admin.news.form')
+    Livewire::test('admin.web-content.news.form')
         ->set('title', 'Artikel dengan Gambar')
         ->set('content', 'Konten artikel dengan gambar unggulan.')
         ->set('status', 'published')
@@ -57,7 +58,7 @@ test('admin can create news article with featured image', function () {
 });
 
 test('news article form validates required fields', function () {
-    Volt::test('admin.news.form')
+    Livewire::test('admin.web-content.news.form')
         ->set('title', '')
         ->set('content', '')
         ->set('publishedAt', '')
@@ -67,7 +68,7 @@ test('news article form validates required fields', function () {
 
 test('news article form generates unique slug', function () {
     // Create first article
-    Volt::test('admin.news.form')
+    Livewire::test('admin.web-content.news.form')
         ->set('title', 'Artikel Sama')
         ->set('content', 'Konten pertama')
         ->set('status', 'draft')
@@ -76,7 +77,7 @@ test('news article form generates unique slug', function () {
         ->assertHasNoErrors();
 
     // Create second article with same title
-    Volt::test('admin.news.form')
+    Livewire::test('admin.web-content.news.form')
         ->set('title', 'Artikel Sama')
         ->set('content', 'Konten kedua')
         ->set('status', 'draft')
@@ -97,7 +98,7 @@ test('admin can edit existing news article', function () {
         'status' => 'draft',
     ]);
 
-    Volt::test('admin.news.form', ['id' => $article->id])
+    Livewire::test('admin.web-content.news.form', ['id' => $article->id])
         ->assertSet('title', 'Artikel Lama')
         ->assertSet('content', 'Konten lama')
         ->set('title', 'Artikel Diperbarui')
@@ -122,7 +123,7 @@ test('admin can remove featured image from article', function () {
 
     Storage::disk('public')->assertExists($path);
 
-    Volt::test('admin.news.form', ['id' => $article->id])
+    Livewire::test('admin.web-content.news.form', ['id' => $article->id])
         ->call('removeFeaturedImage')
         ->assertHasNoErrors();
 
@@ -134,7 +135,7 @@ test('admin can remove featured image from article', function () {
 test('news article form auto-generates excerpt if not provided', function () {
     $longContent = str_repeat('Lorem ipsum dolor sit amet. ', 50);
 
-    Volt::test('admin.news.form')
+    Livewire::test('admin.web-content.news.form')
         ->set('title', 'Artikel Tanpa Ringkasan')
         ->set('content', $longContent)
         ->set('status', 'draft')
@@ -152,7 +153,7 @@ test('news article form validates image file type', function () {
 
     $file = UploadedFile::fake()->create('document.pdf', 1000);
 
-    Volt::test('admin.news.form')
+    Livewire::test('admin.web-content.news.form')
         ->set('title', 'Artikel Test')
         ->set('content', 'Konten test')
         ->set('status', 'draft')
@@ -168,7 +169,7 @@ test('news article form validates image file size', function () {
     // Create a file larger than 5MB (5120KB)
     $file = UploadedFile::fake()->image('large.jpg')->size(6000);
 
-    Volt::test('admin.news.form')
+    Livewire::test('admin.web-content.news.form')
         ->set('title', 'Artikel Test')
         ->set('content', 'Konten test')
         ->set('status', 'draft')
@@ -179,7 +180,7 @@ test('news article form validates image file size', function () {
 });
 
 test('news article form sets author to current user', function () {
-    Volt::test('admin.news.form')
+    Livewire::test('admin.web-content.news.form')
         ->set('title', 'Artikel Baru')
         ->set('content', 'Konten artikel')
         ->set('status', 'draft')
@@ -192,7 +193,7 @@ test('news article form sets author to current user', function () {
 });
 
 test('news article form auto-generates meta title and description if not provided', function () {
-    Volt::test('admin.news.form')
+    Livewire::test('admin.web-content.news.form')
         ->set('title', 'Artikel SEO')
         ->set('content', 'Ini adalah konten artikel yang akan digunakan untuk meta description.')
         ->set('status', 'draft')

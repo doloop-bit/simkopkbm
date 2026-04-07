@@ -1,10 +1,12 @@
 <?php
 
+declare(strict_types=1);
+
 use App\Models\SchoolProfile;
 use App\Models\User;
 use Illuminate\Http\UploadedFile;
 use Illuminate\Support\Facades\Storage;
-use Livewire\Volt\Volt;
+use Livewire\Livewire;
 
 beforeEach(function () {
     $this->withoutVite();
@@ -16,7 +18,7 @@ test('admin can access school profile edit page', function () {
     $this->actingAs($admin)
         ->get(route('admin.school-profile.edit'))
         ->assertOk()
-        ->assertSeeLivewire('admin.school-profile.edit');
+        ->assertSeeLivewire('admin.web-content.school-profile.edit');
 });
 
 test('non-admin cannot access school profile edit page', function () {
@@ -36,8 +38,8 @@ test('admin can create new school profile', function () {
     Storage::fake('public');
     $admin = User::factory()->create(['role' => 'admin']);
 
-    Volt::actingAs($admin)
-        ->test('admin.school-profile.edit')
+    Livewire::actingAs($admin)
+        ->test('admin.web-content.school-profile.edit')
         ->set('name', 'PKBM Harapan Bangsa')
         ->set('address', 'Jl. Pendidikan No. 123, Jakarta')
         ->set('phone', '021-12345678')
@@ -61,14 +63,15 @@ test('admin can create new school profile', function () {
 });
 
 test('admin can update existing school profile', function () {
+    Storage::fake('public');
     $admin = User::factory()->create(['role' => 'admin']);
     $profile = SchoolProfile::factory()->create([
         'name' => 'Old Name',
         'is_active' => true,
     ]);
 
-    Volt::actingAs($admin)
-        ->test('admin.school-profile.edit')
+    Livewire::actingAs($admin)
+        ->test('admin.web-content.school-profile.edit')
         ->set('name', 'New Name')
         ->set('address', $profile->address)
         ->set('phone', $profile->phone)
@@ -87,8 +90,8 @@ test('admin can upload school logo', function () {
     $admin = User::factory()->create(['role' => 'admin']);
     $logo = UploadedFile::fake()->image('logo.png', 500, 500);
 
-    Volt::actingAs($admin)
-        ->test('admin.school-profile.edit')
+    Livewire::actingAs($admin)
+        ->test('admin.web-content.school-profile.edit')
         ->set('name', 'PKBM Test')
         ->set('address', 'Test Address')
         ->set('phone', '021-12345678')
@@ -119,8 +122,8 @@ test('logo upload replaces old logo', function () {
 
     $newLogo = UploadedFile::fake()->image('new-logo.png');
 
-    Volt::actingAs($admin)
-        ->test('admin.school-profile.edit')
+    Livewire::actingAs($admin)
+        ->test('admin.web-content.school-profile.edit')
         ->set('logo', $newLogo)
         ->call('save')
         ->assertHasNoErrors();
@@ -144,8 +147,8 @@ test('admin can remove school logo', function () {
     $logoPath = $profile->logo_path;
     Storage::disk('public')->assertExists($logoPath);
 
-    Volt::actingAs($admin)
-        ->test('admin.school-profile.edit')
+    Livewire::actingAs($admin)
+        ->test('admin.web-content.school-profile.edit')
         ->call('removeLogo')
         ->assertHasNoErrors();
 
@@ -157,8 +160,8 @@ test('admin can remove school logo', function () {
 test('required fields are validated', function () {
     $admin = User::factory()->create(['role' => 'admin']);
 
-    Volt::actingAs($admin)
-        ->test('admin.school-profile.edit')
+    Livewire::actingAs($admin)
+        ->test('admin.web-content.school-profile.edit')
         ->set('name', '')
         ->set('address', '')
         ->set('phone', '')
@@ -172,8 +175,8 @@ test('required fields are validated', function () {
 test('email field must be valid email', function () {
     $admin = User::factory()->create(['role' => 'admin']);
 
-    Volt::actingAs($admin)
-        ->test('admin.school-profile.edit')
+    Livewire::actingAs($admin)
+        ->test('admin.web-content.school-profile.edit')
         ->set('name', 'Test School')
         ->set('address', 'Test Address')
         ->set('phone', '021-12345678')
@@ -187,8 +190,8 @@ test('email field must be valid email', function () {
 test('social media urls must be valid urls', function () {
     $admin = User::factory()->create(['role' => 'admin']);
 
-    Volt::actingAs($admin)
-        ->test('admin.school-profile.edit')
+    Livewire::actingAs($admin)
+        ->test('admin.web-content.school-profile.edit')
         ->set('name', 'Test School')
         ->set('address', 'Test Address')
         ->set('phone', '021-12345678')
@@ -206,8 +209,8 @@ test('logo must be an image file', function () {
     $admin = User::factory()->create(['role' => 'admin']);
     $file = UploadedFile::fake()->create('document.pdf', 1000);
 
-    Volt::actingAs($admin)
-        ->test('admin.school-profile.edit')
+    Livewire::actingAs($admin)
+        ->test('admin.web-content.school-profile.edit')
         ->set('name', 'Test School')
         ->set('address', 'Test Address')
         ->set('phone', '021-12345678')
@@ -224,8 +227,8 @@ test('logo must not exceed 5MB', function () {
     $admin = User::factory()->create(['role' => 'admin']);
     $file = UploadedFile::fake()->image('large-logo.png')->size(6000); // 6MB
 
-    Volt::actingAs($admin)
-        ->test('admin.school-profile.edit')
+    Livewire::actingAs($admin)
+        ->test('admin.web-content.school-profile.edit')
         ->set('name', 'Test School')
         ->set('address', 'Test Address')
         ->set('phone', '021-12345678')
@@ -246,8 +249,8 @@ test('logo accepts jpeg, png, and webp formats', function () {
     foreach ($formats as $format) {
         $file = UploadedFile::fake()->image("logo.{$format}");
 
-        Volt::actingAs($admin)
-            ->test('admin.school-profile.edit')
+        Livewire::actingAs($admin)
+            ->test('admin.web-content.school-profile.edit')
             ->set('name', 'Test School')
             ->set('address', 'Test Address')
             ->set('phone', '021-12345678')
@@ -267,8 +270,8 @@ test('logo accepts jpeg, png, and webp formats', function () {
 test('latitude must be between -90 and 90', function () {
     $admin = User::factory()->create(['role' => 'admin']);
 
-    Volt::actingAs($admin)
-        ->test('admin.school-profile.edit')
+    Livewire::actingAs($admin)
+        ->test('admin.web-content.school-profile.edit')
         ->set('name', 'Test School')
         ->set('address', 'Test Address')
         ->set('phone', '021-12345678')
@@ -283,8 +286,8 @@ test('latitude must be between -90 and 90', function () {
 test('longitude must be between -180 and 180', function () {
     $admin = User::factory()->create(['role' => 'admin']);
 
-    Volt::actingAs($admin)
-        ->test('admin.school-profile.edit')
+    Livewire::actingAs($admin)
+        ->test('admin.web-content.school-profile.edit')
         ->set('name', 'Test School')
         ->set('address', 'Test Address')
         ->set('phone', '021-12345678')
@@ -304,17 +307,18 @@ test('component loads existing profile data', function () {
         'is_active' => true,
     ]);
 
-    Volt::actingAs($admin)
-        ->test('admin.school-profile.edit')
+    Livewire::actingAs($admin)
+        ->test('admin.web-content.school-profile.edit')
         ->assertSet('name', 'Existing School')
         ->assertSet('address', 'Existing Address');
 });
 
 test('profile is saved successfully', function () {
+    Storage::fake('public');
     $admin = User::factory()->create(['role' => 'admin']);
 
-    Volt::actingAs($admin)
-        ->test('admin.school-profile.edit')
+    Livewire::actingAs($admin)
+        ->test('admin.web-content.school-profile.edit')
         ->set('name', 'Test School')
         ->set('address', 'Test Address')
         ->set('phone', '021-12345678')
@@ -332,10 +336,11 @@ test('profile is saved successfully', function () {
 });
 
 test('optional fields can be left empty', function () {
+    Storage::fake('public');
     $admin = User::factory()->create(['role' => 'admin']);
 
-    Volt::actingAs($admin)
-        ->test('admin.school-profile.edit')
+    Livewire::actingAs($admin)
+        ->test('admin.web-content.school-profile.edit')
         ->set('name', 'Test School')
         ->set('address', 'Test Address')
         ->set('phone', '021-12345678')

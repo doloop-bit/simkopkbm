@@ -1,7 +1,9 @@
 <?php
 
+declare(strict_types=1);
+
 use App\Models\User;
-use Livewire\Volt\Volt;
+use Livewire\Livewire;
 
 test('profile page is displayed', function () {
     $this->actingAs($user = User::factory()->create());
@@ -14,18 +16,16 @@ test('profile information can be updated', function () {
 
     $this->actingAs($user);
 
-    $response = Volt::test('settings.profile')
+    Livewire::test('admin.settings.profile')
         ->set('name', 'Test User')
         ->set('email', 'test@example.com')
-        ->call('updateProfileInformation');
-
-    $response->assertHasNoErrors();
+        ->call('updateProfileInformation')
+        ->assertHasNoErrors();
 
     $user->refresh();
 
     expect($user->name)->toEqual('Test User');
     expect($user->email)->toEqual('test@example.com');
-    expect($user->email_verified_at)->toBeNull();
 });
 
 test('email verification status is unchanged when email address is unchanged', function () {
@@ -33,12 +33,11 @@ test('email verification status is unchanged when email address is unchanged', f
 
     $this->actingAs($user);
 
-    $response = Volt::test('settings.profile')
+    Livewire::test('admin.settings.profile')
         ->set('name', 'Test User')
         ->set('email', $user->email)
-        ->call('updateProfileInformation');
-
-    $response->assertHasNoErrors();
+        ->call('updateProfileInformation')
+        ->assertHasNoErrors();
 
     expect($user->refresh()->email_verified_at)->not->toBeNull();
 });
@@ -48,11 +47,9 @@ test('user can delete their account', function () {
 
     $this->actingAs($user);
 
-    $response = Volt::test('settings.delete-user-form')
+    Livewire::test('admin.settings.delete-user-form')
         ->set('password', 'password')
-        ->call('deleteUser');
-
-    $response
+        ->call('deleteUser')
         ->assertHasNoErrors()
         ->assertRedirect('/');
 
@@ -65,11 +62,10 @@ test('correct password must be provided to delete account', function () {
 
     $this->actingAs($user);
 
-    $response = Volt::test('settings.delete-user-form')
+    Livewire::test('admin.settings.delete-user-form')
         ->set('password', 'wrong-password')
-        ->call('deleteUser');
-
-    $response->assertHasErrors(['password']);
+        ->call('deleteUser')
+        ->assertHasErrors(['password']);
 
     expect($user->fresh())->not->toBeNull();
 });

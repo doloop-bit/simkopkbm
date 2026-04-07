@@ -197,14 +197,14 @@ trait HandlesReportCardGeneration
                 }
             });
 
-            \Flux::toast('Rapor berhasil dibuat untuk '.count($this->selectedStudents).' siswa.');
+            $this->dispatch('toast', type: 'success', message: 'Rapor berhasil dibuat untuk '.count($this->selectedStudents).' siswa.');
             $this->reset(['selectedStudents', 'teacherNotes', 'characterNotes']);
             if (property_exists($this, 'principalNotes')) {
                 $this->reset(['principalNotes']);
             }
             $this->loadExistingReports();
         } catch (\Exception $e) {
-            \Flux::toast(variant: 'danger', heading: 'Gagal membuat rapor', text: $e->getMessage());
+            $this->dispatch('toast', type: 'error', title: 'Gagal membuat rapor', message: $e->getMessage());
         }
     }
 
@@ -213,7 +213,7 @@ trait HandlesReportCardGeneration
         $reportCard = ReportCard::with(['student', 'classroom.level', 'academicYear'])->find($reportCardId);
 
         if (! $reportCard) {
-            \Flux::toast(variant: 'danger', text: 'Rapor tidak ditemukan.');
+            $this->dispatch('toast', type: 'error', message: 'Rapor tidak ditemukan.');
 
             return;
         }
@@ -247,7 +247,7 @@ trait HandlesReportCardGeneration
         $reportCard = ReportCard::with(['student', 'classroom.level', 'academicYear'])->find($reportCardId);
 
         if (! $reportCard) {
-            \Flux::toast(variant: 'danger', text: 'Rapor tidak ditemukan.');
+            $this->dispatch('toast', type: 'error', message: 'Rapor tidak ditemukan.');
 
             return;
         }
@@ -278,7 +278,7 @@ trait HandlesReportCardGeneration
                 ['Content-Type' => 'application/pdf']
             );
         } catch (\Exception $e) {
-            \Flux::toast(variant: 'danger', heading: 'PDF Error', text: $e->getMessage());
+            $this->dispatch('toast', type: 'error', title: 'PDF Error', message: $e->getMessage());
         }
     }
 
@@ -290,9 +290,9 @@ trait HandlesReportCardGeneration
             $this->ensureAccessToClassroom((int) $reportCard->classroom_id);
             $reportCard->delete();
             $this->loadExistingReports();
-            \Flux::toast('Rapor berhasil dihapus.');
+            $this->dispatch('toast', type: 'success', message: 'Rapor berhasil dihapus.');
         } else {
-            \Flux::toast(variant: 'danger', text: 'Rapor tidak ditemukan.');
+            $this->dispatch('toast', type: 'error', message: 'Rapor tidak ditemukan.');
         }
     }
 

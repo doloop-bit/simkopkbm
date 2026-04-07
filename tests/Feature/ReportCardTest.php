@@ -9,7 +9,7 @@ use App\Models\ScoreCategory;
 use App\Models\StudentProfile;
 use App\Models\Subject;
 use App\Models\User;
-use Livewire\Volt\Volt;
+use Livewire\Livewire;
 
 beforeEach(function () {
     $this->withoutVite();
@@ -59,7 +59,7 @@ test('report card can be generated for students', function () {
 
     $this->actingAs($admin);
 
-    Volt::test('admin.report-card.create')
+    Livewire::test('admin.report-card.create')
         ->set('academicYearId', $academicYear->id)
         ->set('classroomId', $classroom->id)
         ->set('semester', '1')
@@ -95,7 +95,7 @@ test('report card can be exported to pdf', function () {
 
     $this->actingAs($admin);
 
-    Volt::test('admin.report-card.create')
+    Livewire::test('admin.report-card.create')
         ->call('exportPdf', $reportCard->id)
         ->assertSuccessful();
 });
@@ -113,12 +113,21 @@ test('student can view their own report card', function () {
 
     $this->actingAs($student);
 
-    Volt::test('admin.report-card.create')
+    Livewire::test('admin.report-card.create')
         ->call('exportPdf', $reportCard->id)
         ->assertSuccessful();
 });
 
-test('non-admin cannot access report card creation page', function () {
+test('teacher can access their own report card page', function () {
+    $teacher = User::factory()->create(['role' => 'guru']);
+
+    $this->actingAs($teacher)
+        ->get(route('teacher.report-cards'))
+        ->assertSuccessful()
+        ->assertSeeLivewire('teacher.report-card.index');
+});
+
+test('non-admin cannot access admin report card creation page', function () {
     $teacher = User::factory()->create(['role' => 'guru']);
 
     $this->actingAs($teacher)

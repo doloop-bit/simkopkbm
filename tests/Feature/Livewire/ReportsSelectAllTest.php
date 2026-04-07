@@ -10,7 +10,6 @@ use App\Models\StudentProfile;
 use App\Models\Level;
 use App\Models\Classroom;
 use Livewire\Livewire;
-use Livewire\Volt\Volt;
 
 beforeEach(function () {
     $this->user = User::factory()->create(['role' => 'admin']);

@@ -2,10 +2,13 @@
 
 namespace App\Models;
 
+use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 
 class TeacherAssignment extends Model
 {
+    use HasFactory;
+
     protected $fillable = ['teacher_id', 'classroom_id', 'subject_id', 'academic_year_id', 'type'];
 
     public function teacher()

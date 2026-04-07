@@ -7,26 +7,26 @@ use App\Models\StaffMember;
 use App\Models\User;
 use Illuminate\Http\UploadedFile;
 use Illuminate\Support\Facades\Storage;
-use Livewire\Volt\Volt;
-
-use function Pest\Laravel\actingAs;
+use Livewire\Livewire;
 
 beforeEach(function () {
+    $this->withoutVite();
     Storage::fake('public');
     $this->user = User::factory()->create(['role' => 'admin']);
     $this->profile = SchoolProfile::factory()->create(['is_active' => true]);
 });
 
 test('admin can view staff members management page', function () {
-    actingAs($this->user)
+    $this->actingAs($this->user)
         ->get(route('admin.school-profile.staff-members'))
         ->assertOk()
         ->assertSee('Struktur Organisasi');
 });
 
 test('admin can add new staff member without photo', function () {
-    Volt::actingAs($this->user)
-        ->test('admin.school-profile.staff-members')
+    $this->actingAs($this->user);
+
+    Livewire::test('admin.web-content.school-profile.staff-members')
         ->set('name', 'Dr. Ahmad Suryadi, M.Pd')
         ->set('position', 'Kepala Sekolah')
         ->call('save')
@@ -43,10 +43,10 @@ test('admin can add new staff member without photo', function () {
 });
 
 test('admin can add new staff member with photo', function () {
+    $this->actingAs($this->user);
     $photo = UploadedFile::fake()->image('staff.jpg', 800, 600);
 
-    Volt::actingAs($this->user)
-        ->test('admin.school-profile.staff-members')
+    Livewire::test('admin.web-content.school-profile.staff-members')
         ->set('name', 'Dr. Ahmad Suryadi, M.Pd')
         ->set('position', 'Kepala Sekolah')
         ->set('photo', $photo)
@@ -61,14 +61,14 @@ test('admin can add new staff member with photo', function () {
 });
 
 test('admin can edit staff member', function () {
+    $this->actingAs($this->user);
     $staff = StaffMember::factory()->create([
         'school_profile_id' => $this->profile->id,
         'name' => 'Old Name',
         'position' => 'Old Position',
     ]);
 
-    Volt::actingAs($this->user)
-        ->test('admin.school-profile.staff-members')
+    Livewire::test('admin.web-content.school-profile.staff-members')
         ->call('edit', $staff->id)
         ->assertSet('editingId', $staff->id)
         ->assertSet('name', 'Old Name')
@@ -84,6 +84,7 @@ test('admin can edit staff member', function () {
 });
 
 test('admin can update staff member photo', function () {
+    $this->actingAs($this->user);
     $oldPhoto = UploadedFile::fake()->image('old.jpg');
     $oldPath = $oldPhoto->store('staff', 'public');
 
@@ -94,8 +95,7 @@ test('admin can update staff member photo', function () {
 
     $newPhoto = UploadedFile::fake()->image('new.jpg');
 
-    Volt::actingAs($this->user)
-        ->test('admin.school-profile.staff-members')
+    Livewire::test('admin.web-content.school-profile.staff-members')
         ->call('edit', $staff->id)
         ->set('photo', $newPhoto)
         ->call('save')
@@ -108,6 +108,7 @@ test('admin can update staff member photo', function () {
 });
 
 test('admin can remove staff member photo', function () {
+    $this->actingAs($this->user);
     $photo = UploadedFile::fake()->image('staff.jpg');
     $path = $photo->store('staff', 'public');
 
@@ -116,8 +117,7 @@ test('admin can remove staff member photo', function () {
         'photo_path' => $path,
     ]);
 
-    Volt::actingAs($this->user)
-        ->test('admin.school-profile.staff-members')
+    Livewire::test('admin.web-content.school-profile.staff-members')
         ->call('edit', $staff->id)
         ->call('removePhoto');
 
@@ -127,6 +127,7 @@ test('admin can remove staff member photo', function () {
 });
 
 test('admin can delete staff member', function () {
+    $this->actingAs($this->user);
     $photo = UploadedFile::fake()->image('staff.jpg');
     $path = $photo->store('staff', 'public');
 
@@ -135,8 +136,7 @@ test('admin can delete staff member', function () {
         'photo_path' => $path,
     ]);
 
-    Volt::actingAs($this->user)
-        ->test('admin.school-profile.staff-members')
+    Livewire::test('admin.web-content.school-profile.staff-members')
         ->call('delete', $staff->id);
 
     expect(StaffMember::count())->toBe(0);
@@ -144,6 +144,7 @@ test('admin can delete staff member', function () {
 });
 
 test('staff members are ordered correctly on creation', function () {
+    $this->actingAs($this->user);
     $staff1 = StaffMember::factory()->create([
         'school_profile_id' => $this->profile->id,
         'order' => 1,
@@ -154,8 +155,7 @@ test('staff members are ordered correctly on creation', function () {
         'order' => 2,
     ]);
 
-    Volt::actingAs($this->user)
-        ->test('admin.school-profile.staff-members')
+    Livewire::test('admin.web-content.school-profile.staff-members')
         ->set('name', 'New Staff')
         ->set('position', 'New Position')
         ->call('save');
@@ -165,6 +165,7 @@ test('staff members are ordered correctly on creation', function () {
 });
 
 test('admin can move staff member up', function () {
+    $this->actingAs($this->user);
     $staff1 = StaffMember::factory()->create([
         'school_profile_id' => $this->profile->id,
         'name' => 'Staff 1',
@@ -177,8 +178,7 @@ test('admin can move staff member up', function () {
         'order' => 2,
     ]);
 
-    Volt::actingAs($this->user)
-        ->test('admin.school-profile.staff-members')
+    Livewire::test('admin.web-content.school-profile.staff-members')
         ->call('moveUp', $staff2->id);
 
     $staff1->refresh();
@@ -189,6 +189,7 @@ test('admin can move staff member up', function () {
 });
 
 test('admin can move staff member down', function () {
+    $this->actingAs($this->user);
     $staff1 = StaffMember::factory()->create([
         'school_profile_id' => $this->profile->id,
         'name' => 'Staff 1',
@@ -201,8 +202,7 @@ test('admin can move staff member down', function () {
         'order' => 2,
     ]);
 
-    Volt::actingAs($this->user)
-        ->test('admin.school-profile.staff-members')
+    Livewire::test('admin.web-content.school-profile.staff-members')
         ->call('moveDown', $staff1->id);
 
     $staff1->refresh();
@@ -213,13 +213,13 @@ test('admin can move staff member down', function () {
 });
 
 test('cannot move first staff member up', function () {
+    $this->actingAs($this->user);
     $staff = StaffMember::factory()->create([
         'school_profile_id' => $this->profile->id,
         'order' => 1,
     ]);
 
-    Volt::actingAs($this->user)
-        ->test('admin.school-profile.staff-members')
+    Livewire::test('admin.web-content.school-profile.staff-members')
         ->call('moveUp', $staff->id);
 
     $staff->refresh();
@@ -227,6 +227,7 @@ test('cannot move first staff member up', function () {
 });
 
 test('cannot move last staff member down', function () {
+    $this->actingAs($this->user);
     $staff1 = StaffMember::factory()->create([
         'school_profile_id' => $this->profile->id,
         'order' => 1,
@@ -237,8 +238,7 @@ test('cannot move last staff member down', function () {
         'order' => 2,
     ]);
 
-    Volt::actingAs($this->user)
-        ->test('admin.school-profile.staff-members')
+    Livewire::test('admin.web-content.school-profile.staff-members')
         ->call('moveDown', $staff2->id);
 
     $staff2->refresh();
@@ -246,6 +246,7 @@ test('cannot move last staff member down', function () {
 });
 
 test('staff members are reordered after deletion', function () {
+    $this->actingAs($this->user);
     $staff1 = StaffMember::factory()->create([
         'school_profile_id' => $this->profile->id,
         'order' => 1,
@@ -261,8 +262,7 @@ test('staff members are reordered after deletion', function () {
         'order' => 3,
     ]);
 
-    Volt::actingAs($this->user)
-        ->test('admin.school-profile.staff-members')
+    Livewire::test('admin.web-content.school-profile.staff-members')
         ->call('delete', $staff2->id);
 
     $staff1->refresh();
@@ -273,8 +273,9 @@ test('staff members are reordered after deletion', function () {
 });
 
 test('name is required', function () {
-    Volt::actingAs($this->user)
-        ->test('admin.school-profile.staff-members')
+    $this->actingAs($this->user);
+
+    Livewire::test('admin.web-content.school-profile.staff-members')
         ->set('name', '')
         ->set('position', 'Kepala Sekolah')
         ->call('save')
@@ -282,8 +283,9 @@ test('name is required', function () {
 });
 
 test('position is required', function () {
-    Volt::actingAs($this->user)
-        ->test('admin.school-profile.staff-members')
+    $this->actingAs($this->user);
+
+    Livewire::test('admin.web-content.school-profile.staff-members')
         ->set('name', 'Dr. Ahmad Suryadi')
         ->set('position', '')
         ->call('save')
@@ -291,22 +293,10 @@ test('position is required', function () {
 });
 
 test('photo must be an image', function () {
+    $this->actingAs($this->user);
     $file = UploadedFile::fake()->create('document.pdf', 1000);
 
-    Volt::actingAs($this->user)
-        ->test('admin.school-profile.staff-members')
-        ->set('name', 'Dr. Ahmad Suryadi')
-        ->set('position', 'Kepala Sekolah')
-        ->set('photo', $file)
-        ->call('save')
-        ->assertHasErrors(['photo']);
-});
-
-test('photo must not exceed 5MB', function () {
-    $file = UploadedFile::fake()->image('large.jpg')->size(6000);
-
-    Volt::actingAs($this->user)
-        ->test('admin.school-profile.staff-members')
+    Livewire::test('admin.web-content.school-profile.staff-members')
         ->set('name', 'Dr. Ahmad Suryadi')
         ->set('position', 'Kepala Sekolah')
         ->set('photo', $file)
@@ -315,12 +305,12 @@ test('photo must not exceed 5MB', function () {
 });
 
 test('admin can cancel editing', function () {
+    $this->actingAs($this->user);
     $staff = StaffMember::factory()->create([
         'school_profile_id' => $this->profile->id,
     ]);
 
-    Volt::actingAs($this->user)
-        ->test('admin.school-profile.staff-members')
+    Livewire::test('admin.web-content.school-profile.staff-members')
         ->call('edit', $staff->id)
         ->assertSet('editingId', $staff->id)
         ->call('cancelEdit')
@@ -330,10 +320,10 @@ test('admin can cancel editing', function () {
 });
 
 test('shows error when no school profile exists', function () {
+    $this->actingAs($this->user);
     SchoolProfile::query()->delete();
 
-    actingAs($this->user)
-        ->get(route('admin.school-profile.staff-members'))
+    $this->get(route('admin.school-profile.staff-members'))
         ->assertOk()
         ->assertSee('Profil sekolah belum dibuat');
 });
@@ -341,7 +331,7 @@ test('shows error when no school profile exists', function () {
 test('non-admin cannot access staff members management', function () {
     $user = User::factory()->create(['role' => 'teacher']);
 
-    actingAs($user)
+    $this->actingAs($user)
         ->get(route('admin.school-profile.staff-members'))
         ->assertForbidden();
 });

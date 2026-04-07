@@ -1,9 +1,12 @@
 <?php
 
-use Livewire\Volt\Volt;
+use App\Models\User;
+use Livewire\Livewire;
 
 it('can render', function () {
-    $component = Volt::test('reports');
+    $this->actingAs(User::factory()->create(['role' => 'admin']));
 
-    $component->assertSee('');
+    $component = Livewire::test('admin.reports');
+
+    $component->assertOk();
 });

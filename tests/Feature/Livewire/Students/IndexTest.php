@@ -1,9 +1,12 @@
 <?php
 
-use Livewire\Volt\Volt;
+use App\Models\User;
+use Livewire\Livewire;
 
 it('can render', function () {
-    $component = Volt::test('students.index');
+    $this->actingAs(User::factory()->create(['role' => 'admin']));
 
-    $component->assertSee('');
+    $component = Livewire::test('admin.data-master.students.index');
+
+    $component->assertOk();
 });

@@ -7,7 +7,7 @@ use App\Models\Program;
 use App\Models\User;
 use Illuminate\Http\UploadedFile;
 use Illuminate\Support\Facades\Storage;
-use Livewire\Volt\Volt;
+use Livewire\Livewire;
 
 beforeEach(function () {
     $this->withoutVite();
@@ -36,7 +36,7 @@ test('admin can create a program', function () {
     $level = Level::factory()->create(['name' => 'Paket A']);
     $image = UploadedFile::fake()->image('program.jpg', 800, 600);
 
-    Volt::test('admin.web-content.programs.index')
+    Livewire::test('admin.web-content.programs.index')
         ->set('level_id', $level->id)
         ->set('description', 'Program setara SD untuk dewasa')
         ->set('duration', '1 tahun')
@@ -66,7 +66,7 @@ test('admin can edit a program', function () {
         'description' => 'Original Description',
     ]);
 
-    Volt::test('admin.web-content.programs.index')
+    Livewire::test('admin.web-content.programs.index')
         ->call('edit', $program->id)
         ->set('description', 'Updated Description')
         ->call('save')
@@ -84,7 +84,7 @@ test('admin can delete a program', function () {
         'image_path' => $image->store('programs', 'public'),
     ]);
 
-    Volt::test('admin.web-content.programs.index')
+    Livewire::test('admin.web-content.programs.index')
         ->call('delete', $program->id);
 
     expect(Program::find($program->id))->toBeNull();
@@ -97,7 +97,7 @@ test('admin can reorder programs', function () {
     $program1 = Program::factory()->create(['order' => 1]);
     $program2 = Program::factory()->create(['order' => 2]);
 
-    Volt::test('admin.web-content.programs.index')
+    Livewire::test('admin.web-content.programs.index')
         ->call('moveDown', $program1->id);
 
     $program1->refresh();
@@ -110,7 +110,7 @@ test('admin can reorder programs', function () {
 test('program creation requires valid data', function () {
     $this->actingAs($this->admin);
 
-    Volt::test('admin.web-content.programs.index')
+    Livewire::test('admin.web-content.programs.index')
         ->set('level_id', null)
         ->set('description', '')
         ->set('duration', '')
@@ -124,7 +124,7 @@ test('program image must be valid image file', function () {
     $level = Level::factory()->create();
     $invalidFile = UploadedFile::fake()->create('document.pdf', 1000);
 
-    Volt::test('admin.web-content.programs.index')
+    Livewire::test('admin.web-content.programs.index')
         ->set('level_id', $level->id)
         ->set('description', 'Test Description')
         ->set('duration', 'Test Duration')
@@ -139,7 +139,7 @@ test('cannot create duplicate program for same level', function () {
     $level = Level::factory()->create(['name' => 'PAUD']);
     Program::factory()->forLevel($level)->create();
 
-    Volt::test('admin.web-content.programs.index')
+    Livewire::test('admin.web-content.programs.index')
         ->set('level_id', $level->id)
         ->set('description', 'Another program')
         ->set('duration', '1 tahun')

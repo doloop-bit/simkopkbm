@@ -227,7 +227,9 @@ new #[Layout('components.admin.layouts.app')] class extends Component
                         accept="image/jpeg,image/jpg,image/png,image/webp"
                     >
                         @php
-                            $previewUrl = $image ? $image->temporaryUrl() : ($editingId && ($program = \App\Models\Program::find($editingId)) && $program->image_path ? Storage::url($program->image_path) : '/placeholder.png');
+                            $previewUrl = ($image && method_exists($image, 'isPreviewable') && $image->isPreviewable()) 
+                                ? $image->temporaryUrl() 
+                                : ($editingId && ($program = \App\Models\Program::find($editingId)) && $program->image_path ? Storage::url($program->image_path) : '/placeholder.png');
                         @endphp
                         <div class="mt-4 relative group">
                             <img src="{{ $previewUrl }}" class="h-48 w-80 rounded-[2rem] object-cover border-4 border-white dark:border-slate-700 shadow-2xl group-hover:scale-105 transition-transform duration-500" />
