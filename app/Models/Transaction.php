@@ -2,10 +2,13 @@
 
 namespace App\Models;
 
+use App\Models\Concerns\HasTransactionRelationships;
 use Illuminate\Database\Eloquent\Model;
 
 class Transaction extends Model
 {
+    use HasTransactionRelationships;
+
     protected $fillable = [
         'type',
         'student_billing_id',
@@ -28,30 +31,5 @@ class Transaction extends Model
             'amount' => 'decimal:2',
             'attachment' => 'array',
         ];
-    }
-
-    public function billing()
-    {
-        return $this->belongsTo(StudentBilling::class, 'student_billing_id');
-    }
-
-    public function user()
-    {
-        return $this->belongsTo(User::class);
-    }
-
-    public function budgetPlan()
-    {
-        return $this->belongsTo(BudgetPlan::class, 'budget_plan_id');
-    }
-
-    public function budgetItem()
-    {
-        return $this->belongsTo(BudgetPlanItem::class, 'budget_plan_item_id');
-    }
-
-    public function feeCategory()
-    {
-        return $this->belongsTo(FeeCategory::class, 'fee_category_id');
     }
 }
