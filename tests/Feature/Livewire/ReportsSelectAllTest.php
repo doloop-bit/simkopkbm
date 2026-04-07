@@ -5,7 +5,8 @@ declare(strict_types=1);
 use App\Models\User;
 use App\Models\StudentBilling;
 use App\Models\FeeCategory;
-use App\Models\Student;
+use App\Models\Profile;
+use App\Models\StudentProfile;
 use App\Models\Level;
 use App\Models\Classroom;
 use Livewire\Livewire;
@@ -16,12 +17,17 @@ beforeEach(function () {
 });
 
 it('can select all arrears billings', function () {
-    actingAs($this->user);
+    $this->actingAs($this->user);
 
     $level = Level::factory()->create();
     $classroom = Classroom::factory()->create(['level_id' => $level->id]);
-    $student = Student::factory()->create();
-    $student->studentProfile()->create(['classroom_id' => $classroom->id]);
+    $student = User::factory()->create(['role' => 'student']);
+    $studentProfile = StudentProfile::factory()->create(['classroom_id' => $classroom->id]);
+    Profile::create([
+        'user_id' => $student->id,
+        'profileable_id' => $studentProfile->id,
+        'profileable_type' => StudentProfile::class,
+    ]);
     
     $feeCategory = FeeCategory::factory()->create(['level_id' => $level->id]);
     
@@ -41,7 +47,7 @@ it('can select all arrears billings', function () {
         'paid_amount' => 200000,
     ]);
 
-    $component = Volt::test('admin.reports')
+    $component = Livewire::test('admin.reports')
         ->set('tab', 'arrears')
         ->set('selectAll', true);
     
@@ -49,12 +55,17 @@ it('can select all arrears billings', function () {
 });
 
 it('can deselect all arrears billings', function () {
-    actingAs($this->user);
+    $this->actingAs($this->user);
 
     $level = Level::factory()->create();
     $classroom = Classroom::factory()->create(['level_id' => $level->id]);
-    $student = Student::factory()->create();
-    $student->studentProfile()->create(['classroom_id' => $classroom->id]);
+    $student = User::factory()->create(['role' => 'student']);
+    $studentProfile = StudentProfile::factory()->create(['classroom_id' => $classroom->id]);
+    Profile::create([
+        'user_id' => $student->id,
+        'profileable_id' => $studentProfile->id,
+        'profileable_type' => StudentProfile::class,
+    ]);
     
     $feeCategory = FeeCategory::factory()->create(['level_id' => $level->id]);
     
@@ -66,7 +77,7 @@ it('can deselect all arrears billings', function () {
         'paid_amount' => 0,
     ]);
 
-    $component = Volt::test('admin.reports')
+    $component = Livewire::test('admin.reports')
         ->set('tab', 'arrears')
         ->set('selected_billings', [(string) $billing->id])
         ->set('selectAll', false);
@@ -75,7 +86,7 @@ it('can deselect all arrears billings', function () {
 });
 
 it('select all respects level filter', function () {
-    actingAs($this->user);
+    $this->actingAs($this->user);
 
     $level1 = Level::factory()->create();
     $level2 = Level::factory()->create();
@@ -83,11 +94,21 @@ it('select all respects level filter', function () {
     $classroom1 = Classroom::factory()->create(['level_id' => $level1->id]);
     $classroom2 = Classroom::factory()->create(['level_id' => $level2->id]);
     
-    $student1 = Student::factory()->create();
-    $student1->studentProfile()->create(['classroom_id' => $classroom1->id]);
+    $student1 = User::factory()->create(['role' => 'student']);
+    $studentProfile1 = StudentProfile::factory()->create(['classroom_id' => $classroom1->id]);
+    Profile::create([
+        'user_id' => $student1->id,
+        'profileable_id' => $studentProfile1->id,
+        'profileable_type' => StudentProfile::class,
+    ]);
     
-    $student2 = Student::factory()->create();
-    $student2->studentProfile()->create(['classroom_id' => $classroom2->id]);
+    $student2 = User::factory()->create(['role' => 'student']);
+    $studentProfile2 = StudentProfile::factory()->create(['classroom_id' => $classroom2->id]);
+    Profile::create([
+        'user_id' => $student2->id,
+        'profileable_id' => $studentProfile2->id,
+        'profileable_type' => StudentProfile::class,
+    ]);
     
     $feeCategory1 = FeeCategory::factory()->create(['level_id' => $level1->id]);
     $feeCategory2 = FeeCategory::factory()->create(['level_id' => $level2->id]);
@@ -108,7 +129,7 @@ it('select all respects level filter', function () {
         'paid_amount' => 0,
     ]);
 
-    $component = Volt::test('admin.reports')
+    $component = Livewire::test('admin.reports')
         ->set('tab', 'arrears')
         ->set('level_id', $level1->id)
         ->set('selectAll', true);
