@@ -75,6 +75,10 @@ new #[Layout('components.admin.layouts.app')] class extends Component {
 
     public function save(): void
     {
+        if (auth()->user()->isYayasan()) {
+            session()->flash('error', 'Yayasan tidak diperbolehkan mengubah data.');
+            return;
+        }
         $rules = [
             'name' => 'required|string|max:255',
             'email' => ['required', 'email', Rule::unique('users')->ignore($this->editingUser->id ?? null)],
@@ -158,6 +162,10 @@ new #[Layout('components.admin.layouts.app')] class extends Component {
 
     public function delete(User $user): void
     {
+        if (auth()->user()->isYayasan()) {
+            session()->flash('error', 'Yayasan tidak diperbolehkan menghapus data.');
+            return;
+        }
         DB::transaction(function () use ($user) {
             if ($user->profile) {
                 $user->profile->profileable->delete();
@@ -190,7 +198,9 @@ new #[Layout('components.admin.layouts.app')] class extends Component {
         <x-slot:actions>
             <div class="flex items-center gap-3">
                 <x-ui.input wire:model.live.debounce.300ms="search" :placeholder="__('Cari ptk...')" icon="o-magnifying-glass" class="w-64" clearable />
-                <x-ui.button :label="__('Tambah PTK')" icon="o-plus" wire:click="create" class="btn-primary" />
+                @if(!auth()->user()->isYayasan())
+                    <x-ui.button :label="__('Tambah PTK')" icon="o-plus" wire:click="create" class="btn-primary" />
+                @endif
             </div>
         </x-slot:actions>
     </x-ui.header>
@@ -256,14 +266,16 @@ new #[Layout('components.admin.layouts.app')] class extends Component {
 
             @scope('cell_actions', $user)
                 <div class="flex justify-end gap-1">
-                    <x-ui.button icon="o-pencil-square" wire:click="edit({{ $user->id }})" ghost />
-                    <x-ui.button 
-                        icon="o-trash" 
-                        class="text-red-500 dark:text-red-400 hover:bg-red-50 dark:hover:bg-red-900/10" 
-                        wire:confirm="{{ __('Yakin ingin menghapus data ini?') }}"
-                        wire:click="delete({{ $user->id }})"
-                        ghost 
-                    />
+                    @if(!auth()->user()->isYayasan())
+                        <x-ui.button icon="o-pencil-square" wire:click="edit({{ $user->id }})" ghost />
+                        <x-ui.button 
+                            icon="o-trash" 
+                            class="text-red-500 dark:text-red-400 hover:bg-red-50 dark:hover:bg-red-900/10" 
+                            wire:confirm="{{ __('Yakin ingin menghapus data ini?') }}"
+                            wire:click="delete({{ $user->id }})"
+                            ghost 
+                        />
+                    @endif
                 </div>
             @endscope
         </x-ui.table>

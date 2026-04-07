@@ -2,7 +2,7 @@
 
 use Illuminate\Support\Facades\Route;
 
-Route::middleware(['auth', 'verified', 'role:admin,bendahara'])->prefix('admin')->group(function () {
+Route::middleware(['auth', 'verified', 'role:admin,bendahara,yayasan'])->prefix('admin')->group(function () {
     Route::livewire('/financial/categories', 'admin.financial.categories')->name('financial.categories');
     Route::livewire('/financial/billings', 'admin.financial.billings')->name('financial.billings');
     Route::livewire('/financial/discounts', 'admin.financial.discounts')->name('financial.discounts');

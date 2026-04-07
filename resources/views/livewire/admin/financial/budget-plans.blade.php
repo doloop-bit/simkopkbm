@@ -332,7 +332,9 @@ new class extends Component {
     <x-ui.header :title="__('RAB / Rencana Anggaran Biaya')" :subtitle="__('Kelola pengajuan, persetujuan, dan pencairan anggaran operasional sekolah.')" separator>
         <x-slot:actions>
             @if(Auth::user()->isTreasurer() || Auth::user()->isHeadmaster() || Auth::user()->isAdmin())
-                <x-ui.button :label="__('Buat RAB Baru')" icon="o-plus" class="btn-primary" wire:click="createNew" />
+                @if(!Auth::user()->isYayasan())
+                    <x-ui.button :label="__('Buat RAB Baru')" icon="o-plus" class="btn-primary" wire:click="createNew" />
+                @endif
             @endif
         </x-slot:actions>
     </x-ui.header>
@@ -402,7 +404,7 @@ new class extends Component {
                 <div class="flex justify-end gap-2">
                     <x-ui.button icon="o-eye" wire:click="edit({{ $plan->id }})" class="btn-ghost btn-sm text-slate-400 hover:text-primary transition-colors" />
                     <x-ui.button icon="o-printer" wire:click="exportPdf({{ $plan->id }})" class="btn-ghost btn-sm text-slate-400 hover:text-slate-600 transition-colors" />
-                    @if($plan->status === 'draft' || Auth::user()->isAdmin())
+                    @if(($plan->status === 'draft' || Auth::user()->isAdmin()) && !Auth::user()->isYayasan())
                         <x-ui.button icon="o-trash" wire:click="delete({{ $plan->id }})" wire:confirm="{{ __('Hapus RAB ini?') }}" class="btn-ghost btn-sm text-slate-400 hover:text-rose-600 transition-colors" />
                     @endif
                 </div>

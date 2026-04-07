@@ -136,6 +136,10 @@ new #[Layout('components.admin.layouts.app')] class extends Component {
 
     public function save(): void
     {
+        if (auth()->user()->isYayasan()) {
+            session()->flash('error', 'Yayasan tidak diperbolehkan mengubah data.');
+            return;
+        }
         $this->validate();
 
         DB::transaction(function () {
@@ -505,8 +509,10 @@ new #[Layout('components.admin.layouts.app')] class extends Component {
         <x-slot:actions>
             <div class="flex items-center gap-3">
                 <x-ui.input wire:model.live.debounce.300ms="search" :placeholder="__('Cari siswa...')" icon="o-magnifying-glass" class="w-64" clearable />
-                <x-ui.button :label="__('Import')" icon="o-arrow-up-tray" wire:click="$set('importModal', true)" ghost />
-                <x-ui.button :label="__('Tambah Siswa')" icon="o-plus" wire:click="createNew" class="btn-primary" />
+                @if(!auth()->user()->isYayasan())
+                    <x-ui.button :label="__('Import')" icon="o-arrow-up-tray" wire:click="$set('importModal', true)" ghost />
+                    <x-ui.button :label="__('Tambah Siswa')" icon="o-plus" wire:click="createNew" class="btn-primary" />
+                @endif
             </div>
         </x-slot:actions>
     </x-ui.header>
@@ -597,14 +603,16 @@ new #[Layout('components.admin.layouts.app')] class extends Component {
                             <td class="px-6 py-4 text-right">
                                 <div class="flex justify-end gap-1.5 opacity-0 group-hover:opacity-100 transition-opacity duration-200">
                                     <x-ui.button icon="o-chart-bar" wire:click="openPeriodic({{ $student->id }})" ghost class="hover:text-primary" />
-                                    <x-ui.button icon="o-pencil-square" wire:click="edit({{ $student->id }})" ghost class="hover:text-indigo-600" />
-                                    <x-ui.button 
-                                        icon="o-trash" 
-                                        class="text-red-500 dark:text-red-400 hover:bg-red-50 dark:hover:bg-red-900/10" 
-                                        wire:confirm="{{ __('Yakin ingin menghapus siswa ini?') }}"
-                                        wire:click="delete({{ $student->id }})"
-                                        ghost 
-                                    />
+                                    @if(!auth()->user()->isYayasan())
+                                        <x-ui.button icon="o-pencil-square" wire:click="edit({{ $student->id }})" ghost class="hover:text-indigo-600" />
+                                        <x-ui.button 
+                                            icon="o-trash" 
+                                            class="text-red-500 dark:text-red-400 hover:bg-red-50 dark:hover:bg-red-900/10" 
+                                            wire:confirm="{{ __('Yakin ingin menghapus siswa ini?') }}"
+                                            wire:click="delete({{ $student->id }})"
+                                            ghost 
+                                        />
+                                    @endif
                                 </div>
                             </td>
                         </tr>

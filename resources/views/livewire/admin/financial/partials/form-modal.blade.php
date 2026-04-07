@@ -154,14 +154,16 @@
         </div>
 
         <x-slot name="actions">
-            <x-ui.button :label="__('Batal')" @click="show = false; $wire.closeModal()" class="btn-ghost" />
-            <x-ui.button 
-                :label="$editingTransactionId ? __('Simpan Koreksi') : __('Simpan Transaksi')" 
-                type="submit"
-                icon="o-check-circle" 
-                class="{{ $type === 'income' ? 'btn-primary' : 'bg-rose-600 hover:bg-rose-700 text-white border-rose-700' }}" 
-                spinner="recordTransaction"
-            />
+            <x-ui.button :label="__('Tutup')" @click="show = false; $wire.closeModal()" class="btn-ghost" />
+            @if(!auth()->user()->isYayasan())
+                <x-ui.button 
+                    :label="$editingTransactionId ? __('Simpan Koreksi') : __('Simpan Transaksi')" 
+                    type="submit"
+                    icon="o-check-circle" 
+                    class="{{ $type === 'income' ? 'btn-primary' : 'bg-rose-600 hover:bg-rose-700 text-white border-rose-700' }}" 
+                    spinner="recordTransaction"
+                />
+            @endif
         </x-slot>
     </x-ui.modal>
 </form>

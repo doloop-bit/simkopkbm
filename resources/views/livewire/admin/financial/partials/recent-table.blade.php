@@ -63,16 +63,22 @@
 
             @scope('cell_actions', $tx)
                 <div class="flex items-center justify-end gap-2">
-                    <button wire:click="editTransaction({{ $tx->id }})" class="text-slate-400 hover:text-blue-500 transition-colors">
-                        <x-ui.icon name="o-pencil" class="size-4" />
-                    </button>
-                    <button 
-                        wire:click="deleteTransaction({{ $tx->id }})" 
-                        wire:confirm="{{ __('Hapus transaksi ini? Tindakan ini akan menyesuaikan tagihan terkait.') }}"
-                        class="text-slate-400 hover:text-rose-500 transition-colors"
-                    >
-                        <x-ui.icon name="o-trash" class="size-4" />
-                    </button>
+                    @if(!auth()->user()->isYayasan())
+                        <button wire:click="editTransaction({{ $tx->id }})" class="text-slate-400 hover:text-blue-500 transition-colors">
+                            <x-ui.icon name="o-pencil" class="size-4" />
+                        </button>
+                        <button 
+                            wire:click="deleteTransaction({{ $tx->id }})" 
+                            wire:confirm="{{ __('Hapus transaksi ini? Tindakan ini akan menyesuaikan tagihan terkait.') }}"
+                            class="text-slate-400 hover:text-rose-500 transition-colors"
+                        >
+                            <x-ui.icon name="o-trash" class="size-4" />
+                        </button>
+                    @else
+                        <button wire:click="editTransaction({{ $tx->id }})" class="text-slate-400 hover:text-blue-500 transition-colors">
+                            <x-ui.icon name="o-eye" class="size-4" />
+                        </button>
+                    @endif
                 </div>
             @endscope
         </x-ui.table>
