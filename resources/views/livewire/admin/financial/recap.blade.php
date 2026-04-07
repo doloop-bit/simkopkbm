@@ -23,6 +23,12 @@ new #[Layout('components.admin.layouts.app')] class extends Component {
     {
         $this->month = (int) now()->format('m');
         $this->year = (int) now()->format('Y');
+
+        // Access Restriction for Treasurer
+        $user = auth()->user();
+        if ($user->role === 'bendahara') {
+            $this->level_id = $user->managed_level_id;
+        }
     }
 
     public function setTab(string $tab): void
@@ -54,6 +60,21 @@ new #[Layout('components.admin.layouts.app')] class extends Component {
 
     public function getRecapData(): array
     {
+        $user = auth()->user();
+        
+        // Treasurer Restriction: Force level_id to managed_level_id
+        if ($user->role === 'bendahara') {
+            $this->level_id = $user->managed_level_id;
+            
+            // If they don't have an assigned level, return empty (as requested)
+            if (!$this->level_id) {
+                return [
+                    'startBalance' => 0,
+                    'transactions' => collect(),
+                ];
+            }
+        }
+
         $startDate = Carbon::createFromDate($this->year, $this->month, 1)->startOfDay();
         $endDate = $startDate->copy()->endOfMonth()->endOfDay();
 
@@ -101,8 +122,15 @@ new #[Layout('components.admin.layouts.app')] class extends Component {
 
     public function with(): array
     {
+        $user = auth()->user();
+        $levels = Level::query();
+
+        if ($user->role === 'bendahara') {
+            $levels->where('id', $user->managed_level_id);
+        }
+
         return array_merge($this->getRecapData(), [
-            'levels' => Level::all(),
+            'levels' => $levels->get(),
         ]);
     }
 }; ?>
