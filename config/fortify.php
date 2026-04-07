@@ -75,7 +75,7 @@ return [
 
     'home' => function () {
         return match (auth()->user()->role) {
-            'admin' => '/admin/dashboard',
+            'admin', 'bendahara', 'kepsek', 'yayasan' => '/admin/dashboard',
             'guru' => '/teacher/dashboard',
             default => '/',
         };
