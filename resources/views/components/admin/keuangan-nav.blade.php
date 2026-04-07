@@ -1,5 +1,5 @@
 @php
-    $isTransaksi = request()->routeIs('financial.transactions') || request()->routeIs('financial.billings') || request()->routeIs('financial.discounts') || request()->routeIs('financial.categories');
+    $isTransaksi = request()->routeIs('financial.transactions') || request()->routeIs('financial.billings') || request()->routeIs('financial.discounts') || request()->routeIs('financial.categories') || request()->routeIs('financial.recap');
 
     $isAnggaran = request()->routeIs('financial.budget-plans') || request()->routeIs('financial.budget-categories') || request()->routeIs('financial.standard-items');
 
@@ -33,6 +33,13 @@
                 'icon' => 'o-swatch',
                 'route' => 'financial.categories',
                 'route_pattern' => 'financial.categories',
+            ],
+            'recap' => [
+                'label' => 'Rekapitulasi',
+                'label_short' => 'Rekap',
+                'icon' => 'o-document-chart-bar',
+                'route' => 'financial.recap',
+                'route_pattern' => 'financial.recap',
             ],
         ];
     } elseif ($isAnggaran) {

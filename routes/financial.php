@@ -7,6 +7,7 @@ Route::middleware(['auth', 'verified', 'role:admin,bendahara'])->prefix('admin')
     Route::livewire('/financial/billings', 'admin.financial.billings')->name('financial.billings');
     Route::livewire('/financial/discounts', 'admin.financial.discounts')->name('financial.discounts');
     Route::livewire('/financial/transactions', 'admin.financial.transactions')->name('financial.transactions');
+    Route::livewire('/financial/recap', 'admin.financial.recap')->name('financial.recap');
 
     // Master Budget Data
     Route::livewire('/financial/budget-categories', 'admin.financial.budget-categories')->name('financial.budget-categories');
