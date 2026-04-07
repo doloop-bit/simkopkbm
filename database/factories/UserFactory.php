@@ -76,4 +76,53 @@ class UserFactory extends Factory
             'role' => 'guru',
         ]);
     }
+
+    /**
+     * Indicate that the user is a student (siswa).
+     */
+    public function siswa(): static
+    {
+        return $this->state(fn (array $attributes) => [
+            'role' => 'siswa',
+        ])->afterCreating(function (\App\Models\User $user) {
+            if (!$user->profiles()->exists()) {
+                $studentProfile = \App\Models\StudentProfile::factory()->create();
+                \App\Models\Profile::create([
+                    'user_id' => $user->id,
+                    'profileable_type' => \App\Models\StudentProfile::class,
+                    'profileable_id' => $studentProfile->id,
+                ]);
+            }
+        });
+    }
+
+    /**
+     * Indicate that the user is a treasurer (bendahara).
+     */
+    public function bendahara(): static
+    {
+        return $this->state(fn (array $attributes) => [
+            'role' => 'bendahara',
+        ]);
+    }
+
+    /**
+     * Indicate that the user is a headmaster (kepsek).
+     */
+    public function kepsek(): static
+    {
+        return $this->state(fn (array $attributes) => [
+            'role' => 'kepsek',
+        ]);
+    }
+
+    /**
+     * Indicate that the user is foundation (yayasan).
+     */
+    public function yayasan(): static
+    {
+        return $this->state(fn (array $attributes) => [
+            'role' => 'yayasan',
+        ]);
+    }
 }

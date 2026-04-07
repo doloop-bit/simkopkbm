@@ -7,10 +7,9 @@ use App\Models\AcademicYear;
 use App\Models\Level;
 use App\Models\Classroom;
 use App\Models\User;
-use App\Models\StudentProfile;
-use App\Models\Profile;
-use Illuminate\Support\Facades\Hash;
-use Faker\Factory as Faker;
+use App\Models\NewsArticle;
+use App\Models\GalleryPhoto;
+use App\Models\Program;
 
 class DummyDataSeeder extends Seeder
 {
@@ -19,7 +18,8 @@ class DummyDataSeeder extends Seeder
      */
     public function run(): void
     {
-        $faker = Faker::create('id_ID');
+        $this->command->info('Creating Dummy Data (Teachers, Students, News, Programs)...');
+
         $academicYear = AcademicYear::where('is_active', true)->first();
 
         if (! $academicYear) {
@@ -33,55 +33,81 @@ class DummyDataSeeder extends Seeder
         }
 
         $levels = Level::all();
-        $password = Hash::make('password');
+        if ($levels->isEmpty()) {
+            $this->command->warn('No Levels exist! Did you run DatabaseSeeder first?');
+            return;
+        }
 
+        // 1. Create dummy Guru (Teachers)
+        $this->command->info('Creating 5 dummy teachers...');
+        $teachers = User::factory()->count(5)->guru()->create();
+
+        // 2. Create Dummy Programs
+        if (Program::count() === 0) {
+            $this->command->info('Creating extra public programs...');
+            Program::factory()->count(3)->create(['is_active' => true]);
+        }
+
+        // 3. Create Dummy News
+        if (NewsArticle::count() === 0) {
+            $this->command->info('Creating dummy news articles...');
+            NewsArticle::factory()->count(8)->create(['author_id' => User::where('role', 'admin')->first()->id ?? $teachers->first()->id]);
+        }
+        
+        // 4. Create Dummy Gallery
+        if (GalleryPhoto::count() === 0) {
+            $this->command->info('Creating dummy gallery photos...');
+            GalleryPhoto::factory()->count(10)->create(['is_published' => true]);
+        }
+
+        // 5. Create Classrooms & Students
         foreach ($levels as $level) {
-            // Create a class for this level
-            $classroom = Classroom::firstOrCreate([
-                'name' => 'Kelas A - ' . $level->name,
-                'level_id' => $level->id,
+            $classroom = Classroom::firstOrCreate(
+                [
+                    'level_id' => $level->id,
+                    'academic_year_id' => $academicYear->id,
+                ],
+                [
+                    'name' => 'Kelas A - ' . $level->name,
+                ]
+            );
+
+            // Create Homeroom Teacher
+            \App\Models\TeacherAssignment::firstOrCreate([
                 'academic_year_id' => $academicYear->id,
+                'classroom_id' => $classroom->id,
+                'teacher_id' => $teachers->random()->id,
+                'type' => 'class_teacher',
             ]);
+            
+            // Assign some extra subject teachers
+            foreach (\App\Models\Subject::where('level_id', $level->id)->take(2)->get() as $subject) {
+                 \App\Models\TeacherAssignment::firstOrCreate([
+                    'academic_year_id' => $academicYear->id,
+                    'classroom_id' => $classroom->id,
+                    'subject_id' => $subject->id,
+                    'teacher_id' => $teachers->random()->id,
+                    'type' => 'subject_teacher',
+                ]);
+            }
 
-            $this->command->info('Membuat data untuk: ' . $classroom->name);
+            $currentStudentCount = $classroom->students()->count();
 
-            // Create 10 students for this class
-            for ($i = 1; $i <= 10; $i++) {
-                $student = User::firstOrCreate(
-                    ['email' => 'siswa' . $i . '_level' . $level->id . '@example.com'],
-                    [
-                        'name' => $faker->name,
-                        'password' => $password,
-                        'role' => 'siswa',
-                        'is_active' => true,
-                    ]
-                );
-
-                if (! $student->profiles()->exists()) {
-                    // Create profile
-                    $profile = StudentProfile::create([
-                        'nis' => $faker->unique()->numerify('######'),
-                        'nisn' => $faker->unique()->numerify('##########'),
-                        'phone' => $faker->phoneNumber(),
-                        'address' => $faker->address(),
-                        'dob' => $faker->date(),
-                        'pob' => $faker->city(),
-                        'father_name' => collect([$faker->name('male'), null])->random(),
-                        'mother_name' => collect([$faker->name('female'), null])->random(),
-                        'status' => 'baru',
+            if ($currentStudentCount < 10) {
+                $this->command->info("Membuat siswa untuk: {$classroom->name}");
+                
+                // Use factory state to create 'siswa', which automatically creates StudentProfile!
+                // We update their profile to belong to this classroom.
+                $students = User::factory()->count(10 - $currentStudentCount)->siswa()->create();
+                
+                foreach ($students as $student) {
+                    $student->studentProfile->update([
                         'classroom_id' => $classroom->id,
-                    ]);
-
-                    // Link User and Profile
-                    Profile::create([
-                        'user_id' => $student->id,
-                        'profileable_type' => StudentProfile::class,
-                        'profileable_id' => $profile->id,
                     ]);
                 }
             }
         }
         
-        $this->command->info('Berhasil membuat data kelas tiap tingkat dan siswa 10 tiap kelas.');
+        $this->command->info('Berhasil membuat dummy data untuk local development.');
     }
 }

@@ -22,10 +22,10 @@ class TeacherAssignmentFactory extends Factory
     public function definition(): array
     {
         return [
-            'academic_year_id' => AcademicYear::factory(),
-            'classroom_id' => Classroom::factory(),
-            'teacher_id' => User::factory()->state(['role' => 'guru']),
-            'subject_id' => Subject::factory(),
+            'academic_year_id' => \App\Models\AcademicYear::where('is_active', true)->first() ?? \App\Models\AcademicYear::factory(),
+            'classroom_id' => \App\Models\Classroom::inRandomOrder()->first() ?? Classroom::factory(),
+            'teacher_id' => \App\Models\User::factory()->guru(),
+            'subject_id' => \App\Models\Subject::inRandomOrder()->first() ?? Subject::factory(),
             'type' => 'subject_teacher',
         ];
     }
