@@ -92,7 +92,11 @@ new #[Layout('components.admin.layouts.app')] class extends Component {
             $baseQuery->where(function ($q) {
                 $q->whereHas('billing.student.studentProfile.classroom', function ($sq) {
                     $sq->where('level_id', $this->level_id);
-                })->orWhereHas('budgetPlan', function ($bq) {
+                })
+                ->orWhereHas('feeCategory', function ($fq) {
+                    $fq->where('level_id', $this->level_id);
+                })
+                ->orWhereHas('budgetPlan', function ($bq) {
                     $bq->where('level_id', $this->level_id);
                 });
             });
@@ -108,7 +112,7 @@ new #[Layout('components.admin.layouts.app')] class extends Component {
         $this->startBalance = $startBalance;
 
         // Current month transactions
-        $transactions = $baseQuery->with(['billing.student', 'billing.feeCategory', 'budgetPlan', 'budgetItem', 'user'])
+        $transactions = $baseQuery->with(['billing.student', 'billing.feeCategory', 'feeCategory', 'budgetPlan', 'budgetItem', 'user'])
             ->whereBetween('payment_date', [$startDate, $endDate])
             ->orderBy('payment_date', 'asc')
             ->orderBy('id', 'asc')
@@ -286,7 +290,11 @@ new #[Layout('components.admin.layouts.app')] class extends Component {
                                 <div class="flex flex-col">
                                     <span class="font-semibold text-slate-800 dark:text-slate-200">
                                         @if($tx->type === 'income')
-                                            {{ $tx->billing?->feeCategory?->name ?? 'Pemasukan' }} - {{ $tx->billing?->student?->name ?? 'Siswa' }}
+                                            @if($tx->billing)
+                                                {{ $tx->billing->feeCategory?->name ?? 'Pemasukan' }} - {{ $tx->billing->student?->name ?? 'Siswa' }}
+                                            @else
+                                                {{ $tx->feeCategory?->name ?? 'Pemasukan Global/Saldo Awal' }}
+                                            @endif
                                         @else
                                             {{ $tx->budgetItem?->name ?? 'Pengeluaran' }} 
                                         @endif

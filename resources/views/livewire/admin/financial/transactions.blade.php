@@ -30,6 +30,7 @@ new #[Layout('components.admin.layouts.app')] class extends Component {
 
     // Income Specific
     public ?int $fee_category_id = null;
+    public bool $is_global = false;
     public ?int $student_id = null;
     public string $student_search = '';
     public ?StudentBilling $selectedBilling = null;
@@ -55,7 +56,7 @@ new #[Layout('components.admin.layouts.app')] class extends Component {
     {
         $this->recordModal = false;
         $this->editingTransactionId = null;
-        $this->reset(['student_id', 'student_search', 'selectedBilling', 'fee_category_id', 'budget_plan_id', 'budget_plan_item_id', 'pay_amount', 'adjustment_amount', 'reference_number', 'notes', 'attachments']);
+        $this->reset(['is_global', 'student_id', 'student_search', 'selectedBilling', 'fee_category_id', 'budget_plan_id', 'budget_plan_item_id', 'pay_amount', 'adjustment_amount', 'reference_number', 'notes', 'attachments']);
     }
 
     public function switchType(string $type) {
@@ -118,19 +119,21 @@ new #[Layout('components.admin.layouts.app')] class extends Component {
             'adjustment_amount' => 'nullable|numeric',
             'payment_method' => 'required|string',
             'payment_date' => 'required|date',
-            'attachments' => 'required|array|min:1',
+            'attachments' => 'nullable|array',
             'attachments.*' => 'file|max:2048|mimes:jpg,jpeg,png,pdf',
         ];
 
         if ($this->type === 'income') {
-            $rules['student_id'] = 'required';
             $rules['fee_category_id'] = 'required';
+            if (!$this->is_global) {
+                $rules['student_id'] = 'required';
+            }
         } else {
             $rules['budget_plan_id'] = 'required';
             $rules['budget_plan_item_id'] = 'required';
         }
 
-        if (!$this->editingTransactionId) {
+        if (!$this->editingTransactionId && $this->type !== 'income') {
             $rules['attachments'] = 'required|array|min:1';
         }
 
@@ -164,48 +167,73 @@ new #[Layout('components.admin.layouts.app')] class extends Component {
                 }
 
                 if ($this->type === 'income') {
-                    $billing = $this->selectedBilling;
-                    
-                    if (!$billing) {
-                        $activeYear = AcademicYear::where('is_active', true)->first();
-                        $billing = StudentBilling::create([
-                            'student_id' => $this->student_id,
+                    if ($this->is_global) {
+                        $txData = [
+                            'type' => 'income',
                             'fee_category_id' => $this->fee_category_id,
-                            'academic_year_id' => $activeYear ? $activeYear->id : null,
+                            'student_billing_id' => null,
+                            'user_id' => auth()->id(),
                             'amount' => $this->pay_amount,
-                            'paid_amount' => 0,
-                            'status' => 'unpaid'
-                        ]);
-                    }
+                            'adjustment_amount' => $this->adjustment_amount,
+                            'payment_date' => $this->payment_date,
+                            'payment_method' => $this->payment_method,
+                            'reference_number' => $this->reference_number,
+                            'notes' => $this->notes,
+                            'attachment' => $attachmentPaths,
+                        ];
 
-                    $txData = [
-                        'type' => 'income',
-                        'student_billing_id' => $billing->id,
-                        'user_id' => auth()->id(),
-                        'amount' => $this->pay_amount,
-                        'adjustment_amount' => $this->adjustment_amount,
-                        'payment_date' => $this->payment_date,
-                        'payment_method' => $this->payment_method,
-                        'reference_number' => $this->reference_number,
-                        'notes' => $this->notes,
-                        'attachment' => $attachmentPaths,
-                    ];
+                        if ($this->editingTransactionId) {
+                            Transaction::where('id', $this->editingTransactionId)->update($txData);
+                        } else {
+                            Transaction::create($txData);
+                        }
 
-                    if ($this->editingTransactionId) {
-                        Transaction::where('id', $this->editingTransactionId)->update($txData);
+                        session()->flash('success', $this->editingTransactionId ? __('Transaksi diperbarui.') : __('Pemasukan dicatat.'));
                     } else {
-                        Transaction::create($txData);
+                        $billing = $this->selectedBilling;
+                        
+                        if (!$billing) {
+                            $activeYear = AcademicYear::where('is_active', true)->first();
+                            $billing = StudentBilling::create([
+                                'student_id' => $this->student_id,
+                                'fee_category_id' => $this->fee_category_id,
+                                'academic_year_id' => $activeYear ? $activeYear->id : null,
+                                'amount' => $this->pay_amount,
+                                'paid_amount' => 0,
+                                'status' => 'unpaid'
+                            ]);
+                        }
+
+                        $txData = [
+                            'type' => 'income',
+                            'student_billing_id' => $billing->id,
+                            'fee_category_id' => $this->fee_category_id,
+                            'user_id' => auth()->id(),
+                            'amount' => $this->pay_amount,
+                            'adjustment_amount' => $this->adjustment_amount,
+                            'payment_date' => $this->payment_date,
+                            'payment_method' => $this->payment_method,
+                            'reference_number' => $this->reference_number,
+                            'notes' => $this->notes,
+                            'attachment' => $attachmentPaths,
+                        ];
+
+                        if ($this->editingTransactionId) {
+                            Transaction::where('id', $this->editingTransactionId)->update($txData);
+                        } else {
+                            Transaction::create($txData);
+                        }
+
+                        $newPaidAmount = $billing->paid_amount + $this->pay_amount + $this->adjustment_amount;
+                        $status = $newPaidAmount >= $billing->amount ? 'paid' : ($newPaidAmount > 0 ? 'partial' : 'unpaid');
+
+                        $billing->update([
+                            'paid_amount' => $newPaidAmount,
+                            'status' => $status,
+                        ]);
+
+                        session()->flash('success', $this->editingTransactionId ? __('Transaksi diperbarui.') : __('Pemasukan dicatat.'));
                     }
-
-                    $newPaidAmount = $billing->paid_amount + $this->pay_amount + $this->adjustment_amount;
-                    $status = $newPaidAmount >= $billing->amount ? 'paid' : ($newPaidAmount > 0 ? 'partial' : 'unpaid');
-
-                    $billing->update([
-                        'paid_amount' => $newPaidAmount,
-                        'status' => $status,
-                    ]);
-
-                    session()->flash('success', $this->editingTransactionId ? __('Transaksi diperbarui.') : __('Pemasukan dicatat.'));
                 } else {
                     $txData = [
                         'type' => 'expense',
@@ -282,9 +310,10 @@ new #[Layout('components.admin.layouts.app')] class extends Component {
         $this->attachments = []; // New attachments only
         
         if ($tx->type === 'income') {
+            $this->is_global = empty($tx->billing);
             $this->student_id = $tx->billing?->student_id;
             $this->student_search = $tx->billing?->student?->name ?? '';
-            $this->fee_category_id = $tx->billing?->fee_category_id;
+            $this->fee_category_id = $tx->fee_category_id ?? $tx->billing?->fee_category_id;
             $this->selectedBilling = $tx->billing;
         } else {
             $this->budget_plan_id = $tx->budget_plan_id;
@@ -296,16 +325,37 @@ new #[Layout('components.admin.layouts.app')] class extends Component {
 
     public function with(): array
     {
+        $user = auth()->user();
+        
         $students = [];
         if (strlen($this->student_search) > 2 && !$this->student_id) {
-            $students = User::where('role', 'siswa')
-                ->where('name', 'like', "%{$this->student_search}%")
-                ->limit(5)
-                ->get();
+            $studentQuery = User::where('role', 'siswa')
+                ->where('name', 'like', "%{$this->student_search}%");
+                
+            if ($user->role === 'bendahara' && $user->managed_level_id) {
+                // Limit student search to bendahara's level
+                $studentQuery->whereHas('studentProfile.classroom', function ($q) use ($user) {
+                    $q->where('level_id', $user->managed_level_id);
+                });
+            }
+                
+            $students = $studentQuery->limit(5)->get();
         }
 
-        $feeCategories = FeeCategory::all();
-        $activeBudgetPlans = BudgetPlan::where('is_active', true)->get();
+        $feeQuery = FeeCategory::query();
+        $budgetQuery = BudgetPlan::where('is_active', true);
+
+        if ($user->role === 'bendahara' && $user->managed_level_id) {
+            $feeQuery->where(function($q) use ($user) {
+                $q->where('level_id', $user->managed_level_id)->orWhereNull('level_id');
+            });
+            $budgetQuery->where(function($q) use ($user) {
+                $q->where('level_id', $user->managed_level_id)->orWhereNull('level_id');
+            });
+        }
+
+        $feeCategories = $feeQuery->get();
+        $activeBudgetPlans = $budgetQuery->get();
         
         $budgetItems = [];
         if ($this->budget_plan_id) {
@@ -412,8 +462,13 @@ new #[Layout('components.admin.layouts.app')] class extends Component {
                     @scope('cell_description', $tx)
                         <div class="flex flex-col">
                             @if($tx->type === 'income')
-                                <span class="font-semibold text-slate-900 dark:text-white">{{ $tx->billing?->student?->name ?? __('Siswa Tidak Diketahui') }}</span>
-                                <span class="text-[10px] font-semibold uppercase tracking-wide text-slate-500">{{ $tx->billing?->feeCategory?->name ?? __('Tarif') }}</span>
+                                @if($tx->billing)
+                                    <span class="font-semibold text-slate-900 dark:text-white">{{ $tx->billing->student?->name ?? __('Siswa') }}</span>
+                                    <span class="text-[10px] font-semibold uppercase tracking-wide text-slate-500">{{ $tx->billing->feeCategory?->name ?? __('Tarif') }}</span>
+                                @else
+                                    <span class="font-semibold text-slate-900 dark:text-white">{{ __('Pemasukan Global/Saldo Awal') }}</span>
+                                    <span class="text-[10px] font-semibold uppercase tracking-wide text-slate-500">{{ $tx->feeCategory?->name ?? __('Kategori') }}</span>
+                                @endif
                             @else
                                 <div class="flex items-center gap-2">
                                     <span class="font-semibold text-slate-900 dark:text-white">{{ $tx->budgetItem?->name ?? __('RAB Item') }}</span>
@@ -482,6 +537,8 @@ new #[Layout('components.admin.layouts.app')] class extends Component {
                         <div class="text-[10px] font-black uppercase text-slate-400 tracking-widest">{{ __('Destinasi Keuangan') }}</div>
                         
                         @if($type === 'income')
+                            <x-ui.checkbox wire:model.live="is_global" :label="__('Saldo Awal / Pemasukan Global (Tanpa Siswa)')" class="text-[10px] font-bold text-slate-700 dark:text-slate-300 mb-4" />
+                            
                             <x-ui.select 
                                 wire:model.live="fee_category_id" 
                                 :label="__('Kategori Biaya')" 
@@ -489,7 +546,8 @@ new #[Layout('components.admin.layouts.app')] class extends Component {
                                 :options="$feeCategories"
                             />
                             
-                            <div class="relative">
+                            @if(!$is_global)
+                                <div class="relative">
                                 <x-ui.input 
                                     wire:model.live.debounce.300ms="student_search" 
                                     :label="__('Cari Nama Siswa')"
@@ -526,6 +584,7 @@ new #[Layout('components.admin.layouts.app')] class extends Component {
                                         <span class="text-emerald-600 dark:text-emerald-300 font-mono text-base">Rp {{ number_format($selectedBilling->amount - $selectedBilling->paid_amount, 0, ',', '.') }}</span>
                                     </div>
                                 </div>
+                            @endif
                             @endif
                         @else
                             <x-ui.select 

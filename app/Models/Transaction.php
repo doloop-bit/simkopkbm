@@ -9,6 +9,7 @@ class Transaction extends Model
     protected $fillable = [
         'type',
         'student_billing_id',
+        'fee_category_id',
         'budget_plan_id',
         'budget_plan_item_id',
         'user_id',
@@ -47,5 +48,10 @@ class Transaction extends Model
     public function budgetItem()
     {
         return $this->belongsTo(BudgetPlanItem::class, 'budget_plan_item_id');
+    }
+
+    public function feeCategory()
+    {
+        return $this->belongsTo(FeeCategory::class, 'fee_category_id');
     }
 }
