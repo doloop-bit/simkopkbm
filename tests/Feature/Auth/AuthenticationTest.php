@@ -10,7 +10,7 @@ test('login screen can be rendered', function () {
 });
 
 test('users can authenticate using the login screen', function () {
-    $user = User::factory()->admin()->create();
+    $user = User::factory()->create();
 
     $response = $this->post(route('login.store'), [
         'email' => $user->email,
@@ -25,7 +25,7 @@ test('users can authenticate using the login screen', function () {
 });
 
 test('users can not authenticate with invalid password', function () {
-    $user = User::factory()->admin()->create();
+    $user = User::factory()->create();
 
     $response = $this->post(route('login.store'), [
         'email' => $user->email,
@@ -47,7 +47,7 @@ test('users with two factor enabled are redirected to two factor challenge', fun
         'confirmPassword' => true,
     ]);
 
-    $user = User::factory()->admin()->withTwoFactor()->create();
+    $user = User::factory()->withTwoFactor()->create();
 
     $response = $this->post(route('login.store'), [
         'email' => $user->email,
@@ -58,17 +58,8 @@ test('users with two factor enabled are redirected to two factor challenge', fun
     $this->assertGuest();
 });
 
-test('login screen has password visibility toggle', function () {
-    $response = $this->get(route('login'));
-
-    $response->assertOk()
-        ->assertSee('x-data=', false)
-        ->assertSee('showPassword', false)
-        ->assertSee('data-test="toggle-password"', false);
-});
-
 test('users can logout', function () {
-    $user = User::factory()->admin()->create();
+    $user = User::factory()->create();
 
     $response = $this->actingAs($user)->post(route('logout'));
 

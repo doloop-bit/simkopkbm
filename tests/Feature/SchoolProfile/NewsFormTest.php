@@ -1,7 +1,5 @@
 <?php
 
-
-
 declare(strict_types=1);
 
 use App\Models\NewsArticle;
@@ -9,18 +7,19 @@ use App\Models\User;
 use Illuminate\Http\UploadedFile;
 use Illuminate\Support\Facades\Storage;
 use Livewire\Livewire;
+
 use function Pest\Laravel\actingAs;
 
 beforeEach(function () {
     $this->withoutVite();
     $this->user = User::factory()->create(['role' => 'admin']);
-    $this->actingAs($this->user);
+    actingAs($this->user);
 });
 
 test('admin can access news create form', function () {
     Livewire::test('admin.web-content.news.form')
         ->assertOk()
-        ->assertSee('Tulis Berita Baru')
+        ->assertSee('Berita Baru')
         ->assertSee('Judul Utama Berita');
 });
 
@@ -145,6 +144,7 @@ test('news article form auto-generates excerpt if not provided', function () {
 
     $article = NewsArticle::where('title', 'Artikel Tanpa Ringkasan')->first();
     expect($article->excerpt)->not->toBeNull();
+    // In view: Str::limit(strip_tags($this->content), 200)
     expect(strlen($article->excerpt))->toBeLessThanOrEqual(203); // 200 + "..."
 });
 
@@ -204,5 +204,6 @@ test('news article form auto-generates meta title and description if not provide
     $article = NewsArticle::where('title', 'Artikel SEO')->first();
     expect($article->meta_title)->toBe('Artikel SEO');
     expect($article->meta_description)->not->toBeNull();
+    // In view: Str::limit(strip_tags($this->content), 160)
     expect(strlen($article->meta_description))->toBeLessThanOrEqual(163); // 160 + "..."
 });

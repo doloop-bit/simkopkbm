@@ -6,6 +6,10 @@ use App\Models\User;
 use Illuminate\Support\Facades\Hash;
 use Livewire\Livewire;
 
+beforeEach(function () {
+    $this->withoutVite();
+});
+
 test('password can be updated', function () {
     $user = User::factory()->create([
         'password' => Hash::make('password'),

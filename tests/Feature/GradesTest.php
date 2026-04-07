@@ -13,7 +13,7 @@ test('admin can access grades page', function () {
     actingAs($user)
         ->get(route('academic.grades'))
         ->assertOk()
-        ->assertSeeLivewire('admin.academic.grades');
+        ->assertSeeLivewire('academic.grades');
 });
 
 test('non-admin cannot access grades page', function () {

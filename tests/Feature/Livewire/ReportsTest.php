@@ -1,12 +1,14 @@
 <?php
 
-use App\Models\User;
+declare(strict_types=1);
+
 use Livewire\Livewire;
+use App\Models\User;
 
-it('can render', function () {
-    $this->actingAs(User::factory()->create(['role' => 'admin']));
+it('can render reports for admin', function () {
+    $admin = User::factory()->create(['role' => 'admin']);
 
-    $component = Livewire::test('admin.reports');
-
-    $component->assertOk();
+    Livewire::actingAs($admin)
+        ->test('admin.reports')
+        ->assertOk();
 });

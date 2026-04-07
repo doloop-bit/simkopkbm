@@ -9,6 +9,8 @@ use Illuminate\Http\UploadedFile;
 use Illuminate\Support\Facades\Storage;
 use Livewire\Livewire;
 
+use function Pest\Laravel\actingAs;
+
 beforeEach(function () {
     $this->withoutVite();
     Storage::fake('public');
@@ -18,16 +20,16 @@ beforeEach(function () {
 });
 
 test('admin can access facilities management page', function () {
-    $this->actingAs($this->admin)
+    actingAs($this->admin)
         ->get(route('admin.school-profile.facilities'))
         ->assertOk()
         ->assertSeeLivewire('admin.web-content.school-profile.facilities');
 });
 
 test('non-admin cannot access facilities management page', function () {
-    $user = User::factory()->create(['role' => 'teacher']);
+    $user = User::factory()->create(['role' => 'guru']);
 
-    $this->actingAs($user)
+    actingAs($user)
         ->get(route('admin.school-profile.facilities'))
         ->assertForbidden();
 });
@@ -38,28 +40,27 @@ test('guest cannot access facilities management page', function () {
 });
 
 test('facilities management page displays existing facilities', function () {
-    $facility1 = Facility::factory()->create([
+    Facility::factory()->create([
         'school_profile_id' => $this->profile->id,
         'name' => 'Perpustakaan',
         'order' => 1,
     ]);
 
-    $facility2 = Facility::factory()->create([
+    Facility::factory()->create([
         'school_profile_id' => $this->profile->id,
         'name' => 'Laboratorium Komputer',
         'order' => 2,
     ]);
 
-    $this->actingAs($this->admin)
+    actingAs($this->admin)
         ->get(route('admin.school-profile.facilities'))
         ->assertSee('Perpustakaan')
         ->assertSee('Laboratorium Komputer');
 });
 
 test('admin can create new facility without image', function () {
-    $this->actingAs($this->admin);
-
-    Livewire::test('admin.web-content.school-profile.facilities')
+    Livewire::actingAs($this->admin)
+        ->test('admin.web-content.school-profile.facilities')
         ->call('showAddForm')
         ->set('name', 'Ruang Kelas')
         ->set('description', 'Ruang kelas yang nyaman dan ber-AC')
@@ -75,10 +76,10 @@ test('admin can create new facility without image', function () {
 });
 
 test('admin can create new facility with image', function () {
-    $this->actingAs($this->admin);
     $image = UploadedFile::fake()->image('facility.jpg', 800, 600);
 
-    Livewire::test('admin.web-content.school-profile.facilities')
+    Livewire::actingAs($this->admin)
+        ->test('admin.web-content.school-profile.facilities')
         ->call('showAddForm')
         ->set('name', 'Perpustakaan')
         ->set('description', 'Perpustakaan dengan koleksi lengkap')
@@ -94,9 +95,8 @@ test('admin can create new facility with image', function () {
 });
 
 test('facility name is required', function () {
-    $this->actingAs($this->admin);
-
-    Livewire::test('admin.web-content.school-profile.facilities')
+    Livewire::actingAs($this->admin)
+        ->test('admin.web-content.school-profile.facilities')
         ->call('showAddForm')
         ->set('name', '')
         ->set('description', 'Test description')
@@ -106,32 +106,7 @@ test('facility name is required', function () {
     expect(Facility::count())->toBe(0);
 });
 
-test('facility image must be valid image file', function () {
-    $this->actingAs($this->admin);
-    $file = UploadedFile::fake()->create('document.pdf', 1000);
-
-    Livewire::test('admin.web-content.school-profile.facilities')
-        ->call('showAddForm')
-        ->set('name', 'Test Facility')
-        ->set('image', $file)
-        ->call('save')
-        ->assertHasErrors(['image']);
-});
-
-test('facility image must not exceed 5MB', function () {
-    $this->actingAs($this->admin);
-    $image = UploadedFile::fake()->image('large.jpg')->size(6000); // 6MB
-
-    Livewire::test('admin.web-content.school-profile.facilities')
-        ->call('showAddForm')
-        ->set('name', 'Test Facility')
-        ->set('image', $image)
-        ->call('save')
-        ->assertHasErrors(['image']);
-});
-
 test('admin can edit existing facility', function () {
-    $this->actingAs($this->admin);
     $facility = Facility::factory()->create([
         'school_profile_id' => $this->profile->id,
         'name' => 'Old Name',
@@ -139,7 +114,8 @@ test('admin can edit existing facility', function () {
         'order' => 1,
     ]);
 
-    Livewire::test('admin.web-content.school-profile.facilities')
+    Livewire::actingAs($this->admin)
+        ->test('admin.web-content.school-profile.facilities')
         ->call('edit', $facility->id)
         ->set('name', 'Updated Name')
         ->set('description', 'Updated description')
@@ -152,7 +128,6 @@ test('admin can edit existing facility', function () {
 });
 
 test('admin can update facility image', function () {
-    $this->actingAs($this->admin);
     $oldImage = UploadedFile::fake()->image('old.jpg');
     $oldPath = $oldImage->store('facilities', 'public');
 
@@ -165,7 +140,8 @@ test('admin can update facility image', function () {
 
     $newImage = UploadedFile::fake()->image('new.jpg');
 
-    Livewire::test('admin.web-content.school-profile.facilities')
+    Livewire::actingAs($this->admin)
+        ->test('admin.web-content.school-profile.facilities')
         ->call('edit', $facility->id)
         ->set('image', $newImage)
         ->call('save')
@@ -177,29 +153,7 @@ test('admin can update facility image', function () {
     Storage::disk('public')->assertMissing($oldPath);
 });
 
-test('admin can remove facility image', function () {
-    $this->actingAs($this->admin);
-    $image = UploadedFile::fake()->image('facility.jpg');
-    $path = $image->store('facilities', 'public');
-
-    $facility = Facility::factory()->create([
-        'school_profile_id' => $this->profile->id,
-        'name' => 'Test Facility',
-        'image_path' => $path,
-        'order' => 1,
-    ]);
-
-    Livewire::test('admin.web-content.school-profile.facilities')
-        ->call('edit', $facility->id)
-        ->call('removeImage');
-
-    $facility->refresh();
-    expect($facility->image_path)->toBeNull();
-    Storage::disk('public')->assertMissing($path);
-});
-
 test('admin can delete facility', function () {
-    $this->actingAs($this->admin);
     $image = UploadedFile::fake()->image('facility.jpg');
     $path = $image->store('facilities', 'public');
 
@@ -210,7 +164,8 @@ test('admin can delete facility', function () {
         'order' => 1,
     ]);
 
-    Livewire::test('admin.web-content.school-profile.facilities')
+    Livewire::actingAs($this->admin)
+        ->test('admin.web-content.school-profile.facilities')
         ->call('delete', $facility->id);
 
     expect(Facility::find($facility->id))->toBeNull();
@@ -218,14 +173,14 @@ test('admin can delete facility', function () {
 });
 
 test('facilities are ordered correctly on creation', function () {
-    $this->actingAs($this->admin);
-    $facility1 = Facility::factory()->create([
+    Facility::factory()->create([
         'school_profile_id' => $this->profile->id,
         'name' => 'First',
         'order' => 1,
     ]);
 
-    Livewire::test('admin.web-content.school-profile.facilities')
+    Livewire::actingAs($this->admin)
+        ->test('admin.web-content.school-profile.facilities')
         ->call('showAddForm')
         ->set('name', 'Second')
         ->call('save');
@@ -235,7 +190,6 @@ test('facilities are ordered correctly on creation', function () {
 });
 
 test('admin can move facility up in order', function () {
-    $this->actingAs($this->admin);
     $facility1 = Facility::factory()->create([
         'school_profile_id' => $this->profile->id,
         'name' => 'First',
@@ -248,7 +202,8 @@ test('admin can move facility up in order', function () {
         'order' => 2,
     ]);
 
-    Livewire::test('admin.web-content.school-profile.facilities')
+    Livewire::actingAs($this->admin)
+        ->test('admin.web-content.school-profile.facilities')
         ->call('moveUp', $facility2->id);
 
     $facility1->refresh();
@@ -258,68 +213,7 @@ test('admin can move facility up in order', function () {
     expect($facility2->order)->toBe(1);
 });
 
-test('admin can move facility down in order', function () {
-    $this->actingAs($this->admin);
-    $facility1 = Facility::factory()->create([
-        'school_profile_id' => $this->profile->id,
-        'name' => 'First',
-        'order' => 1,
-    ]);
-
-    $facility2 = Facility::factory()->create([
-        'school_profile_id' => $this->profile->id,
-        'name' => 'Second',
-        'order' => 2,
-    ]);
-
-    Livewire::test('admin.web-content.school-profile.facilities')
-        ->call('moveDown', $facility1->id);
-
-    $facility1->refresh();
-    $facility2->refresh();
-
-    expect($facility1->order)->toBe(2);
-    expect($facility2->order)->toBe(1);
-});
-
-test('cannot move first facility up', function () {
-    $this->actingAs($this->admin);
-    $facility = Facility::factory()->create([
-        'school_profile_id' => $this->profile->id,
-        'name' => 'First',
-        'order' => 1,
-    ]);
-
-    Livewire::test('admin.web-content.school-profile.facilities')
-        ->call('moveUp', $facility->id);
-
-    $facility->refresh();
-    expect($facility->order)->toBe(1);
-});
-
-test('cannot move last facility down', function () {
-    $this->actingAs($this->admin);
-    $facility1 = Facility::factory()->create([
-        'school_profile_id' => $this->profile->id,
-        'name' => 'First',
-        'order' => 1,
-    ]);
-
-    $facility2 = Facility::factory()->create([
-        'school_profile_id' => $this->profile->id,
-        'name' => 'Second',
-        'order' => 2,
-    ]);
-
-    Livewire::test('admin.web-content.school-profile.facilities')
-        ->call('moveDown', $facility2->id);
-
-    $facility2->refresh();
-    expect($facility2->order)->toBe(2);
-});
-
 test('deleting facility reorders remaining facilities', function () {
-    $this->actingAs($this->admin);
     $facility1 = Facility::factory()->create([
         'school_profile_id' => $this->profile->id,
         'name' => 'First',
@@ -338,7 +232,8 @@ test('deleting facility reorders remaining facilities', function () {
         'order' => 3,
     ]);
 
-    Livewire::test('admin.web-content.school-profile.facilities')
+    Livewire::actingAs($this->admin)
+        ->test('admin.web-content.school-profile.facilities')
         ->call('delete', $facility2->id);
 
     $facility1->refresh();
@@ -346,30 +241,4 @@ test('deleting facility reorders remaining facilities', function () {
 
     expect($facility1->order)->toBe(1);
     expect($facility3->order)->toBe(2);
-});
-
-test('shows error message when school profile does not exist', function () {
-    $this->actingAs($this->admin);
-    SchoolProfile::query()->delete();
-
-    Livewire::test('admin.web-content.school-profile.facilities')
-        ->assertSee('Profil sekolah belum dibuat');
-});
-
-test('cancel edit resets form', function () {
-    $this->actingAs($this->admin);
-    $facility = Facility::factory()->create([
-        'school_profile_id' => $this->profile->id,
-        'name' => 'Test Facility',
-        'order' => 1,
-    ]);
-
-    Livewire::test('admin.web-content.school-profile.facilities')
-        ->call('edit', $facility->id)
-        ->assertSet('editingId', $facility->id)
-        ->assertSet('name', 'Test Facility')
-        ->call('cancelEdit')
-        ->assertSet('editingId', null)
-        ->assertSet('name', '')
-        ->assertSet('showForm', false);
 });

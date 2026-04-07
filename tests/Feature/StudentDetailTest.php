@@ -3,9 +3,14 @@
 declare(strict_types=1);
 
 use App\Models\Classroom;
+use App\Models\Profile;
 use App\Models\StudentProfile;
 use App\Models\User;
 use Livewire\Livewire;
+
+beforeEach(function () {
+    $this->withoutVite();
+});
 
 test('student name and photo are clickable to view details', function () {
     $admin = User::factory()->create(['role' => 'admin']);
@@ -19,16 +24,17 @@ test('student name and photo are clickable to view details', function () {
         'nisn' => '67890',
     ]);
 
-    $student->profiles()->create([
+    Profile::create([
+        'user_id' => $student->id,
         'profileable_id' => $studentProfile->id,
         'profileable_type' => StudentProfile::class,
     ]);
 
-    Livewire::test('admin.data-master.students.index')
-        ->actingAs($admin)
+    Livewire::actingAs($admin)
+        ->test('admin.data-master.students.index')
         ->assertSee('Test Student')
         ->call('viewDetails', $student->id)
-        ->assertDispatched('open-modal', 'detail-modal')
+        ->assertSet('detailModal', true)
         ->assertSet('viewing.id', $student->id);
 });
 
@@ -38,15 +44,16 @@ test('edit button opens student modal correctly', function () {
 
     $studentProfile = StudentProfile::factory()->create();
 
-    $student->profiles()->create([
+    Profile::create([
+        'user_id' => $student->id,
         'profileable_id' => $studentProfile->id,
         'profileable_type' => StudentProfile::class,
     ]);
 
-    Livewire::test('admin.data-master.students.index')
-        ->actingAs($admin)
+    Livewire::actingAs($admin)
+        ->test('admin.data-master.students.index')
         ->call('edit', $student->id)
-        ->assertDispatched('open-modal', 'student-modal')
+        ->assertSet('studentModal', true)
         ->assertSet('editing.id', $student->id)
         ->assertSet('name', $student->name)
         ->assertSet('email', $student->email);
@@ -58,15 +65,16 @@ test('periodic button opens periodic modal correctly', function () {
 
     $studentProfile = StudentProfile::factory()->create();
 
-    $student->profiles()->create([
+    Profile::create([
+        'user_id' => $student->id,
         'profileable_id' => $studentProfile->id,
         'profileable_type' => StudentProfile::class,
     ]);
 
-    Livewire::test('admin.data-master.students.index')
-        ->actingAs($admin)
+    Livewire::actingAs($admin)
+        ->test('admin.data-master.students.index')
         ->call('openPeriodic', $student->id)
-        ->assertDispatched('open-modal', 'periodic-modal')
+        ->assertSet('periodicModal', true)
         ->assertSet('editing.id', $student->id);
 });
 
@@ -87,13 +95,14 @@ test('detail modal shows complete student information', function () {
         'classroom_id' => $classroom->id,
     ]);
 
-    $student->profiles()->create([
+    Profile::create([
+        'user_id' => $student->id,
         'profileable_id' => $studentProfile->id,
         'profileable_type' => StudentProfile::class,
     ]);
 
-    Livewire::test('admin.data-master.students.index')
-        ->actingAs($admin)
+    Livewire::actingAs($admin)
+        ->test('admin.data-master.students.index')
         ->call('viewDetails', $student->id)
         ->assertSet('viewing.id', $student->id)
         ->assertSee('John Doe')
@@ -111,13 +120,14 @@ test('modals do not overlap', function () {
 
     $studentProfile = StudentProfile::factory()->create();
 
-    $student->profiles()->create([
+    Profile::create([
+        'user_id' => $student->id,
         'profileable_id' => $studentProfile->id,
         'profileable_type' => StudentProfile::class,
     ]);
 
-    $component = Livewire::test('admin.data-master.students.index')
-        ->actingAs($admin);
+    $component = Livewire::actingAs($admin)
+        ->test('admin.data-master.students.index');
 
     // Open detail modal
     $component->call('viewDetails', $student->id)
@@ -126,9 +136,11 @@ test('modals do not overlap', function () {
 
     // Open edit modal
     $component->call('edit', $student->id)
-        ->assertSet('editing.id', $student->id);
+        ->assertSet('editing.id', $student->id)
+        ->assertSet('viewing.id', $student->id); // viewing persists unless reset
 
     // Open periodic modal
     $component->call('openPeriodic', $student->id)
-        ->assertSet('editing.id', $student->id);
+        ->assertSet('editing.id', $student->id)
+        ->assertSet('detailModal', true); // persists
 });

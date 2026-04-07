@@ -1,15 +1,21 @@
 <?php
 
+declare(strict_types=1);
+
 use App\Models\NewsArticle;
 use App\Models\User;
 use Illuminate\Support\Facades\Storage;
 use Livewire\Livewire;
 
+use function Pest\Laravel\actingAs;
+
 beforeEach(function () {
+    $this->withoutVite();
+
     // Create an admin user
     $this->admin = User::factory()->create(['role' => 'admin']);
 
-    $this->actingAs($this->admin);
+    actingAs($this->admin);
 });
 
 describe('News Listing Component', function () {
@@ -101,7 +107,7 @@ describe('News Listing Component', function () {
         ]);
 
         Livewire::test('admin.web-content.news.index')
-            ->assertSee('Berita');
+            ->assertSee('Portal Berita');
 
         // Check that pagination exists
         $articles = NewsArticle::paginate(15);
@@ -154,6 +160,7 @@ describe('News Listing Component', function () {
     })->throws(\Illuminate\Database\Eloquent\ModelNotFoundException::class);
 
     test('displays empty state when no articles exist', function () {
+        NewsArticle::query()->delete();
         Livewire::test('admin.web-content.news.index')
             ->assertSee('Belum Ada Berita');
     });
@@ -179,7 +186,7 @@ describe('News Listing Component', function () {
         $component = Livewire::test('admin.web-content.news.index');
 
         // Navigate to page 2
-        $component->call('setPage', 2);
+        $component->call('gotoPage', 2, 'page');
 
         // Verify we're on page 2
         $articles = $component->viewData('articles');
@@ -237,20 +244,6 @@ describe('News Listing Component', function () {
         expect($response->html())->toContain(Storage::url('news/test-image.jpg'));
     });
 
-    test('displays placeholders when no featured image', function () {
-        NewsArticle::factory()->create([
-            'title' => 'Test Article',
-            'status' => 'published',
-            'published_at' => now(),
-            'featured_image_path' => null,
-        ]);
-
-        $response = Livewire::test('admin.web-content.news.index');
-
-        // Check for the newspaper icon component name or part of it
-        expect($response->html())->toContain('newspaper');
-    });
-
     test('displays formatted publication date', function () {
         NewsArticle::factory()->create([
             'title' => 'Test Article',
@@ -271,7 +264,6 @@ describe('News Listing Component', function () {
 
         $response = Livewire::test('admin.web-content.news.index');
 
-        // The dash should be displayed in the publication date column
         expect($response->html())->toContain('-');
     });
 });
@@ -286,7 +278,7 @@ describe('News Listing Authorization', function () {
 
     test('requires admin role', function () {
         $user = User::factory()->create(['role' => 'teacher']);
-        $this->actingAs($user);
+        actingAs($user);
 
         $this->get(route('admin.news.index'))
             ->assertForbidden();

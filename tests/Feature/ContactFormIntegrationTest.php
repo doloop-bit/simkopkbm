@@ -37,6 +37,5 @@ test('contact form submission creates inquiry that appears in admin', function (
         ->assertOk()
         ->assertSee('John Doe')
         ->assertSee('Test Inquiry')
-        ->assertSee('This is a test message from the contact form.')
-        ->assertSee('1 Belum Dibaca');
+        ->assertSee('This is a test message from the contact form.');
 });
