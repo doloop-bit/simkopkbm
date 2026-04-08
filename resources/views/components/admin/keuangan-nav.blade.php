@@ -15,7 +15,7 @@
             ],
         ];
 
-        if (!auth()->user()->isYayasan()) {
+        if (!auth()->user()->isYayasan() || auth()->user()->isHeadmaster()) {
             $tabs['billings'] = [
                 'label' => 'Tagihan Siswa',
                 'label_short' => 'Tagihan',
@@ -57,7 +57,7 @@
             ],
         ];
 
-        if (!auth()->user()->isYayasan()) {
+        if (!auth()->user()->isYayasan() || auth()->user()->isHeadmaster()) {
             $tabs['budget-categories'] = [
                 'label' => 'Kategori Anggaran',
                 'label_short' => 'Kategori',

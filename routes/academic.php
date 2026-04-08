@@ -3,7 +3,7 @@
 use Illuminate\Support\Facades\Route;
 
 Route::prefix('admin')->group(function () {
-    Route::middleware(['auth', 'verified', 'role:admin'])->group(function () {
+    Route::middleware(['auth', 'verified', 'role:admin,kepsek'])->group(function () {
         Route::livewire('/academic/years', 'admin.academic.academic-years')->name('academic.years');
         Route::livewire('/academic/levels', 'admin.academic.levels')->name('academic.levels');
         Route::livewire('/academic/classrooms', 'admin.academic.classrooms')->name('academic.classrooms');

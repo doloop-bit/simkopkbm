@@ -28,11 +28,14 @@
             
             @if(!auth()->user()->isYayasan())
                 <x-ui.menu-item title="Pengguna" icon="o-user-circle" :link="route('users.index')" />
+            @endif
+
+            @if(!auth()->user()->isYayasan() || auth()->user()->isHeadmaster())
                 <x-ui.menu-item title="Pendaftaran" icon="o-user-plus" :link="route('admin.registrations.index')" />
             @endif
         </x-ui.menu-sub>
 
-        @if(!auth()->user()->isYayasan())
+        @if(!auth()->user()->isYayasan() || auth()->user()->isHeadmaster())
             <x-ui.menu-sub title="Akademik" icon="o-academic-cap" :active="request()->routeIs('academic.*')">
                 <x-ui.menu-item title="Tahun Ajaran" icon="o-calendar" :link="route('academic.years')" />
                 <x-ui.menu-item title="Jenjang" icon="o-academic-cap" :link="route('academic.levels')" />
