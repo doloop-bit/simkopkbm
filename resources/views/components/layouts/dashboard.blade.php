@@ -164,9 +164,9 @@
         </div>
     </div>
 
-    @if($showBottomNav)
+    @isset($bottomNav)
         {{ $bottomNav }}
-    @endif
+    @endisset
     
     <x-ui.toast />
 </body>

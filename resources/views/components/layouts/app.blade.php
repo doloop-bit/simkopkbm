@@ -36,7 +36,6 @@
     :title="$title"
     :dashboard-route="$dashboardRoute"
     :has-sub-nav="$hasSubNav"
-    :show-bottom-nav="$isGuru"
 >
     {{-- Unified Sub Navigation --}}
     @if ($hasSubNav)
@@ -51,12 +50,10 @@
         </x-slot:subNav>
     @endif
 
-    {{-- Teacher-only Bottom Navigation --}}
-    @if($isGuru)
-        <x-slot:bottomNav>
-            <x-teacher.bottom-nav />
-        </x-slot:bottomNav>
-    @endif
+    {{-- Unified Bottom Navigation (Visible on Mobile) --}}
+    <x-slot:bottomNav>
+        <x-layouts.bottom-nav />
+    </x-slot:bottomNav>
 
     {{ $slot }}
 </x-layouts.dashboard>

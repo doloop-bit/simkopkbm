@@ -67,27 +67,27 @@ trait HasAssessmentLogic
     {
         // 1. Priority: URL Path detection (Most robust)
         if (request()->is('teacher*')) {
-            return 'components.teacher.layouts.app';
+            return 'components.layouts.app';
         }
 
         if (request()->is('admin*')) {
-            return 'components.admin.layouts.app';
+            return 'components.layouts.app';
         }
 
         // 2. Route Name detection
         if (request()->routeIs('teacher.*')) {
-            return 'components.teacher.layouts.app';
+            return 'components.layouts.app';
         }
 
         if (request()->routeIs('admin.*')) {
-            return 'components.admin.layouts.app';
+            return 'components.layouts.app';
         }
 
         // 3. Fallback: User Role-based
         $role = strtolower(trim(auth()->user()->role ?? ''));
 
         return ($role === 'guru' || $role === 'teacher')
-            ? 'components.teacher.layouts.app'
-            : 'components.admin.layouts.app';
+            ? 'components.layouts.app'
+            : 'components.layouts.app';
     }
 }

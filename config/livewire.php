@@ -44,7 +44,7 @@ return [
     |
     */
 
-    'component_layout' => 'components.admin.layouts.app',
+    'component_layout' => 'components.layouts.app',
 
     /*
     |---------------------------------------------------------------------------
