@@ -1,6 +1,7 @@
 <?php
 
 use App\Models\User;
+use App\Models\Role;
 use App\Models\Level;
 use Illuminate\Validation\Rule;
 use Illuminate\Support\Facades\Hash;
@@ -21,6 +22,7 @@ new class extends Component {
     public $role = 'user';
     public $managed_level_id = '';
     public $is_active = true;
+    public array $role_ids = [];
 
     public ?User $editing = null;
 
@@ -29,17 +31,19 @@ new class extends Component {
         return [
             'users' => User::query()
                 ->when($this->search, fn($q) => $q->where('name', 'like', "%{$this->search}%")->orWhere('email', 'like', "%{$this->search}%"))
-                ->when($this->role_filter, fn($q) => $q->where('role', $this->role_filter))
+                ->when($this->role_filter, fn($q) => $q->whereHas('roles', fn($rq) => $rq->where('slug', $this->role_filter)))
                 ->latest()
                 ->paginate(10),
             'levels' => Level::orderBy('name')->get(),
+            'allRoles' => Role::all(),
         ];
     }
 
     public function createNew(): void
     {
-        $this->reset(['name', 'email', 'phone', 'password', 'role', 'managed_level_id', 'is_active', 'editing']);
+        $this->reset(['name', 'email', 'phone', 'password', 'role', 'role_ids', 'managed_level_id', 'is_active', 'editing']);
         $this->role = 'user';
+        $this->role_ids = [];
         $this->is_active = true;
         $this->resetValidation();
         $this->userModal = true;
@@ -52,6 +56,7 @@ new class extends Component {
         $this->email = $user->email;
         $this->phone = $user->phone;
         $this->role = $user->role;
+        $this->role_ids = $user->roles->pluck('id')->toArray();
         $this->managed_level_id = $user->managed_level_id;
         $this->is_active = $user->is_active;
         $this->password = ''; // Don't fill password
@@ -65,7 +70,7 @@ new class extends Component {
             'name' => 'required|string|max:255',
             'email' => ['required', 'email', Rule::unique('users')->ignore($this->editing->id ?? null)],
             'phone' => 'nullable|string|max:20',
-            'role' => 'required|string',
+            'role_ids' => 'required|array|min:1',
             'managed_level_id' => 'nullable|exists:levels,id',
             'is_active' => 'boolean',
         ];
@@ -78,12 +83,16 @@ new class extends Component {
 
         $this->validate($rules);
 
+        // Map primary role for legacy support
+        $selectedRoles = Role::whereIn('id', $this->role_ids)->get();
+        $primaryRole = $selectedRoles->first()->slug ?? 'user';
+
         $data = [
             'name' => $this->name,
             'email' => $this->email,
             'phone' => $this->phone,
-            'role' => $this->role,
-            'managed_level_id' => in_array($this->role, ['bendahara', 'kepsek']) ? $this->managed_level_id : null,
+            'role' => $primaryRole,
+            'managed_level_id' => $selectedRoles->whereIn('slug', ['bendahara', 'kepsek'])->isNotEmpty() ? $this->managed_level_id : null,
             'is_active' => $this->is_active,
         ];
 
@@ -93,13 +102,16 @@ new class extends Component {
 
         if ($this->editing) {
             $this->editing->update($data);
+            $user = $this->editing;
         } else {
-            User::create($data);
+            $user = User::create($data);
         }
+
+        $user->roles()->sync($this->role_ids);
 
         $this->dispatch('user-saved');
         $this->userModal = false;
-        $this->reset(['name', 'email', 'phone', 'password', 'role', 'managed_level_id', 'is_active', 'editing']);
+        $this->reset(['name', 'email', 'phone', 'password', 'role', 'role_ids', 'managed_level_id', 'is_active', 'editing']);
     }
 
     public function delete(User $user): void
@@ -110,19 +122,7 @@ new class extends Component {
         $user->delete();
     }
     
-    public function getRolesProperty()
-    {
-        return [
-            'admin' => 'Administrator',
-            'yayasan' => 'Yayasan',
-            'kepsek' => 'Kepala Sekolah',
-            'bendahara' => 'Bendahara',
-            'guru' => 'Guru',
-            'staff' => 'Staff',
-            'siswa' => 'Siswa',
-            'user' => 'User Umum',
-        ];
-    }
+    // Removed legacy getRolesProperty
 }; ?>
 
 <div class="p-6 space-y-6 text-slate-900 dark:text-white">
@@ -135,7 +135,7 @@ new class extends Component {
     <div class="flex flex-col md:flex-row gap-4 items-center justify-between">
         <div class="flex gap-2 w-full md:w-auto">
             <x-ui.input wire:model.live="search" icon="o-magnifying-glass" :placeholder="__('Cari user...')" class="w-full md:w-64" />
-            <x-ui.select wire:model.live="role_filter" :placeholder="__('Semua Role')" class="w-full md:w-48" :options="collect($this->roles)->map(fn($v, $k) => ['id' => $k, 'name' => $v])->values()->toArray()" />
+            <x-ui.select wire:model.live="role_filter" :placeholder="__('Semua Role')" class="w-full md:w-48" :options="\App\Models\Role::all()->map(fn($r) => ['id' => $r->slug, 'name' => $r->name])->toArray()" />
         </div>
     </div>
 
@@ -165,7 +165,14 @@ new class extends Component {
             @endscope
 
             @scope('cell_role', $user)
-                <x-ui.badge :label="$this->roles[$user->role] ?? $user->role" class="bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-400 text-[10px] font-bold" />
+                <div class="flex flex-wrap gap-1">
+                    @foreach($user->roles as $role)
+                        <x-ui.badge :label="$role->name" class="bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-400 text-[9px] font-bold" />
+                    @endforeach
+                    @if($user->roles->isEmpty())
+                        <x-ui.badge :label="$user->role" class="bg-slate-100 dark:bg-slate-800 text-slate-400 text-[9px] italic" />
+                    @endif
+                </div>
             @endscope
 
             @scope('cell_phone', $user)
@@ -223,9 +230,28 @@ new class extends Component {
             <x-ui.input wire:model="email" type="email" :label="__('Email Address')" required />
             <x-ui.input wire:model="phone" type="tel" :label="__('No. HP / WhatsApp')" :placeholder="__('08xxxxxxxx')" />
             
-            <x-ui.select wire:model.live="role" :label="__('Role / Peran')" :options="collect($this->roles)->map(fn($v, $k) => ['id' => $k, 'name' => $v])->values()->toArray()" />
+            <div class="space-y-3">
+                <label class="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1.5">{{ __('Role / Peran (Bisa pilih lebih dari satu)') }}</label>
+                <div class="grid grid-cols-2 gap-3 p-4 bg-slate-50 dark:bg-slate-800/50 rounded-2xl border border-slate-100 dark:border-slate-800">
+                    @foreach($allRoles as $r)
+                        <x-ui.checkbox 
+                            wire:model.live="role_ids" 
+                            name="role_ids" 
+                            value="{{ $r->id }}" 
+                            :label="$r->name" 
+                            wire:key="role-{{ $r->id }}"
+                        />
+                    @endforeach
+                </div>
+                @error('role_ids') <span class="text-xs text-red-500">{{ $message }}</span> @enderror
+            </div>
 
-            @if(in_array($role, ['bendahara', 'kepsek']))
+            @php
+                $selectedSlugs = \App\Models\Role::whereIn('id', $this->role_ids)->pluck('slug');
+                $showManagedLevel = $selectedSlugs->intersect(['bendahara', 'kepsek'])->isNotEmpty();
+            @endphp
+
+            @if($showManagedLevel)
                 <x-ui.select wire:model="managed_level_id" :label="__('Kelola Jenjang')" :placeholder="__('Pilih Jenjang')" :options="$levels" />
             @endif
             
