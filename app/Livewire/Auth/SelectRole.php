@@ -8,7 +8,7 @@ use Livewire\Component;
 
 class SelectRole extends Component
 {
-    #[Layout('components.layouts.app')]
+    #[Layout('components.layouts.plain')]
     public function render()
     {
         $roles = auth()->user()->roles;
@@ -25,7 +25,15 @@ class SelectRole extends Component
 
         if ($role) {
             Session::put('active_role_id', $role->id);
-            $this->redirectIntended(default: route('dashboard'), navigate: true);
+
+            // Redirect based on role slug
+            $redirectUrl = match ($role->slug) {
+                'guru' => route('teacher.dashboard'),
+                'siswa' => route('home'),
+                default => route('dashboard'),
+            };
+
+            $this->redirect($redirectUrl, navigate: true);
         }
     }
 }

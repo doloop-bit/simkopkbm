@@ -122,6 +122,18 @@ npm run dev
 
 ---
 
+### **Workflow 5: Handling Multi-Role Access**
+
+1. **Check Role**: Use helper methods on the `User` model rather than raw string checks.
+   - ✅ `if (auth()->user()->isTreasurer())`
+   - ❌ `if (auth()->user()->role === 'bendahara')`
+
+2. **Middleware**: Routes are protected by `auth` and often by specific role check logic in components or `bootstrap/app.php`.
+
+3. **Active Role**: Access the active role via `auth()->user()->activeRole()`.
+
+---
+
 ## 📍 File Location Guide
 
 ### **Where to Put New Files?**
@@ -247,5 +259,5 @@ new class extends Component {
 
 ---
 
-**Last Updated:** 2026-03-01
-**Version:** 3.0 (Native SFC + Custom UI Update)
+**Last Updated:** 2026-04-08
+**Version:** 3.1 (Native SFC + Multi-Role Update)

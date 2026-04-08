@@ -17,7 +17,11 @@ class EnsureRoleSelected
     {
         $user = $request->user();
 
-        if ($user && ! $request->session()->has('active_role_id')) {
+        // Only enforce role selection for protected routes (admin, teacher, financial, etc.)
+        // and avoid redirecting for public routes or the select-role page itself.
+        $isProtectedRoute = $request->is('admin*', 'teacher*', 'financial*', 'ptk*', 'settings*', 'users*', 'registrations*');
+
+        if ($user && $isProtectedRoute && ! $request->session()->has('active_role_id')) {
             $roles = $user->roles;
 
             if ($roles->count() === 1) {
