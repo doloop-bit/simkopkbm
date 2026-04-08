@@ -10,7 +10,7 @@ use App\Models\Transaction;
 use Livewire\Attributes\Layout;
 use Livewire\Component;
 
-new #[Layout('components.admin.layouts.app')] class extends Component
+new #[Layout('components.layouts.app')] class extends Component
 {
     public string $tab = 'financial';
 

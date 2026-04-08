@@ -4,7 +4,7 @@ use App\Models\StudentProfile;
 use Livewire\Attributes\Layout;
 use Livewire\Component;
 
-new #[Layout('components.teacher.layouts.app')] class extends Component {
+new #[Layout('components.layouts.app')] class extends Component {
     public bool $periodicModal = false;
     public float $weight = 0;
     public float $height = 0;

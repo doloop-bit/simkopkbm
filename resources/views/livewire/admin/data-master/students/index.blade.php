@@ -13,7 +13,7 @@ use Livewire\Component;
 use Livewire\WithFileUploads;
 use Livewire\WithPagination;
 
-new #[Layout('components.admin.layouts.app')] class extends Component {
+new #[Layout('components.layouts.app')] class extends Component {
     use WithFileUploads, WithPagination;
 
     public string $search = '';

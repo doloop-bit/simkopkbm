@@ -76,4 +76,4 @@
     }
 @endphp
 
-<x-admin.sub-nav :tabs="$tabs" />
+<x-ui.sub-nav :tabs="$tabs" />

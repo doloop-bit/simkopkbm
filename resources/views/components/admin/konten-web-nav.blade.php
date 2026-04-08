@@ -44,7 +44,7 @@
     ] : [];
 @endphp
 
-<x-admin.sub-nav :tabs="$tabs">
+<x-ui.sub-nav :tabs="$tabs">
     @if ($isVisible)
         <x-slot:actions>
             <x-ui.button 
@@ -57,4 +57,4 @@
             />
         </x-slot:actions>
     @endif
-</x-admin.sub-nav>
+</x-ui.sub-nav>

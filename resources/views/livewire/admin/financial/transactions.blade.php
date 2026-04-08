@@ -15,7 +15,7 @@ use Livewire\WithFileUploads;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Storage;
 
-new #[Layout('components.admin.layouts.app')] class extends Component {
+new #[Layout('components.layouts.app')] class extends Component {
     use WithFileUploads;
     // General Form
     public string $type = 'income'; // 'income' or 'expense'

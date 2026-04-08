@@ -5,7 +5,7 @@ declare(strict_types=1);
 use Livewire\Attributes\Layout;
 use Livewire\Component;
 
-new #[Layout('components.admin.layouts.app')] class extends Component {
+new #[Layout('components.layouts.app')] class extends Component {
     public string $appearance = 'system';
 
     public function mount(): void

@@ -4,7 +4,7 @@ use Livewire\Component;
 use App\Traits\Assessments\HandlesExtracurricularAssessment;
 use Livewire\Attributes\Layout;
 
-new #[Layout('components.teacher.layouts.app')] class extends Component {
+new #[Layout('components.layouts.app')] class extends Component {
     use HandlesExtracurricularAssessment;
 
     public function mount()

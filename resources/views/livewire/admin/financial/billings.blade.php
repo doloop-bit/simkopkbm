@@ -11,7 +11,7 @@ use Livewire\Attributes\Layout;
 use Livewire\Component;
 use Livewire\WithPagination;
 
-new #[Layout('components.admin.layouts.app')] class extends Component {
+new #[Layout('components.layouts.app')] class extends Component {
     use WithPagination;
 
     public ?int $academic_year_id = null;

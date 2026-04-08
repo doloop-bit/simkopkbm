@@ -10,7 +10,7 @@ use Livewire\Attributes\Layout;
 use Livewire\Component;
 use Livewire\WithPagination;
 
-new #[Layout('components.admin.layouts.app')] class extends Component {
+new #[Layout('components.layouts.app')] class extends Component {
     use WithPagination;
 
     public string $name = '';

@@ -9,7 +9,7 @@ use Livewire\Attributes\Async;
 use Livewire\Component;
 use Livewire\WithFileUploads;
 
-new #[Layout('components.admin.layouts.app')] class extends Component
+new #[Layout('components.layouts.app')] class extends Component
 {
     use WithFileUploads;
 

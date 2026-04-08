@@ -4,7 +4,7 @@ use Livewire\Component;
 use App\Traits\Assessments\HandlesAttendanceAssessment;
 use Livewire\Attributes\Layout;
 
-new #[Layout('components.admin.layouts.app')] class extends Component {
+new #[Layout('components.layouts.app')] class extends Component {
     use HandlesAttendanceAssessment;
 
     public function mount()

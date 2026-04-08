@@ -87,7 +87,7 @@
 use Livewire\Attributes\Layout;
 use Livewire\Component;
 
-new #[Layout('components.admin.layouts.app')] class extends Component {
+new #[Layout('components.layouts.app')] class extends Component {
     // Component logic here
 }; ?>
 
@@ -307,7 +307,7 @@ use App\Models\User;
 use Livewire\Attributes\Layout;
 use Livewire\Component;
 
-new #[Layout('components.admin.layouts.app')] class extends Component {
+new #[Layout('components.layouts.app')] class extends Component {
     // Properties
     public ?int $model_id = null;
     public array $data = [];
@@ -421,14 +421,14 @@ trait HandlesGrading {
 
 ```php
 // Teacher Component
-new #[Layout('components.teacher.layouts.app')] class extends Component {
+new #[Layout('components.layouts.app')] class extends Component {
     use HandlesGrading;
 }
 ```
 
 ```php
 // Admin Component
-new #[Layout('components.admin.layouts.app')] class extends Component {
+new #[Layout('components.layouts.app')] class extends Component {
     use HandlesGrading;
 }
 ```

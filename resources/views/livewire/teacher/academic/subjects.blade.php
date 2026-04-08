@@ -6,7 +6,7 @@ use App\Models\Subject;
 use Livewire\Attributes\Layout;
 use Livewire\Component;
 
-new #[Layout('components.teacher.layouts.app')] class extends Component {
+new #[Layout('components.layouts.app')] class extends Component {
     public function with(): array
     {
         $teacher = auth()->user();

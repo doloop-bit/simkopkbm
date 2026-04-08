@@ -10,7 +10,7 @@ use App\Models\SchoolProfile;
 use Carbon\Carbon;
 use Barryvdh\DomPDF\Facade\Pdf;
 
-new #[Layout('components.admin.layouts.app')] class extends Component {
+new #[Layout('components.layouts.app')] class extends Component {
     public string $tab = 'bku'; // 'bku', 'bank', 'tunai'
     
     public int $month;

@@ -7,7 +7,7 @@ use App\Models\Classroom;
 use Livewire\Attributes\Layout;
 use Livewire\Component;
 
-new #[Layout('components.admin.layouts.app')] class extends Component {
+new #[Layout('components.layouts.app')] class extends Component {
     use HandlesDailyAttendance;
 
     public function mount(): void

@@ -4,7 +4,7 @@ use Livewire\Component;
 use App\Traits\Assessments\HandlesGradingAssessment;
 use Livewire\Attributes\Layout;
 
-new #[Layout('components.teacher.layouts.app')] class extends Component {
+new #[Layout('components.layouts.app')] class extends Component {
     use HandlesGradingAssessment;
 
     public function mount()

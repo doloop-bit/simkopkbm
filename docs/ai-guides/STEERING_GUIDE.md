@@ -114,8 +114,8 @@ npm run dev
 1.  **Extract Logic**: Create a Trait in `app/Traits/Assessments/`.
 2.  **Extract UI**: Create a Partial View in `resources/views/livewire/shared/_partials/`.
 3.  **Create Two Components**:
-    - `livewire/admin/.../feature.blade.php` -> uses `#[Layout('components.admin.layouts.app')]`
-    - `livewire/teacher/.../feature.blade.php` -> uses `#[Layout('components.teacher.layouts.app')]`
+    - `livewire/admin/.../feature.blade.php` -> uses `#[Layout('components.layouts.app')]`
+    - `livewire/teacher/.../feature.blade.php` -> uses `#[Layout('components.layouts.app')]`
 4.  **Route Explicitly**:
     - Admin route -> Admin component
     - Teacher route -> Teacher component
@@ -197,7 +197,7 @@ use Livewire\Attributes\Layout;
 use Livewire\Component;
 use Livewire\WithPagination;
 
-new #[Layout('components.admin.layouts.app')] class extends Component {
+new #[Layout('components.layouts.app')] class extends Component {
     use WithPagination;
 
     public $search = '';

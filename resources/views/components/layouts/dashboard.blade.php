@@ -1,5 +1,8 @@
 @props([
     'title' => null,
+    'dashboardRoute' => route('dashboard'),
+    'hasSubNav' => false,
+    'showBottomNav' => false,
 ])
 
 <!DOCTYPE html>
@@ -14,7 +17,7 @@
     @include('partials.head')
 
     <style>
-        /* INLINE BRUTE FORCE PATCH FOR SIDEBAR */
+        /* Sidebar styles copied from original layouts */
         .sidebar-premium .menu li > a.active,
         .sidebar-premium .menu li > details > summary.active,
         .sidebar-premium .menu li > .active {
@@ -29,20 +32,13 @@
             background-color: rgba(30, 41, 59, 0.4) !important;
         }
 
-        /* Custom Scrollbar for Sidebar */
-        .custom-scrollbar::-webkit-scrollbar {
-            width: 5px;
-        }
-        .custom-scrollbar::-webkit-scrollbar-track {
-            background: transparent;
-        }
+        .custom-scrollbar::-webkit-scrollbar { width: 5px; }
+        .custom-scrollbar::-webkit-scrollbar-track { background: transparent; }
         .custom-scrollbar::-webkit-scrollbar-thumb {
             background: rgba(148, 163, 184, 0.2);
             border-radius: 10px;
         }
-        .custom-scrollbar::-webkit-scrollbar-thumb:hover {
-            background: rgba(148, 163, 184, 0.4);
-        }
+        .custom-scrollbar::-webkit-scrollbar-thumb:hover { background: rgba(148, 163, 184, 0.4); }
         .custom-scrollbar {
             scrollbar-width: thin;
             scrollbar-color: rgba(148, 163, 184, 0.2) transparent;
@@ -61,7 +57,7 @@
     </div>
 
     <div class="flex min-h-screen relative">
-        {{-- Sidebar --}}
+        {{-- Unified Sidebar --}}
         <aside
             x-cloak
             :class="[
@@ -73,7 +69,7 @@
             {{-- Fixed Logo Header --}}
             <div class="px-5 py-6 shrink-0 relative group h-[88px]">
                 <div class="flex items-center justify-between h-full">
-                    <a href="{{ route('dashboard') }}" class="flex items-center gap-3 no-underline min-w-0 transition-opacity" :class="sidebarCollapsed ? 'opacity-100 group-hover:opacity-0 justify-center w-full' : ''" wire:navigate>
+                    <a href="{{ $dashboardRoute }}" class="flex items-center gap-3 no-underline min-w-0 transition-opacity" :class="sidebarCollapsed ? 'opacity-100 group-hover:opacity-0 justify-center w-full' : ''" wire:navigate>
                         <div class="shrink-0 flex items-center justify-center">
                             <x-global.app-logo-icon class="size-8 fill-primary block aspect-square object-contain" />
                         </div>
@@ -95,8 +91,13 @@
             </div>
 
             {{-- Scrollable Navigation --}}
+            {{-- Scrollable Navigation --}}
             <div class="flex-1 overflow-y-auto custom-scrollbar px-2">
-                <x-admin.sidebar :only-menu="true" />
+                @isset($sidebarMenu)
+                    {{ $sidebarMenu }}
+                @else
+                    <x-layouts.sidebar />
+                @endisset
             </div>
 
             {{-- User & Settings (Fixed at bottom) --}}
@@ -145,27 +146,17 @@
                 <x-admin.header />
 
                 <div class="p-responsive flex-1">
-                    @php
-                        $hasSubNav = request()->routeIs('admin.school-profile.*', 'admin.news.*', 'admin.gallery.*', 'admin.programs.*', 'admin.contact-inquiries.*', 'admin.report-card.*', 'admin.assessments.attendance', 'admin.assessments.extracurricular', 'financial.*');
-                    @endphp
-
                     @if ($hasSubNav)
-                        {{-- Sticky pill nav: uses negative margin to bleed past p-responsive padding --}}
                         <div class="sticky top-0 z-10 -mt-4 md:-mt-8 lg:-mt-12 -mx-4 md:-mx-8 lg:-mx-12 px-4 md:px-8 lg:px-12 py-3 hidden lg:block">
-                            <x-admin.konten-web-nav />
-                            <x-admin.report-card-nav />
-                            <x-admin.keuangan-nav />
+                            {{ $subNav }}
                         </div>
 
-                        {{-- Mobile: components output their own fixed bottom nav --}}
                         <div class="lg:hidden">
-                            <x-admin.konten-web-nav />
-                            <x-admin.report-card-nav />
-                            <x-admin.keuangan-nav />
+                            {{ $subNav }}
                         </div>
                     @endif
 
-                    <div class="max-w-7xl mx-auto">
+                    <div class="max-w-7xl mx-auto {{ $showBottomNav ? 'pb-20 md:pb-0' : '' }}">
                         {{ $slot }}
                     </div>
                 </div>
@@ -173,6 +164,10 @@
         </div>
     </div>
 
+    @if($showBottomNav)
+        {{ $bottomNav }}
+    @endif
+    
     <x-ui.toast />
 </body>
 </html>
