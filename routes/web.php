@@ -9,6 +9,10 @@ Route::view('admin/dashboard', 'dashboard')
     ->middleware(['auth', 'verified'])
     ->name('dashboard');
 
+Route::get('/select-role', \App\Livewire\Auth\SelectRole::class)
+    ->middleware(['auth', 'verified'])
+    ->name('select-role');
+
 require __DIR__.'/settings.php';
 require __DIR__.'/academic.php';
 require __DIR__.'/students.php';

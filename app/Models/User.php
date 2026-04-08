@@ -4,6 +4,7 @@ namespace App\Models;
 
 // use Illuminate\Contracts\Auth\MustVerifyEmail;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
+use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
 use Illuminate\Support\Str;
@@ -29,14 +30,35 @@ class User extends Authenticatable
         'managed_level_id',
     ];
 
+    public function roles(): BelongsToMany
+    {
+        return $this->belongsToMany(Role::class);
+    }
+
+    public function activeRole(): ?Role
+    {
+        $roleId = session('active_role_id');
+
+        if (! $roleId) {
+            return null;
+        }
+
+        return $this->roles->firstWhere('id', $roleId);
+    }
+
+    public function activeRoleSlug(): string
+    {
+        return $this->activeRole()?->slug ?? (string) $this->role;
+    }
+
     public function isAdmin(): bool
     {
-        return $this->role === 'admin';
+        return $this->activeRoleSlug() === 'admin';
     }
 
     public function isGuru(): bool
     {
-        return $this->role === 'guru';
+        return $this->activeRoleSlug() === 'guru';
     }
 
     public function profiles()
@@ -216,17 +238,17 @@ class User extends Authenticatable
 
     public function isTreasurer(): bool
     {
-        return $this->role === 'bendahara';
+        return $this->activeRoleSlug() === 'bendahara';
     }
 
     public function isHeadmaster(): bool
     {
-        return $this->role === 'kepsek';
+        return $this->activeRoleSlug() === 'kepsek';
     }
 
     public function isYayasan(): bool
     {
-        return $this->role === 'yayasan';
+        return $this->activeRoleSlug() === 'yayasan';
     }
 
     public function canManageLevel(int $levelId): bool
@@ -236,5 +258,17 @@ class User extends Authenticatable
         }
 
         return $this->managed_level_id === $levelId;
+    }
+
+    public function hasMultipleRoles(): bool
+    {
+        return $this->roles->count() > 1;
+    }
+
+    public function otherRoles()
+    {
+        $activeRoleId = session('active_role_id');
+
+        return $this->roles->where('id', '!=', $activeRoleId);
     }
 }
