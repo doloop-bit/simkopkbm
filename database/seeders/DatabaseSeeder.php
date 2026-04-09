@@ -11,32 +11,13 @@ class DatabaseSeeder extends Seeder
      */
     public function run(): void
     {
+        // === CORE APPLICATION DATA (ESSENTIAL) ===
+        // Data yang tidak memiliki CRUD atau wajib ada untuk infrastruktur aplikasi.
         $this->command->info('Configuring core application data...');
-
-        // 1. Core Authentication & Users
         $this->call([
-            AdminSeeder::class,
-        ]);
-
-        // 2. Run Core Seeders
-        $this->command->info('Running Level and Subject seeders...');
-        $this->call([
-            LevelSeeder::class,
-            SubjectSeeder::class,
-            LearningAchievementSeeder::class, // Extends levels with phase_map and creates CPs
-        ]);
-
-        // 3. Kurikulum Merdeka Seeders
-        $this->command->info('Running Kurikulum Merdeka seeders...');
-        $this->call([
-            DevelopmentalAspectsSeeder::class,     // For PAUD
-            ExtracurricularActivitiesSeeder::class, // For Extracurriculars
-        ]);
-
-        // 4. Financial Infrastructure
-        $this->command->info('Running Financial seeders...');
-        $this->call([
-            FinancialSeeder::class,
+            AdminSeeder::class,                 // Akun Admin Utama
+            LevelSeeder::class,                 // Jenjang & Phase Map (Kurikulum Merdeka)
+            DevelopmentalAspectsSeeder::class,  // Indikator Penilaian PAUD
         ]);
 
         $this->command->info('Database seeding completed successfully!');
