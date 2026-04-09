@@ -27,8 +27,11 @@
         @else
             @vite(['resources/css/app.css'])
         @endif
+
+        @stack('heads')
     </head>
     <body class="antialiased">
         {{ $slot }}
+        @stack('scripts')
     </body>
 </html>

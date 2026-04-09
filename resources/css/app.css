@@ -12,6 +12,17 @@
 @theme {
     --font-sans:
         "Inter", "Instrument Sans", ui-sans-serif, system-ui, sans-serif;
+    --font-headline: "Manrope", "Inter", sans-serif;
+
+    /* Elegant Theme Colors (from template) */
+    --color-elegant-primary: #003822;
+    --color-elegant-accent: #C5A059;
+    --color-elegant-accent-dark: #A6823D;
+    --color-elegant-accent-light: #F4EBD0;
+    --color-elegant-secondary: #008a4c;
+    --color-elegant-surface: #f8f9fa;
+    --color-elegant-on-surface: #191c1d;
+    --color-elegant-on-surface-variant: #434f47;
 
     /* Primary Accent: Electric Emerald */
     --color-primary-50: #f0fdf4;
@@ -112,6 +123,34 @@
 
     .btn-ghost {
         @apply hover:bg-slate-100 dark:hover:bg-slate-800 rounded-2xl transition-colors cursor-pointer;
+    }
+
+    /* Elegant Theme Components */
+    .elegant-card {
+        @apply bg-white dark:bg-slate-900 border border-elegant-accent-light/30 rounded-3xl shadow-lg transition-all duration-300 hover:shadow-xl;
+    }
+
+    .elegant-btn-primary {
+        @apply bg-elegant-primary text-white px-8 py-3 rounded-xl font-bold hover:bg-elegant-primary/90 transition-all active:scale-95;
+    }
+
+    .elegant-btn-accent {
+        @apply bg-elegant-accent text-white px-8 py-3 rounded-xl font-bold hover:bg-elegant-accent-dark shadow-lg shadow-elegant-accent/20 transition-all active:scale-95;
+    }
+}
+
+@layer utilities {
+    .islamic-pattern {
+        background-color: #fcfbf7;
+        background-image: url("data:image/svg+xml,%3Csvg width='60' height='60' viewBox='0 0 60 60' xmlns='http://www.w3.org/2000/svg'%3E%3Cpath d='M30 0l2.5 7.5L40 10l-7.5 2.5L30 20l-2.5-7.5L20 10l7.5-2.5L30 0zm0 40l2.5 7.5L40 50l-7.5 2.5L30 60l-2.5-7.5L20 50l7.5-2.5L30 40zM0 30l2.5 7.5L10 40l-7.5 2.5L0 50l-2.5-7.5L-10 40l7.5-2.5L0 30zm40 0l2.5 7.5L50 40l-7.5 2.5L40 50l-2.5-7.5L30 40l7.5-2.5L40 30z' fill='%23C5A059' fill-opacity='0.05' fill-rule='evenodd'/%3E%3C/svg%3E");
+    }
+
+    .glass-nav-elegant {
+        @apply sticky top-0 w-full z-50 bg-white/90 dark:bg-slate-900/90 backdrop-blur-lg border-b border-elegant-accent-light/30;
+    }
+
+    .text-glow-elegant {
+        text-shadow: 0 0 20px rgba(197, 160, 89, 0.2);
     }
 }
 
