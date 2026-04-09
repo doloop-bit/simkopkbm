@@ -1,149 +1,224 @@
 <script>
     import PublicLayout from '../../Layouts/PublicLayout.svelte';
+    import Button from '../../Components/Button.svelte';
+    import { onMount } from 'svelte';
     
-    let { schoolProfile, latestNews, programs, featuredPhotos } = $props();
+    let { schoolProfile, latestNews = [], programs = [], featuredPhotos = [] } = $props();
     
     let activeSlide = $state(0);
-    
-    // Auto slide for hero carousel
-    if (programs.length > 1) {
-        setInterval(() => {
-            activeSlide = (activeSlide + 1) % programs.length;
-        }, 5000);
-    }
+    let scrolled = $state(false);
+
+    onMount(() => {
+        window.addEventListener('scroll', () => {
+            scrolled = window.scrollY > 50;
+        });
+        
+        if (programs.length > 1) {
+            const interval = setInterval(() => {
+                activeSlide = (activeSlide + 1) % programs.length;
+            }, 6000);
+            return () => clearInterval(interval);
+        }
+    });
 
     const schoolName = schoolProfile?.name || 'SIMKOPKBM';
-    const vision = schoolProfile?.vision || '';
+    const vision = schoolProfile?.vision || 'Mewujudkan masyarakat cerdas, terampil, dan mandiri melalui pendidikan berkualitas.';
     const logoUrl = schoolProfile?.logo_path ? `/storage/${schoolProfile.logo_path}` : null;
+
+    const stats = [
+        { label: 'Siswa Aktif', value: '180+', icon: 'M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197M13 7a4 4 0 11-8 0 4 4 0 018 0z' },
+        { label: 'Alumni Sukses', value: '50+', icon: 'M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4' },
+        { label: 'Program Unggulan', value: '4+', icon: 'M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477 4.5 1.253v13C19.832 18.477 18.247 18 16.5 18c-1.746 0-3.332.477-4.5 1.253' },
+        { label: 'Tahun Berdiri', value: '2022', icon: 'M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z' }
+    ];
 </script>
 
 <PublicLayout {schoolProfile} currentRoute="Home">
-    <!-- Hero Section -->
-    <div class="relative bg-zinc-950 text-zinc-50 overflow-hidden">
-        <div class="absolute inset-0 bg-[radial-gradient(ellipse_at_top,_var(--tw-gradient-stops))] from-zinc-800/40 via-zinc-950 to-zinc-950"></div>
-        
-        <div class="relative max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-20 sm:py-28 lg:py-32">
-            <div class="text-center max-w-4xl mx-auto">
-                {#if logoUrl}
-                    <div class="mb-8">
-                        <img src={logoUrl} alt={schoolName} class="h-20 sm:h-24 lg:h-28 mx-auto drop-shadow-xl hover:scale-105 transition-transform duration-300">
+    <!-- Hero Section with Motion -->
+    <section class="relative min-h-[90vh] flex items-center overflow-hidden bg-slate-950">
+        <!-- Dynamic Background -->
+        <div class="absolute inset-0 z-0">
+            <div class="absolute inset-0 bg-gradient-to-br from-slate-950 via-slate-900 to-slate-950 opacity-90"></div>
+            {#if programs.length > 0 && programs[activeSlide]?.image_path}
+                <img 
+                    src={`/storage/${programs[activeSlide].image_path}`} 
+                    class="w-full h-full object-cover transition-opacity duration-1000 blur-sm opacity-30 scale-105" 
+                    alt="Background"
+                >
+            {:else}
+                <div class="absolute inset-0 bg-[url('https://www.transparenttextures.com/patterns/dark-matter.png')] opacity-20"></div>
+            {/if}
+            
+            <!-- Animated Orbs -->
+            <div class="absolute top-1/4 -left-20 w-96 h-96 bg-amber-500/10 rounded-full blur-[120px] animate-pulse"></div>
+            <div class="absolute bottom-1/4 -right-20 w-96 h-96 bg-amber-500/5 rounded-full blur-[120px] animate-pulse [animation-delay:2s]"></div>
+        </div>
+
+        <div class="relative z-10 max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-24">
+            <div class="grid lg:grid-cols-2 gap-16 items-center">
+                <div class="space-y-8 text-center lg:text-left">
+                    <div class="inline-flex items-center px-4 py-2 rounded-full bg-amber-500/10 border border-amber-500/20 text-amber-500 text-xs font-bold tracking-widest uppercase animate-in fade-in slide-in-from-left-4 duration-1000">
+                        Selamat Datang di {schoolName}
                     </div>
-                {/if}
-                <h1 class="text-4xl sm:text-5xl md:text-6xl lg:text-7xl font-bold font-heading mb-6 tracking-tight leading-tight">
-                    <span class="bg-gradient-to-br from-white via-zinc-200 to-zinc-400 bg-clip-text text-transparent">
-                        {schoolName}
-                    </span>
-                </h1>
-                <p class="text-lg sm:text-xl md:text-2xl mb-8 text-zinc-400 font-medium tracking-wide">
-                    Pusat Kegiatan Belajar Masyarakat
-                </p>
-                {#if vision}
-                    <p class="text-base sm:text-lg text-zinc-400 leading-relaxed mb-10 px-4 max-w-3xl mx-auto font-light">
+                    
+                    <h1 class="text-5xl sm:text-6xl lg:text-7xl font-bold font-heading text-white tracking-tight leading-[1.1] animate-in fade-in slide-in-from-left-8 duration-1000 [animation-delay:200ms]">
+                        Beriman, Cerdas, <br/>
+                        <span class="text-transparent bg-clip-text bg-gradient-to-r from-amber-400 to-amber-600">Berkarakter dan Mandiri</span>
+                    </h1>
+                    
+                    <p class="text-xl text-slate-400 leading-relaxed max-w-xl mx-auto lg:mx-0 animate-in fade-in slide-in-from-left-10 duration-1000 [animation-delay:400ms]">
                         {vision}
                     </p>
-                {/if}
-                <div class="flex flex-col sm:flex-row gap-4 justify-center items-center px-4">
-                    <a href="/program-pendidikan" class="group inline-flex items-center justify-center px-8 py-4 bg-zinc-100 text-zinc-900 font-semibold rounded-full shadow-lg hover:shadow-xl hover:bg-white transition-all duration-300 transform hover:-translate-y-0.5 w-full sm:w-auto">
-                        Lihat Program
-                        <svg class="w-5 h-5 ml-2 group-hover:translate-x-1 transition-transform duration-200" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 8l4 4m0 0l-4 4m4-4H3" />
-                        </svg>
-                    </a>
-                    <a href="/pendaftaran" class="group inline-flex items-center justify-center px-8 py-4 bg-amber-500 text-white font-semibold rounded-full shadow-lg shadow-amber-500/20 hover:shadow-amber-500/40 hover:bg-amber-400 transition-all duration-300 transform hover:-translate-y-0.5 w-full sm:w-auto">
-                        Pendaftaran Siswa
-                        <svg class="w-5 h-5 ml-2 group-hover:translate-x-1 transition-transform duration-200" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
-                        </svg>
-                    </a>
-                </div>
-            </div>
-        </div>
-        <div class="absolute bottom-0 left-0 right-0 h-px bg-gradient-to-r from-transparent via-zinc-700 to-transparent"></div>
-    </div>
 
-    <!-- Programs Carousel/Grid -->
-    {#if programs.length > 0}
-    <div class="bg-zinc-900 overflow-hidden border-b border-zinc-200/50">
-        <div class="relative w-full aspect-[16/9] sm:aspect-[21/9] lg:aspect-[3/1]">
-            {#each programs as program, index}
-                {#if activeSlide === index}
-                <div class="absolute inset-0 w-full h-full transition-opacity duration-1000">
-                    <img src={program.image_path ? `/storage/${program.image_path}` : 'https://placehold.co/1920x600/27272a/ffffff.png'} class="object-cover w-full h-full opacity-90" alt={program.name}>
-                    <div class="absolute inset-0 bg-gradient-to-t from-zinc-950/95 via-zinc-950/50 to-transparent"></div>
-                    <div class="absolute bottom-0 left-0 w-full px-6 py-12 sm:p-16 text-center sm:text-left text-white">
-                        <div class="max-w-7xl mx-auto sm:px-6 lg:px-8">
-                            <h3 class="text-3xl sm:text-4xl lg:text-5xl font-bold font-heading mb-4 drop-shadow-lg tracking-tight">{program.name}</h3>
-                            <a href="/pendaftaran" class="inline-flex items-center justify-center px-6 py-3 bg-amber-500 text-white font-semibold rounded-full hover:bg-amber-400 transition-colors shadow-lg">
-                                Daftar Sekarang
-                                <svg class="w-4 h-4 ml-2" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M14 5l7 7m0 0l-7 7m7-7H3"></path></svg>
-                            </a>
-                        </div>
+                    <div class="flex flex-col sm:flex-row gap-4 justify-center lg:justify-start pt-4 animate-in fade-in slide-in-from-left-12 duration-1000 [animation-delay:600ms]">
+                        <Button onclick={() => window.location.href = '/pendaftaran'} size="lg" class="px-12 group">
+                            Mulai Pendaftaran
+                            <svg class="size-5 group-hover:translate-x-1 transition-transform" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 8l4 4m0 0l-4 4m4-4H3"/></svg>
+                        </Button>
+                        <Button variant="outline" onclick={() => window.location.href = '/program-pendidikan'} size="lg" class="border-slate-700 text-white hover:border-amber-500 hover:bg-amber-500/10">
+                            Jelajahi Program
+                        </Button>
                     </div>
                 </div>
-                {/if}
-            {/each}
-        </div>
-    </div>
-    {/if}
 
-    <!-- Latest News -->
-    {#if latestNews.length > 0}
-    <section class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-24">
-        <div class="flex flex-col md:flex-row md:items-end justify-between mb-12 gap-6">
-            <div class="max-w-2xl">
-                <h2 class="text-3xl md:text-4xl font-bold font-heading text-zinc-900 tracking-tight">Berita Terbaru</h2>
-                <p class="text-zinc-500 mt-4 text-lg">Ikuti perkembangan terbaru dan kegiatan menarik di PKBM kami.</p>
-            </div>
-            <a href="/berita" class="inline-flex items-center text-zinc-900 font-semibold hover:text-amber-600 transition-colors group">
-                Lihat Semua
-                <svg class="w-5 h-5 ml-2 group-hover:translate-x-1 transition-transform" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 8l4 4m0 0l-4 4m4-4H3" />
-                </svg>
-            </a>
-        </div>
-
-        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
-            {#each latestNews as article}
-            <article class="group relative flex flex-col bg-white rounded-2xl ring-1 ring-zinc-200/50 shadow-sm hover:shadow-lg transition-all duration-300 overflow-hidden">
-                <div class="aspect-[16/9] bg-zinc-100 overflow-hidden">
-                    {#if article.featured_image_path}
-                        <img src={`/storage/${article.featured_image_path}`} alt={article.title} class="object-cover w-full h-full group-hover:scale-105 transition-transform duration-500">
-                    {:else}
-                        <div class="w-full h-full flex items-center justify-center text-zinc-300">
-                            <svg class="w-12 h-12" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" /></svg>
+                <!-- Floating Featured Card -->
+                <div class="hidden lg:block relative animate-in fade-in zoom-in duration-1000 [animation-delay:800ms]">
+                    <div class="relative z-20 bg-slate-900/40 backdrop-blur-3xl border border-white/10 p-2 rounded-[2.5rem] shadow-2xl">
+                        <div class="overflow-hidden rounded-[2rem] aspect-[4/5] relative group">
+                            {#if programs.length > 0}
+                                <img 
+                                    src={programs[activeSlide]?.image_path ? `/storage/${programs[activeSlide].image_path}` : 'https://placehold.co/800x1000/1e293b/ffffff'} 
+                                    class="w-full h-full object-cover transition-transform duration-700 group-hover:scale-110" 
+                                    alt="Featured"
+                                >
+                                <div class="absolute inset-0 bg-gradient-to-t from-slate-950 via-transparent to-transparent opacity-60"></div>
+                                <div class="absolute bottom-10 left-10 right-10">
+                                    <h3 class="text-2xl font-bold text-white mb-2">{programs[activeSlide]?.name}</h3>
+                                    <p class="text-amber-500 text-sm font-bold uppercase tracking-widest">Program Unggulan</p>
+                                </div>
+                            {/if}
                         </div>
-                    {/if}
+                    </div>
+                    <!-- Decorative back layers -->
+                    <div class="absolute top-10 -right-10 w-full h-full bg-amber-500/5 rounded-[2.5rem] -z-10 animate-pulse"></div>
+                    <div class="absolute -bottom-10 -left-10 w-full h-full border border-white/5 rounded-[2.5rem] -z-20"></div>
                 </div>
-                <div class="p-6 md:p-8 flex-1 flex flex-col">
-                    <h3 class="text-xl font-bold font-heading leading-tight text-zinc-900 group-hover:text-amber-600 transition-colors line-clamp-2">
-                        <a href={`/berita/${article.slug}`}>
-                            <span class="absolute inset-0"></span>
-                            {article.title}
-                        </a>
-                    </h3>
-                    <p class="mt-4 text-zinc-600 line-clamp-3 text-sm leading-relaxed">
-                        {article.excerpt || ''}
-                    </p>
-                </div>
-            </article>
-            {/each}
+            </div>
         </div>
     </section>
-    {/if}
 
-    <!-- CTA Section -->
-    <div class="relative bg-zinc-950 text-white overflow-hidden py-24 sm:py-32 mt-auto">
-        <div class="relative max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 text-center">
-            <h2 class="text-3xl sm:text-4xl md:text-5xl font-bold font-heading mb-6 tracking-tight">Bergabunglah Bersama Kami</h2>
-            <p class="text-lg sm:text-xl text-zinc-400 mb-10 leading-relaxed max-w-2xl mx-auto font-light">
-                Daftarkan diri Anda atau keluarga untuk mendapatkan pendidikan berkualitas dan terjangkau.
-            </p>
-            <a href="/pendaftaran" class="group inline-flex items-center justify-center px-8 py-4 bg-amber-500 text-white font-semibold rounded-full shadow-xl hover:bg-amber-400 transition-all duration-300 transform hover:-translate-y-0.5">
-                Daftar Sekarang
-                <svg class="w-5 h-5 ml-2 group-hover:translate-x-1 transition-transform" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 8l4 4m0 0l-4 4m4-4H3" />
-                </svg>
-            </a>
+    <!-- Stats Bar -->
+    <div class="relative z-20 -mt-16 max-w-6xl mx-auto px-4">
+        <div class="grid grid-cols-2 lg:grid-cols-4 bg-white dark:bg-slate-900 rounded-[2.5rem] shadow-2xl border border-slate-100 dark:border-slate-800 divide-x divide-slate-100 dark:divide-slate-800 overflow-hidden">
+            {#each stats as stat}
+                <div class="p-8 text-center hover:bg-slate-50 dark:hover:bg-slate-800/50 transition-colors group">
+                    <div class="w-12 h-12 bg-amber-500/10 rounded-2xl flex items-center justify-center text-amber-500 mx-auto mb-4 group-hover:scale-110 transition-transform">
+                        <svg class="size-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d={stat.icon} />
+                        </svg>
+                    </div>
+                    <div class="text-2xl font-bold text-slate-900 dark:text-white mb-1 leading-none">{stat.value}</div>
+                    <div class="text-[10px] font-bold text-slate-400 uppercase tracking-widest">{stat.label}</div>
+                </div>
+            {/each}
         </div>
     </div>
+
+    <!-- Featured Programs Grid -->
+    {#if programs.length > 0}
+        <section class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-32">
+            <div class="flex flex-col md:flex-row items-end justify-between mb-16 gap-8">
+                <div class="max-w-2xl">
+                    <div class="text-amber-500 text-xs font-bold uppercase tracking-[0.3em] mb-4">Kurikulum & Kompetensi</div>
+                    <h2 class="text-4xl font-bold font-heading text-slate-900 dark:text-white tracking-tight leading-tight">
+                        Program Pendidikan <br/><span class="text-slate-400">Pilihan Terbaik</span>
+                    </h2>
+                </div>
+                <Button variant="ghost" onclick={() => window.location.href = '/program-pendidikan'} class="group">
+                    Lihat Semua
+                    <svg class="size-4 group-hover:translate-x-1 transition-transform" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 8l4 4m0 0l-4 4m4-4H3"/></svg>
+                </Button>
+            </div>
+
+            <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
+                {#each programs.slice(0, 3) as program}
+                    <div class="group relative bg-white dark:bg-slate-900 rounded-[2rem] overflow-hidden border border-slate-100 dark:border-slate-800 shadow-sm hover:shadow-2xl transition-all duration-500 hover:-translate-y-2">
+                        <div class="aspect-[4/3] overflow-hidden grayscale group-hover:grayscale-0 transition-all duration-700">
+                            <img 
+                                src={program.image_path ? `/storage/${program.image_path}` : 'https://placehold.co/600x400/f8fafc/cbd5e1'} 
+                                class="w-full h-full object-cover transition-transform duration-700 group-hover:scale-110" 
+                                alt={program.name}
+                            >
+                        </div>
+                        <div class="p-8">
+                            <h3 class="text-xl font-bold text-slate-900 dark:text-white mb-3 tracking-tight group-hover:text-amber-600 transition-colors uppercase leading-none">{program.name}</h3>
+                            <div class="w-10 h-1 bg-amber-500/20 mb-6 group-hover:w-20 transition-all"></div>
+                            <Button variant="outline" size="sm" class="w-full" onclick={() => window.location.href = `/program-pendidikan#${program.id}`}>
+                                Detail Program
+                            </Button>
+                        </div>
+                    </div>
+                {/each}
+            </div>
+        </section>
+    {/if}
+
+    <!-- Latest News Masonry -->
+    {#if latestNews.length > 0}
+        <section class="bg-slate-50 dark:bg-slate-950 py-32 border-y border-slate-100 dark:border-slate-900">
+            <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+                <div class="text-center mb-20">
+                    <div class="text-amber-500 text-xs font-bold uppercase tracking-[0.3em] mb-4">Update & Wawasan</div>
+                    <h2 class="text-4xl font-bold font-heading text-slate-900 dark:text-white tracking-tight">Kabar Terbaru</h2>
+                </div>
+
+                <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-10">
+                    {#each latestNews.slice(0, 3) as article}
+                        <article class="group flex flex-col">
+                            <div class="aspect-video rounded-3xl overflow-hidden mb-6 shadow-lg">
+                                <img 
+                                    src={article.featured_image_path ? `/storage/${article.featured_image_path}` : 'https://placehold.co/1280x720/e2e8f0/64748b'} 
+                                    class="w-full h-full object-cover transition-transform duration-700 group-hover:scale-105" 
+                                    alt={article.title}
+                                >
+                            </div>
+                            <div class="space-y-4">
+                                <div class="flex items-center gap-4 text-[10px] font-bold text-slate-400 uppercase tracking-widest leading-none">
+                                    <span class="text-amber-500">Aktivitas</span>
+                                    <span class="w-1 h-1 bg-slate-300 rounded-full"></span>
+                                    <span>{new Date().toLocaleDateString('id-ID', { year: 'numeric', month: 'long', day: 'numeric'})}</span>
+                                </div>
+                                <h3 class="text-xl font-bold text-slate-900 dark:text-white tracking-tight leading-tight group-hover:text-amber-600 transition-colors">
+                                    <a href={`/berita/${article.slug}`}>{article.title}</a>
+                                </h3>
+                                <p class="text-slate-500 text-sm line-clamp-2 leading-relaxed font-medium">
+                                    {article.excerpt || 'Pelajari selengkapnya tentang berita dan kegiatan terbaru di sekolah kami melalui artikel ini.'}
+                                </p>
+                            </div>
+                        </article>
+                    {/each}
+                </div>
+            </div>
+        </section>
+    {/if}
+
+    <!-- Premium CTA -->
+    <section class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-32">
+        <div class="relative rounded-[3rem] overflow-hidden bg-slate-900 p-12 sm:p-24 text-center">
+            <div class="absolute inset-0 z-0">
+                <div class="absolute inset-0 bg-gradient-to-br from-amber-600/20 to-slate-900/60 mix-blend-overlay"></div>
+                <div class="absolute top-0 right-0 p-20 opacity-10">
+                    <svg class="size-64 text-amber-500" fill="currentColor" viewBox="0 0 24 24"><path d="M12 2L4.5 20.29l.71.71L12 18l6.79 3 .71-.71L12 2z"/></svg>
+                </div>
+            </div>
+            
+            <div class="relative z-10 max-w-2xl mx-auto">
+                <h2 class="text-3xl sm:text-4xl md:text-5xl font-bold font-heading text-white mb-8 leading-tight tracking-tight">Siap Membangun <br/>Masa Depan Lebih Cerah?</h2>
+                <p class="text-slate-400 text-lg mb-12 font-medium">Dapatkan pengalaman belajar yang transformatif. Pendaftaran untuk tahun ajaran baru telah dibuka.</p>
+                <Button variant="primary" size="lg" onclick={() => window.location.href = '/pendaftaran'} class="px-12">
+                    Daftar Sekarang
+                </Button>
+            </div>
+        </div>
+    </section>
 </PublicLayout>
