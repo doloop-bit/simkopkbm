@@ -10,7 +10,7 @@ import {
 export default defineConfig({
     plugins: [
         laravel({
-            input: ['resources/css/app.css', 'resources/js/app.js', 'resources/js/paud.js', 'resources/js/paketa.js'],
+            input: ['resources/css/app.css', 'resources/js/app.js', 'resources/js/paud.js', 'resources/js/paketa.js', 'resources/js/public-site.js'],
             refresh: true,
         }),
         tailwindcss(),
