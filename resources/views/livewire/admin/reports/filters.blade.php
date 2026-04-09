@@ -41,16 +41,7 @@
             @endif
             
             <div class="{{ $tab === 'attendance' ? 'md:col-span-2' : 'md:col-span-2' }}">
-                @if($tab === 'financial')
-                    <x-ui.button 
-                        wire:click="downloadFinancialReport" 
-                        wire:loading.attr="disabled"
-                        :label="__('Ekspor CSV')" 
-                        icon="o-arrow-down-tray" 
-                        class="btn-primary w-full shadow-lg shadow-primary/20" 
-                        spinner="downloadFinancialReport"
-                    />
-                @endif
+                {{-- Export button removed --}}
             </div>
         </div>
     </div>
