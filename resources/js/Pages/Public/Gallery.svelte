@@ -10,7 +10,7 @@
             {#each photos as photo}
                 <div class="group relative aspect-square bg-zinc-100 rounded-2xl overflow-hidden shadow-sm hover:shadow-xl transition-all duration-500">
                     <img src={`/storage/${photo.image_path}`} alt={photo.title} class="object-cover w-full h-full group-hover:scale-110 transition-transform duration-700">
-                    <div class="absolute inset-0 bg-gradient-to-t from-zinc-950/80 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300 flex flex-col justify-end p-6">
+                    <div class="absolute inset-0 bg-linear-to-t from-zinc-950/80 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300 flex flex-col justify-end p-6">
                         <p class="text-white font-bold text-sm tracking-tight">{photo.title}</p>
                     </div>
                 </div>
