@@ -17,6 +17,7 @@ new #[Layout('components.layouts.app')] class extends Component {
     public string $duration = '';
     public string $requirements = '';
     public $image = null;
+    public $logo = null;
     public bool $is_active = true;
 
     public ?int $editingId = null;
@@ -29,6 +30,7 @@ new #[Layout('components.layouts.app')] class extends Component {
             'duration' => 'required|string|max:100',
             'requirements' => 'nullable|string',
             'image' => 'nullable|image|mimes:jpeg,jpg,png,webp|max:2048',
+            'logo' => 'nullable|image|mimes:jpeg,jpg,png,webp|max:1024',
             'is_active' => 'boolean',
         ];
     }
@@ -40,7 +42,8 @@ new #[Layout('components.layouts.app')] class extends Component {
             'description' => 'deskripsi',
             'duration' => 'durasi',
             'requirements' => 'persyaratan',
-            'image' => 'gambar',
+            'image' => 'gambar ilustrasi',
+            'logo' => 'logo branding',
         ];
     }
 
@@ -67,12 +70,24 @@ new #[Layout('components.layouts.app')] class extends Component {
             $data['image_path'] = $originalPath;
         }
 
+        // Handle logo upload
+        if ($this->logo) {
+            $logoFilename = 'logo_' . uniqid() . '.' . $this->logo->extension();
+            $logoPath = $this->logo->storeAs('programs/logos', $logoFilename, 'public');
+            $data['logo_path'] = $logoPath;
+        }
+
         if ($this->editingId) {
             $program = Program::findOrFail($this->editingId);
 
             // Delete old images if new image uploaded
             if ($this->image && $program->image_path) {
                 Storage::disk('public')->delete($program->image_path);
+            }
+
+            // Delete old logo if new logo uploaded
+            if ($this->logo && $program->logo_path) {
+                Storage::disk('public')->delete($program->logo_path);
             }
 
             $program->update($data);
@@ -124,6 +139,11 @@ new #[Layout('components.layouts.app')] class extends Component {
         // Delete images
         if ($program->image_path) {
             Storage::disk('public')->delete($program->image_path);
+        }
+
+        // Delete logo
+        if ($program->logo_path) {
+            Storage::disk('public')->delete($program->logo_path);
         }
 
         $program->delete();
@@ -204,28 +224,53 @@ new #[Layout('components.layouts.app')] class extends Component {
                         class="font-medium" />
                 </div>
 
-                <div class="space-y-4 max-w-md">
-                    <x-ui.file wire:model="image" :label="__('Ilustrasi / Foto Program')" accept="image/jpeg,image/jpg,image/png,image/webp">
-                        @php
-                            $previewUrl =
-                                $image && method_exists($image, 'isPreviewable') && $image->isPreviewable()
-                                    ? $image->temporaryUrl()
-                                    : ($editingId &&
-                                    ($program = \App\Models\Program::find($editingId)) &&
-                                    $program->image_path
-                                        ? Storage::url($program->image_path)
-                                        : '/placeholder.png');
-                        @endphp
-                        <div class="mt-4 relative group">
-                            <img src="{{ $previewUrl }}"
-                                class="h-48 w-80 rounded-4xl object-cover border-4 border-white dark:border-slate-700 shadow-2xl group-hover:scale-105 transition-transform duration-500" />
-                            <div class="absolute inset-0 rounded-4xl bg-linear-to-t from-black/20 to-transparent"></div>
-                        </div>
-                    </x-ui.file>
-                    <p class="text-xs text-slate-400 px-1 leading-relaxed">
-                        *
-                        {{ __('Format: JPG, PNG, WebP (Maksimal 2MB). Gunakan gambar dengan resolusi tinggi untuk hasil terbaik.') }}
-                    </p>
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-12 items-start">
+                    <div class="space-y-4">
+                        <x-ui.file wire:model="image" :label="__('Ilustrasi / Foto Program')" accept="image/jpeg,image/jpg,image/png,image/webp">
+                            @php
+                                $previewUrl =
+                                    $image && method_exists($image, 'isPreviewable') && $image->isPreviewable()
+                                        ? $image->temporaryUrl()
+                                        : ($editingId &&
+                                        ($program = \App\Models\Program::find($editingId)) &&
+                                        $program->image_path
+                                            ? Storage::url($program->image_path)
+                                            : '/placeholder.png');
+                            @endphp
+                            <div class="mt-4 relative group">
+                                <img src="{{ $previewUrl }}"
+                                    class="h-48 w-full rounded-4xl object-cover border-4 border-white dark:border-slate-700 shadow-2xl group-hover:scale-105 transition-transform duration-500" />
+                                <div class="absolute inset-0 rounded-4xl bg-linear-to-t from-black/20 to-transparent"></div>
+                            </div>
+                        </x-ui.file>
+                        <p class="text-[10px] text-slate-400 px-1 leading-relaxed">
+                            {{ __('Maksimal 2MB. Resolusi tinggi disarankan.') }}
+                        </p>
+                    </div>
+
+                    <div class="space-y-4">
+                        <x-ui.file wire:model="logo" :label="__('Logo Branding Jenjang')" accept="image/jpeg,image/jpg,image/png,image/webp">
+                            @php
+                                $logoPreviewUrl =
+                                    $logo && method_exists($logo, 'isPreviewable') && $logo->isPreviewable()
+                                        ? $logo->temporaryUrl()
+                                        : ($editingId &&
+                                        ($program = \App\Models\Program::find($editingId)) &&
+                                        $program->logo_path
+                                            ? Storage::url($program->logo_path)
+                                            : '/placeholder.png');
+                            @endphp
+                            <div class="mt-4 flex justify-center">
+                                <div class="relative group p-6 bg-white dark:bg-slate-800 rounded-4xl border-2 border-dashed border-slate-200 dark:border-slate-700 shadow-inner">
+                                    <img src="{{ $logoPreviewUrl }}"
+                                        class="h-28 w-28 object-contain transition-transform duration-500 group-hover:rotate-6" />
+                                </div>
+                            </div>
+                        </x-ui.file>
+                        <p class="text-[10px] text-slate-400 px-1 leading-relaxed text-center">
+                            {{ __('Maksimal 1MB. Gunakan file PNG transparan.') }}
+                        </p>
+                    </div>
                 </div>
 
                 <x-ui.textarea wire:model="description" :label="__('Deskripsi Program & Keunggulan')" rows="6" :placeholder="__('Jelaskan visi, misi, dan nilai tambah program ini...')"
@@ -257,7 +302,7 @@ new #[Layout('components.layouts.app')] class extends Component {
         <div class="flex items-center justify-between px-2">
             <h3 class="font-bold text-slate-800 dark:text-white uppercase tracking-wider text-xs">
                 {{ __('Katalog Program Pendidikan') }}</h3>
-            <x-ui.badge :label="$programs->count() . ' ' . __('Program')" class="bg-indigo-50 text-indigo-600 border-none font-bold text-[10px]" />
+            <x-ui.badge :label="$programs->count() . ' ' . __('Program')" variant="indigo" rounded="md" />
         </div>
 
         @if ($programs->isEmpty())
@@ -286,13 +331,26 @@ new #[Layout('components.layouts.app')] class extends Component {
                                 </div>
                             @endif
 
+                            {{-- Floating Logo --}}
+                            @if ($program->logo_path)
+                                <div class="absolute top-4 right-4 z-20 size-16 p-2 bg-white/90 backdrop-blur-md rounded-2xl shadow-xl flex items-center justify-center border border-white/50 group-hover:-translate-y-1 transition-transform duration-500">
+                                    <img src="{{ Storage::url($program->logo_path) }}" class="max-h-full max-w-full object-contain">
+                                </div>
+                            @endif
+
                             <div class="absolute top-4 left-4 z-10 flex flex-col gap-2">
-                                <x-ui.badge :label="$program->level?->name ?? 'GENERAL'"
-                                    class="bg-black/40 backdrop-blur-md text-white border-white/20 font-bold text-[9px] px-3 py-1 uppercase tracking-wider" />
-                                @if (!$program->is_active)
-                                    <x-ui.badge :label="__('NON-AKTIF')"
-                                        class="bg-rose-500 text-white border-none font-bold text-[8px] px-2 py-0.5" />
-                                @endif
+                                <x-ui.badge 
+                                    :label="$program->level?->name ?? 'GENERAL'" 
+                                    variant="indigo" 
+                                    rounded="md" 
+                                    size="xs" 
+                                />
+                                
+                                <x-ui.badge 
+                                    :label="$program->is_active ? __('AKTIF') : __('NON-AKTIF')" 
+                                    rounded="md" 
+                                    size="xs" 
+                                />
                             </div>
 
                             <div class="absolute bottom-4 right-4 z-10">

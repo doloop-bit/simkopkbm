@@ -13,10 +13,10 @@ class LevelSeeder extends Seeder
     public function run(): void
     {
         $phaseMaps = [
-            'paud' => [
+            'PAUD' => [
                 '0' => 'Fondasi',
             ],
-            'sd' => [
+            'Paket A' => [
                 '1' => 'A',
                 '2' => 'A',
                 '3' => 'B',
@@ -24,12 +24,12 @@ class LevelSeeder extends Seeder
                 '5' => 'C',
                 '6' => 'C',
             ],
-            'smp' => [
+            'Paket B' => [
                 '7' => 'D',
                 '8' => 'D',
                 '9' => 'D',
             ],
-            'sma' => [
+            'Paket C' => [
                 '10' => 'E',
                 '11' => 'F',
                 '12' => 'F',

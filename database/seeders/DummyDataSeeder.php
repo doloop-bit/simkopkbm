@@ -78,7 +78,7 @@ class DummyDataSeeder extends Seeder
                     'academic_year_id' => $academicYear->id,
                 ],
                 [
-                    'name' => 'Kelas A - '.$level->name,
+                    'name' => 'Kelas 1 - '.$level->name,
                 ]
             );
 

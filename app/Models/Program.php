@@ -19,6 +19,7 @@ class Program extends Model
         'duration',
         'requirements',
         'image_path',
+        'logo_path',
         'order',
         'is_active',
     ];
