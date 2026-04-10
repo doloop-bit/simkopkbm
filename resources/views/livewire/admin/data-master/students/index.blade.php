@@ -584,11 +584,15 @@ new #[Layout('components.layouts.app')] class extends Component {
                             </td>
                             <td class="px-6 py-4">
                                 @if ($profile?->classroom)
-                                    <div class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-md bg-primary/5 text-primary border border-primary/10">
-                                        <span class="text-[10px] font-black tracking-widest uppercase">{{ $profile->classroom->name }}</span>
-                                    </div>
+                                    <x-ui.badge 
+                                        :label="$profile->classroom->name" 
+                                        variant="primary" 
+                                        rounded="md" 
+                                        size="xs"
+                                        class="px-2.5"
+                                    />
                                 @else
-                                    <span class="text-[10px] text-rose-500 font-black uppercase italic tracking-widest bg-rose-50 dark:bg-rose-950/30 px-2 py-0.5 rounded">{{ __('Belum ada kelas') }}</span>
+                                    <x-ui.badge :label="__('Belum ada kelas')" variant="error" rounded="md" size="xs" />
                                 @endif
                             </td>
                             <td class="px-6 py-4">
