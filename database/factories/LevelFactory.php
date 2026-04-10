@@ -19,10 +19,14 @@ class LevelFactory extends Factory
      */
     public function definition(): array
     {
+        $levels = Level::defaultPhases();
+        $educationLevel = $this->faker->randomElement(array_keys($levels));
+        
         return [
-            'name' => fake()->randomElement(['PAUD', 'TK', 'Paket A', 'Paket B', 'Paket C']),
-            'type' => fake()->randomElement(['class_teacher', 'subject_teacher']),
-            'education_level' => fake()->randomElement(['paud', 'sd', 'smp', 'sma']),
+            'name' => strtoupper($educationLevel),
+            'type' => $educationLevel === 'paud' || $educationLevel === 'sd' ? 'class_teacher' : 'subject_teacher',
+            'education_level' => $educationLevel,
+            'phase_map' => $levels[$educationLevel],
         ];
     }
 }

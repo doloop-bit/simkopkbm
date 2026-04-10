@@ -54,8 +54,14 @@ class DummyDataSeeder extends Seeder
 
         // 2. Create Dummy Programs
         if (Program::count() === 0) {
-            $this->command->info('Creating extra public programs...');
-            Program::factory()->count(3)->create(['is_active' => true]);
+            $this->command->info('Creating realistic public programs for each level...');
+            foreach ($levels as $level) {
+                Program::factory()
+                    ->forLevel($level)
+                    ->levelSpecific()
+                    ->withBranding()
+                    ->create(['is_active' => true]);
+            }
         }
 
         // 3. Create Dummy News
