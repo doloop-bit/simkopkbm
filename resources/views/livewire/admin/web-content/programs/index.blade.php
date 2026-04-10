@@ -9,8 +9,7 @@ use Livewire\Attributes\Async;
 use Livewire\Component;
 use Livewire\WithFileUploads;
 
-new #[Layout('components.layouts.app')] class extends Component
-{
+new #[Layout('components.layouts.app')] class extends Component {
     use WithFileUploads;
 
     public ?int $level_id = null;
@@ -70,12 +69,12 @@ new #[Layout('components.layouts.app')] class extends Component
 
         if ($this->editingId) {
             $program = Program::findOrFail($this->editingId);
-            
+
             // Delete old images if new image uploaded
             if ($this->image && $program->image_path) {
                 Storage::disk('public')->delete($program->image_path);
             }
-            
+
             $program->update($data);
             session()->flash('message', 'Program berhasil diperbarui.');
         } else {
@@ -89,7 +88,7 @@ new #[Layout('components.layouts.app')] class extends Component
             // Get the next order value
             $maxOrder = Program::max('order') ?? 0;
             $data['order'] = $maxOrder + 1;
-            
+
             Program::create($data);
             session()->flash('message', 'Program berhasil ditambahkan.');
         }
@@ -104,7 +103,7 @@ new #[Layout('components.layouts.app')] class extends Component
     public function edit(int $id): void
     {
         $program = Program::findOrFail($id);
-        
+
         $this->editingId = $id;
         $this->level_id = $program->level_id;
         $this->description = $program->description;
@@ -121,18 +120,18 @@ new #[Layout('components.layouts.app')] class extends Component
     public function delete(int $id): void
     {
         $program = Program::findOrFail($id);
-        
+
         // Delete images
         if ($program->image_path) {
             Storage::disk('public')->delete($program->image_path);
         }
-        
+
         $program->delete();
-        
+
         // Clear programs cache after deletion
         $cacheService = app(CacheService::class);
         $cacheService->clearProgramsCache();
-        
+
         session()->flash('message', 'Program berhasil dihapus.');
     }
 
@@ -140,9 +139,7 @@ new #[Layout('components.layouts.app')] class extends Component
     public function moveUp(int $id): void
     {
         $program = Program::findOrFail($id);
-        $previousProgram = Program::where('order', '<', $program->order)
-            ->orderBy('order', 'desc')
-            ->first();
+        $previousProgram = Program::where('order', '<', $program->order)->orderBy('order', 'desc')->first();
 
         if ($previousProgram) {
             $tempOrder = $program->order;
@@ -158,9 +155,7 @@ new #[Layout('components.layouts.app')] class extends Component
     public function moveDown(int $id): void
     {
         $program = Program::findOrFail($id);
-        $nextProgram = Program::where('order', '>', $program->order)
-            ->orderBy('order', 'asc')
-            ->first();
+        $nextProgram = Program::where('order', '>', $program->order)->orderBy('order', 'asc')->first();
 
         if ($nextProgram) {
             $tempOrder = $program->order;
@@ -177,16 +172,15 @@ new #[Layout('components.layouts.app')] class extends Component
         return [
             'programs' => Program::with('level')->ordered()->get(),
             'levels' => Level::all(),
-            'usedLevelIds' => Program::when($this->editingId, fn ($q) => $q->where('id', '!=', $this->editingId))
-                ->pluck('level_id')
-                ->toArray(),
+            'usedLevelIds' => Program::when($this->editingId, fn($q) => $q->where('id', '!=', $this->editingId))->pluck('level_id')->toArray(),
         ];
     }
 }; ?>
 
 <div class="p-6 space-y-8 text-slate-900 dark:text-white pb-24 md:pb-6">
     @if (session()->has('message'))
-        <x-ui.alert :title="__('Sukses')" icon="o-check-circle" class="bg-emerald-50 text-emerald-800 border-emerald-100" dismissible>
+        <x-ui.alert :title="__('Sukses')" icon="o-check-circle" class="bg-emerald-50 text-emerald-800 border-emerald-100"
+            dismissible>
             {{ session('message') }}
         </x-ui.alert>
     @endif
@@ -203,75 +197,56 @@ new #[Layout('components.layouts.app')] class extends Component
         <div class="p-8">
             <form wire:submit="save" class="space-y-8">
                 <div class="grid grid-cols-1 md:grid-cols-2 gap-8">
-                    <x-ui.select 
-                        wire:model="level_id" 
-                        :label="__('Target Jenjang Pendidikan')" 
-                        :placeholder="__('Pilih jenjang akademik...')"
-                        :options="$levels"
-                        class="tracking-tight"
-                    />
+                    <x-ui.select wire:model="level_id" :label="__('Target Jenjang Pendidikan')" :placeholder="__('Pilih jenjang akademik...')" :options="$levels"
+                        class="tracking-tight" />
 
-                    <x-ui.input 
-                        wire:model="duration" 
-                        :label="__('Estimasi Durasi Belajar')" 
-                        :placeholder="__('Contoh: 6 Bulan / 1 Semester')"
-                        icon="o-clock"
-                        class="font-medium"
-                    />
+                    <x-ui.input wire:model="duration" :label="__('Estimasi Durasi Belajar')" :placeholder="__('Contoh: 6 Bulan / 1 Semester')" icon="o-clock"
+                        class="font-medium" />
                 </div>
 
                 <div class="space-y-4 max-w-md">
-                    <x-ui.file 
-                        wire:model="image" 
-                        :label="__('Ilustrasi / Foto Program')" 
-                        accept="image/jpeg,image/jpg,image/png,image/webp"
-                    >
+                    <x-ui.file wire:model="image" :label="__('Ilustrasi / Foto Program')" accept="image/jpeg,image/jpg,image/png,image/webp">
                         @php
-                            $previewUrl = ($image && method_exists($image, 'isPreviewable') && $image->isPreviewable()) 
-                                ? $image->temporaryUrl() 
-                                : ($editingId && ($program = \App\Models\Program::find($editingId)) && $program->image_path ? Storage::url($program->image_path) : '/placeholder.png');
+                            $previewUrl =
+                                $image && method_exists($image, 'isPreviewable') && $image->isPreviewable()
+                                    ? $image->temporaryUrl()
+                                    : ($editingId &&
+                                    ($program = \App\Models\Program::find($editingId)) &&
+                                    $program->image_path
+                                        ? Storage::url($program->image_path)
+                                        : '/placeholder.png');
                         @endphp
                         <div class="mt-4 relative group">
-                            <img src="{{ $previewUrl }}" class="h-48 w-80 rounded-[2rem] object-cover border-4 border-white dark:border-slate-700 shadow-2xl group-hover:scale-105 transition-transform duration-500" />
-                            <div class="absolute inset-0 rounded-[2rem] bg-gradient-to-t from-black/20 to-transparent"></div>
+                            <img src="{{ $previewUrl }}"
+                                class="h-48 w-80 rounded-4xl object-cover border-4 border-white dark:border-slate-700 shadow-2xl group-hover:scale-105 transition-transform duration-500" />
+                            <div class="absolute inset-0 rounded-4xl bg-linear-to-t from-black/20 to-transparent"></div>
                         </div>
                     </x-ui.file>
                     <p class="text-xs text-slate-400 px-1 leading-relaxed">
-                        * {{ __('Format: JPG, PNG, WebP (Maksimal 2MB). Gunakan gambar dengan resolusi tinggi untuk hasil terbaik.') }}
+                        *
+                        {{ __('Format: JPG, PNG, WebP (Maksimal 2MB). Gunakan gambar dengan resolusi tinggi untuk hasil terbaik.') }}
                     </p>
                 </div>
 
-                <x-ui.textarea 
-                    wire:model="description" 
-                    :label="__('Deskripsi Program & Keunggulan')" 
-                    rows="6" 
-                    :placeholder="__('Jelaskan visi, misi, dan nilai tambah program ini...')"
-                    class="font-medium text-slate-700 dark:text-slate-300 leading-relaxed"
-                />
+                <x-ui.textarea wire:model="description" :label="__('Deskripsi Program & Keunggulan')" rows="6" :placeholder="__('Jelaskan visi, misi, dan nilai tambah program ini...')"
+                    class="font-medium text-slate-700 dark:text-slate-300 leading-relaxed" />
 
-                <x-ui.textarea 
-                    wire:model="requirements" 
-                    :label="__('Kualifikasi / Persyaratan Pendaftaran (Opsional)')" 
-                    rows="3" 
-                    :placeholder="__('Sebutkan dokumen atau kriteria yang harus dipenuhi calon peserta...')"
-                    class="text-sm leading-relaxed"
-                />
+                <x-ui.textarea wire:model="requirements" :label="__('Kualifikasi / Persyaratan Pendaftaran (Opsional)')" rows="3" :placeholder="__('Sebutkan dokumen atau kriteria yang harus dipenuhi calon peserta...')"
+                    class="text-sm leading-relaxed" />
 
-                <div class="flex items-center gap-3 p-4 bg-slate-50 dark:bg-slate-900 border border-slate-100 dark:border-slate-800 rounded-2xl">
+                <div
+                    class="flex items-center gap-3 p-4 bg-slate-50 dark:bg-slate-900 border border-slate-100 dark:border-slate-800 rounded-2xl">
                     <x-ui.checkbox wire:model="is_active" :label="__('Status Aktif (Tampilkan di web)')" />
-                    <span class="text-xs font-semibold text-slate-500 dark:text-slate-400 uppercase tracking-widest">{{ __('Aktifkan publikasi program di portal sekolah') }}</span>
+                    <span
+                        class="text-xs font-semibold text-slate-500 dark:text-slate-400 uppercase tracking-widest">{{ __('Aktifkan publikasi program di portal sekolah') }}</span>
                 </div>
 
                 <div class="flex items-center justify-end gap-3 pt-6 border-t border-slate-50 dark:border-slate-800">
                     @if ($editingId)
                         <x-ui.button wire:click="cancelEdit" :label="__('Batalkan Edit')" class="btn-ghost" />
                     @endif
-                    <x-ui.button 
-                        :label="$editingId ? __('Simpan Perubahan') : __('Tambahkan Program')"
-                        class="btn-primary shadow-xl shadow-primary/20 px-8"
-                        type="submit" 
-                        spinner="save"
-                    />
+                    <x-ui.button :label="$editingId ? __('Simpan Perubahan') : __('Tambahkan Program')" class="btn-primary shadow-xl shadow-primary/20 px-8" type="submit"
+                        spinner="save" />
                 </div>
             </form>
         </div>
@@ -280,79 +255,79 @@ new #[Layout('components.layouts.app')] class extends Component
     {{-- Programs List --}}
     <div class="space-y-6">
         <div class="flex items-center justify-between px-2">
-            <h3 class="font-bold text-slate-800 dark:text-white uppercase tracking-wider text-xs">{{ __('Katalog Program Pendidikan') }}</h3>
+            <h3 class="font-bold text-slate-800 dark:text-white uppercase tracking-wider text-xs">
+                {{ __('Katalog Program Pendidikan') }}</h3>
             <x-ui.badge :label="$programs->count() . ' ' . __('Program')" class="bg-indigo-50 text-indigo-600 border-none font-bold text-[10px]" />
         </div>
 
         @if ($programs->isEmpty())
-            <div class="flex flex-col items-center justify-center py-32 text-slate-300 dark:text-slate-700 border-2 border-dashed border-slate-200 dark:border-slate-800 rounded-[32px] bg-slate-50/50 dark:bg-slate-900/50 transition-all text-center px-6">
+            <div
+                class="flex flex-col items-center justify-center py-32 text-slate-300 dark:text-slate-700 border-2 border-dashed border-slate-200 dark:border-slate-800 rounded-[32px] bg-slate-50/50 dark:bg-slate-900/50 transition-all text-center px-6">
                 <x-ui.icon name="o-folder-open" class="size-20 mb-6 opacity-20" />
                 <p class="text-sm font-semibold uppercase tracking-widest">{{ __('Belum Ada Program Terdefinisi') }}</p>
-                <p class="text-xs text-slate-400 uppercase tracking-widest mt-2">{{ __('Gunakan formulir di atas untuk mendaftarkan program pendidikan pertama.') }}</p>
+                <p class="text-xs text-slate-400 uppercase tracking-widest mt-2">
+                    {{ __('Gunakan formulir di atas untuk mendaftarkan program pendidikan pertama.') }}</p>
             </div>
         @else
             <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
                 @foreach ($programs as $program)
-                    <x-ui.card wire:key="program-{{ $program->id }}" shadow padding="false" class="group relative overflow-hidden border-none ring-1 ring-slate-100 dark:ring-slate-800 hover:ring-primary/20 transition-all duration-500 bg-white">
+                    <x-ui.card wire:key="program-{{ $program->id }}" shadow padding="false"
+                        class="group relative overflow-hidden border-none ring-1 ring-slate-100 dark:ring-slate-800 hover:ring-primary/20 transition-all duration-500 bg-white">
                         {{-- Visual Header --}}
-                        <div class="h-48 relative overflow-hidden bg-slate-100 dark:bg-slate-900 border-b border-slate-50 dark:border-slate-800">
+                        <div
+                            class="h-48 relative overflow-hidden bg-slate-100 dark:bg-slate-900 border-b border-slate-50 dark:border-slate-800">
                             @if ($program->image_path)
-                                <img 
-                                    src="{{ Storage::url($program->image_path) }}" 
-                                    alt="{{ $program->name }}"
-                                    class="absolute inset-0 size-full object-cover transition-transform duration-700 group-hover:scale-110"
-                                >
+                                <img src="{{ Storage::url($program->image_path) }}" alt="{{ $program->name }}"
+                                    class="absolute inset-0 size-full object-cover transition-transform duration-700 group-hover:scale-110">
                             @else
                                 <div class="absolute inset-0 flex items-center justify-center bg-indigo-500/10">
-                                    <span class="text-6xl font-black text-indigo-500 opacity-20 italic">{{ substr($program->name, 0, 1) }}</span>
+                                    <span
+                                        class="text-6xl font-black text-indigo-500 opacity-20 italic">{{ substr($program->name, 0, 1) }}</span>
                                 </div>
                             @endif
 
                             <div class="absolute top-4 left-4 z-10 flex flex-col gap-2">
-                                <x-ui.badge :label="$program->level?->name ?? 'GENERAL'" class="bg-black/40 backdrop-blur-md text-white border-white/20 font-bold text-[9px] px-3 py-1 uppercase tracking-wider" />
+                                <x-ui.badge :label="$program->level?->name ?? 'GENERAL'"
+                                    class="bg-black/40 backdrop-blur-md text-white border-white/20 font-bold text-[9px] px-3 py-1 uppercase tracking-wider" />
                                 @if (!$program->is_active)
-                                    <x-ui.badge :label="__('NON-AKTIF')" class="bg-rose-500 text-white border-none font-bold text-[8px] px-2 py-0.5" />
+                                    <x-ui.badge :label="__('NON-AKTIF')"
+                                        class="bg-rose-500 text-white border-none font-bold text-[8px] px-2 py-0.5" />
                                 @endif
                             </div>
 
                             <div class="absolute bottom-4 right-4 z-10">
-                                <x-ui.badge :label="$program->duration" class="bg-white/90 backdrop-blur-sm text-slate-800 border-none font-bold text-[9px] px-3 py-1 shadow-sm ring-1 ring-slate-100 uppercase" icon="o-clock" />
+                                <x-ui.badge :label="$program->duration"
+                                    class="bg-white/90 backdrop-blur-sm text-slate-800 border-none font-bold text-[9px] px-3 py-1 shadow-sm ring-1 ring-slate-100 uppercase"
+                                    icon="o-clock" />
                             </div>
 
-                            <div class="absolute inset-0 bg-gradient-to-t from-slate-900/40 to-transparent"></div>
+                            <div class="absolute inset-0 bg-linear-to-t from-slate-900/40 to-transparent"></div>
                         </div>
 
                         <div class="p-6">
-                            <h3 class="font-bold text-lg text-slate-900 dark:text-white leading-tight mb-2 group-hover:text-primary transition-colors uppercase tracking-tight">{{ $program->name }}</h3>
-                            <p class="text-xs text-slate-500 leading-relaxed line-clamp-3 mb-6 font-medium">{{ $program->description }}</p>
+                            <h3
+                                class="font-bold text-lg text-slate-900 dark:text-white leading-tight mb-2 group-hover:text-primary transition-colors uppercase tracking-tight">
+                                {{ $program->name }}</h3>
+                            <p class="text-xs text-slate-500 leading-relaxed line-clamp-3 mb-6 font-medium">
+                                {{ $program->description }}</p>
 
                             {{-- Advanced Control Panel --}}
-                            <div class="flex items-center justify-between pt-4 border-t border-slate-50 dark:border-slate-800/50">
-                                <div class="flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-all duration-300">
-                                    <x-ui.button 
-                                        wire:click="moveUp({{ $program->id }})" 
-                                        icon="o-chevron-up" 
-                                        class="size-8 min-h-0 p-0 btn-ghost text-slate-400 hover:text-indigo-500"
-                                    />
-                                    <x-ui.button 
-                                        wire:click="moveDown({{ $program->id }})" 
-                                        icon="o-chevron-down" 
-                                        class="size-8 min-h-0 p-0 btn-ghost text-slate-400 hover:text-indigo-500"
-                                    />
+                            <div
+                                class="flex items-center justify-between pt-4 border-t border-slate-50 dark:border-slate-800/50">
+                                <div
+                                    class="flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-all duration-300">
+                                    <x-ui.button wire:click="moveUp({{ $program->id }})" icon="o-chevron-up"
+                                        class="size-8 min-h-0 p-0 btn-ghost text-slate-400 hover:text-indigo-500" />
+                                    <x-ui.button wire:click="moveDown({{ $program->id }})" icon="o-chevron-down"
+                                        class="size-8 min-h-0 p-0 btn-ghost text-slate-400 hover:text-indigo-500" />
                                 </div>
-                                
+
                                 <div class="flex items-center gap-1">
-                                    <x-ui.button 
-                                        wire:click="edit({{ $program->id }})" 
-                                        icon="o-pencil"
-                                        class="size-8 min-h-0 p-0 btn-ghost text-slate-300 hover:text-primary"
-                                    />
-                                    <x-ui.button 
-                                        wire:click="delete({{ $program->id }})" 
-                                        icon="o-trash"
+                                    <x-ui.button wire:click="edit({{ $program->id }})" icon="o-pencil"
+                                        class="size-8 min-h-0 p-0 btn-ghost text-slate-300 hover:text-primary" />
+                                    <x-ui.button wire:click="delete({{ $program->id }})" icon="o-trash"
                                         class="size-8 min-h-0 p-0 btn-ghost text-slate-300 hover:text-rose-500"
-                                        wire:confirm="__('Hapus deskripsi program pendidikan ini secara permanen?') "
-                                    />
+                                        wire:confirm="__('Hapus deskripsi program pendidikan ini secara permanen?') " />
                                 </div>
                             </div>
                         </div>

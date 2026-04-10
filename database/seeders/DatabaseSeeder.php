@@ -15,6 +15,7 @@ class DatabaseSeeder extends Seeder
         // Data yang tidak memiliki CRUD atau wajib ada untuk infrastruktur aplikasi.
         $this->command->info('Configuring core application data...');
         $this->call([
+            RoleSeeder::class,                  // User Roles (Essential for RBAC)
             AdminSeeder::class,                 // Akun Admin Utama
             LevelSeeder::class,                 // Jenjang & Phase Map (Kurikulum Merdeka)
             DevelopmentalAspectsSeeder::class,  // Indikator Penilaian PAUD
