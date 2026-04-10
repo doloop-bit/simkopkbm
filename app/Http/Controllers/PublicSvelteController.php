@@ -11,6 +11,7 @@ use App\Models\Registration;
 use App\Services\CacheService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\RateLimiter;
+use Inertia\Inertia;
 use Laravolt\Indonesia\Models\City;
 use Laravolt\Indonesia\Models\District;
 use Laravolt\Indonesia\Models\Province;
@@ -24,27 +25,16 @@ class PublicSvelteController extends Controller
 
     public function home()
     {
-        return view('public-svelte-shell', [
-            'page' => 'Home',
-            'props' => [
-                'schoolProfile' => $this->cacheService->getSchoolProfile(),
-                'latestNews' => $this->cacheService->getLatestNews(3),
-                'programs' => $this->cacheService->getActivePrograms(),
-                'featuredPhotos' => $this->cacheService->getFeaturedPhotos(6),
-            ],
+        return Inertia::render('Public/Home', [
+            'latestNews' => $this->cacheService->getLatestNews(3),
+            'programs' => $this->cacheService->getActivePrograms(),
+            'featuredPhotos' => $this->cacheService->getFeaturedPhotos(6),
         ]);
     }
 
     public function about()
     {
-        $profile = $this->cacheService->getSchoolProfile();
-
-        return view('public-svelte-shell', [
-            'page' => 'About',
-            'props' => [
-                'schoolProfile' => $profile,
-            ],
-        ]);
+        return Inertia::render('Public/About');
     }
 
     public function staff()
@@ -52,12 +42,8 @@ class PublicSvelteController extends Controller
         $profile = $this->cacheService->getSchoolProfile();
         $staffMembers = $profile?->staffMembers ?? collect();
 
-        return view('public-svelte-shell', [
-            'page' => 'Staff',
-            'props' => [
-                'schoolProfile' => $profile,
-                'staffMembers' => $staffMembers,
-            ],
+        return Inertia::render('Public/Staff', [
+            'staffMembers' => $staffMembers,
         ]);
     }
 
@@ -66,23 +52,15 @@ class PublicSvelteController extends Controller
         $profile = $this->cacheService->getSchoolProfile();
         $facilities = $profile?->facilities ?? collect();
 
-        return view('public-svelte-shell', [
-            'page' => 'Facilities',
-            'props' => [
-                'schoolProfile' => $profile,
-                'facilities' => $facilities,
-            ],
+        return Inertia::render('Public/Facilities', [
+            'facilities' => $facilities,
         ]);
     }
 
     public function programs()
     {
-        return view('public-svelte-shell', [
-            'page' => 'ProgramsIndex',
-            'props' => [
-                'schoolProfile' => $this->cacheService->getSchoolProfile(),
-                'programs' => $this->cacheService->getActivePrograms(),
-            ],
+        return Inertia::render('Public/ProgramsIndex', [
+            'programs' => $this->cacheService->getActivePrograms(),
         ]);
     }
 
@@ -90,12 +68,8 @@ class PublicSvelteController extends Controller
     {
         $program = Program::where('slug', $slug)->with('level')->firstOrFail();
 
-        return view('public-svelte-shell', [
-            'page' => 'ProgramsShow',
-            'props' => [
-                'schoolProfile' => $this->cacheService->getSchoolProfile(),
-                'program' => $program,
-            ],
+        return Inertia::render('Public/ProgramsShow', [
+            'program' => $program,
         ]);
     }
 
@@ -103,12 +77,8 @@ class PublicSvelteController extends Controller
     {
         $news = NewsArticle::published()->latest()->paginate(9);
 
-        return view('public-svelte-shell', [
-            'page' => 'NewsIndex',
-            'props' => [
-                'schoolProfile' => $this->cacheService->getSchoolProfile(),
-                'news' => $news,
-            ],
+        return Inertia::render('Public/NewsIndex', [
+            'news' => $news,
         ]);
     }
 
@@ -121,13 +91,9 @@ class PublicSvelteController extends Controller
             ->limit(3)
             ->get();
 
-        return view('public-svelte-shell', [
-            'page' => 'NewsShow',
-            'props' => [
-                'schoolProfile' => $this->cacheService->getSchoolProfile(),
-                'article' => $article,
-                'latestNews' => $latestNews,
-            ],
+        return Inertia::render('Public/NewsShow', [
+            'article' => $article,
+            'latestNews' => $latestNews,
         ]);
     }
 
@@ -136,37 +102,24 @@ class PublicSvelteController extends Controller
         $photos = GalleryPhoto::published()->ordered()->paginate(12);
         $categories = $this->cacheService->getGalleryCategories();
 
-        return view('public-svelte-shell', [
-            'page' => 'Gallery',
-            'props' => [
-                'schoolProfile' => $this->cacheService->getSchoolProfile(),
-                'photos' => $photos,
-                'categories' => $categories,
-            ],
+        return Inertia::render('Public/Gallery', [
+            'photos' => $photos,
+            'categories' => $categories,
         ]);
     }
 
     public function contact()
     {
-        return view('public-svelte-shell', [
-            'page' => 'Contact',
-            'props' => [
-                'schoolProfile' => $this->cacheService->getSchoolProfile(),
-            ],
-        ]);
+        return Inertia::render('Public/Contact');
     }
 
     public function registration()
     {
-        return view('public-svelte-shell', [
-            'page' => 'Register',
-            'props' => [
-                'schoolProfile' => $this->cacheService->getSchoolProfile(),
-                'levels' => Level::orderBy('name')->get(),
-                'academicYears' => AcademicYear::orderByDesc('start_date')->get(),
-                'provinces' => Province::orderBy('name')->get(),
-                'cities' => City::orderBy('name')->get(),
-            ],
+        return Inertia::render('Public/Register', [
+            'levels' => Level::orderBy('name')->get(),
+            'academicYears' => AcademicYear::orderByDesc('start_date')->get(),
+            'provinces' => Province::orderBy('name')->get(),
+            'cities' => City::orderBy('name')->limit(50)->get(), // Initial cities limited for performance
         ]);
     }
 
