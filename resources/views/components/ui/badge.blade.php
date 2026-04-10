@@ -20,9 +20,8 @@
         };
     }
 
-    $baseStyles =
-        'inline-flex items-center gap-1.5 font-black uppercase tracking-[0.2em] transition-all duration-300 border h-fit text-[10px]';
-
+    $baseStyles = 'inline-flex items-center gap-1.5 font-black uppercase tracking-[0.2em] transition-all duration-300 border h-fit text-[10px] backdrop-blur-sm';
+    
     $roundedClass = match ($rounded) {
         'full' => 'rounded-full',
         'lg' => 'rounded-xl',
@@ -31,38 +30,38 @@
 
     $variantClasses = match ($variant) {
         'primary' => [
-            'bg' => 'bg-primary/10 dark:bg-primary/25',
-            'text' => 'text-primary dark:text-primary-400',
-            'border' => 'border-primary/0 dark:border-primary/30',
+            'bg' => 'bg-primary/90 dark:bg-primary/80',
+            'text' => 'text-white dark:text-white',
+            'border' => 'border-primary/20 dark:border-primary/30',
             'glow' => 'shadow-[0_0_12px_rgba(var(--color-primary-500),0.15)]',
         ],
         'success' => [
-            'bg' => 'bg-emerald-500/15 dark:bg-emerald-500/25',
-            'text' => 'text-emerald-600 dark:text-emerald-400',
+            'bg' => 'bg-emerald-500/90 dark:bg-emerald-500/80',
+            'text' => 'text-white dark:text-white',
             'border' => 'border-emerald-500/20 dark:border-emerald-500/30',
             'glow' => 'shadow-[0_0_12px_rgba(16,185,129,0.15)]',
         ],
         'error' => [
-            'bg' => 'bg-rose-500/15 dark:bg-rose-500/25',
-            'text' => 'text-rose-600 dark:text-rose-400',
+            'bg' => 'bg-rose-500/90 dark:bg-rose-500/80',
+            'text' => 'text-white dark:text-white',
             'border' => 'border-rose-500/20 dark:border-rose-500/30',
             'glow' => 'shadow-[0_0_12px_rgba(244,63,94,0.15)]',
         ],
         'warning' => [
-            'bg' => 'bg-amber-500/15 dark:bg-amber-500/25',
-            'text' => 'text-amber-600 dark:text-amber-400',
+            'bg' => 'bg-amber-500/90 dark:bg-amber-500/80',
+            'text' => 'text-white dark:text-white',
             'border' => 'border-amber-500/20 dark:border-amber-500/30',
             'glow' => 'shadow-[0_0_12px_rgba(245,158,11,0.15)]',
         ],
         'info' => [
-            'bg' => 'bg-sky-500/15 dark:bg-sky-500/25',
-            'text' => 'text-sky-600 dark:text-sky-400',
+            'bg' => 'bg-sky-500/90 dark:bg-sky-500/80',
+            'text' => 'text-white dark:text-white',
             'border' => 'border-sky-500/20 dark:border-sky-500/30',
             'glow' => 'shadow-[0_0_12px_rgba(14,165,233,0.15)]',
         ],
         default => [
-            'bg' => 'bg-slate-500/15 dark:bg-slate-500/25',
-            'text' => 'text-slate-600 dark:text-slate-400',
+            'bg' => 'bg-slate-800/90 dark:bg-slate-700/80',
+            'text' => 'text-white dark:text-white',
             'border' => 'border-slate-500/20 dark:border-slate-500/30',
             'glow' => 'shadow-sm',
         ],

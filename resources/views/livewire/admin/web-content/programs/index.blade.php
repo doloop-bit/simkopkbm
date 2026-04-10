@@ -29,8 +29,8 @@ new #[Layout('components.layouts.app')] class extends Component {
             'description' => 'required|string',
             'duration' => 'required|string|max:100',
             'requirements' => 'nullable|string',
-            'image' => 'nullable|image|mimes:jpeg,jpg,png,webp|max:2048',
-            'logo' => 'nullable|image|mimes:jpeg,jpg,png,webp|max:1024',
+            'image' => 'nullable|image|mimes:jpeg,png,webp|max:2048',
+            'logo' => 'nullable|image|mimes:jpeg,png,webp|max:1024',
             'is_active' => 'boolean',
         ];
     }
@@ -197,7 +197,7 @@ new #[Layout('components.layouts.app')] class extends Component {
     }
 }; ?>
 
-<div class="p-6 space-y-8 text-slate-900 dark:text-white pb-24 md:pb-6">
+<div id="program-form-container" class="p-6 space-y-8 text-slate-900 dark:text-white pb-24 md:pb-6">
     @if (session()->has('message'))
         <x-ui.alert :title="__('Sukses')" icon="o-check-circle" class="bg-emerald-50 text-emerald-800 border-emerald-100"
             dismissible>
@@ -226,7 +226,7 @@ new #[Layout('components.layouts.app')] class extends Component {
 
                 <div class="grid grid-cols-1 md:grid-cols-2 gap-12 items-start">
                     <div class="space-y-4">
-                        <x-ui.file wire:model="image" :label="__('Ilustrasi / Foto Program')" accept="image/jpeg,image/jpg,image/png,image/webp">
+                        <x-ui.file wire:model="image" :label="__('Ilustrasi / Foto Program')" accept="image/jpeg,image/png,image/webp">
                             @php
                                 $previewUrl =
                                     $image && method_exists($image, 'isPreviewable') && $image->isPreviewable()
@@ -249,7 +249,7 @@ new #[Layout('components.layouts.app')] class extends Component {
                     </div>
 
                     <div class="space-y-4">
-                        <x-ui.file wire:model="logo" :label="__('Logo Branding Jenjang')" accept="image/jpeg,image/jpg,image/png,image/webp">
+                        <x-ui.file wire:model="logo" :label="__('Logo Branding Jenjang')" accept="image/jpeg,image/png,image/webp">
                             @php
                                 $logoPreviewUrl =
                                     $logo && method_exists($logo, 'isPreviewable') && $logo->isPreviewable()
@@ -381,8 +381,12 @@ new #[Layout('components.layouts.app')] class extends Component {
                                 </div>
 
                                 <div class="flex items-center gap-1">
-                                    <x-ui.button wire:click="edit({{ $program->id }})" icon="o-pencil"
-                                        class="size-8 min-h-0 p-0 btn-ghost text-slate-300 hover:text-primary" />
+                                    <x-ui.button 
+                                        @click="document.getElementById('program-form-container').scrollIntoView({ behavior: 'smooth' })"
+                                        wire:click="edit({{ $program->id }})" 
+                                        icon="o-pencil"
+                                        class="size-8 min-h-0 p-0 btn-ghost text-slate-300 hover:text-primary" 
+                                    />
                                     <x-ui.button wire:click="delete({{ $program->id }})" icon="o-trash"
                                         class="size-8 min-h-0 p-0 btn-ghost text-slate-300 hover:text-rose-500"
                                         wire:confirm="__('Hapus deskripsi program pendidikan ini secara permanen?') " />
