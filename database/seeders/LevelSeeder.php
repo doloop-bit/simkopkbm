@@ -12,29 +12,7 @@ class LevelSeeder extends Seeder
      */
     public function run(): void
     {
-        $phaseMaps = [
-            'PAUD' => [
-                '0' => 'Fondasi',
-            ],
-            'Paket A' => [
-                '1' => 'A',
-                '2' => 'A',
-                '3' => 'B',
-                '4' => 'B',
-                '5' => 'C',
-                '6' => 'C',
-            ],
-            'Paket B' => [
-                '7' => 'D',
-                '8' => 'D',
-                '9' => 'D',
-            ],
-            'Paket C' => [
-                '10' => 'E',
-                '11' => 'F',
-                '12' => 'F',
-            ],
-        ];
+        $phaseMaps = Level::defaultPhases();
 
         foreach ($phaseMaps as $edLevel => $map) {
             Level::where('education_level', $edLevel)->update([

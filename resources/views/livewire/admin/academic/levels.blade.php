@@ -25,13 +25,7 @@ new #[Layout('components.layouts.app')] class extends Component {
 
     public function updatedEducationLevel(): void
     {
-        $this->phase_map = match($this->education_level) {
-            'paud' => [],
-            'sd' => ['1' => 'A', '2' => 'A', '3' => 'B', '4' => 'B', '5' => 'C', '6' => 'C'],
-            'smp' => ['7' => 'D', '8' => 'D', '9' => 'D'],
-            'sma' => ['10' => 'E', '11' => 'F', '12' => 'F'],
-            default => [],
-        };
+        $this->phase_map = Level::defaultPhases()[$this->education_level] ?? [];
     }
 
     public function rules(): array
