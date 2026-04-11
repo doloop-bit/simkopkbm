@@ -74,7 +74,7 @@
                         </p>
 
                         <Link
-                            href={`/program-pendidikan/${program.slug}`}
+                            href={['paud', 'paket-a'].includes(program.slug) ? `/${program.slug}` : `/program-pendidikan/${program.slug}`}
                             class="inline-flex items-center justify-center w-full px-6 py-3.5 bg-zinc-900 text-white rounded-2xl font-bold text-sm tracking-wide group-hover:bg-amber-500 transition-all duration-300 shadow-lg group-hover:shadow-amber-500/25"
                         >
                             Lihat Detail Program

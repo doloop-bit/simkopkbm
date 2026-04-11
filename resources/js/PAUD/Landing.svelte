@@ -19,10 +19,10 @@
     ];
 
     const features = [
-        { title: 'Bermain & Belajar', icon: '🎨', desc: 'Metode belajar yang menyenangkan' },
-        { title: 'Kreativitas', icon: '🧩', desc: 'Asah imajinasi si kecil' },
-        { title: 'Lingkungan Aman', icon: '🏡', desc: 'Nyaman seperti di rumah' },
-        { title: 'Guru Penyayang', icon: '👩‍🏫', desc: 'Didampingi tenaga ahli' }
+        { title: 'Bermain & Belajar', icon: '/images/paud/play_learn.png', desc: 'Metode belajar yang menyenangkan', color: 'bg-yellow-100', accent: 'bg-yellow-400/20', text: 'text-yellow-700' },
+        { title: 'Kreativitas', icon: '/images/paud/creativity.png', desc: 'Asah imajinasi si kecil', color: 'bg-sky-100', accent: 'bg-sky-400/20', text: 'text-sky-700' },
+        { title: 'Lingkungan Aman', icon: '/images/paud/safe_env.png', desc: 'Nyaman seperti di rumah', color: 'bg-rose-100', accent: 'bg-rose-400/20', text: 'text-rose-700' },
+        { title: 'Guru Penyayang', icon: '/images/paud/teacher.png', desc: 'Didampingi tenaga ahli', color: 'bg-emerald-100', accent: 'bg-emerald-400/20', text: 'text-emerald-700' }
     ];
 </script>
 
@@ -119,15 +119,27 @@
                 <div class="w-24 h-2 bg-yellow-400 mx-auto rounded-full"></div>
             </div>
 
-            <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8">
+            <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-x-8 gap-y-24">
                 {#each features as feature, i}
                 <div 
                     in:fly={{ y: 50, delay: i * 200, duration: 800 }}
-                    class="p-8 rounded-[40px] text-center transition-all duration-300 card-hover bg-slate-50 border-2 border-transparent hover:border-sky-200"
+                    class="group p-10 pt-20 rounded-[60px] text-center transition-all duration-500 card-hover {feature.color} border-4 border-white shadow-xl shadow-slate-200/50 hover:shadow-2xl relative"
                 >
-                    <div class="text-5xl mb-6">{feature.icon}</div>
-                    <h3 class="text-2xl font-bold text-slate-800 mb-3">{feature.title}</h3>
-                    <p class="text-slate-600">{feature.desc}</p>
+                    <!-- Background Accent Circle -->
+                    <div class="absolute -top-10 -right-10 w-32 h-32 {feature.accent} rounded-full blur-2xl group-hover:scale-150 transition-transform duration-700 pointer-events-none"></div>
+                    
+                    <div class="absolute -top-16 left-1/2 -translate-x-1/2 w-32 h-32 md:w-36 md:h-36 flex justify-center items-center">
+                        <div class="absolute inset-0 bg-white/40 rounded-full blur-xl scale-75 group-hover:scale-110 transition-transform"></div>
+                        <img src={feature.icon} alt={feature.title} class="w-full h-full object-contain drop-shadow-2xl relative z-10 hover:rotate-6 transition-transform duration-300" />
+                    </div>
+                    
+                    <h3 class="text-2xl font-black {feature.text} mb-4 relative z-10">{feature.title}</h3>
+                    <p class="text-slate-600 font-medium leading-relaxed relative z-10">{feature.desc}</p>
+                    
+                    <!-- Bottom Accent Dot -->
+                    <div class="flex justify-center mt-6">
+                        <div class="w-12 h-1.5 {feature.accent} rounded-full"></div>
+                    </div>
                 </div>
                 {/each}
             </div>

@@ -45,19 +45,13 @@ Route::prefix('v1')->name('v1.')->group(function () {
 });
 
 // PAUD Landing Page
-Route::get('/paud', function () {
-    $program = \App\Models\Program::where('slug', 'like', '%paud%')->first()
-        ?? new \App\Models\Program(['name' => 'PAUD Ceria']);
-
-    return view('paud', compact('program'));
+Route::get('/paud', function (PublicSvelteController $controller) {
+    return $controller->programShow('paud');
 })->name('public.paud');
 
 // Paket A Landing Page
-Route::get('/paket-a', function () {
-    $program = \App\Models\Program::where('slug', 'like', '%paket-a%')->first()
-        ?? new \App\Models\Program(['name' => 'Paket A (Setara SD)']);
-
-    return view('paketa', compact('program'));
+Route::get('/paket-a', function (PublicSvelteController $controller) {
+    return $controller->programShow('paket-a');
 })->name('public.paketa');
 
 // SEO Routes
