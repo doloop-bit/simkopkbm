@@ -11,7 +11,7 @@
         <link rel="stylesheet" href="{{ asset('fonts/fonts.css') }}" media="print" onload="this.media='all'" />
 
         @inertiaHead
-        @vite(['resources/css/app.css', 'resources/js/app.js', "resources/js/Pages/{$page['component']}.svelte"])
+        @vite(['resources/css/app.css', 'resources/js/app.js'])
 
         <script>
             (function() {
