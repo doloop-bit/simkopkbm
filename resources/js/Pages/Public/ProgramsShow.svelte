@@ -1,5 +1,6 @@
 <script>
     import PublicLayout from "../../Layouts/PublicLayout.svelte";
+    import PageHeader from "../../Components/PageHeader.svelte";
     import PAUDLanding from "../../PAUD/Landing.svelte";
     import PaketALanding from "../../PaketA/Landing.svelte";
 
@@ -22,9 +23,15 @@
 {:else}
     <!-- Default fallback layout for all other programs -->
     <PublicLayout {schoolProfile} currentRoute="ProgramsShow">
+        <PageHeader 
+            title={program.name} 
+            description={program.level?.name || "Program Unggulan"}
+            breadcrumb="Detail Program"
+        />
+
         <section class="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-24 text-center">
             <div
-                class="w-20 h-20 rounded-3xl bg-zinc-900 text-white flex items-center justify-center mb-8 shadow-xl mx-auto"
+                class="w-32 h-32 rounded-3xl bg-zinc-900 text-white flex items-center justify-center mb-12 shadow-xl mx-auto overflow-hidden ring-4 ring-slate-100"
             >
                 {#if program.image_path}
                     <img
@@ -37,16 +44,6 @@
                         >{program.name[0]}</span
                     >
                 {/if}
-            </div>
-            <h1
-                class="text-4xl md:text-5xl font-bold font-heading mb-6 tracking-tight"
-            >
-                {program.name}
-            </h1>
-            <div
-                class="inline-flex items-center rounded-full bg-amber-500/10 text-amber-600 px-4 py-1.5 text-sm font-bold mb-10 ring-1 ring-inset ring-amber-500/20"
-            >
-                {program.level?.name || "Program Unggulan"}
             </div>
             <div
                 class="prose max-w-none text-zinc-600 text-lg leading-relaxed text-left"

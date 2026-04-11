@@ -1,14 +1,18 @@
 <script>
     import PublicLayout from "../../Layouts/PublicLayout.svelte";
+    import PageHeader from "../../Components/PageHeader.svelte";
     import { Link } from "@inertiajs/svelte";
     let { schoolProfile, news } = $props();
 </script>
 
 <PublicLayout {schoolProfile} currentRoute="NewsIndex">
+    <PageHeader 
+        title="Berita Terkini" 
+        description="Ikuti terus perkembangan terbaru, pengumuman, dan artikel menarik seputar kegiatan sekolah."
+        breadcrumb="Berita"
+    />
+
     <section class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-24">
-        <h1 class="text-4xl font-bold font-heading mb-12 text-center">
-            Berita Terkini
-        </h1>
         <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
             {#each news.data as article}
                 <article

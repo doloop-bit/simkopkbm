@@ -252,7 +252,7 @@
                     <h2
                         class="text-4xl font-bold font-heading text-slate-900 dark:text-white tracking-tight leading-tight"
                     >
-                        Program Pendidikan <br /><span class="text-slate-400"
+                        Program Pendidikan <br /><span class="text-amber-500"
                             >Pilihan Terbaik</span
                         >
                     </h2>

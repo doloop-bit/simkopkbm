@@ -20,6 +20,7 @@
         <script>
             window.programName = @json($programName);
             window.programLogo = @json($programLogo);
+            document.documentElement.classList.remove('dark');
         </script>
 
         @if($entryPoint)

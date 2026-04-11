@@ -21,6 +21,16 @@
 <script>
     (function() {
         const applyTheme = () => {
+            const isAdmin = window.location.pathname.startsWith('/admin') || 
+                           window.location.pathname.startsWith('/teacher') ||
+                           window.location.pathname.startsWith('/select-role') ||
+                           window.location.pathname.startsWith('/dev/tools');
+
+            if (!isAdmin) {
+                document.documentElement.classList.remove('dark');
+                return;
+            }
+
             const theme = localStorage.getItem('theme') || 'system';
             if (theme === 'system') {
                 if (window.matchMedia('(prefers-color-scheme: dark)').matches) {

@@ -1,22 +1,18 @@
 <script>
     import PublicLayout from "../../Layouts/PublicLayout.svelte";
+    import PageHeader from "../../Components/PageHeader.svelte";
     import { Link } from "@inertiajs/svelte";
     let { schoolProfile, programs } = $props();
 </script>
 
 <PublicLayout {schoolProfile} currentRoute="ProgramsIndex">
+    <PageHeader 
+        title="Program Pendidikan" 
+        description="Pilih jalur pendidikan yang tepat untuk masa depan Anda. Kami menyediakan berbagai tingkatan program berkualitas."
+        breadcrumb="Program"
+    />
+
     <section class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-24">
-        <header class="max-w-3xl mx-auto text-center mb-16 space-y-4">
-            <h1
-                class="text-4xl md:text-5xl font-bold font-heading text-zinc-900 tracking-tight"
-            >
-                Program Pendidikan
-            </h1>
-            <p class="text-zinc-500 text-lg leading-relaxed">
-                Pilih jalur pendidikan yang tepat untuk masa depan Anda. Kami
-                menyediakan berbagai tingkatan program berkualitas.
-            </p>
-        </header>
 
         <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-x-10 gap-y-24">
             {#each programs as program}

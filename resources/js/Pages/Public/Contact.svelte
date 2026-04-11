@@ -1,5 +1,6 @@
 <script>
     import PublicLayout from '../../Layouts/PublicLayout.svelte';
+    import PageHeader from '../../Components/PageHeader.svelte';
     let { schoolProfile } = $props();
     
     const phone = $derived(schoolProfile?.phone || '6281234567890');
@@ -9,8 +10,13 @@
 </script>
 
 <PublicLayout {schoolProfile} currentRoute="Contact">
+    <PageHeader 
+        title="Hubungi Kami" 
+        description="Kami selalu terbuka untuk pertanyaan, saran, dan kerjasama. Silakan hubungi kami melalui saluran yang tersedia."
+        breadcrumb="Kontak"
+    />
+
     <section class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-24">
-        <h1 class="text-4xl font-bold font-heading mb-12 text-center">Hubungi Kami</h1>
         
         <div class="grid grid-cols-1 lg:grid-cols-2 gap-12">
             <!-- Contact Info -->

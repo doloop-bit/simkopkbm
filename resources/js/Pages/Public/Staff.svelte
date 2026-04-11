@@ -1,11 +1,17 @@
 <script>
     import PublicLayout from '../../Layouts/PublicLayout.svelte';
+    import PageHeader from '../../Components/PageHeader.svelte';
     let { schoolProfile, staffMembers } = $props();
 </script>
 
 <PublicLayout {schoolProfile} currentRoute="Staff">
+    <PageHeader 
+        title="Struktur Organisasi" 
+        description="Mengenal tim pengajar dan staf administrasi yang berdedikasi di sekolah kami."
+        breadcrumb="Struktur Organisasi"
+    />
+
     <section class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-24">
-        <h1 class="text-4xl font-bold font-heading mb-12 text-center">Struktur Organisasi</h1>
         <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-8">
             {#each staffMembers as member}
                 <div class="bg-white rounded-2xl shadow-sm border border-zinc-100 overflow-hidden text-center p-6">

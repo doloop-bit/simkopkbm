@@ -1,5 +1,6 @@
 <script>
     import PublicLayout from "../../Layouts/PublicLayout.svelte";
+    import PageHeader from "../../Components/PageHeader.svelte";
     import FormInput from "../../Components/FormInput.svelte";
     import FormSelect from "../../Components/FormSelect.svelte";
     import FormTextarea from "../../Components/FormTextarea.svelte";
@@ -170,39 +171,11 @@
 </script>
 
 <PublicLayout {schoolProfile} currentRoute="Register">
-    <!-- Page Header -->
-    <div
-        class="relative bg-slate-900 text-white overflow-hidden py-20 sm:py-24"
-    >
-        <div
-            class="absolute -top-24 -left-20 w-96 h-96 bg-amber-500/10 blur-[120px] rounded-full"
-        ></div>
-        <div
-            class="absolute -bottom-24 -right-20 w-96 h-96 bg-amber-500/5 blur-[120px] rounded-full"
-        ></div>
-
-        <div
-            class="relative max-w-7xl mx-auto px-6 lg:px-8 text-center space-y-4"
-        >
-            <span
-                class="inline-flex items-center px-3 py-1 rounded-full text-[10px] font-bold uppercase tracking-[0.2em] bg-amber-500/10 text-amber-500 border border-amber-500/20"
-            >
-                Penerimaan Siswa Baru
-            </span>
-            <h1
-                class="text-3xl sm:text-4xl md:text-5xl font-semibold font-heading tracking-tight leading-tight"
-            >
-                Formulir <span class="text-amber-500">Registrasi</span>
-            </h1>
-            <p
-                class="text-base text-slate-400 max-w-xl mx-auto font-normal leading-relaxed"
-            >
-                Silakan lengkapi informasi yang dibutuhkan untuk memulai
-                pendaftaran.
-            </p>
-            <div class="w-16 h-1 bg-amber-500/30 mx-auto rounded-full"></div>
-        </div>
-    </div>
+    <PageHeader 
+        title="Formulir Pendaftaran" 
+        description="Silakan lengkapi informasi yang dibutuhkan untuk memulai pendaftaran siswa baru."
+        breadcrumb="Pendaftaran"
+    />
 
     <div class="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-10 sm:py-12">
         {#if submitted}
