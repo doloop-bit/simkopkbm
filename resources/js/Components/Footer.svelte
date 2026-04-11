@@ -1,10 +1,12 @@
 <script>
-    import { Link, page } from '@inertiajs/svelte';
+    import { Link, usePage } from '@inertiajs/svelte';
+
+    const page = usePage();
 
     let { schoolProfile } = $props();
     
     // Fallback to shared props if not passed directly
-    const profile = $derived(schoolProfile || $page.props.schoolProfile || {});
+    const profile = $derived(schoolProfile || page.props.schoolProfile || {});
 
     const name = $derived(profile?.name || 'SIMKOPKBM');
     const phone = $derived(profile?.phone || '6281234567890');

@@ -1,12 +1,14 @@
 <script>
-    import { Link, page } from "@inertiajs/svelte";
+    import { Link, usePage } from "@inertiajs/svelte";
+    
+    const page = usePage();
 
     let { schoolProfile, currentRoute } = $props();
     let mobileMenuOpen = $state(false);
     let aboutDropdownOpen = $state(false);
 
     // Fallback to shared props if not passed directly
-    const profile = $derived(schoolProfile || $page.props.schoolProfile || {});
+    const profile = $derived(schoolProfile || page.props.schoolProfile || {});
 
     const schoolName = $derived(profile?.name || "SIMKOPKBM");
     const phone = $derived(profile?.phone || "6281234567890");
