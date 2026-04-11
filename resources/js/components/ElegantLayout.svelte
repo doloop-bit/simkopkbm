@@ -16,12 +16,12 @@
     });
 
     const navLinks = [
-        { name: 'Home', href: '#' },
-        { name: 'Profile', href: '#' },
-        { name: 'Programs', href: '#' },
-        { name: 'Facilities', href: '#' },
-        { name: 'News', href: '#' },
-        { name: 'Contact', href: '#' },
+        { name: 'Home', href: '/' },
+        { name: 'Profile', href: '/tentang-kami' },
+        { name: 'Programs', href: '/program-pendidikan' },
+        { name: 'Facilities', href: '/fasilitas' },
+        { name: 'News', href: '/berita' },
+        { name: 'Contact', href: '/kontak' },
     ];
 </script>
 
@@ -57,6 +57,7 @@
                 </button>
                 <button 
                     class="p-2 -mr-2 text-elegant-primary dark:text-white lg:hidden"
+                     aria-label="Toggle Menu"
                     onclick={() => mobileMenuOpen = !mobileMenuOpen}
                 >
                     <span class="material-symbols-outlined text-3xl">menu</span>
@@ -71,8 +72,9 @@
             class="fixed inset-0 z-[100] bg-white dark:bg-slate-950 p-6 flex flex-col items-center justify-center gap-8 lg:hidden"
             transition:fade={{ duration: 300 }}
         >
-            <button 
+             <button 
                 class="absolute top-6 right-6 text-elegant-primary dark:text-white p-2"
+                aria-label="Close Menu"
                 onclick={() => mobileMenuOpen = false}
             >
                 <span class="material-symbols-outlined text-4xl">close</span>
@@ -101,7 +103,10 @@
 
     <!-- FAB for Admission -->
     <div class="fixed bottom-8 right-6 z-50">
-        <button class="bg-elegant-accent text-white w-14 h-14 rounded-full shadow-[0_20px_40px_rgba(197,160,89,0.4)] flex items-center justify-center active:scale-90 transition-transform border-2 border-white/20 hover:bg-elegant-accent-dark group">
+         <button 
+            class="bg-elegant-accent text-white w-14 h-14 rounded-full shadow-[0_20px_40px_rgba(197,160,89,0.4)] flex items-center justify-center active:scale-90 transition-transform border-2 border-white/20 hover:bg-elegant-accent-dark group"
+            aria-label="Hubungi Kami via WhatsApp"
+        >
             <span class="material-symbols-outlined scale-110" style="font-variation-settings: 'FILL' 1;">forum</span>
             <span class="absolute right-16 bg-white text-elegant-primary px-4 py-2 rounded-xl text-sm font-bold shadow-lg opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none whitespace-nowrap border border-elegant-accent-light">
                 Hubungi Kami
@@ -117,11 +122,11 @@
                     {programName.split(' ')[0]} <span class="text-elegant-accent">{programName.split(' ').slice(1).join(' ')}</span>
                 </div>
                 <p class="text-emerald-100/70 text-sm">Mendedikasikan diri untuk masa depan pendidikan yang berlandaskan iman, inovasi, dan karakter mulia.</p>
-                <div class="flex gap-4">
-                    <a class="w-10 h-10 rounded-full border border-elegant-accent/30 flex items-center justify-center hover:bg-elegant-accent transition-colors" href="#">
+                 <div class="flex gap-4">
+                    <a class="w-10 h-10 rounded-full border border-elegant-accent/30 flex items-center justify-center hover:bg-elegant-accent transition-colors" href="/" aria-label="Bagikan Halaman">
                         <span class="material-symbols-outlined text-sm">share</span>
                     </a>
-                    <a class="w-10 h-10 rounded-full border border-elegant-accent/30 flex items-center justify-center hover:bg-elegant-accent transition-colors" href="#">
+                    <a class="w-10 h-10 rounded-full border border-elegant-accent/30 flex items-center justify-center hover:bg-elegant-accent transition-colors" href="/" aria-label="Situs Publik">
                         <span class="material-symbols-outlined text-sm">public</span>
                     </a>
                 </div>
@@ -129,30 +134,30 @@
             
             <div>
                 <h4 class="font-headline font-bold mb-6 text-elegant-accent">Tautan Langsung</h4>
-                <ul class="space-y-4 text-sm text-emerald-100/80">
-                    <li><a class="hover:text-elegant-accent transition-colors duration-200" href="#">Tentang Kami</a></li>
-                    <li><a class="hover:text-elegant-accent transition-colors duration-200" href="#">Program Akademik</a></li>
-                    <li><a class="hover:text-elegant-accent transition-colors duration-200" href="#">Pendaftaran Online</a></li>
-                    <li><a class="hover:text-elegant-accent transition-colors duration-200" href="#">Program Tahfizh</a></li>
+                 <ul class="space-y-4 text-sm text-emerald-100/80">
+                    <li><a class="hover:text-elegant-accent transition-colors duration-200" href="/tentang-kami">Tentang Kami</a></li>
+                    <li><a class="hover:text-elegant-accent transition-colors duration-200" href="/program-pendidikan">Program Akademik</a></li>
+                    <li><a class="hover:text-elegant-accent transition-colors duration-200" href="/pendaftaran">Pendaftaran Online</a></li>
+                    <li><a class="hover:text-elegant-accent transition-colors duration-200" href="/program-pendidikan/tahfizh">Program Tahfizh</a></li>
                 </ul>
             </div>
 
             <div>
                 <h4 class="font-headline font-bold mb-6 text-elegant-accent">Informasi</h4>
-                <ul class="space-y-4 text-sm text-emerald-100/80">
-                    <li><a class="hover:text-elegant-accent transition-colors duration-200" href="#">Privacy Policy</a></li>
-                    <li><a class="hover:text-elegant-accent transition-colors duration-200" href="#">Terms of Service</a></li>
-                    <li><a class="hover:text-elegant-accent transition-colors duration-200" href="#">Campus Map</a></li>
-                    <li><a class="hover:text-elegant-accent transition-colors duration-200" href="#">Adab & Policy</a></li>
+                 <ul class="space-y-4 text-sm text-emerald-100/80">
+                    <li><a class="hover:text-elegant-accent transition-colors duration-200" href="/">Privacy Policy</a></li>
+                    <li><a class="hover:text-elegant-accent transition-colors duration-200" href="/">Terms of Service</a></li>
+                    <li><a class="hover:text-elegant-accent transition-colors duration-200" href="/">Campus Map</a></li>
+                    <li><a class="hover:text-elegant-accent transition-colors duration-200" href="/">Adab & Policy</a></li>
                 </ul>
             </div>
 
             <div>
                 <h4 class="font-headline font-bold mb-6 text-elegant-accent">Newsletter</h4>
                 <p class="text-xs text-emerald-200/60 mb-4">Dapatkan update terbaru mengenai kegiatan dakwah dan pendidikan sekolah.</p>
-                <div class="flex">
-                    <input class="bg-[#003822] border-none rounded-l-lg text-sm w-full focus:ring-1 focus:ring-elegant-accent placeholder-emerald-100/30 px-4" placeholder="Email Anda" type="email"/>
-                    <button class="bg-elegant-accent px-4 py-2 rounded-r-lg hover:bg-elegant-accent-dark transition-colors">
+                 <div class="flex">
+                    <input class="bg-[#003822] border-none rounded-l-lg text-sm w-full focus:ring-1 focus:ring-elegant-accent placeholder-emerald-100/30 px-4" placeholder="Email Anda" type="email" aria-label="Email Newsletter"/>
+                    <button class="bg-elegant-accent px-4 py-2 rounded-r-lg hover:bg-elegant-accent-dark transition-colors" aria-label="Kirim">
                         <span class="material-symbols-outlined text-white">send</span>
                     </button>
                 </div>
@@ -161,10 +166,10 @@
 
         <div class="mt-16 pt-8 border-t border-emerald-900/50 px-6 md:px-12 max-w-7xl mx-auto flex flex-col md:row justify-between items-center gap-4 text-[10px] text-emerald-500/80">
             <p>© 2026 {programName}. All rights reserved.</p>
-            <div class="flex gap-8">
-                <a class="hover:text-elegant-accent transition-colors" href="#">Instagram</a>
-                <a class="hover:text-elegant-accent transition-colors" href="#">Youtube</a>
-                <a class="hover:text-elegant-accent transition-colors" href="#">Linkedin</a>
+             <div class="flex gap-8">
+                <a class="hover:text-elegant-accent transition-colors" href="/">Instagram</a>
+                <a class="hover:text-elegant-accent transition-colors" href="/">Youtube</a>
+                <a class="hover:text-elegant-accent transition-colors" href="/">Linkedin</a>
             </div>
         </div>
     </footer>

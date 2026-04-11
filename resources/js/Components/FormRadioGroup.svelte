@@ -19,12 +19,12 @@
 
 <div class="space-y-2 {className}">
     {#if label}
-        <label class="text-xs font-semibold text-slate-500 tracking-wide ml-1">
+        <span class="text-xs font-semibold text-slate-500 tracking-wide ml-1">
             {label}
             {#if required}
                 <span class="text-rose-500">*</span>
             {/if}
-        </label>
+        </span>
     {/if}
     
     <div class="flex p-1 bg-slate-50 dark:bg-slate-800 rounded-xl ring-1 {error ? 'ring-rose-500' : 'ring-slate-100 dark:ring-slate-700'}">

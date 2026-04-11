@@ -141,7 +141,7 @@
             <div class="absolute z-50 mt-2 p-4 bg-white dark:bg-slate-900 rounded-[2rem] shadow-2xl border border-slate-100 dark:border-slate-800 animate-in fade-in zoom-in-95 duration-200 origin-top w-[320px]">
                 <!-- Header -->
                 <div class="flex items-center justify-between mb-4">
-                    <button type="button" onclick={() => changeMonth(-1)} class="p-2 hover:bg-slate-50 dark:hover:bg-slate-800 rounded-xl transition-colors text-slate-400 hover:text-amber-500">
+                    <button type="button" onclick={() => changeMonth(-1)} aria-label="Bulan Sebelumnya" class="p-2 hover:bg-slate-50 dark:hover:bg-slate-800 rounded-xl transition-colors text-slate-400 hover:text-amber-500">
                         <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7"/></svg>
                     </button>
                     
@@ -158,7 +158,7 @@
                         </select>
                     </div>
 
-                    <button type="button" onclick={() => changeMonth(1)} class="p-2 hover:bg-slate-50 dark:hover:bg-slate-800 rounded-xl transition-colors text-slate-400 hover:text-amber-500">
+                    <button type="button" onclick={() => changeMonth(1)} aria-label="Bulan Berikutnya" class="p-2 hover:bg-slate-50 dark:hover:bg-slate-800 rounded-xl transition-colors text-slate-400 hover:text-amber-500">
                         <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"/></svg>
                     </button>
                 </div>

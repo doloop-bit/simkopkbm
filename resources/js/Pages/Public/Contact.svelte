@@ -2,10 +2,10 @@
     import PublicLayout from '../../Layouts/PublicLayout.svelte';
     let { schoolProfile } = $props();
     
-    const phone = schoolProfile?.phone || '6281234567890';
-    const email = schoolProfile?.email || 'info@simkopkbm.com';
-    const address = schoolProfile?.address || 'Jakarta, Indonesia';
-    const mapUrl = schoolProfile?.map_embed_url || '';
+    const phone = $derived(schoolProfile?.phone || '6281234567890');
+    const email = $derived(schoolProfile?.email || 'info@simkopkbm.com');
+    const address = $derived(schoolProfile?.address || 'Jakarta, Indonesia');
+    const mapUrl = $derived(schoolProfile?.map_embed_url || '');
 </script>
 
 <PublicLayout {schoolProfile} currentRoute="Contact">
