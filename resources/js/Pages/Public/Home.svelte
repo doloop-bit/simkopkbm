@@ -1,5 +1,9 @@
-<script>
+<script context="module">
     import PublicLayout from "../../Layouts/PublicLayout.svelte";
+    export const layout = PublicLayout;
+</script>
+
+<script>
     import Button from "../../Components/Button.svelte";
     import { onMount } from "svelte";
     import { router, Link } from "@inertiajs/svelte";
@@ -60,7 +64,7 @@
     ];
 </script>
 
-<PublicLayout {schoolProfile} currentRoute="Home">
+
     <!-- Hero Section with Motion -->
     <section
         class="relative min-h-[90vh] flex items-center overflow-hidden bg-slate-950"
@@ -260,7 +264,7 @@
                 <Button
                     variant="ghost"
                     onclick={() =>
-                        (window.location.href = "/program-pendidikan")}
+                        router.visit("/program-pendidikan")}
                     class="group"
                 >
                     Lihat Semua
@@ -440,4 +444,4 @@
             </div>
         </div>
     </section>
-</PublicLayout>
+

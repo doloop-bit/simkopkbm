@@ -1,10 +1,14 @@
-<script>
+<script context="module">
     import PublicLayout from "../../Layouts/PublicLayout.svelte";
+    export const layout = PublicLayout;
+</script>
+
+<script>
     import PageHeader from "../../Components/PageHeader.svelte";
     let { schoolProfile, article } = $props();
 </script>
 
-<PublicLayout {schoolProfile} currentRoute="NewsShow">
+
     <PageHeader 
         title={article.title} 
         description={`${new Date(article.published_at).toLocaleDateString("id-ID", { day: 'numeric', month: 'long', year: 'numeric' })} • ${article.author?.name || 'Administrator'}`}
@@ -24,4 +28,4 @@
             {@html article.content}
         </div>
     </article>
-</PublicLayout>
+

@@ -1,5 +1,9 @@
-<script>
+<script context="module">
     import PublicLayout from "../../Layouts/PublicLayout.svelte";
+    export const layout = PublicLayout;
+</script>
+
+<script>
     import PageHeader from "../../Components/PageHeader.svelte";
     import PAUDLanding from "../../PAUD/Landing.svelte";
     import PaketALanding from "../../PaketA/Landing.svelte";
@@ -22,7 +26,7 @@
     <CustomLanding programName={program.name} programLogo={logoUrl} />
 {:else}
     <!-- Default fallback layout for all other programs -->
-    <PublicLayout {schoolProfile} currentRoute="ProgramsShow">
+
         <PageHeader 
             title={program.name} 
             description={program.level?.name || "Program Unggulan"}
@@ -71,5 +75,5 @@
                 </a>
             </div>
         </section>
-    </PublicLayout>
+
 {/if}

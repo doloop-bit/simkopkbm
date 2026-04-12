@@ -1,10 +1,14 @@
+<script context="module">
+    import PublicLayout from "../../Layouts/PublicLayout.svelte";
+    export const layout = PublicLayout;
+</script>
+
 <script>
-    import PublicLayout from '../../Layouts/PublicLayout.svelte';
     import PageHeader from '../../Components/PageHeader.svelte';
     let { schoolProfile, facilities } = $props();
 </script>
 
-<PublicLayout {schoolProfile} currentRoute="Facilities">
+
     <PageHeader 
         title="Fasilitas Sekolah" 
         description="Lingkungan belajar yang nyaman dan fasilitas lengkap untuk menunjang kreativitas siswa."
@@ -24,4 +28,4 @@
             {/each}
         </div>
     </section>
-</PublicLayout>
+

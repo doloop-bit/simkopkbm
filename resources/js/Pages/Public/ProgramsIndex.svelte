@@ -1,11 +1,15 @@
-<script>
+<script context="module">
     import PublicLayout from "../../Layouts/PublicLayout.svelte";
+    export const layout = PublicLayout;
+</script>
+
+<script>
     import PageHeader from "../../Components/PageHeader.svelte";
     import { Link } from "@inertiajs/svelte";
     let { schoolProfile, programs } = $props();
 </script>
 
-<PublicLayout {schoolProfile} currentRoute="ProgramsIndex">
+
     <PageHeader 
         title="Program Pendidikan" 
         description="Pilih jalur pendidikan yang tepat untuk masa depan Anda. Kami menyediakan berbagai tingkatan program berkualitas."
@@ -110,4 +114,4 @@
             {/each}
         </div>
     </section>
-</PublicLayout>
+

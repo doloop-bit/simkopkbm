@@ -1,5 +1,9 @@
-<script>
+<script context="module">
     import PublicLayout from "../../Layouts/PublicLayout.svelte";
+    export const layout = PublicLayout;
+</script>
+
+<script>
     import PageHeader from "../../Components/PageHeader.svelte";
     import FormInput from "../../Components/FormInput.svelte";
     import FormSelect from "../../Components/FormSelect.svelte";
@@ -170,7 +174,7 @@
     const currentYear = new Date().getFullYear();
 </script>
 
-<PublicLayout {schoolProfile} currentRoute="Register">
+
     <PageHeader 
         title="Formulir Pendaftaran" 
         description="Silakan lengkapi informasi yang dibutuhkan untuk memulai pendaftaran siswa baru."
@@ -869,4 +873,4 @@
             </div>
         {/if}
     </div>
-</PublicLayout>
+

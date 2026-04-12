@@ -1,5 +1,9 @@
+<script context="module">
+    import PublicLayout from "../../Layouts/PublicLayout.svelte";
+    export const layout = PublicLayout;
+</script>
+
 <script>
-    import PublicLayout from '../../Layouts/PublicLayout.svelte';
     import PageHeader from '../../Components/PageHeader.svelte';
     let { schoolProfile } = $props();
     
@@ -9,7 +13,7 @@
     const mapUrl = $derived(schoolProfile?.map_embed_url || '');
 </script>
 
-<PublicLayout {schoolProfile} currentRoute="Contact">
+
     <PageHeader 
         title="Hubungi Kami" 
         description="Kami selalu terbuka untuk pertanyaan, saran, dan kerjasama. Silakan hubungi kami melalui saluran yang tersedia."
@@ -78,4 +82,4 @@
             </div>
         </div>
     </section>
-</PublicLayout>
+

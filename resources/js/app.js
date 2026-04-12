@@ -1,5 +1,6 @@
 import { createInertiaApp } from '@inertiajs/svelte';
 import { mount } from 'svelte';
+import PublicLayout from './Layouts/PublicLayout.svelte';
 
 createInertiaApp({
   resolve: name => {

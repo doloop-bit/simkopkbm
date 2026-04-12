@@ -16,12 +16,16 @@
     const facebook = $derived(profile?.facebook_url || "#");
     const instagram = $derived(profile?.instagram_url || "#");
 
-    let logoSrc = $state("/img/logo.svg");
+    // Dynamic Logo handling
+    const initialLogo = profile?.logo_path ? `/storage/${profile.logo_path}` : "/img/logo.svg";
+    let logoSrc = $state(initialLogo);
     let logoError = $state(false);
 
     function handleLogoError() {
         if (logoSrc === "/img/logo.svg") {
             logoSrc = "/img/logo.png";
+        } else if (profile?.logo_path && logoSrc === `/storage/${profile.logo_path}`) {
+            logoSrc = "/img/logo.svg"; // Fallback to default if custom logo fails
         } else {
             logoError = true;
         }

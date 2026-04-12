@@ -1,10 +1,14 @@
+<script context="module">
+    import PublicLayout from "../../Layouts/PublicLayout.svelte";
+    export const layout = PublicLayout;
+</script>
+
 <script>
-    import PublicLayout from '../../Layouts/PublicLayout.svelte';
     import PageHeader from '../../Components/PageHeader.svelte';
     let { schoolProfile, staffMembers } = $props();
 </script>
 
-<PublicLayout {schoolProfile} currentRoute="Staff">
+
     <PageHeader 
         title="Struktur Organisasi" 
         description="Mengenal tim pengajar dan staf administrasi yang berdedikasi di sekolah kami."
@@ -22,4 +26,4 @@
             {/each}
         </div>
     </section>
-</PublicLayout>
+

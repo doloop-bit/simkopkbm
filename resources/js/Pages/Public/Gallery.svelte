@@ -1,10 +1,14 @@
+<script context="module">
+    import PublicLayout from "../../Layouts/PublicLayout.svelte";
+    export const layout = PublicLayout;
+</script>
+
 <script>
-    import PublicLayout from '../../Layouts/PublicLayout.svelte';
     import PageHeader from '../../Components/PageHeader.svelte';
     let { schoolProfile, photos } = $props();
 </script>
 
-<PublicLayout {schoolProfile} currentRoute="Gallery">
+
     <PageHeader 
         title="Galeri Kegiatan" 
         description="Dokumentasi berbagai aktivitas dan momen berharga dalam perjalanan pendidikan di sekolah kami."
@@ -23,4 +27,4 @@
             {/each}
         </div>
     </section>
-</PublicLayout>
+

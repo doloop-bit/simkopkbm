@@ -1,10 +1,14 @@
+<script context="module">
+    import PublicLayout from "../../Layouts/PublicLayout.svelte";
+    export const layout = PublicLayout;
+</script>
+
 <script>
-    import PublicLayout from '../../Layouts/PublicLayout.svelte';
     import PageHeader from '../../Components/PageHeader.svelte';
     let { schoolProfile } = $props();
 </script>
 
-<PublicLayout {schoolProfile} currentRoute="About">
+
     <PageHeader 
         title="Tentang Kami" 
         description="Mengenal lebih dekat visi, misi, dan profil pendidikan di sekolah kami."
@@ -23,4 +27,4 @@
             <div class="whitespace-pre-line">{schoolProfile?.mission || 'Misi kami...'}</div>
         </div>
     </section>
-</PublicLayout>
+
