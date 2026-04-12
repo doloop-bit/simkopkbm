@@ -21,6 +21,7 @@ new #[Layout('components.layouts.app')] class extends Component {
     public string $assessment_type = 'numeric';
     public ?string $target = null;
     public bool $has_practice = false;
+    public int $kkm = 70;
     public ?int $level_id = null;
 
     public function mount(): void
@@ -51,6 +52,7 @@ new #[Layout('components.layouts.app')] class extends Component {
         $this->assessment_type = $subject->assessment_type;
         $this->target = $subject->target;
         $this->has_practice = $subject->has_practice;
+        $this->kkm = $subject->kkm;
         $this->level_id = $subject->level_id;
         $this->myModal = true;
     }
@@ -76,6 +78,7 @@ new #[Layout('components.layouts.app')] class extends Component {
                 'assessment_type' => $this->assessment_type,
                 'target' => $this->assessment_type === 'target_achievement' ? $this->target : null,
                 'has_practice' => $this->assessment_type === 'numeric' ? $this->has_practice : false,
+                'kkm' => $this->kkm,
                 'level_id' => $this->level_id,
             ]
         );
@@ -103,6 +106,7 @@ new #[Layout('components.layouts.app')] class extends Component {
         $this->assessment_type = 'numeric';
         $this->target = null;
         $this->has_practice = false;
+        $this->kkm = 70;
         $this->level_id = null;
     }
 
@@ -157,6 +161,7 @@ new #[Layout('components.layouts.app')] class extends Component {
 
             @scope('cell_details', $subject)
                 <div class="text-xs text-slate-500">
+                    <span class="mr-2">KKM: {{ $subject->kkm }}</span>
                     @if($subject->assessment_type === 'numeric')
                         <span>{{ __('Praktek:') }} {{ $subject->has_practice ? 'Ya' : 'Tidak' }}</span>
                     @else
@@ -186,7 +191,10 @@ new #[Layout('components.layouts.app')] class extends Component {
         <div class="grid gap-4">
             <x-ui.select wire:model.live="level_id" :label="__('Jenjang / Level')" :options="$levels" placeholder="Pilih Jenjang" />
             <x-ui.input wire:model="name" :label="__('Nama Mata Pelajaran')" placeholder="Contoh: Hafalan Juz Amma" />
-            <x-ui.input wire:model="code" :label="__('Kode (Opsional)')" placeholder="Contoh: DIN01" />
+            <div class="grid grid-cols-2 gap-4">
+                <x-ui.input wire:model="code" :label="__('Kode (Opsional)')" placeholder="Contoh: DIN01" />
+                <x-ui.input wire:model="kkm" :label="__('KKM')" type="number" />
+            </div>
             
             <x-ui.select 
                 wire:model.live="assessment_type" 

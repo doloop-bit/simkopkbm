@@ -20,8 +20,8 @@ class DiniyahGrade extends Model
         'practice_grade',
         'attitude_grade',
         'achievement',
+        'target_status',
         'grade',
-        'notes',
     ];
 
     public function student(): BelongsTo

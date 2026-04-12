@@ -86,15 +86,15 @@ trait HandlesDiniyahReportCard
             return [
                 'subject_id' => $grade->diniyah_subject_id,
                 'subject_name' => $grade->subject->name,
-                'assessment_type' => $grade->subject->assessment_type,
+                'kkm' => $grade->subject->kkm ?? 70,
                 'target' => $grade->subject->target,
+                'target_status' => $grade->target_status,
                 'has_practice' => $grade->subject->has_practice,
                 'knowledge_grade' => $grade->knowledge_grade,
                 'practice_grade' => $grade->practice_grade,
                 'attitude_grade' => $grade->attitude_grade,
                 'achievement' => $grade->achievement,
                 'grade' => $grade->grade,
-                'notes' => $grade->notes,
             ];
         })->toArray();
 
@@ -131,6 +131,16 @@ trait HandlesDiniyahReportCard
 
         $teacher = $teacherAssignment?->teacher;
 
+        // Fetch attendance
+        $attendance = \App\Models\ReportAttendance::where([
+            'student_id' => $student->id,
+            'academic_year_id' => $academicYear->id,
+            'semester' => $reportCard->semester,
+        ])->first();
+
+        // Level-specific header info
+        $headerInfo = $this->getHeaderInfoForLevel($classroom->level?->education_level);
+
         $pdf = Pdf::loadView('pdf.diniyah-report-card', [
             'reportCard' => $reportCard,
             'student' => $student,
@@ -138,7 +148,10 @@ trait HandlesDiniyahReportCard
             'classroom' => $classroom,
             'academicYear' => $academicYear,
             'teacher' => $teacher,
+            'attendance' => $attendance,
+            'headerInfo' => $headerInfo,
             'semester' => $reportCard->semester,
+            'terbilang' => fn ($n) => $this->terbilang($n),
         ]);
 
         $safeStudentName = str_replace(['/', '\\'], '-', $student->name);
@@ -182,5 +195,53 @@ trait HandlesDiniyahReportCard
             'students' => $students,
             'existingReports' => $existingReports,
         ];
+    }
+
+    private function getHeaderInfoForLevel(?string $educationLevel): array
+    {
+        $programs = \App\Models\Program::all()->keyBy('level_id');
+        $levels = \App\Models\Level::all()->keyBy('education_level');
+
+        if ($educationLevel === 'sd') {
+            return [
+                'name' => 'MADRASAH DINIYAH AL IHSAN (PAKET A)',
+                'address' => 'Jl. Letjen Suprapto No.20 Putatan-Sidomulyo, Ungaran, Kab. Semarang',
+                'logo' => $programs->get($levels->get('sd')?->id)?->logo_path,
+            ];
+        }
+
+        $levelId = ($educationLevel === 'smp') ? $levels->get('smp')?->id : $levels->get('sma')?->id;
+        $levelName = ($educationLevel === 'smp') ? 'PAKET B' : 'PAKET C';
+
+        return [
+            'name' => "MADRASAH DINIYAH AL IHSAN ({$levelName})",
+            'address' => 'Dsn Sitoyo RT 01 RW 03, Ds Keji, Kec. Ungaran Barat, Kab. Semarang',
+            'logo' => $programs->get($levelId)?->logo_path,
+        ];
+    }
+
+    private function terbilang($angka): string
+    {
+        $angka = abs((float) $angka);
+        $baca = ['', 'satu', 'dua', 'tiga', 'empat', 'lima', 'enam', 'tujuh', 'delapan', 'sembilan', 'sepuluh', 'sebelas'];
+        $terbilang = '';
+
+        if ($angka < 12) {
+            $terbilang = ' '.$baca[$angka];
+        } elseif ($angka < 20) {
+            $terbilang = $this->terbilang($angka - 10).' belas';
+        } elseif ($angka < 100) {
+            $terbilang = $this->terbilang($angka / 10).' puluh'.$this->terbilang($angka % 10);
+        } elseif ($angka < 200) {
+            $terbilang = ' seratus'.$this->terbilang($angka - 100);
+        } elseif ($angka < 1000) {
+            $terbilang = $this->terbilang($angka / 100).' ratus'.$this->terbilang($angka % 100);
+        } elseif ($angka < 2000) {
+            $terbilang = ' seribu'.$this->terbilang($angka - 1000);
+        } elseif ($angka < 1000000) {
+            $terbilang = $this->terbilang($angka / 1000).' ribu'.$this->terbilang($angka % 1000);
+        }
+
+        return trim($terbilang);
     }
 }

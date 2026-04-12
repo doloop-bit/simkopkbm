@@ -69,10 +69,18 @@ test('diniyah report card can be generated', function () {
         'profileable_type' => StudentProfile::class,
     ]);
 
-    $subject = DiniyahSubject::create([
-        'name' => 'Tauhid',
-        'level_id' => $level->id,
+    $subject = DiniyahSubject::factory()->create([
+        'name' => 'Numeric Subject',
         'assessment_type' => 'numeric',
+        'kkm' => 75,
+        'level_id' => $level->id,
+    ]);
+
+    DiniyahSubject::factory()->create([
+        'name' => 'Target Subject',
+        'assessment_type' => 'target_achievement',
+        'kkm' => 80,
+        'level_id' => $level->id,
     ]);
 
     DiniyahGrade::create([

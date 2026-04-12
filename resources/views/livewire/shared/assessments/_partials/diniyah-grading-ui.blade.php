@@ -29,7 +29,7 @@
                 ] : [
                     ['key' => 'achievement', 'label' => __('Capaian'), 'class' => 'w-48'],
                     ['key' => 'grade', 'label' => __('Nilai'), 'class' => 'w-24 text-center'],
-                    ['key' => 'notes', 'label' => __('Keterangan / Uraian')],
+                    ['key' => 'target_status', 'label' => __('Status'), 'class' => 'w-32'],
                 ])
             ]" :rows="$students">
                 
@@ -101,13 +101,18 @@
                     </div>
                 @endscope
 
-                @scope('cell_notes', $student)
-                    <x-ui.textarea 
-                        wire:model="grades_data.{{ $student->id }}.notes" 
-                        rows="1"
-                        placeholder="Uraian perkembangan/catatan..."
-                        class="!py-1 text-xs border-none bg-slate-50/50"
-                    />
+                @scope('cell_target_status', $student)
+                    <div class="flex justify-center">
+                        <x-ui.select 
+                            wire:model="grades_data.{{ $student->id }}.target_status" 
+                            :options="[
+                                ['id' => 'Tercapai', 'name' => 'Tercapai'],
+                                ['id' => 'Belum Tercapai', 'name' => 'Belum'],
+                            ]" 
+                            class="!py-1 font-bold !w-28 text-sm"
+                            placeholder="Pilih..."
+                        />
+                    </div>
                 @endscope
             </x-ui.table>
 

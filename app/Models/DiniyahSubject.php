@@ -15,6 +15,7 @@ class DiniyahSubject extends Model
         'name',
         'code',
         'assessment_type',
+        'kkm',
         'target',
         'has_practice',
         'level_id',

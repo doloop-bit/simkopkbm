@@ -89,8 +89,8 @@ trait HandlesDiniyahAssessment
                 'practice_grade' => $grade->practice_grade,
                 'attitude_grade' => $grade->attitude_grade,
                 'achievement' => $grade->achievement,
+                'target_status' => $grade->target_status,
                 'grade' => $grade->grade,
-                'notes' => $grade->notes,
             ];
         }
 
@@ -109,8 +109,8 @@ trait HandlesDiniyahAssessment
                     'practice_grade' => null,
                     'attitude_grade' => 'B', // Default to B for attitude
                     'achievement' => '',
+                    'target_status' => 'Belum Tercapai',
                     'grade' => null,
-                    'notes' => '',
                 ];
             }
         }
@@ -158,8 +158,8 @@ trait HandlesDiniyahAssessment
                     $values['attitude_grade'] = $data['attitude_grade'] ?: 'B';
                 } else {
                     $values['achievement'] = $data['achievement'] ?: null;
+                    $values['target_status'] = $data['target_status'] ?: 'Belum Tercapai';
                     $values['grade'] = $data['grade'] !== '' ? (float) $data['grade'] : null;
-                    $values['notes'] = $data['notes'] ?: null;
                 }
 
                 DiniyahGrade::updateOrCreate(
