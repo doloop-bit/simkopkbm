@@ -17,12 +17,30 @@ new #[Layout('components.layouts.app')] class extends Component {
 
     protected function ensureAccessToClassroom(int $classroomId): void
     {
-        // Admin has access to all
+        $user = auth()->user();
+        
+        if ($user->isAdmin()) {
+            return;
+        }
+
+        if (!$user->hasAccessToClassroom($classroomId)) {
+             abort(403, 'Anda tidak berhak mengakses kelas ini.');
+        }
     }
 
     protected function getAllowedClassrooms()
     {
-        return Classroom::query()
+        $user = auth()->user();
+        $isAdmin = $user->isAdmin();
+        
+        $query = Classroom::query();
+
+        if (!$isAdmin) {
+            $assignedIds = $user->getAssignedClassroomIds();
+            $query->whereIn('id', $assignedIds);
+        }
+
+        return $query
              ->when($this->academic_year_id, fn($q) => $q->where('academic_year_id', $this->academic_year_id))
              ->orderBy('name')
              ->get();

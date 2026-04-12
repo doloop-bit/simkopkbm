@@ -1,87 +1,16 @@
 <?php
 
-use App\Models\StudentProfile;
+use App\Models\User;
+use App\Traits\Shared\HandlesPeriodicRecord;
 use Livewire\Attributes\Layout;
 use Livewire\Component;
 
 new #[Layout('components.layouts.app')] class extends Component {
-    public bool $periodicModal = false;
-    public float $weight = 0;
-    public float $height = 0;
-    public float $head_circumference = 0;
-    public int $semester = 1;
-    public ?int $current_academic_year_id = null;
-    public bool $hasExistingPeriodicData = false;
-    public ?string $periodicDataLastUpdated = null;
-    public ?StudentProfile $editingStudent = null;
+    use HandlesPeriodicRecord;
 
     public function mount(): void
     {
-        $this->current_academic_year_id = \App\Models\AcademicYear::where('is_active', true)->first()?->id;
-    }
-
-    public function openPeriodic(StudentProfile $student): void
-    {
-        $this->editingStudent = $student;
-        $this->loadPeriodicData();
-        $this->periodicModal = true;
-    }
-
-    public function updatedSemester(): void
-    {
-        $this->loadPeriodicData();
-    }
-
-    protected function loadPeriodicData(): void
-    {
-        if ($this->editingStudent) {
-            $existingRecord = \App\Models\StudentPeriodicRecord::where('student_profile_id', $this->editingStudent->id)
-                ->where('academic_year_id', $this->current_academic_year_id)
-                ->where('semester', $this->semester)
-                ->first();
-
-            if ($existingRecord) {
-                $this->weight = $existingRecord->weight;
-                $this->height = $existingRecord->height;
-                $this->head_circumference = $existingRecord->head_circumference;
-                $this->hasExistingPeriodicData = true;
-                $this->periodicDataLastUpdated = $existingRecord->updated_at->diffForHumans();
-            } else {
-                $this->weight = 0;
-                $this->height = 0;
-                $this->head_circumference = 0;
-                $this->hasExistingPeriodicData = false;
-                $this->periodicDataLastUpdated = null;
-            }
-        }
-    }
-
-    public function savePeriodic(int $studentProfileId): void
-    {
-        $this->validate([
-            'weight' => 'required|numeric|min:0',
-            'height' => 'required|numeric|min:0',
-            'head_circumference' => 'required|numeric|min:0',
-            'semester' => 'required|integer|in:1,2',
-        ]);
-
-        \App\Models\StudentPeriodicRecord::updateOrCreate(
-            [
-                'student_profile_id' => $studentProfileId,
-                'academic_year_id' => $this->current_academic_year_id,
-                'semester' => $this->semester,
-            ],
-            [
-                'weight' => $this->weight,
-                'height' => $this->height,
-                'head_circumference' => $this->head_circumference,
-                'recorded_by' => auth()->id(),
-            ],
-        );
-
-        $this->periodicModal = false;
-        $this->reset(['weight', 'height', 'head_circumference', 'semester', 'hasExistingPeriodicData', 'periodicDataLastUpdated']);
-        session()->flash('success', __('Data periodik berhasil disimpan!'));
+        $this->mountHandlesPeriodicRecord();
     }
 
     public function with(): array
@@ -89,15 +18,10 @@ new #[Layout('components.layouts.app')] class extends Component {
         $teacher = auth()->user();
         $assignedClassroomIds = $teacher->getAssignedClassroomIds();
 
-        $students = StudentProfile::whereIn('classroom_id', $assignedClassroomIds)
-            ->join('profiles', function($j) {
-                $j->on('student_profiles.id', '=', 'profiles.profileable_id')
-                  ->where('profiles.profileable_type', '=', \App\Models\StudentProfile::class);
-            })
-            ->join('users', 'profiles.user_id', '=', 'users.id')
-            ->with(['profile.user', 'classroom.level', 'classroom.academicYear'])
-            ->orderBy('users.name')
-            ->select('student_profiles.*')
+        $students = User::where('role', 'siswa')
+            ->whereHas('latestProfile', fn($q) => $q->whereIn('classroom_id', $assignedClassroomIds))
+            ->with(['latestProfile.profileable.classroom.level', 'latestProfile.profileable.classroom.academicYear'])
+            ->orderBy('name')
             ->get();
 
         return [
@@ -144,34 +68,35 @@ new #[Layout('components.layouts.app')] class extends Component {
             :rows="$students"
         >
             @scope('cell_name', $student)
+                @php $profile = $student->latestProfile?->profileable; @endphp
                 <div class="flex items-center gap-3">
                     <x-ui.avatar 
-                        :image="($student->photo && Storage::disk('public')->exists($student->photo)) ? '/storage/'.$student->photo : null" 
+                        :image="($profile?->photo && Storage::disk('public')->exists($profile->photo)) ? '/storage/'.$profile->photo : null" 
                         icon="o-user" 
                         class="!w-10 !h-10 rounded-xl shadow-sm hidden sm:grid flex-none"
                     />
                     <div class="flex flex-col">
-                        <span class="font-bold text-slate-900 dark:text-white text-xs sm:text-sm leading-tight">{{ $student->profile->user->name }}</span>
+                        <span class="font-bold text-slate-900 dark:text-white text-xs sm:text-sm leading-tight">{{ $student->name }}</span>
                         <div class="flex items-center gap-1.5 mt-0.5">
-                            <span class="text-[9px] text-slate-400 font-mono tracking-tighter">{{ $student->nisn ?? $student->nis }}</span>
-                            <span class="sm:hidden text-[9px] bg-slate-100 dark:bg-slate-800 text-slate-500 px-1 rounded font-black uppercase">{{ $student->classroom->name }}</span>
+                            <span class="text-[9px] text-slate-400 font-mono tracking-tighter">{{ $profile?->nisn ?? $profile?->nis }}</span>
+                            <span class="sm:hidden text-[9px] bg-slate-100 dark:bg-slate-800 text-slate-500 px-1 rounded font-black uppercase">{{ $profile?->classroom->name }}</span>
                         </div>
                     </div>
                 </div>
             @endscope
 
             @scope('cell_nis', $student)
-                <span class="text-xs font-medium text-slate-600 dark:text-slate-400 font-mono">{{ $student->nis ?? '-' }}</span>
+                <span class="text-xs font-medium text-slate-600 dark:text-slate-400 font-mono">{{ $student->latestProfile?->profileable?->nis ?? '-' }}</span>
             @endscope
 
             @scope('cell_classroom_name', $student)
-                <x-ui.badge :label="$student->classroom->name" class="bg-blue-50 text-blue-600 dark:bg-blue-900/30 dark:text-blue-400 text-[10px] font-black border-none" />
+                <x-ui.badge :label="$student->latestProfile?->profileable?->classroom?->name" class="bg-blue-50 text-blue-600 dark:bg-blue-900/30 dark:text-blue-400 text-[10px] font-black border-none" />
             @endscope
 
             @scope('cell_status', $student)
                 <div class="flex items-center gap-1.5">
-                    <div class="size-1.5 rounded-full {{ $student->profile->user->is_active ? 'bg-emerald-500' : 'bg-slate-300' }}"></div>
-                    <span class="text-[10px] uppercase font-black tracking-widest text-slate-500">{{ $student->profile->user->is_active ? __('Aktif') : __('Non-Aktif') }}</span>
+                    <div class="size-1.5 rounded-full {{ $student->is_active ? 'bg-emerald-500' : 'bg-slate-300' }}"></div>
+                    <span class="text-[10px] uppercase font-black tracking-widest text-slate-500">{{ $student->is_active ? __('Aktif') : __('Non-Aktif') }}</span>
                 </div>
             @endscope
 
@@ -200,40 +125,5 @@ new #[Layout('components.layouts.app')] class extends Component {
     </x-ui.card>
 
     {{-- Periodic Data Modal --}}
-    <x-ui.modal wire:model="periodicModal" persistent>
-        <x-ui.header :title="__('Data Periodik Siswa')" :subtitle="__('Input data berat badan, tinggi, dan lingkar kepala.')" separator />
-
-        <form wire:submit.prevent="savePeriodic({{ $editingStudent->id ?? 0 }})" class="space-y-6">
-            @if($hasExistingPeriodicData)
-                <x-ui.alert :title="__('Data sudah ada')" icon="o-information-circle" class="bg-blue-50 text-blue-800 border-blue-100 shadow-sm">
-                    {{ __('Terakhir diupdate') }} {{ $periodicDataLastUpdated }}
-                </x-ui.alert>
-            @else
-                <x-ui.alert :title="__('Belum ada data')" icon="o-exclamation-triangle" class="bg-amber-50 text-amber-800 border-amber-100 shadow-sm">
-                    {{ __('Belum ada data untuk semester ini.') }}
-                </x-ui.alert>
-            @endif
-
-            <div class="space-y-4">
-                <x-ui.select 
-                    wire:model.live="semester" 
-                    :label="__('Semester')" 
-                    :options="[
-                        ['id' => 1, 'name' => __('Ganjil (1)')],
-                        ['id' => 2, 'name' => __('Genap (2)')],
-                    ]"
-                    required
-                />
-
-                <x-ui.input type="number" step="0.5" wire:model="weight" :label="__('Berat Badan (kg)')" suffix="kg" required />
-                <x-ui.input type="number" step="1" wire:model="height" :label="__('Tinggi Badan (cm)')" suffix="cm" required />
-                <x-ui.input type="number" step="0.1" wire:model="head_circumference" :label="__('Lingkar Kepala (cm)')" suffix="cm" required />
-            </div>
-
-            <div class="flex justify-end gap-2 pt-4 border-t border-slate-100 dark:border-slate-800">
-                <x-ui.button :label="__('Batal')" ghost @click="show = false" />
-                <x-ui.button :label="__('Simpan Data')" type="submit" class="btn-primary" spinner="savePeriodic" />
-            </div>
-        </form>
-    </x-ui.modal>
+    @include('livewire.admin.data-master.students.partials.periodic-modal', ['editing' => $editingUserForPeriodic])
 </div>

@@ -35,5 +35,5 @@ Route::middleware(['auth', 'verified', 'role:guru'])->prefix('teacher')->name('t
         ->name('assessments.extracurricular');
     Route::livewire('/assessments/paud', 'teacher.report-card.paud.developmental')->name('assessments.paud');
     Route::livewire('/assessments/attendance', 'shared.assessments.attendance')->name('assessments.attendance'); // Rekap Rapor
-    Route::livewire('/attendance/daily', 'teacher.attendance.daily')->name('attendance.daily'); // Presensi Harian
+    Route::livewire('/attendance/daily', 'shared.attendance.daily')->name('attendance.daily'); // Presensi Harian
 });
