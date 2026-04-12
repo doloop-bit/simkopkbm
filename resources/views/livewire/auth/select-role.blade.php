@@ -1,3 +1,39 @@
+<?php
+
+use Livewire\Volt\Component;
+use Livewire\Attributes\Layout;
+use Illuminate\Support\Facades\Session;
+
+new #[Layout('components.layouts.plain')] class extends Component {
+    public function with(): array
+    {
+        return [
+            'roles' => auth()->user()->roles,
+        ];
+    }
+
+    public function selectRole(int $roleId): void
+    {
+        $user = auth()->user();
+        $role = $user->roles()->find($roleId);
+
+        if ($role) {
+            Session::put('active_role_id', $role->id);
+
+            // Redirect based on role slug
+            $redirectUrl = match ($role->slug) {
+                'guru' => route('teacher.dashboard'),
+                'siswa' => route('home'),
+                default => route('dashboard'),
+            };
+
+            $this->redirect($redirectUrl, navigate: true);
+        }
+    }
+};
+
+?>
+
 <div class="space-y-4 md:space-y-12 py-4 md:py-8 px-4 h-full flex flex-col justify-center">
     {{-- Header Section --}}
     <div class="text-center space-y-2 md:space-y-4 animate-in fade-in slide-in-from-top-4 duration-1000">

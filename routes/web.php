@@ -9,7 +9,7 @@ Route::view('admin/dashboard', 'dashboard')
     ->middleware(['auth', 'verified'])
     ->name('dashboard');
 
-Route::get('/select-role', \App\Livewire\Auth\SelectRole::class)
+Route::livewire('/select-role', 'auth.select-role')
     ->middleware(['auth', 'verified'])
     ->name('select-role');
 
