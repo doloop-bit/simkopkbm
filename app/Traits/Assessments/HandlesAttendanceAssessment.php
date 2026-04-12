@@ -4,9 +4,7 @@ namespace App\Traits\Assessments;
 
 use App\Models\AcademicYear;
 use App\Models\Classroom;
-use App\Models\Profile;
 use App\Models\ReportAttendance;
-use App\Models\StudentProfile;
 use App\Models\User;
 use Illuminate\Support\Facades\DB;
 
@@ -66,8 +64,8 @@ trait HandlesAttendanceAssessment
         $user = auth()->user();
         if ($user->role === 'guru' && ! $user->hasAccessToClassroom($this->classroom_id)) {
             $this->attendance_data = [];
-            $this->dispatch('toast', 
-                type: 'error', 
+            $this->dispatch('toast',
+                type: 'error',
                 title: __('Akses Ditolak'),
                 message: __('Anda tidak memiliki akses ke kelas ini.')
             );
@@ -127,8 +125,8 @@ trait HandlesAttendanceAssessment
             ];
         }
 
-        $this->dispatch('toast', 
-            type: 'success', 
+        $this->dispatch('toast',
+            type: 'success',
             title: __('Rekap Diperbarui'),
             message: __('Berhasil mengambil rekap dari presensi harian. Jangan lupa menekan "Simpan" untuk memperbarui rapor.')
         );
@@ -142,7 +140,11 @@ trait HandlesAttendanceAssessment
             ->join('attendances', 'attendances.id', '=', 'attendance_items.attendance_id')
             ->where('attendances.classroom_id', $this->classroom_id)
             ->where('attendances.academic_year_id', $this->academic_year_id)
-            ->whereIn(DB::raw('MONTH(attendances.date)'), $semesterMonths)
+            ->where(function ($query) use ($semesterMonths) {
+                foreach ($semesterMonths as $month) {
+                    $query->orWhereMonth('attendances.date', $month);
+                }
+            })
             ->groupBy('attendance_items.student_id')
             ->select('attendance_items.student_id')
             ->selectRaw("
@@ -174,8 +176,8 @@ trait HandlesAttendanceAssessment
 
         $user = auth()->user();
         if ($user->role === 'guru' && ! $user->hasAccessToClassroom($this->classroom_id)) {
-            $this->dispatch('toast', 
-                type: 'error', 
+            $this->dispatch('toast',
+                type: 'error',
                 title: __('Akses Ditolak'),
                 message: __('Anda tidak memiliki akses untuk menyimpan presensi ini.')
             );
@@ -201,8 +203,8 @@ trait HandlesAttendanceAssessment
             }
         });
 
-        $this->dispatch('toast', 
-            type: 'success', 
+        $this->dispatch('toast',
+            type: 'success',
             title: __('Data Disimpan'),
             message: __('Data presensi rapor berhasil disimpan.')
         );

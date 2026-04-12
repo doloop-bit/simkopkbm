@@ -1,11 +1,9 @@
 <?php
 
+use App\Livewire\Auth\SelectRole;
 use App\Models\Role;
 use App\Models\User;
-use Livewire\Volt\Volt;
 use Livewire\Livewire;
-use App\Livewire\Auth\SelectRole;
-use Illuminate\Support\Facades\Session;
 
 uses(\Illuminate\Foundation\Testing\RefreshDatabase::class);
 
@@ -13,9 +11,9 @@ test('admin can manage multiple roles for a user', function () {
     $admin = User::factory()->admin()->create();
     // Seed roles if they don't exist (migration should have done it, but let's be safe)
     if (Role::count() === 0) {
-        collect(['admin', 'bendahara', 'guru'])->each(fn($s) => Role::create(['name' => ucfirst($s), 'slug' => $s]));
+        collect(['admin', 'bendahara', 'guru'])->each(fn ($s) => Role::create(['name' => ucfirst($s), 'slug' => $s]));
     }
-    
+
     $targetUser = User::factory()->create(['name' => 'Target User', 'email' => 'target@example.com']);
     $roles = Role::whereIn('slug', ['bendahara', 'guru'])->get();
 
@@ -32,8 +30,8 @@ test('admin can manage multiple roles for a user', function () {
 });
 
 test('user with multiple roles can select active role', function () {
-    $roles = collect(['admin', 'bendahara', 'guru'])->map(fn($s) => Role::firstOrCreate(['slug' => $s], ['name' => ucfirst($s)]));
-    
+    $roles = collect(['admin', 'bendahara', 'guru'])->map(fn ($s) => Role::firstOrCreate(['slug' => $s], ['name' => ucfirst($s)]));
+
     $user = User::factory()->create();
     $user->roles()->attach($roles->pluck('id')->toArray());
 
@@ -50,7 +48,7 @@ test('user with multiple roles can select active role', function () {
 });
 
 test('middleware redirects user with multiple roles to select-role page', function () {
-    $roles = collect(['admin', 'bendahara', 'guru'])->map(fn($s) => Role::firstOrCreate(['slug' => $s], ['name' => ucfirst($s)]));
+    $roles = collect(['admin', 'bendahara', 'guru'])->map(fn ($s) => Role::firstOrCreate(['slug' => $s], ['name' => ucfirst($s)]));
     $user = User::factory()->create();
     $user->roles()->attach($roles->pluck('id')->toArray());
 

@@ -2,13 +2,13 @@
 
 declare(strict_types=1);
 
-use App\Models\User;
-use App\Models\StudentBilling;
-use App\Models\FeeCategory;
-use App\Models\Profile;
-use App\Models\StudentProfile;
-use App\Models\Level;
 use App\Models\Classroom;
+use App\Models\FeeCategory;
+use App\Models\Level;
+use App\Models\Profile;
+use App\Models\StudentBilling;
+use App\Models\StudentProfile;
+use App\Models\User;
 use Livewire\Livewire;
 
 beforeEach(function () {
@@ -27,9 +27,9 @@ it('can select all arrears billings', function () {
         'profileable_id' => $studentProfile->id,
         'profileable_type' => StudentProfile::class,
     ]);
-    
+
     $feeCategory = FeeCategory::factory()->create(['level_id' => $level->id]);
-    
+
     $billing1 = StudentBilling::factory()->create([
         'student_id' => $student->id,
         'fee_category_id' => $feeCategory->id,
@@ -37,7 +37,7 @@ it('can select all arrears billings', function () {
         'amount' => 1000000,
         'paid_amount' => 0,
     ]);
-    
+
     $billing2 = StudentBilling::factory()->create([
         'student_id' => $student->id,
         'fee_category_id' => $feeCategory->id,
@@ -49,7 +49,7 @@ it('can select all arrears billings', function () {
     $component = Livewire::test('admin.reports')
         ->set('tab', 'arrears')
         ->set('selectAll', true);
-    
+
     expect($component->get('selected_billings'))->toContain((string) $billing1->id, (string) $billing2->id);
 });
 
@@ -65,9 +65,9 @@ it('can deselect all arrears billings', function () {
         'profileable_id' => $studentProfile->id,
         'profileable_type' => StudentProfile::class,
     ]);
-    
+
     $feeCategory = FeeCategory::factory()->create(['level_id' => $level->id]);
-    
+
     $billing = StudentBilling::factory()->create([
         'student_id' => $student->id,
         'fee_category_id' => $feeCategory->id,
@@ -80,7 +80,7 @@ it('can deselect all arrears billings', function () {
         ->set('tab', 'arrears')
         ->set('selected_billings', [(string) $billing->id])
         ->set('selectAll', false);
-    
+
     expect($component->get('selected_billings'))->toBe([]);
 });
 
@@ -89,10 +89,10 @@ it('select all respects level filter', function () {
 
     $level1 = Level::factory()->create();
     $level2 = Level::factory()->create();
-    
+
     $classroom1 = Classroom::factory()->create(['level_id' => $level1->id]);
     $classroom2 = Classroom::factory()->create(['level_id' => $level2->id]);
-    
+
     $student1 = User::factory()->create(['role' => 'student']);
     $studentProfile1 = StudentProfile::factory()->create(['classroom_id' => $classroom1->id]);
     Profile::create([
@@ -100,7 +100,7 @@ it('select all respects level filter', function () {
         'profileable_id' => $studentProfile1->id,
         'profileable_type' => StudentProfile::class,
     ]);
-    
+
     $student2 = User::factory()->create(['role' => 'student']);
     $studentProfile2 = StudentProfile::factory()->create(['classroom_id' => $classroom2->id]);
     Profile::create([
@@ -108,10 +108,10 @@ it('select all respects level filter', function () {
         'profileable_id' => $studentProfile2->id,
         'profileable_type' => StudentProfile::class,
     ]);
-    
+
     $feeCategory1 = FeeCategory::factory()->create(['level_id' => $level1->id]);
     $feeCategory2 = FeeCategory::factory()->create(['level_id' => $level2->id]);
-    
+
     $billing1 = StudentBilling::factory()->create([
         'student_id' => $student1->id,
         'fee_category_id' => $feeCategory1->id,
@@ -119,7 +119,7 @@ it('select all respects level filter', function () {
         'amount' => 1000000,
         'paid_amount' => 0,
     ]);
-    
+
     $billing2 = StudentBilling::factory()->create([
         'student_id' => $student2->id,
         'fee_category_id' => $feeCategory2->id,
@@ -132,7 +132,7 @@ it('select all respects level filter', function () {
         ->set('tab', 'arrears')
         ->set('level_id', $level1->id)
         ->set('selectAll', true);
-    
+
     expect($component->get('selected_billings'))->toContain((string) $billing1->id)
         ->and($component->get('selected_billings'))->not->toContain((string) $billing2->id);
 });

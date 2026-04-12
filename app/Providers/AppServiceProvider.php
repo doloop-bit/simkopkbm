@@ -27,7 +27,7 @@ class AppServiceProvider extends ServiceProvider
             $parts = explode(',', $expression);
             $name = trim($parts[0]);
             $variable = isset($parts[1]) ? trim($parts[1]) : '$item';
-            
+
             return "<?php \$__env->slot({$name}, function({$variable}) use (\$__env) { ?>";
         });
 

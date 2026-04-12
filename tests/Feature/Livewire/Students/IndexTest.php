@@ -2,8 +2,8 @@
 
 declare(strict_types=1);
 
-use Livewire\Livewire;
 use App\Models\User;
+use Livewire\Livewire;
 
 it('can render students index for admin', function () {
     $admin = User::factory()->create(['role' => 'admin']);

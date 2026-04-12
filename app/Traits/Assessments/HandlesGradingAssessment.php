@@ -160,7 +160,7 @@ trait HandlesGradingAssessment
             if (! empty($data['best_tp_ids']) && ! empty($data['improvement_tp_ids'])) {
                 if (array_intersect($data['best_tp_ids'], $data['improvement_tp_ids'])) {
                     $studentName = User::find($studentId)?->name ?? 'Siswa';
-            $this->dispatch('toast', type: 'error', message: "TP yang sama tidak boleh dipilih sebagai Terbaik dan Perlu Peningkatan sekaligus untuk $studentName.");
+                    $this->dispatch('toast', type: 'error', message: "TP yang sama tidak boleh dipilih sebagai Terbaik dan Perlu Peningkatan sekaligus untuk $studentName.");
 
                     return;
                 }

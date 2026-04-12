@@ -11,7 +11,7 @@ Route::middleware(['auth', 'verified'])->group(function () {
     Route::livewire('admin/report-card/create', 'admin.report-card.create')
         ->middleware('role:admin')
         ->name('admin.report-card.create');
-        
-    Route::livewire('admin/report-card/grading', 'admin.assessments.grading')
+
+    Route::livewire('admin/report-card/grading', 'shared.assessments.grading')
         ->name('admin.report-card.grading');
 });

@@ -21,6 +21,7 @@ new class extends Component {
         // Basic Stats
         $totalStudents = User::where('role', 'siswa')->count();
         $totalTeachers = User::where('role', 'guru')->count();
+        $totalStaff = User::whereNotIn('role', ['siswa', 'guru'])->count();
         $totalClassrooms = Classroom::count();
         
         // Financial Stats
@@ -64,6 +65,7 @@ new class extends Component {
             'stats' => [
                 'students' => $totalStudents,
                 'teachers' => $totalTeachers,
+                'staff' => $totalStaff,
                 'classrooms' => $totalClassrooms,
                 'income_month' => $incomeMonth,
                 'expense_month' => $expenseMonth,
@@ -88,7 +90,7 @@ new class extends Component {
     </x-ui.header>
 
     <!-- Stats Grid -->
-    <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+    <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-4">
         @if($isTreasurer)
             <x-ui.stat
                 :title="__('Pemasukan (Bulan Ini)')"
@@ -127,6 +129,13 @@ new class extends Component {
                 :value="$stats['teachers']"
                 icon="o-academic-cap"
                 color="text-indigo-600 dark:text-indigo-400"
+            />
+
+            <x-ui.stat
+                :title="__('Total Staf')"
+                :value="$stats['staff']"
+                icon="o-briefcase"
+                color="text-amber-600 dark:text-amber-400"
             />
 
             <x-ui.stat

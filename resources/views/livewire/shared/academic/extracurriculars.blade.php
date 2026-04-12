@@ -26,6 +26,8 @@ new #[Layout('components.layouts.app')] class extends Component {
 
     public function createNew(): void
     {
+        if (!auth()->user()->isAdmin()) return;
+        
         $this->reset(['name', 'instructor', 'description', 'level_id', 'is_active', 'editing']);
         $this->resetValidation();
         $this->activityModal = true;
@@ -63,6 +65,8 @@ new #[Layout('components.layouts.app')] class extends Component {
 
     public function save(): void
     {
+        if (!auth()->user()->isAdmin()) return;
+        
         $validated = $this->validate();
 
         if ($this->editing) {
@@ -80,6 +84,8 @@ new #[Layout('components.layouts.app')] class extends Component {
 
     public function edit(ExtracurricularActivity $activity): void
     {
+        if (!auth()->user()->isAdmin()) return;
+
         $this->editing = $activity;
         $this->name = $activity->name;
         $this->instructor = $activity->instructor ?? '';
@@ -92,37 +98,58 @@ new #[Layout('components.layouts.app')] class extends Component {
 
     public function delete(ExtracurricularActivity $activity): void
     {
+        if (!auth()->user()->isAdmin()) return;
+        
         $activity->delete();
         session()->flash('success', 'Ekstrakurikuler berhasil dihapus.');
     }
 
     public function toggleStatus(ExtracurricularActivity $activity): void
     {
+        if (!auth()->user()->isAdmin()) return;
+
         $activity->update(['is_active' => !$activity->is_active]);
         session()->flash('success', 'Status berhasil diubah.');
     }
 
     public function with(): array
     {
+        $user = auth()->user();
+        $isAdmin = $user->isAdmin();
+        
+        $query = ExtracurricularActivity::with('level');
+
+        if (!$isAdmin) {
+            // Teacher filtering
+            $classroomIds = $user->getAssignedClassroomIds();
+            $levelIds = \App\Models\Classroom::whereIn('id', $classroomIds)->pluck('level_id')->unique();
+            $query->whereIn('level_id', $levelIds);
+        }
+
         return [
-            'activities' => ExtracurricularActivity::with('level')
+            'activities' => $query
                 ->when($this->search, function ($query) {
-                    $query->where('name', 'like', '%' . $this->search . '%')
+                    $query->where(function($q) {
+                        $q->where('name', 'like', '%' . $this->search . '%')
                           ->orWhere('instructor', 'like', '%' . $this->search . '%');
+                    });
                 })
                 ->when($this->filterLevelId, fn($q) => $q->where('level_id', $this->filterLevelId))
                 ->latest()
                 ->paginate(15),
             'levels' => Level::where('education_level', '!=', 'PAUD')->get(),
+            'isAdmin' => $isAdmin,
         ];
     }
 }; ?>
 
-<div class="p-6 space-y-6 text-slate-900 dark:text-white">
-    <x-ui.header :title="__('Ekstrakurikuler')" :subtitle="__('Kelola daftar kegiatan ekstrakurikuler untuk siswa.')" separator>
-        <x-slot:actions>
-             <x-ui.button :label="__('Tambah Ekskul')" icon="o-plus" class="btn-primary" wire:click="createNew" wire:loading.attr="disabled" />
-        </x-slot:actions>
+<div class="p-4 md:p-6 space-y-6 text-slate-900 dark:text-white pb-24 md:pb-6">
+    <x-ui.header :title="__('Ekstrakurikuler')" :subtitle="$isAdmin ? __('Kelola daftar kegiatan ekstrakurikuler untuk siswa.') : __('Daftar kegiatan ekstrakurikuler pada jenjang Anda')" separator>
+        @if($isAdmin)
+            <x-slot:actions>
+                 <x-ui.button :label="__('Tambah Ekskul')" icon="o-plus" class="btn-primary" wire:click="createNew" wire:loading.attr="disabled" />
+            </x-slot:actions>
+        @endif
     </x-ui.header>
 
     <div class="flex flex-col md:flex-row gap-4 items-center justify-between">
@@ -170,30 +197,40 @@ new #[Layout('components.layouts.app')] class extends Component {
             @endscope
 
             @scope('cell_is_active', $activity)
-                <button wire:click="toggleStatus({{ $activity->id }})" class="focus:outline-none group">
+                @if($isAdmin)
+                    <button wire:click="toggleStatus({{ $activity->id }})" class="focus:outline-none group">
+                        @if($activity->is_active)
+                            <x-ui.badge :label="__('Aktif')" class="bg-emerald-100 text-emerald-700 dark:bg-emerald-900/30 dark:text-emerald-400 text-[10px] font-black group-hover:brightness-110" />
+                        @else
+                            <x-ui.badge :label="__('Non-aktif')" class="bg-rose-100 text-rose-700 dark:bg-rose-900/30 dark:text-rose-400 text-[10px] font-black group-hover:brightness-110" />
+                        @endif
+                    </button>
+                @else
                     @if($activity->is_active)
-                        <x-ui.badge :label="__('Aktif')" class="bg-emerald-100 text-emerald-700 dark:bg-emerald-900/30 dark:text-emerald-400 text-[10px] font-black group-hover:brightness-110" />
+                        <x-ui.badge :label="__('Aktif')" class="bg-emerald-100 text-emerald-700 dark:bg-emerald-900/30 dark:text-emerald-400 text-[10px] font-black" />
                     @else
-                        <x-ui.badge :label="__('Non-aktif')" class="bg-rose-100 text-rose-700 dark:bg-rose-900/30 dark:text-rose-400 text-[10px] font-black group-hover:brightness-110" />
+                        <x-ui.badge :label="__('Non-aktif')" class="bg-rose-100 text-rose-700 dark:bg-rose-900/30 dark:text-rose-400 text-[10px] font-black" />
                     @endif
-                </button>
+                @endif
             @endscope
 
             @scope('cell_actions', $activity)
-                <div class="flex justify-end gap-1">
-                    <x-ui.button icon="o-pencil-square" wire:click="edit({{ $activity->id }})" ghost wire:loading.attr="disabled" />
-                    <x-ui.button 
-                        icon="o-trash" 
-                        class="text-red-500 dark:text-red-400 hover:bg-red-50 dark:hover:bg-red-900/10" 
-                        wire:confirm="{{ __('Yakin ingin menghapus ekstrakurikuler ini?') }}" 
-                        wire:click="delete({{ $activity->id }})" 
-                        ghost 
-                    />
-                </div>
+                @if($isAdmin)
+                    <div class="flex justify-end gap-1">
+                        <x-ui.button icon="o-pencil-square" wire:click="edit({{ $activity->id }})" ghost wire:loading.attr="disabled" />
+                        <x-ui.button 
+                            icon="o-trash" 
+                            class="text-red-500 dark:text-red-400 hover:bg-red-50 dark:hover:bg-red-900/10" 
+                            wire:confirm="{{ __('Yakin ingin menghapus ekstrakurikuler ini?') }}" 
+                            wire:click="delete({{ $activity->id }})" 
+                            ghost 
+                        />
+                    </div>
+                @endif
             @endscope
         </x-ui.table>
 
-        @if(collect($activities)->isEmpty())
+        @if($activities->isEmpty())
             <div class="py-12 text-center text-slate-400 italic text-sm">
                 {{ __('Belum ada data ekstrakurikuler.') }}
             </div>
@@ -204,25 +241,27 @@ new #[Layout('components.layouts.app')] class extends Component {
         {{ $activities->links() }}
     </div>
 
-    {{-- Activity Create/Edit Modal --}}
-    <x-ui.modal wire:model="activityModal" persistent>
-        <x-ui.header :title="$editing ? __('Edit Ekstrakurikuler') : __('Tambah Ekstrakurikuler')" :subtitle="__('Lengkapi detail kegiatan di bawah ini.')" separator />
+    @if($isAdmin)
+        {{-- Activity Create/Edit Modal --}}
+        <x-ui.modal wire:model="activityModal" persistent>
+            <x-ui.header :title="$editing ? __('Edit Ekstrakurikuler') : __('Tambah Ekstrakurikuler')" :subtitle="__('Lengkapi detail kegiatan di bawah ini.')" separator />
 
-        <form wire:submit="save" class="space-y-6">
-            <x-ui.select wire:model="level_id" :label="__('Jenjang')" :options="$levels" :placeholder="__('Pilih Jenjang')" required />
+            <form wire:submit="save" class="space-y-6">
+                <x-ui.select wire:model="level_id" :label="__('Jenjang')" :options="$levels" :placeholder="__('Pilih Jenjang')" required />
 
-            <x-ui.input wire:model="name" :label="__('Nama Kegiatan')" required :placeholder="__('e.g. Futsal, Pramuka')" />
-            
-            <x-ui.input wire:model="instructor" :label="__('Pembina / Pelatih')" :placeholder="__('e.g. Pak Budi Santoso')" />
+                <x-ui.input wire:model="name" :label="__('Nama Kegiatan')" required :placeholder="__('e.g. Futsal, Pramuka')" />
+                
+                <x-ui.input wire:model="instructor" :label="__('Pembina / Pelatih')" :placeholder="__('e.g. Pak Budi Santoso')" />
 
-            <x-ui.textarea wire:model="description" :label="__('Keterangan (Opsional)')" rows="3" :placeholder="__('Deskripsi singkat kegiatan...')" />
+                <x-ui.textarea wire:model="description" :label="__('Keterangan (Opsional)')" rows="3" :placeholder="__('Deskripsi singkat kegiatan...')" />
 
-            <x-ui.checkbox wire:model="is_active" :label="__('Kegiatan ini aktif')" />
+                <x-ui.checkbox wire:model="is_active" :label="__('Kegiatan ini aktif')" />
 
-            <div class="flex justify-end gap-2 pt-4">
-                <x-ui.button :label="__('Batal')" ghost @click="show = false" />
-                <x-ui.button :label="__('Simpan')" type="submit" class="btn-primary" spinner="save" />
-            </div>
-        </form>
-    </x-ui.modal>
+                <div class="flex justify-end gap-2 pt-4">
+                    <x-ui.button :label="__('Batal')" ghost @click="show = false" />
+                    <x-ui.button :label="__('Simpan')" type="submit" class="btn-primary" spinner="save" />
+                </div>
+            </form>
+        </x-ui.modal>
+    @endif
 </div>

@@ -18,7 +18,7 @@ beforeEach(function () {
     $this->classroom = Classroom::factory()->create(['academic_year_id' => $this->academicYear->id]);
     $this->teacher = User::factory()->create(['role' => 'guru']);
     $this->subject = Subject::factory()->create();
-    
+
     actingAs($this->admin);
 });
 
@@ -60,7 +60,7 @@ it('can edit a teacher assignment', function () {
         'academic_year_id' => $this->academicYear->id,
         'classroom_id' => $this->classroom->id,
         'teacher_id' => $this->teacher->id,
-        'type' => 'class_teacher'
+        'type' => 'class_teacher',
     ]);
 
     $newTeacher = User::factory()->create(['role' => 'guru']);

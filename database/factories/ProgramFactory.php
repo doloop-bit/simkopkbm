@@ -20,8 +20,8 @@ class ProgramFactory extends Factory
     {
         return [
             'level_id' => Level::factory(),
-            'name' => 'Program ' . fake()->company(),
-            'slug' => fn (array $attributes) => Str::slug($attributes['name']) . '-' . fake()->unique()->randomNumber(4),
+            'name' => 'Program '.fake()->company(),
+            'slug' => fn (array $attributes) => Str::slug($attributes['name']).'-'.fake()->unique()->randomNumber(4),
             'description' => fake()->paragraph(),
             'curriculum_overview' => 'Fokus pada pengembangan karakter, literasi numerasi, dan penguatan Profil Pelajar Pancasila.',
             'duration' => fake()->randomElement(['1 Tahun', '2 Semester', '6 Bulan (Intensif)']),
@@ -40,9 +40,9 @@ class ProgramFactory extends Factory
     {
         return $this->state(function (array $attributes) {
             $level = Level::find($attributes['level_id']) ?? Level::factory()->create();
-            $name = "Program " . $level->name . " " . fake()->randomElement(['Unggulan', 'Reguler', 'Intensif', 'Digital']);
-            
-            $desc = match(strtolower($level->education_level)) {
+            $name = 'Program '.$level->name.' '.fake()->randomElement(['Unggulan', 'Reguler', 'Intensif', 'Digital']);
+
+            $desc = match (strtolower($level->education_level)) {
                 'paud' => 'Fokus pada pengembangan motorik, sosial-emosional, dan persiapan transisi menuju pendidikan dasar.',
                 'sd' => 'Penguatan literasi dasar, numerasi, dan karakter melalui pendekatan Kurikulum Merdeka yang menyenangkan.',
                 'smp' => 'Pendalaman materi akademik dasar dan pengembangan minat bakat melalui berbagai proyek kreatif.',

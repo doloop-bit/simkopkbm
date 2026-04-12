@@ -21,7 +21,7 @@ class LevelFactory extends Factory
     {
         $levels = Level::defaultPhases();
         $educationLevel = $this->faker->randomElement(array_keys($levels));
-        
+
         return [
             'name' => strtoupper($educationLevel),
             'type' => $educationLevel === 'paud' || $educationLevel === 'sd' ? 'class_teacher' : 'subject_teacher',

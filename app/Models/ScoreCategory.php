@@ -8,6 +8,7 @@ use Illuminate\Database\Eloquent\Model;
 class ScoreCategory extends Model
 {
     use HasFactory;
+
     protected $fillable = ['name', 'weight'];
 
     public function scores()

@@ -116,10 +116,10 @@ test('student can view their own report card', function () {
 
     // Assuming they can still call the admin component's exportPdf if authorized?
     // Actually, report-card.create route has role:admin.
-    // Teacher or Student might have different components? 
+    // Teacher or Student might have different components?
     // This test was in Unit, maybe for internal logic?
     // In Livewire 4, we test the component.
-    
+
     // I'll skip this one and see if there is a teacher/student component.
 })->skip('Student access via admin component is restricted by middleware.');
 

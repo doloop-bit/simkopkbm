@@ -22,18 +22,18 @@ Route::middleware(['auth', 'verified', 'role:guru'])->prefix('teacher')->name('t
     Route::livewire('/students', 'teacher.data-master.students.index')->name('students.index');
 
     // Academic
-    Route::livewire('/subjects', 'teacher.academic.subjects')->name('academic.subjects');
-    Route::livewire('/extracurriculars', 'teacher.academic.extracurriculars')->name('academic.extracurriculars');
+    Route::livewire('/subjects', 'shared.academic.subjects')->name('academic.subjects');
+    Route::livewire('/extracurriculars', 'shared.academic.extracurriculars')->name('academic.extracurriculars');
 
     // Report Card & Assessments
     Route::livewire('/report-cards', 'teacher.report-card.index')->name('report-cards');
 
     // Assessments - filtered by assigned classrooms
-    Route::livewire('/assessments/grading', 'teacher.assessments.grading')
+    Route::livewire('/assessments/grading', 'shared.assessments.grading')
         ->name('assessments.grading');
-    Route::livewire('/assessments/extracurricular', 'teacher.assessments.extracurricular')
+    Route::livewire('/assessments/extracurricular', 'shared.assessments.extracurricular')
         ->name('assessments.extracurricular');
     Route::livewire('/assessments/paud', 'teacher.report-card.paud.developmental')->name('assessments.paud');
-    Route::livewire('/assessments/attendance', 'teacher.assessments.attendance')->name('assessments.attendance'); // Rekap Rapor
+    Route::livewire('/assessments/attendance', 'shared.assessments.attendance')->name('assessments.attendance'); // Rekap Rapor
     Route::livewire('/attendance/daily', 'teacher.attendance.daily')->name('attendance.daily'); // Presensi Harian
 });

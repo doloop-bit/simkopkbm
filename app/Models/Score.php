@@ -8,6 +8,7 @@ use Illuminate\Database\Eloquent\Model;
 class Score extends Model
 {
     use HasFactory;
+
     protected $fillable = ['student_id', 'subject_id', 'classroom_id', 'academic_year_id', 'score_category_id', 'score', 'notes'];
 
     protected function casts(): array

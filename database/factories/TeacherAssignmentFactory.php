@@ -2,11 +2,8 @@
 
 namespace Database\Factories;
 
-use App\Models\AcademicYear;
 use App\Models\Classroom;
 use App\Models\Subject;
-use App\Models\TeacherAssignment;
-use App\Models\User;
 use Illuminate\Database\Eloquent\Factories\Factory;
 
 /**

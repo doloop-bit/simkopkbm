@@ -8,6 +8,7 @@ use Illuminate\Database\Eloquent\Model;
 class StudentBilling extends Model
 {
     use HasFactory;
+
     protected $fillable = [
         'student_id',
         'fee_category_id',
