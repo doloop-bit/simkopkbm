@@ -15,6 +15,7 @@
 
         <x-ui.menu-sub title="Akademik" icon="o-academic-cap" :active="request()->routeIs('teacher.academic.*') || request()->routeIs('teacher.attendance.*')">
             <x-ui.menu-item title="Mata Pelajaran" icon="o-book-open" link="{{ route('teacher.academic.subjects') }}" />
+            <x-ui.menu-item title="Mapel Diniyah" icon="o-book-open" link="{{ route('teacher.academic.diniyah-subjects') }}" />
             <x-ui.menu-item title="Presensi Harian" icon="o-check-badge" link="{{ route('teacher.attendance.daily') }}" />
             <x-ui.menu-item title="Ekstrakurikuler" icon="o-trophy" link="{{ route('teacher.academic.extracurriculars') }}" />
         </x-ui.menu-sub>
@@ -23,6 +24,7 @@
             <x-ui.menu-item title="Rekap Absensi" icon="o-clipboard-document-list" link="{{ route('teacher.assessments.attendance') }}" />
             <x-ui.menu-item title="Nilai Ekskul" icon="o-star" link="{{ route('teacher.assessments.extracurricular') }}" />
             <x-ui.menu-item title="Raport Kesetaraan" icon="o-document-chart-bar" link="{{ route('teacher.assessments.grading') }}" />
+            <x-ui.menu-item title="Nilai Diniyah" icon="o-sparkles" link="{{ route('teacher.assessments.diniyah') }}" />
 
             @if(auth()->user()->teachesPaudLevel())
                 <x-ui.menu-item title="Nilai PAUD" icon="o-face-smile" link="{{ route('teacher.assessments.paud') }}" />
@@ -57,6 +59,7 @@
                 <x-ui.menu-item title="Kelas" icon="o-building-office" :link="route('academic.classrooms')" />
 
                 <x-ui.menu-item title="Mata Pelajaran" icon="o-book-open" :link="route('academic.subjects')" />
+                <x-ui.menu-item title="Mapel Diniyah" icon="o-book-open" :link="route('academic.diniyah-subjects')" />
                 <x-ui.menu-item title="Penugasan Guru" icon="o-user-group" :link="route('academic.assignments')" />
                 <x-ui.menu-item title="Presensi" icon="o-check-badge" :link="route('academic.attendance')" />
                 <x-ui.menu-item title="Ekstrakurikuler" icon="o-trophy" :link="route('academic.extracurriculars')" />
@@ -65,6 +68,8 @@
             <x-ui.menu-sub title="Penilaian & Raport" icon="o-pencil-square" :active="request()->routeIs('admin.assessments.*') || request()->routeIs('admin.report-card.*')">
                 <x-ui.menu-item title="Penilaian PAUD" icon="o-clipboard-document-check" :link="route('admin.assessments.competency')" />
                 <x-ui.menu-item title="Raport Kesetaraan" icon="o-document-chart-bar" :link="route('admin.report-card.grading')" />
+                <x-ui.menu-item title="Nilai Diniyah" icon="o-sparkles" :link="route('admin.report-card.diniyah-grading')" />
+                <x-ui.menu-item title="Rapor Diniyah" icon="o-book-open" :link="route('admin.report-card.diniyah')" />
             </x-ui.menu-sub>
         @endif
     @endif

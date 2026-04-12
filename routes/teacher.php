@@ -23,6 +23,7 @@ Route::middleware(['auth', 'verified', 'role:guru'])->prefix('teacher')->name('t
 
     // Academic
     Route::livewire('/subjects', 'shared.academic.subjects')->name('academic.subjects');
+    Route::livewire('/diniyah-subjects', 'shared.academic.diniyah-subjects')->name('academic.diniyah-subjects');
     Route::livewire('/extracurriculars', 'shared.academic.extracurriculars')->name('academic.extracurriculars');
 
     // Report Card & Assessments
@@ -31,6 +32,8 @@ Route::middleware(['auth', 'verified', 'role:guru'])->prefix('teacher')->name('t
     // Assessments - filtered by assigned classrooms
     Route::livewire('/assessments/grading', 'shared.assessments.grading')
         ->name('assessments.grading');
+    Route::livewire('/assessments/diniyah', 'teacher.assessments.diniyah-grading')
+        ->name('assessments.diniyah');
     Route::livewire('/assessments/extracurricular', 'shared.assessments.extracurricular')
         ->name('assessments.extracurricular');
     Route::livewire('/assessments/paud', 'teacher.report-card.paud.developmental')->name('assessments.paud');

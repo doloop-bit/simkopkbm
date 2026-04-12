@@ -18,13 +18,16 @@
         'admin.contact-inquiries.*', 
         'admin.report-card.*', 
         'admin.assessments.attendance', 
-        'admin.assessments.extracurricular', 
+        'admin.assessments.extracurricular',
+        'admin.report-card.diniyah-grading',
+        'admin.report-card.diniyah',
         'financial.*'
     );
     
     $hasTeacherSubNav = request()->routeIs(
         'teacher.report-cards', 
         'teacher.assessments.grading', 
+        'teacher.assessments.diniyah',
         'teacher.assessments.attendance', 
         'teacher.assessments.extracurricular'
     );

@@ -27,6 +27,18 @@
             'icon' => 'o-trophy',
             'route' => $prefix . '.extracurricular',
         ],
+        'diniyah_grading' => [
+            'label' => 'Nilai Diniyah',
+            'label_short' => 'Diniyah',
+            'icon' => 'o-sparkles',
+            'route' => $isGuru ? 'teacher.assessments.diniyah' : 'admin.report-card.diniyah-grading',
+        ],
+        'diniyah_report' => [
+            'label' => 'Rapor Diniyah',
+            'label_short' => 'R. Diniyah',
+            'icon' => 'o-book-open',
+            'route' => $isGuru ? 'teacher.report-cards' : 'admin.report-card.diniyah', // Teacher handles both in index? No, actually teacher link is to report-cards index which should show both.
+        ],
         'report_card' => [
             'label' => 'Buat Rapor',
             'label_short' => 'Rapor',

@@ -14,4 +14,11 @@ Route::middleware(['auth', 'verified'])->group(function () {
 
     Route::livewire('admin/report-card/grading', 'shared.assessments.grading')
         ->name('admin.report-card.grading');
+
+    Route::livewire('admin/report-card/diniyah-grading', 'admin.report-card.diniyah-grading')
+        ->name('admin.report-card.diniyah-grading');
+
+    Route::livewire('admin/report-card/diniyah', 'admin.report-card.diniyah-create')
+        ->middleware('role:admin')
+        ->name('admin.report-card.diniyah');
 });

@@ -111,6 +111,13 @@ class User extends Authenticatable
             ->distinct();
     }
 
+    public function assignedDiniyahSubjects()
+    {
+        return $this->belongsToMany(DiniyahSubject::class, 'teacher_assignments', 'teacher_id', 'diniyah_subject_id')
+            ->whereNotNull('teacher_assignments.diniyah_subject_id')
+            ->distinct();
+    }
+
     // Teacher Access Control Methods
     public function hasAccessToClassroom(int $classroomId): bool
     {
@@ -146,6 +153,36 @@ class User extends Authenticatable
 
         return Classroom::whereIn('id', $classroomIdsAsHomeroom)
             ->where('level_id', $subject->level_id)
+            ->exists();
+    }
+
+    public function hasAccessToDiniyahSubject(int $diniyahSubjectId): bool
+    {
+        if ($this->isAdmin()) {
+            return true;
+        }
+
+        if ($this->role !== 'guru') {
+            return false;
+        }
+
+        // Direct diniyah subject assignment
+        if ($this->teacherAssignments()->where('diniyah_subject_id', $diniyahSubjectId)->exists()) {
+            return true;
+        }
+
+        // Access via homeroom (class_teacher) assignment
+        $diniyahSubject = DiniyahSubject::find($diniyahSubjectId);
+        if (! $diniyahSubject) {
+            return false;
+        }
+
+        $classroomIdsAsHomeroom = $this->teacherAssignments()
+            ->whereIn('type', ['class_teacher', 'homeroom'])
+            ->pluck('classroom_id');
+
+        return Classroom::whereIn('id', $classroomIdsAsHomeroom)
+            ->where('level_id', $diniyahSubject->level_id)
             ->exists();
     }
 
