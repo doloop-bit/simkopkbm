@@ -8,6 +8,16 @@
     let visible = $state(false);
     onMount(() => {
         visible = true;
+        
+        // We only need to handle the font now, 
+        // the background is handled by PublicLayout's bg-sky-50!
+        const originalFont = document.body.style.fontFamily;
+        document.body.style.fontFamily = "'Quicksand', sans-serif";
+        
+        return () => {
+            // Cleanup on leave
+            document.body.style.fontFamily = originalFont;
+        };
     });
 
     const colors = [
@@ -27,11 +37,6 @@
 </script>
 
 <style>
-    :global(body) {
-        background-color: #f0f9ff;
-        font-family: 'Quicksand', sans-serif;
-    }
-
     .blob {
         position: absolute;
         width: 300px;

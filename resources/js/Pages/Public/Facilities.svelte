@@ -18,7 +18,7 @@
     <section class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-24">
         <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
             {#each facilities as facility}
-                <div class="bg-white rounded-2xl shadow-sm border border-zinc-100 overflow-hidden">
+                <div class="bg-white rounded-2xl shadow-[0_20px_50px_rgba(0,0,0,0.04)] border border-white/50 overflow-hidden">
                     <img src={facility.image_path ? `/storage/${facility.image_path}` : 'https://placehold.co/600x400?text=Fasilitas'} alt={facility.name} class="w-full h-48 object-cover">
                     <div class="p-6">
                         <h3 class="font-bold text-xl text-zinc-900 mb-2">{facility.name}</h3>

@@ -10,16 +10,10 @@ import {
 export default defineConfig({
     plugins: [
         laravel({
-            input: ['resources/css/app.css', 'resources/js/app.js', 'resources/js/paud.js', 'resources/js/paketa.js', 'resources/js/public-site.js'],
+            input: ['resources/css/app.css', 'resources/js/app.js'],
             refresh: true,
         }),
         tailwindcss(),
         svelte(),
     ],
-    server: {
-        cors: true,
-        watch: {
-            ignored: ['**/storage/framework/views/**'],
-        },
-    },
 });

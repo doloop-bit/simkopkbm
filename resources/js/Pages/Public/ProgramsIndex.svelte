@@ -21,7 +21,7 @@
         <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-x-10 gap-y-24">
             {#each programs as program}
                 <div
-                    class="group relative bg-white rounded-4xl ring-1 ring-zinc-200/50 shadow-sm hover:shadow-2xl transition-all duration-500 hover:-translate-y-2 flex flex-col"
+                    class="group relative bg-white rounded-4xl shadow-[0_20px_50px_rgba(0,0,0,0.04)] border border-white/50 hover:shadow-2xl transition-all duration-500 hover:-translate-y-2 flex flex-col"
                 >
                     <!-- Image Wrapper -->
                     <div

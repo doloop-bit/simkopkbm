@@ -35,7 +35,7 @@
 
         <section class="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-24 text-center">
             <div
-                class="w-32 h-32 rounded-3xl bg-zinc-900 text-white flex items-center justify-center mb-12 shadow-xl mx-auto overflow-hidden ring-4 ring-slate-100"
+                class="w-32 h-32 rounded-3xl bg-zinc-900 text-white flex items-center justify-center mb-12 shadow-xl mx-auto overflow-hidden ring-4 ring-white"
             >
                 {#if program.image_path}
                     <img

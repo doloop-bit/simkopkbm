@@ -164,10 +164,14 @@
                 </Link>
 
                 <!-- About Dropdown -->
-                <div class="relative h-full flex items-center">
+                <div 
+                    class="relative h-full flex items-center"
+                    role="menu"
+                    tabindex="-1"
+                    onmouseenter={() => (aboutDropdownOpen = true)}
+                    onmouseleave={() => (aboutDropdownOpen = false)}
+                >
                     <button
-                        onmouseenter={() => (aboutDropdownOpen = true)}
-                        onmouseleave={() => (aboutDropdownOpen = false)}
                         onclick={() => (aboutDropdownOpen = !aboutDropdownOpen)}
                         class="inline-flex items-center px-1 pt-1 border-b-2 text-sm font-semibold transition-all duration-200 h-full {[
                             'About',
@@ -195,9 +199,7 @@
                     </button>
                     {#if aboutDropdownOpen}
                         <div
-                            onmouseenter={() => (aboutDropdownOpen = true)}
-                            onmouseleave={() => (aboutDropdownOpen = false)}
-                            class="absolute left-1/2 -translate-x-1/2 top-full mt-1 w-56 rounded-xl bg-slate-800 border border-slate-700 shadow-xl z-9999"
+                            class="absolute left-1/2 -translate-x-1/2 top-full w-56 rounded-xl bg-slate-800 border border-slate-700 shadow-xl z-9999 animate-in fade-in slide-in-from-top-2 duration-200"
                             role="menu"
                             tabindex="-1"
                         >
@@ -305,7 +307,7 @@
             <div class="hidden lg:flex lg:items-center lg:space-x-4 shrink-0">
                 <a
                     href="/login"
-                    class="inline-flex items-center px-6 py-2.5 rounded-full text-sm font-bold border-2 border-slate-700 text-slate-300 hover:bg-slate-800 hover:text-white hover:border-amber-500 transition-all duration-200 transform hover:-translate-y-0.5"
+                    class="inline-flex items-center px-6 py-2.5 rounded-full text-sm font-bold border-2 border-slate-700 text-slate-300 hover:bg-slate-800 hover:text-white hover:border-amber-500 hover:shadow-lg hover:shadow-amber-500/50 transition-all duration-200 transform hover:-translate-y-0.5"
                 >
                     Login Admin
                 </a>
