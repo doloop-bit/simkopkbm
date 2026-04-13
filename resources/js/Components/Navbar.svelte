@@ -1,6 +1,6 @@
 <script>
     import { Link, usePage } from "@inertiajs/svelte";
-    
+
     const page = usePage();
 
     let { schoolProfile, currentRoute } = $props();
@@ -17,14 +17,19 @@
     const instagram = $derived(profile?.instagram_url || "#");
 
     // Dynamic Logo handling
-    const initialLogo = profile?.logo_path ? `/storage/${profile.logo_path}` : "/img/logo.svg";
+    const initialLogo = profile?.logo_path
+        ? `/storage/${profile.logo_path}`
+        : "/img/logo.svg";
     let logoSrc = $state(initialLogo);
     let logoError = $state(false);
 
     function handleLogoError() {
         if (logoSrc === "/img/logo.svg") {
             logoSrc = "/img/logo.png";
-        } else if (profile?.logo_path && logoSrc === `/storage/${profile.logo_path}`) {
+        } else if (
+            profile?.logo_path &&
+            logoSrc === `/storage/${profile.logo_path}`
+        ) {
             logoSrc = "/img/logo.svg"; // Fallback to default if custom logo fails
         } else {
             logoError = true;
@@ -286,7 +291,7 @@
                 >
                     Galeri
                 </Link>
-                <Link
+                <!-- <Link
                     href="/kontak"
                     class="inline-flex items-center px-1 pt-1 border-b-2 text-sm font-semibold transition-all duration-200 h-full {currentRoute ===
                     'Contact'
@@ -294,7 +299,7 @@
                         : 'border-transparent text-slate-300 hover:text-white hover:border-slate-300'}"
                 >
                     Kontak
-                </Link>
+                </Link> -->
             </div>
 
             <div class="hidden lg:flex lg:items-center lg:space-x-4 shrink-0">
