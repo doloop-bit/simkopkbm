@@ -68,6 +68,21 @@ class PublicSvelteController extends Controller
     {
         $program = Program::where('slug', $slug)->with('level')->firstOrFail();
 
+        // Check for specific landing pages
+        if ($slug === 'paud') {
+            return Inertia::render('Public/Landing/paud', [
+                'programName' => $program->name,
+                'programLogo' => $program->logo_path ? asset('storage/'.$program->logo_path) : null,
+            ]);
+        }
+
+        if ($slug === 'paket-a') {
+            return Inertia::render('Public/Landing/paketa', [
+                'programName' => $program->name,
+                'programLogo' => $program->logo_path ? asset('storage/'.$program->logo_path) : null,
+            ]);
+        }
+
         return Inertia::render('Public/ProgramsShow', [
             'program' => $program,
         ]);

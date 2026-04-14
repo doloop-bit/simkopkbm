@@ -8,6 +8,9 @@ use App\Models\GalleryPhoto;
 use App\Models\Level;
 use App\Models\NewsArticle;
 use App\Models\Program;
+use App\Models\SchoolProfile;
+use App\Models\StaffMember;
+use App\Models\Facility;
 use App\Models\User;
 use Illuminate\Database\Seeder;
 
@@ -18,6 +21,36 @@ class DummyDataSeeder extends Seeder
      */
     public function run(): void
     {
+        $this->command->info('Configuring School Profile...');
+        $schoolProfile = SchoolProfile::firstOrCreate(
+            ['is_active' => true],
+            [
+                'name' => 'PKBM Harapan Bangsa',
+                'address' => 'Jl. Pendidikan No. 123, Jakarta Selatan',
+                'phone' => '021-5551234',
+                'email' => 'info@harapanbangsa.sch.id',
+                'vision' => 'Mencetak generasi cerdas, mandiri, dan berakhlak mulia.',
+                'mission' => "1. Menyelenggarakan pendidikan inklusif.\n2. Mengembangkan bakat dan minat siswa.\n3. Membangun karakter positif.",
+                'history' => [
+                    ['year' => '2010', 'title' => 'Pendirian', 'description' => 'PKBM didirikan dengan semangat kepedulian terhadap pendidikan masyarakat.', 'image_path' => null],
+                    ['year' => '2015', 'title' => 'Akreditasi A', 'description' => 'Berhasil memperoleh nilai akreditasi terbaik untuk seluruh program.', 'image_path' => null],
+                    ['year' => '2020', 'title' => 'Era Digital', 'description' => 'Meluncurkan sistem pembelajaran online terpadu.', 'image_path' => null],
+                    ['year' => '2025', 'title' => 'Modernisasi KBM', 'description' => 'Renovasi fasilitas dan implementasi kurikulum merdeka.', 'image_path' => null],
+                ],
+                'operating_hours' => 'Senin - Jumat: 08:00 - 15:00',
+            ]
+        );
+
+        if ($schoolProfile->staffMembers()->count() === 0) {
+            $this->command->info('Seeding Staff Members...');
+            StaffMember::factory()->count(6)->for($schoolProfile)->create();
+        }
+
+        if ($schoolProfile->facilities()->count() === 0) {
+            $this->command->info('Seeding Facilities...');
+            Facility::factory()->count(4)->for($schoolProfile)->create();
+        }
+
         $this->command->info('Creating Dummy Data (Teachers, Students, News, Programs)...');
 
         $academicYear = AcademicYear::where('is_active', true)->first();

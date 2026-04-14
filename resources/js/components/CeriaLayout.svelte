@@ -12,15 +12,10 @@
             isScrolled = window.scrollY > 20;
         };
         
-        // PAUD Specific Font
-        const originalFont = document.body.style.fontFamily;
-        document.body.style.fontFamily = "'Quicksand', sans-serif";
-        
         window.addEventListener('scroll', handleScroll);
         
         return () => {
             window.removeEventListener('scroll', handleScroll);
-            document.body.style.fontFamily = originalFont;
         };
     });
 
@@ -32,7 +27,7 @@
     ];
 </script>
 
-<div class="min-h-screen bg-sky-50 text-slate-800 font-body selection:bg-rose-400 selection:text-white overflow-x-hidden pt-20">
+<div class="paud-layout min-h-screen bg-sky-50 text-slate-800 font-body selection:bg-rose-400 selection:text-white overflow-x-hidden pt-20">
     <!-- Playful Background Blobs -->
     <div class="fixed top-0 -left-20 w-[400px] h-[400px] bg-yellow-400/10 blur-[80px] rounded-full pointer-events-none z-0"></div>
     <div class="fixed bottom-0 -right-20 w-[400px] h-[400px] bg-rose-400/10 blur-[80px] rounded-full pointer-events-none z-0"></div>
@@ -135,7 +130,7 @@
 <style>
     @import url('https://fonts.googleapis.com/css2?family=Quicksand:wght@300..700&display=swap');
     
-    :global(body) {
+    .paud-layout {
         font-family: 'Quicksand', sans-serif;
     }
 </style>

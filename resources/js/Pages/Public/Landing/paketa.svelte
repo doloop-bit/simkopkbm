@@ -1,7 +1,7 @@
 <script>
     import { onMount } from 'svelte';
     import { fade, fly, scale } from 'svelte/transition';
-    import ElegantLayout from '../components/ElegantLayout.svelte';
+    import ElegantLayout from '../../../components/ElegantLayout.svelte';
 
     let { programName = 'Paket A (Setara SD)', programLogo = null } = $props();
 

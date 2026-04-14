@@ -19,8 +19,8 @@
 
 <script>
     import PageHeader from "../../Components/PageHeader.svelte";
-    import PAUDLanding from "../../PAUD/Landing.svelte";
-    import PaketALanding from "../../PaketA/Landing.svelte";
+    import PAUDLanding from "./Landing/paud.svelte";
+    import PaketALanding from "./Landing/paketa.svelte";
 
     let { schoolProfile, program } = $props();
 

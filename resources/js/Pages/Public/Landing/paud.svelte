@@ -1,7 +1,7 @@
 <script>
     import { onMount } from 'svelte';
     import { fade, fly, scale } from 'svelte/transition';
-    import CeriaLayout from '../components/CeriaLayout.svelte';
+    import CeriaLayout from '../../../components/CeriaLayout.svelte';
 
     let { programName = 'PAUD Ceria', programLogo = null } = $props();
 
