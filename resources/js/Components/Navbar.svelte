@@ -17,11 +17,14 @@
     const instagram = $derived(profile?.instagram_url || "#");
 
     // Dynamic Logo handling
-    const initialLogo = profile?.logo_path
-        ? `/storage/${profile.logo_path}`
-        : "/img/logo.svg";
-    let logoSrc = $state(initialLogo);
+    let logoSrc = $state("");
     let logoError = $state(false);
+
+    $effect(() => {
+        const path = profile?.logo_path;
+        logoSrc = path ? `/storage/${path}` : "/img/logo.svg";
+        logoError = false;
+    });
 
     function handleLogoError() {
         if (logoSrc === "/img/logo.svg") {

@@ -1,4 +1,4 @@
-<script context="module">
+<script module>
     import PublicLayout from "../../Layouts/PublicLayout.svelte";
     export const layout = PublicLayout;
 </script>
