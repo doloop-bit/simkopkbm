@@ -15,6 +15,7 @@ Before starting any development:
 3. ☐ Use MCP tools to understand current state
 4. ☐ Follow conventions strictly
 5. ☐ Test with tinker before UI testing
+6. ☐ Use 'zsh -i -c' for all build/node commands
 ```
 
 ---
@@ -259,5 +260,17 @@ new class extends Component {
 
 ---
 
-**Last Updated:** 2026-04-08
-**Version:** 3.1 (Native SFC + Multi-Role Update)
+## 🐚 Shell Environment (WSL/Ubuntu)
+
+The project uses a specific `zsh` environment with tools like `nvm` or tailored aliases. Standard `bash` commands may use outdated system binaries (e.g., Node 18) instead of the project-required version (Node 24+).
+
+**Mandatory Rule:**
+Always execute build, sync, or package-related commands via an interactive `zsh` shell to load the specific environment.
+- ✅ `zsh -i -c "npm run build"`
+- ✅ `zsh -i -c "php artisan ..."`
+- ❌ `npm run build`
+
+---
+
+**Last Updated:** 2026-04-14
+**Version:** 3.2 (Shell Environment Update)

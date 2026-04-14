@@ -1,6 +1,20 @@
 <script module>
     import PublicLayout from "../../Layouts/PublicLayout.svelte";
-    export const layout = PublicLayout;
+    
+    /**
+     * Dynamically determine the layout. 
+     * For PAUD and Paket A, we use their internal standalone layouts (Ceria/Elegant).
+     * For all others, we wrap them in the standard PublicLayout.
+     */
+    export const layout = (page) => {
+        const standaloneSlugs = ["paud", "paket-a"];
+        
+        if (page.props.program && standaloneSlugs.includes(page.props.program.slug)) {
+            return page;
+        }
+        
+        return [PublicLayout, page];
+    };
 </script>
 
 <script>
