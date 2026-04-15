@@ -89,15 +89,12 @@ class ProgramFactory extends Factory
         ]);
     }
 
-    /**
-     * Create a program for a specific level.
-     */
     public function forLevel(Level $level): static
     {
         return $this->state(fn (array $attributes) => [
             'level_id' => $level->id,
             'name' => $level->name,
-            'slug' => Str::slug($level->name).'-'.fake()->unique()->randomNumber(4),
+            'slug' => Str::slug(str_replace(' ', '', $level->name)),
         ]);
     }
 }

@@ -28,7 +28,7 @@ trait HandlesPeriodicRecord
 
     public ?User $editingUserForPeriodic = null;
 
-    protected function mountHandlesPeriodicRecord(): void
+    public function mountHandlesPeriodicRecord(): void
     {
         $this->current_academic_year_id = AcademicYear::where('is_active', true)->first()?->id;
     }
