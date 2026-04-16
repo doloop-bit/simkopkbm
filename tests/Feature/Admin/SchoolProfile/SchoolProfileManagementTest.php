@@ -46,6 +46,9 @@ test('admin can create new school profile', function () {
         ->set('email', 'info@pkbm.com')
         ->set('vision', 'Menjadi lembaga pendidikan terdepan')
         ->set('mission', 'Memberikan pendidikan berkualitas untuk semua')
+        ->set('history', [
+            ['year' => '2020', 'title' => 'Founding', 'description' => 'School was founded'],
+        ])
         ->call('save')
         ->assertHasNoErrors()
         ->assertSet('name', 'PKBM Harapan Bangsa');
@@ -91,6 +94,9 @@ test('admin can upload school logo', function () {
         ->set('email', 'test@test.com')
         ->set('vision', 'Test Vision')
         ->set('mission', 'Test Mission')
+        ->set('history', [
+            ['year' => '2020', 'title' => 'Founding', 'description' => 'School was founded'],
+        ])
         ->set('logo', $logo)
         ->call('save')
         ->assertHasNoErrors();
@@ -134,8 +140,11 @@ test('required fields are validated', function () {
         ->set('email', '')
         ->set('vision', '')
         ->set('mission', '')
+        ->set('history', [
+            ['year' => '', 'title' => '', 'description' => ''],
+        ])
         ->call('save')
-        ->assertHasErrors(['name', 'address', 'phone', 'email', 'vision', 'mission']);
+        ->assertHasErrors(['name', 'address', 'phone', 'email', 'vision', 'mission', 'history.0.year', 'history.0.title', 'history.0.description']);
 });
 
 test('email field must be valid email', function () {

@@ -24,7 +24,7 @@ test('contact inquiries page shows empty state when no inquiries exist', functio
     $this->actingAs($this->admin)
         ->get(route('admin.contact-inquiries.index'))
         ->assertOk()
-        ->assertSee('Belum ada pesan');
+        ->assertSee('Arsip Pesan Kosong');
 });
 
 test('contact inquiries page shows inquiries when they exist', function () {
@@ -49,5 +49,5 @@ test('contact inquiries page shows unread count badge', function () {
     $this->actingAs($this->admin)
         ->get(route('admin.contact-inquiries.index'))
         ->assertOk()
-        ->assertSee('3 pesan belum dibaca');
+        ->assertSee('3 Belum Dibaca');
 });

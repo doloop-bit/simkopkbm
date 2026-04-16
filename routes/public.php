@@ -51,7 +51,7 @@ Route::get('/paud', function (PublicSvelteController $controller) {
 
 // Paket A Landing Page
 Route::get('/paketa', function (PublicSvelteController $controller) {
-    return $controller->programShow('paket-a');
+    return $controller->programShow('paketa');
 })->name('public.paketa');
 
 // SEO Routes

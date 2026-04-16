@@ -1,6 +1,6 @@
 @if($tab === 'financial' && count($levelSummary) > 0)
     <x-ui.card shadow padding="false" class="border-none overflow-hidden ring-1 ring-slate-100 dark:ring-slate-800">
-        <div class="p-6 border-b border-slate-50 dark:border-slate-800 flex items-center justify-between bg-slate-50/50">
+        <div class="p-6 border-b border-slate-50 dark:border-slate-800 flex items-center justify-between bg-slate-50/50 dark:bg-slate-900/50">
             <div class="flex items-center gap-3">
                 <div class="size-10 rounded-2xl bg-primary/10 flex items-center justify-center text-primary">
                     <x-ui.icon name="o-presentation-chart-line" class="size-5" />

@@ -29,6 +29,8 @@
             @if(auth()->user()->teachesPaudLevel())
                 <x-ui.menu-item title="Nilai PAUD" icon="o-face-smile" link="{{ route('teacher.assessments.paud') }}" />
             @endif
+
+            <x-ui.menu-item title="Modul Ajar AI" icon="o-sparkles" link="{{ route('teacher.modul-ajar.index') }}" />
         </x-ui.menu-sub>
     @endif
 
@@ -63,6 +65,7 @@
                 <x-ui.menu-item title="Penugasan Guru" icon="o-user-group" :link="route('academic.assignments')" />
                 <x-ui.menu-item title="Presensi" icon="o-check-badge" :link="route('academic.attendance')" />
                 <x-ui.menu-item title="Ekstrakurikuler" icon="o-trophy" :link="route('academic.extracurriculars')" />
+                <x-ui.menu-item title="Modul Ajar AI" icon="o-sparkles" :link="route('admin.modul-ajar.index')" />
             </x-ui.menu-sub>
 
             <x-ui.menu-sub title="Penilaian & Raport" icon="o-pencil-square" :active="request()->routeIs('admin.assessments.*') || request()->routeIs('admin.report-card.*')">

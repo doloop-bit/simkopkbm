@@ -40,7 +40,7 @@ test('admin can access subjects page', function () {
     actingAs($user)
         ->get(route('academic.subjects'))
         ->assertOk()
-        ->assertSeeLivewire('admin.academic.subjects');
+        ->assertSeeLivewire('shared.academic.subjects');
 });
 
 test('admin can access assignments page', function () {

@@ -1,6 +1,6 @@
 @if($tab === 'arrears')
     <x-ui.card shadow padding="false" class="border-none ring-1 ring-slate-100 dark:ring-slate-800 overflow-hidden">
-        <div class="p-6 border-b border-slate-50 dark:border-slate-800 flex flex-col md:flex-row md:items-center justify-between gap-4 bg-slate-50/50">
+        <div class="p-6 border-b border-slate-50 dark:border-slate-800 flex flex-col md:flex-row md:items-center justify-between gap-4 bg-slate-50/50 dark:bg-slate-900/50">
             <div class="flex items-center gap-3">
                 <x-ui.checkbox wire:model.live="selectAll" :label="__('Pilih Semua')" />
                 <span class="text-xs font-black text-slate-400 uppercase tracking-widest">{{ count($selected_billings) }} {{ __('Terpilih') }}</span>

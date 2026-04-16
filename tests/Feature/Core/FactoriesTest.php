@@ -111,7 +111,7 @@ describe('School Profile Factories', function () {
         expect($program)->toBeInstanceOf(Program::class)
             ->and($program->name)->not->toBeEmpty()
             ->and($program->slug)->not->toBeEmpty()
-            ->and($program->level)->toBeIn(['paud', 'paket_a', 'paket_b', 'paket_c'])
+            ->and($program->level->education_level)->toBeIn(['paud', 'sd', 'smp', 'sma'])
             ->and($program->description)->not->toBeEmpty()
             ->and($program->is_active)->toBeTrue();
     });
@@ -131,28 +131,28 @@ describe('School Profile Factories', function () {
     test('Program factory paud state works', function () {
         $program = Program::factory()->paud()->create();
 
-        expect($program->level)->toBe('paud')
+        expect($program->level->education_level)->toBe('paud')
             ->and($program->order)->toBe(1);
     });
 
     test('Program factory paketA state works', function () {
         $program = Program::factory()->paketA()->create();
 
-        expect($program->level)->toBe('paket_a')
+        expect($program->level->education_level)->toBe('sd')
             ->and($program->order)->toBe(2);
     });
 
     test('Program factory paketB state works', function () {
         $program = Program::factory()->paketB()->create();
 
-        expect($program->level)->toBe('paket_b')
+        expect($program->level->education_level)->toBe('smp')
             ->and($program->order)->toBe(3);
     });
 
     test('Program factory paketC state works', function () {
         $program = Program::factory()->paketC()->create();
 
-        expect($program->level)->toBe('paket_c')
+        expect($program->level->education_level)->toBe('sma')
             ->and($program->order)->toBe(4);
     });
 
@@ -287,11 +287,12 @@ describe('Factory Data Quality', function () {
         $article = NewsArticle::factory()->create();
 
         // Check that title is in Indonesian (contains common Indonesian words)
-        $indonesianWords = ['Kegiatan', 'PKBM', 'Peserta', 'Didik', 'Program', 'Pendidikan', 'Pembelajaran'];
+        $indonesianWords = ['kegiatan', 'pkbm', 'peserta', 'didik', 'program', 'pendidikan', 'pembelajaran'];
         $containsIndonesian = false;
 
+        $loweredTitle = strtolower($article->title);
         foreach ($indonesianWords as $word) {
-            if (str_contains($article->title, $word)) {
+            if (str_contains($loweredTitle, $word)) {
                 $containsIndonesian = true;
                 break;
             }

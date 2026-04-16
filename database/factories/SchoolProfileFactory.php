@@ -41,8 +41,8 @@ class SchoolProfileFactory extends Factory
         ];
 
         $histories = [
-            "PKBM {name} didirikan pada tahun 2010 dengan tujuan memberikan akses pendidikan kepada masyarakat yang tidak dapat mengikuti pendidikan formal. Berawal dari sebuah kelompok belajar kecil dengan 20 peserta didik, kini PKBM kami telah berkembang menjadi lembaga pendidikan nonformal yang melayani ratusan peserta didik dari berbagai tingkat pendidikan.\n\nDalam perjalanannya, PKBM kami terus berkomitmen untuk meningkatkan kualitas layanan pendidikan. Berbagai program inovatif telah dikembangkan untuk memenuhi kebutuhan belajar masyarakat, mulai dari pendidikan kesetaraan hingga pelatihan keterampilan hidup.\n\nSaat ini, PKBM kami telah memiliki fasilitas yang memadai dan tenaga pendidik yang profesional, siap memberikan layanan pendidikan terbaik bagi masyarakat.",
-            "Berdiri sejak tahun 2008, PKBM {name} hadir sebagai solusi pendidikan alternatif bagi masyarakat. Dengan semangat pengabdian dan dedikasi tinggi, kami terus berupaya memberikan layanan pendidikan yang berkualitas dan terjangkau.\n\nSeiring berjalannya waktu, PKBM kami telah meluluskan ribuan peserta didik yang kini telah berhasil melanjutkan pendidikan ke jenjang yang lebih tinggi atau terjun ke dunia kerja. Prestasi ini menjadi motivasi kami untuk terus berinovasi dan meningkatkan kualitas pendidikan.\n\nKami percaya bahwa pendidikan adalah hak setiap orang, dan PKBM kami berkomitmen untuk terus hadir memberikan akses pendidikan bagi seluruh lapisan masyarakat.",
+            'PKBM {name} didirikan pada tahun 2010 dengan tujuan memberikan akses pendidikan kepada masyarakat yang tidak dapat mengikuti pendidikan formal.',
+            'Berdiri sejak tahun 2008, PKBM {name} hadir sebagai solusi pendidikan alternatif bagi masyarakat.',
         ];
 
         $name = fake()->randomElement($schoolNames);
@@ -54,7 +54,20 @@ class SchoolProfileFactory extends Factory
             'email' => strtolower(str_replace(' ', '', $name)).'@example.com',
             'vision' => fake()->randomElement($visions),
             'mission' => fake()->randomElement($missions),
-            'history' => str_replace('{name}', $name, fake()->randomElement($histories)),
+            'history' => [
+                [
+                    'year' => '2010',
+                    'title' => 'Pendirian',
+                    'description' => str_replace('{name}', $name, fake()->randomElement($histories)),
+                    'image_path' => null,
+                ],
+                [
+                    'year' => '2015',
+                    'title' => 'Akreditasi',
+                    'description' => 'Mendapatkan akreditasi A untuk program Paket C.',
+                    'image_path' => null,
+                ],
+            ],
             'operating_hours' => 'Senin - Jumat: 08.00 - 16.00 WIB, Sabtu: 08.00 - 12.00 WIB',
             'facebook_url' => fake()->optional(0.7)->url(),
             'instagram_url' => fake()->optional(0.7)->url(),

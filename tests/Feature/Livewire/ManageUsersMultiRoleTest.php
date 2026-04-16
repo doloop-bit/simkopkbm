@@ -1,6 +1,5 @@
 <?php
 
-use App\Livewire\Auth\SelectRole;
 use App\Models\Role;
 use App\Models\User;
 use Livewire\Livewire;
@@ -36,7 +35,7 @@ test('user with multiple roles can select active role', function () {
     $user->roles()->attach($roles->pluck('id')->toArray());
 
     Livewire::actingAs($user)
-        ->test(SelectRole::class)
+        ->test('auth.select-role')
         ->assertSee('Admin')
         ->assertSee('Bendahara')
         ->assertSee('Guru')

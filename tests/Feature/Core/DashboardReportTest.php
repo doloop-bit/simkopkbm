@@ -13,7 +13,7 @@ test('admin can access dashboard with livewire component', function () {
     actingAs($user)
         ->get(route('dashboard'))
         ->assertOk()
-        ->assertSeeLivewire('dashboard');
+        ->assertSeeLivewire('admin.dashboard');
 });
 
 test('admin can access reports page', function () {
@@ -22,7 +22,7 @@ test('admin can access reports page', function () {
     actingAs($user)
         ->get(route('reports'))
         ->assertOk()
-        ->assertSeeLivewire('reports');
+        ->assertSeeLivewire('admin.reports');
 });
 
 test('reports page shows financial tab by default', function () {
@@ -30,6 +30,6 @@ test('reports page shows financial tab by default', function () {
 
     actingAs($user)
         ->get(route('reports'))
-        ->assertSee('Laporan Keuangan')
-        ->assertSee('Total Pendapatan');
+        ->assertSee('Analitik & Pelaporan')
+        ->assertSee('Total Pemasukan');
 });

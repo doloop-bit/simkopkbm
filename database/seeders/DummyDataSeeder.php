@@ -4,13 +4,13 @@ namespace Database\Seeders;
 
 use App\Models\AcademicYear;
 use App\Models\Classroom;
+use App\Models\Facility;
 use App\Models\GalleryPhoto;
 use App\Models\Level;
 use App\Models\NewsArticle;
 use App\Models\Program;
 use App\Models\SchoolProfile;
 use App\Models\StaffMember;
-use App\Models\Facility;
 use App\Models\User;
 use Illuminate\Database\Seeder;
 
@@ -25,10 +25,10 @@ class DummyDataSeeder extends Seeder
         $schoolProfile = SchoolProfile::firstOrCreate(
             ['is_active' => true],
             [
-                'name' => 'PKBM Harapan Bangsa',
+                'name' => 'PKBM Baitusyukur',
                 'address' => 'Jl. Pendidikan No. 123, Jakarta Selatan',
                 'phone' => '021-5551234',
-                'email' => 'info@harapanbangsa.sch.id',
+                'email' => 'info@baitusyukur.sch.id',
                 'vision' => 'Mencetak generasi cerdas, mandiri, dan berakhlak mulia.',
                 'mission' => "1. Menyelenggarakan pendidikan inklusif.\n2. Mengembangkan bakat dan minat siswa.\n3. Membangun karakter positif.",
                 'history' => [

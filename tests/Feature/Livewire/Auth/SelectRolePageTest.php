@@ -2,7 +2,6 @@
 
 namespace Tests\Feature\Livewire\Auth;
 
-use App\Livewire\Auth\SelectRole;
 use App\Models\Role;
 use App\Models\User;
 use Illuminate\Support\Facades\Session;
@@ -18,7 +17,7 @@ test('select role component renders correctly with user roles', function () {
     $user->roles()->attach(collect($roles)->pluck('id'));
 
     Livewire::actingAs($user)
-        ->test(SelectRole::class)
+        ->test('auth.select-role')
         ->assertStatus(200)
         ->assertSee('Administrator')
         ->assertSee('Guru')
@@ -36,13 +35,13 @@ test('user can select a role and be redirected to correct dashboard', function (
 
     // Test Admin selection
     Livewire::actingAs($user)
-        ->test(SelectRole::class)
+        ->test('auth.select-role')
         ->call('selectRole', $adminRole->id)
         ->assertRedirect(route('dashboard'));
 
     // Test Guru selection
     Livewire::actingAs($user)
-        ->test(SelectRole::class)
+        ->test('auth.select-role')
         ->call('selectRole', $guruRole->id)
         ->assertRedirect(route('teacher.dashboard'));
 
@@ -57,7 +56,7 @@ test('user cannot select a role they do not have', function () {
     $user->roles()->attach([$guruRole->id]); // User only has Guru role
 
     Livewire::actingAs($user)
-        ->test(SelectRole::class)
+        ->test('auth.select-role')
         ->call('selectRole', $adminRole->id) // Try to select Admin
         ->assertNoRedirect();
 
@@ -123,7 +122,7 @@ test('user is redirected to intended URL after selecting role (disabled for now 
     $user->roles()->attach([$adminRole->id]);
 
     Livewire::actingAs($user)
-        ->test(SelectRole::class)
+        ->test('auth.select-role')
         ->call('selectRole', $adminRole->id)
         ->assertRedirect(route('dashboard'));
 });

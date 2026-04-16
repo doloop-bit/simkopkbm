@@ -39,4 +39,11 @@ Route::middleware(['auth', 'verified', 'role:guru'])->prefix('teacher')->name('t
     Route::livewire('/assessments/paud', 'teacher.report-card.paud.developmental')->name('assessments.paud');
     Route::livewire('/assessments/attendance', 'shared.assessments.attendance')->name('assessments.attendance'); // Rekap Rapor
     Route::livewire('/attendance/daily', 'shared.attendance.daily')->name('attendance.daily'); // Presensi Harian
+
+    // AI Modul Ajar
+    Route::prefix('modul-ajar')->name('modul-ajar.')->group(function () {
+        Route::livewire('/', 'teacher.modul-ajar.index')->name('index');
+        Route::livewire('/create', 'teacher.modul-ajar.create')->name('create');
+        Route::livewire('/{id}', 'teacher.modul-ajar.show')->name('show');
+    });
 });

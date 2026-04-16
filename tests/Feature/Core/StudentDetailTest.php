@@ -75,7 +75,7 @@ test('periodic button opens periodic modal correctly', function () {
         ->test('admin.data-master.students.index')
         ->call('openPeriodic', $student->id)
         ->assertSet('periodicModal', true)
-        ->assertSet('editing.id', $student->id);
+        ->assertSet('editingUserForPeriodic.id', $student->id);
 });
 
 test('detail modal shows complete student information', function () {
@@ -141,6 +141,6 @@ test('modals do not overlap', function () {
 
     // Open periodic modal
     $component->call('openPeriodic', $student->id)
-        ->assertSet('editing.id', $student->id)
+        ->assertSet('editingUserForPeriodic.id', $student->id)
         ->assertSet('detailModal', true); // persists
 });

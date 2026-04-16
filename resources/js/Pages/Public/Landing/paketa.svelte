@@ -54,6 +54,10 @@
     ];
 </script>
 
+<svelte:head>
+    <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@24,400,0,0" />
+</svelte:head>
+
 <ElegantLayout {programName} {programLogo}>
     {#if visible}
         <!-- Hero Section -->
@@ -88,7 +92,7 @@
                 
                 <div class="relative hidden lg:block" in:fly={{ x: 50, duration: 1000 }}>
                     <div class="relative z-20 rounded-3xl overflow-hidden shadow-2xl border-4 border-white transform rotate-2 hover:rotate-0 transition-transform duration-700">
-                        <img class="w-full aspect-[4/5] object-cover" alt="Student" src="https://lh3.googleusercontent.com/aida-public/AB6AXuD9Pt22lwHhfYC-jWJa6eU3ekLTEOActGd9nyDG4BPtkkMxcDgKTNR8-NRBwaFJQ2OYkUcGY0mQnLfICBDN3q9ksgWyKe2dqcPYvcbJGiyf12ECpRAx_V18CksyRWFjghdu9JunKBbosZAwKT44DFRPJFyKJWSurc9kw0Su2w2iS0XZtWbLpbSVrAjO2SucLFzIT3QrIGMe-yYdypeFnBSeGdMkhRFg3AeP1_MlrWAHudCo3ewdlA0E42XZsd135LBopdf7tau7xTwq"/>
+                        <img class="w-full aspect-[4/5] object-cover" alt="Paket A Education" src="/images/paket_a_hero_v3.png"/>
                     </div>
                     <div class="absolute -bottom-10 -left-10 z-30 bg-white p-8 rounded-2xl shadow-xl max-w-[240px] border border-elegant-accent-light">
                         <div class="border-l-4 border-elegant-accent pl-4">

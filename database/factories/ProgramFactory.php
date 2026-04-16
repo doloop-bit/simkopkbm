@@ -97,4 +97,40 @@ class ProgramFactory extends Factory
             'slug' => Str::slug(str_replace(' ', '', $level->name)),
         ]);
     }
+
+    public function paud(): static
+    {
+        return $this->state(fn (array $attributes) => [
+            'level_id' => Level::factory()->state(['education_level' => 'paud', 'name' => 'PAUD']),
+            'name' => 'Program PAUD',
+            'order' => 1,
+        ]);
+    }
+
+    public function paketA(): static
+    {
+        return $this->state(fn (array $attributes) => [
+            'level_id' => Level::factory()->state(['education_level' => 'sd', 'name' => 'PAKET A']),
+            'name' => 'Program Paket A',
+            'order' => 2,
+        ]);
+    }
+
+    public function paketB(): static
+    {
+        return $this->state(fn (array $attributes) => [
+            'level_id' => Level::factory()->state(['education_level' => 'smp', 'name' => 'PAKET B']),
+            'name' => 'Program Paket B',
+            'order' => 3,
+        ]);
+    }
+
+    public function paketC(): static
+    {
+        return $this->state(fn (array $attributes) => [
+            'level_id' => Level::factory()->state(['education_level' => 'sma', 'name' => 'PAKET C']),
+            'name' => 'Program Paket C',
+            'order' => 4,
+        ]);
+    }
 }

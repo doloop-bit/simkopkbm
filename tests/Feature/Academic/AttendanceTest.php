@@ -7,19 +7,19 @@ use function Pest\Laravel\withoutVite;
 
 beforeEach(fn () => withoutVite());
 
-test('admin can access grades page', function () {
+test('admin can access attendance page', function () {
     $user = User::factory()->create(['role' => 'admin']);
 
     actingAs($user)
-        ->get(route('academic.grades'))
+        ->get(route('academic.attendance'))
         ->assertOk()
-        ->assertSeeLivewire('academic.grades');
+        ->assertSeeLivewire('shared.attendance.daily');
 });
 
-test('non-admin cannot access grades page', function () {
+test('non-admin cannot access attendance page', function () {
     $user = User::factory()->create(['role' => 'siswa']);
 
     actingAs($user)
-        ->get(route('academic.grades'))
+        ->get(route('academic.attendance'))
         ->assertForbidden();
 });
