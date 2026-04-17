@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace App\Livewire\Teacher\ModulAjar;
 
 use App\Models\ModulAjar;
+use Barryvdh\DomPDF\Facade\Pdf;
 use Livewire\Attributes\Layout;
 use Livewire\Component;
 
@@ -16,14 +17,39 @@ new #[Layout('components.layouts.app')] class extends Component {
         $this->id = $id;
     }
 
+    public function getRoutePrefix(): string
+    {
+        $routeName = request()->route()?->getName() ?? '';
+        return str_contains($routeName, 'admin') ? 'admin.modul-ajar' : 'teacher.modul-ajar';
+    }
+
+    public function exportPdf()
+    {
+        $module = ModulAjar::with('user')->findOrFail($this->id);
+
+        if (!auth()->user()->isAdmin() && !auth()->user()->isHeadmaster() && $module->user_id !== auth()->id()) {
+            abort(403);
+        }
+
+        $data = ['module' => $module];
+        $pdf = Pdf::loadView('pdf.modul-ajar', $data);
+
+        return response()->streamDownload(
+            fn () => print ($pdf->output()),
+            'modul-ajar-'.str($module->title)->slug().'.pdf',
+            ['Content-Type' => 'application/pdf']
+        );
+    }
+
     public function with(): array
     {
-        $modul = ModulAjar::where('id', $this->id)
-            ->when(!auth()->user()->isAdmin(), fn($q) => $q->where('user_id', auth()->id()))
+        $modul = ModulAjar::with('user')->where('id', $this->id)
+            ->when(!auth()->user()->isAdmin() && !auth()->user()->isHeadmaster(), fn($q) => $q->where('user_id', auth()->id()))
             ->firstOrFail();
 
         return [
             'module' => $modul,
+            'routePrefix' => $this->getRoutePrefix(),
         ];
     }
 }; ?>
@@ -32,12 +58,14 @@ new #[Layout('components.layouts.app')] class extends Component {
     <div class="flex flex-col md:flex-row md:items-center justify-between gap-4">
         <div>
             <x-ui.button label="Kembali" icon="o-arrow-left" class="btn-sm btn-ghost mb-2" 
-                link="{{ route('teacher.modul-ajar.index') }}" wire:navigate />
+                link="{{ route($routePrefix . '.index') }}" wire:navigate />
             <x-ui.header :title="$module->title" :subtitle="$module->subject . ' - ' . $module->class_level" />
         </div>
         
         <div class="flex items-center gap-2">
-            <x-ui.button label="Cetak / PDF" icon="o-printer" class="btn-primary" 
+            <x-ui.button label="Download PDF" icon="o-document-arrow-down" class="btn-primary" 
+                wire:click="exportPdf" spinner="exportPdf" />
+            <x-ui.button label="Cetak / Print" icon="o-printer" class="btn-outline" 
                 onclick="window.print()" />
         </div>
     </div>
@@ -54,7 +82,7 @@ new #[Layout('components.layouts.app')] class extends Component {
             <h3 class="font-bold text-amber-800 dark:text-amber-200">Modul Belum Selesai</h3>
             <p class="text-sm text-amber-700 dark:text-amber-300 mb-4">Penyusunan modul ini belum selesai atau terjadi kegagalan saat proses generate.</p>
             <x-ui.button label="Lanjutkan Diskusi di Chat" icon="o-chat-bubble-left-right" class="btn-primary"
-                link="{{ route('teacher.modul-ajar.create', ['id' => $module->id]) }}" wire:navigate />
+                link="{{ route($routePrefix . '.create', ['id' => $module->id]) }}" wire:navigate />
         </div>
     @endif
 </div>

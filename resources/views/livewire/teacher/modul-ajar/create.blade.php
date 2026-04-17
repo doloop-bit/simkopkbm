@@ -6,6 +6,8 @@ namespace App\Livewire\Teacher\ModulAjar;
 
 use App\Models\ModulAjar;
 use App\Services\GeminiService;
+use Barryvdh\DomPDF\Facade\Pdf;
+use Illuminate\Support\Str;
 use Livewire\Attributes\Layout;
 use Livewire\Component;
 use Illuminate\Support\Facades\Log;
@@ -21,6 +23,7 @@ new #[Layout('components.layouts.app')] class extends Component {
     public bool $isGenerating = false;
     public ?int $moduleId = null;
     public ?string $generatedContent = null;
+    public ?int $selectedMessageIndex = null;
 
     protected string $systemPrompt = "Anda adalah asisten AI ahli kurikulum pendidikan di Indonesia, khusus untuk Kurikulum Merdeka. 
 Tugas Anda adalah membantu guru menyusun 'Modul Ajar' yang lengkap, sistematis, dan sesuai standar.
@@ -85,7 +88,6 @@ Deskripsi singkat: " . ($this->description ?: 'Beri saya ide yang kreatif.') . "
             'parts' => [['text' => $this->newMessage]]
         ];
 
-        $messageText = $this->newMessage;
         $this->newMessage = '';
         $this->isGenerating = true;
 
@@ -108,11 +110,6 @@ Deskripsi singkat: " . ($this->description ?: 'Beri saya ide yang kreatif.') . "
                     'role' => 'model',
                     'parts' => [['text' => $response]]
                 ];
-
-                // Check if the response looks like a complete module
-                if (str_contains($response, 'Informasi Umum') && str_contains($response, 'Kegiatan Pembelajaran')) {
-                    $this->generatedContent = $response;
-                }
             }
 
             // Update database
@@ -120,8 +117,6 @@ Deskripsi singkat: " . ($this->description ?: 'Beri saya ide yang kreatif.') . "
                 $modul = ModulAjar::find($this->moduleId);
                 $modul->update([
                     'conversation' => $this->messages,
-                    'generated_content' => $this->generatedContent,
-                    'status' => $this->generatedContent ? 'completed' : 'generating'
                 ]);
             }
 
@@ -133,129 +128,225 @@ Deskripsi singkat: " . ($this->description ?: 'Beri saya ide yang kreatif.') . "
             ];
         } finally {
             $this->isGenerating = false;
+            $this->js("window.dispatchEvent(new CustomEvent('update-chat-scroll'));");
         }
     }
 
-    public function saveModule(): void
+    public function selectResponse(int|string $index): void
     {
-        if (!$this->moduleId || !$this->generatedContent) return;
+        Log::info("selectResponse triggered for index: " . $index);
+        $index = (int) $index;
+        if (!isset($this->messages[$index])) {
+            Log::warning("selectResponse failed: index not found in messages.");
+            return;
+        }
+
+        $this->selectedMessageIndex = $index;
+        $this->generatedContent = $this->messages[$index]['parts'][0]['text'];
+        Log::info("selectResponse successfully updated generatedContent length: " . strlen($this->generatedContent));
+        $this->js("toast('Preview Modul Ajar diperbarui!', { type: 'success' })");
         
-        $this->js("toast('Modul ajar berhasil disimpan!', { type: 'success' })");
-        $this->redirectRoute('teacher.modul-ajar.show', ['id' => $this->moduleId], navigate: true);
+        if ($this->moduleId) {
+            $modul = ModulAjar::find($this->moduleId);
+            $modul->update([
+                'generated_content' => $this->generatedContent,
+                'status' => 'completed'
+            ]);
+        }
+    }
+
+    public function saveAndDownload()
+    {
+        if (!$this->moduleId || !$this->generatedContent) {
+            $this->js("toast('Silakan pilih salah satu respon AI terlebih dahulu.', { type: 'warning' })");
+            return;
+        }
+        
+        $module = ModulAjar::with('user')->find($this->moduleId);
+        if ($module->status !== 'completed') {
+            $module->update(['status' => 'completed']);
+        }
+        
+        $this->js("toast('Modul berhasil disimpan dan siap diunduh!', { type: 'success' })");
+        
+        $data = ['module' => $module];
+        $pdf = Pdf::loadView('pdf.modul-ajar', $data);
+
+        return response()->streamDownload(
+            fn () => print ($pdf->output()),
+            'modul-ajar-'.Str::slug($module->title).'.pdf',
+            ['Content-Type' => 'application/pdf']
+        );
     }
 }; ?>
 
-<div class="p-4 md:p-6 max-w-7xl mx-auto">
-    <div class="grid grid-cols-1 lg:grid-cols-12 gap-6 items-start">
+<div class="h-[calc(100vh-80px)] p-4 max-w-screen-2xl mx-auto flex flex-col">
+    
+    <div class="mb-4 flex items-center justify-between shrink-0">
+        <x-ui.header title="Buat Modul Ajar AI" subtitle="Diskusikan modul Anda dan lihat hasilnya langsung secara berdampingan." class="!mb-0" />
         
-        {{-- Input Form (Left) --}}
-        <div class="lg:col-span-4 space-y-6 sticky top-6">
-            <x-ui.header title="Buat Modul Ajar" subtitle="Lengkapi detail untuk membantu AI menyusun modul." />
-            
-            <x-ui.card shadow class="bg-white/80 dark:bg-slate-900/80 backdrop-blur">
-                <form wire:submit="startChat" class="space-y-4">
-                    <x-ui.input label="Tema / Topik Utama" placeholder="Contoh: Ekosistem Laut, Jual Beli" 
-                        wire:model="theme" required :disabled="!empty($messages)" />
-                    
-                    <x-ui.input label="Mata Pelajaran" placeholder="Contoh: IPAS, Bahasa Indonesia" 
-                        wire:model="subject" required :disabled="!empty($messages)" />
-                        
-                    <x-ui.input label="Jenjang / Kelas" placeholder="Contoh: Kelas 4 / Fase B" 
-                        wire:model="class_level" :disabled="!empty($messages)" />
-
-                    <x-ui.textarea label="Deskripsi (Opsional)" 
-                        placeholder="Tambahkan instruksi khusus, misal: Fokus pada kegiatan kelompok." 
-                        wire:model="description" rows="3" :disabled="!empty($messages)" />
-
-                    @if(empty($messages))
-                        <x-ui.button type="submit" label="Mulai Diskusi dengan AI" icon="o-sparkles" 
-                            class="btn-primary w-full" spinner="startChat" />
-                    @else
-                        <div class="bg-blue-50 dark:bg-blue-900/20 p-4 rounded-xl border border-blue-100 dark:border-blue-800/30">
-                            <p class="text-xs text-blue-700 dark:text-blue-300">
-                                Sesi chat sedang aktif. Anda bisa memberikan instruksi tambahan pada kolom chat di samping.
-                            </p>
-                            <x-ui.button label="Reset / Buat Baru" class="btn-xs btn-ghost mt-2" 
-                                onclick="window.location.reload()" />
-                        </div>
-                    @endif
-                </form>
-            </x-ui.card>
-
-            @if($generatedContent)
-                <x-ui.button wire:click="saveModule" label="Simpan Modul & Lihat Hasil" icon="o-check-circle" 
-                    class="btn-success w-full py-4 text-lg shadow-lg hover:scale-[1.02] transition-transform" />
-            @endif
-        </div>
-
-        {{-- Chat Interface (Right) --}}
-        <div class="lg:col-span-8 flex flex-col h-[70vh] lg:h-[80vh] bg-slate-50 dark:bg-slate-950 rounded-3xl border border-slate-200 dark:border-slate-800 shadow-xl overflow-hidden">
-            
-            {{-- Chat Header --}}
-            <div class="p-4 bg-white dark:bg-slate-900 border-b border-slate-200 dark:border-slate-800 flex items-center justify-between">
-                <div class="flex items-center gap-3">
-                    <div class="size-10 rounded-full bg-emerald-500 flex items-center justify-center text-white">
-                        <x-ui.icon name="o-cpu-chip" class="size-6" />
-                    </div>
-                    <div>
-                        <h3 class="font-bold text-slate-800 dark:text-slate-100">SIUBA AI Assistant</h3>
-                        <p class="text-xs text-emerald-500 flex items-center gap-1">
-                            <span class="size-2 rounded-full bg-emerald-500 animate-pulse"></span> Online & Siap Membantu
-                        </p>
-                    </div>
+        @if(!empty($messages))
+            <div class="flex items-center gap-4 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 px-4 py-2 rounded-xl shadow-sm">
+                <div class="hidden md:block">
+                    <p class="text-[10px] text-slate-500 uppercase font-bold tracking-wider">Topik Aktif</p>
+                    <p class="text-sm font-semibold truncate max-w-[200px]">{{ $theme }} - {{ $subject }}</p>
                 </div>
+                <div class="h-6 w-px bg-slate-200 dark:bg-slate-700 hidden md:block"></div>
+                <x-ui.button label="Buat Baru" icon="o-plus" class="btn-xs btn-outline" onclick="window.location.reload()" />
             </div>
+        @endif
+    </div>
 
-            {{-- Messages Area --}}
-            <div class="flex-1 overflow-y-auto p-4 space-y-4" id="chat-messages">
-                @if(empty($messages))
-                    <div class="h-full flex flex-col items-center justify-center text-center opacity-40 grayscale space-y-4">
-                        <x-ui.icon name="o-chat-bubble-left-right" class="size-20" />
-                        <p class="max-w-xs text-sm">Input data di samping untuk memulai diskusi penyusunan Modul Ajar.</p>
+    {{-- Main Grid --}}
+    <div class="flex-1 grid grid-cols-1 lg:grid-cols-12 gap-6 min-h-0">
+        
+        {{-- Left Pane: Chat & Form --}}
+        <div class="lg:col-span-5 flex flex-col min-h-0 bg-white dark:bg-slate-900 rounded-2xl shadow-sm border border-slate-200 dark:border-slate-800 overflow-hidden">
+            
+            @if(empty($messages))
+                <div class="p-6 overflow-y-auto">
+                    <div class="flex items-center gap-3 mb-6 bg-blue-50 dark:bg-blue-900/20 text-blue-800 dark:text-blue-300 p-4 rounded-xl text-sm">
+                        <x-ui.icon name="o-information-circle" class="size-6 shrink-0" />
+                        <p>Isi formulir ini untuk memberikan konteks awal agar AI dapat mulai menyusun Modul Ajar Anda.</p>
                     </div>
-                @else
-                    @foreach($messages as $msg)
-                        <div class="flex {{ $msg['role'] === 'user' ? 'justify-end' : 'justify-start' }}">
-                            <div class="max-w-[85%] sm:max-w-[75%] rounded-2xl p-4 {{ $msg['role'] === 'user' ? 'bg-primary text-white rounded-tr-none' : 'bg-white dark:bg-slate-900 text-slate-800 dark:text-slate-200 border border-slate-100 dark:border-slate-800 rounded-tl-none shadow-sm' }}">
-                                <div class="prose prose-sm dark:prose-invert max-w-none">
+
+                    <form wire:submit="startChat" class="space-y-4">
+                        <x-ui.input label="Tema / Topik Utama" placeholder="Contoh: Ekosistem Laut, Jual Beli" 
+                            wire:model="theme" required />
+                        
+                        <x-ui.input label="Mata Pelajaran" placeholder="Contoh: IPAS, Bahasa Indonesia" 
+                            wire:model="subject" required />
+                            
+                        <x-ui.input label="Jenjang / Kelas" placeholder="Contoh: Kelas 4 / Fase B" 
+                            wire:model="class_level" />
+
+                        <x-ui.textarea label="Deskripsi Khusus (Opsional)" 
+                            placeholder="Tambahkan instruksi, misal: Gunakan metode Problem Based Learning." 
+                            wire:model="description" rows="3" />
+
+                        <x-ui.button type="submit" label="Memulai Diskusi" icon="o-sparkles" 
+                            class="btn-primary w-full mt-4" spinner="startChat" />
+                    </form>
+                </div>
+            @endif
+
+            {{-- Chat Interface --}}
+            <div class="{{ empty($messages) ? 'hidden' : 'flex-1 flex flex-col min-h-0 relative bg-slate-50 dark:bg-slate-950/50' }}">
+                <div class="p-3 border-b border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 flex items-center gap-3 shrink-0">
+                    <div class="size-8 rounded-full bg-primary/20 flex items-center justify-center text-primary">
+                        <x-ui.icon name="o-chat-bubble-bottom-center-text" class="size-4" />
+                    </div>
+                    <span class="font-bold text-sm">Ruang Diskusi Pribadi</span>
+                </div>
+
+                <div class="flex-1 overflow-y-auto p-4 space-y-4" id="chat-messages">
+                    @foreach($messages as $key => $msg)
+                        <div wire:key="msg-{{ $key }}" class="flex flex-col {{ $msg['role'] === 'user' ? 'items-end' : 'items-start' }} gap-1 mb-4">
+                            <span class="text-[10px] text-slate-500 font-medium px-1">{{ $msg['role'] === 'user' ? 'Anda' : 'SIUBA AI' }}</span>
+                            <div class="max-w-[90%] rounded-2xl p-4 {{ $msg['role'] === 'user' ? 'bg-primary text-white rounded-tr-sm' : 'bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-tl-sm shadow-sm' }}">
+                                <div class="prose prose-sm {{ $msg['role'] === 'user' ? 'prose-p:text-white prose-headings:text-white' : 'dark:prose-invert' }} max-w-none">
                                     {!! \Illuminate\Support\Str::markdown($msg['parts'][0]['text']) !!}
                                 </div>
                             </div>
+                            
+                            @if($msg['role'] === 'model' && !$isGenerating)
+                                @php $isCurrent = ($selectedMessageIndex === $key); @endphp
+                                <x-ui.button wire:click="selectResponse({{ $key }})" 
+                                    :label="$isCurrent ? 'Modul Ditampilkan' : 'Terapkan & Lihat'" 
+                                    :icon="$isCurrent ? 'o-check-circle' : 'o-eye'" 
+                                    spinner="selectResponse({{ $key }})"
+                                    class="btn-xs mt-1 {{ $isCurrent ? 'btn-success text-white ring-2 ring-success/20 ring-offset-1' : 'btn-ghost bg-white/50 border border-slate-200 hover:bg-slate-100' }} rounded-full transition-all" />
+                            @endif
                         </div>
                     @endforeach
-                @endif
 
-                @if($isGenerating)
-                    <div class="flex justify-start">
-                        <div class="bg-white dark:bg-slate-900 border border-slate-100 dark:border-slate-800 rounded-2xl rounded-tl-none p-4 shadow-sm flex items-center gap-2">
-                             <span class="loading loading-dots loading-sm opacity-50"></span>
-                             <span class="text-xs text-slate-400 italic">AI sedang berpikir...</span>
+                    @if($isGenerating)
+                        <div class="flex flex-col items-start gap-1">
+                            <span class="text-[10px] text-slate-500 font-medium px-1">SIUBA AI</span>
+                            <div class="bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-2xl rounded-tl-sm p-4 shadow-sm w-32 flex justify-center">
+                                <span class="loading loading-dots loading-sm opacity-50"></span>
+                            </div>
+                        </div>
+                    @endif
+                </div>
+
+                {{-- Input Area --}}
+                <div class="p-3 bg-white dark:bg-slate-900 border-t border-slate-200 dark:border-slate-800 shrink-0">
+                    <form wire:submit="sendMessage" class="flex gap-2">
+                        <input type="text" wire:model="newMessage" 
+                            class="flex-1 bg-slate-100 dark:bg-slate-800 border-transparent focus:bg-white focus:text-black focus:border-primary/50 focus:ring-2 focus:ring-primary/20 rounded-xl px-4 text-sm dark:text-white"
+                            placeholder="Revisi modul ini... (misal: kurangi durasi waktunya)" :disabled="$isGenerating">
+                        <x-ui.button type="submit" icon="o-paper-airplane" class="btn-primary rounded-xl" 
+                            spinner="sendMessage" :disabled="$isGenerating" />
+                    </form>
+                </div>
+            </div>
+        </div>
+
+        {{-- Right Pane: Live Preview --}}
+        <div class="lg:col-span-7 flex flex-col min-h-0 bg-white dark:bg-slate-900 rounded-2xl shadow-sm border border-slate-200 dark:border-slate-800 overflow-hidden relative group">
+            
+            {{-- Preview Header --}}
+            <div class="p-3 border-b border-slate-200 dark:border-slate-800 bg-slate-50/50 dark:bg-slate-900 flex justify-between items-center shrink-0">
+                <div class="flex items-center gap-2 px-2">
+                    <div class="size-8 rounded bg-orange-100 dark:bg-orange-900/30 flex items-center justify-center text-orange-600 dark:text-orange-400">
+                        <x-ui.icon name="o-document-text" class="size-5" />
+                    </div>
+                    <div>
+                        <span class="font-bold text-sm block">Live Preview</span>
+                        <span class="text-[10px] text-slate-500">Tampilan dokumen PDF</span>
+                    </div>
+                </div>
+                
+                <div>
+                    @if($generatedContent)
+                        <x-ui.button wire:click="saveAndDownload" label="Unduh PDF" icon="o-cloud-arrow-down" 
+                            class="btn-success btn-sm text-white shadow-md animate-bounce hover:animate-none" spinner="saveAndDownload" />
+                    @else
+                        <x-ui.button label="Pilih Respon..." icon="o-document" 
+                            class="btn-disabled btn-sm" disabled />
+                    @endif
+                </div>
+            </div>
+
+            {{-- Preview Area --}}
+            <div class="flex-1 overflow-y-auto bg-slate-100 dark:bg-slate-950 p-4 sm:p-8">
+                @if($generatedContent)
+                    <div class="bg-white dark:bg-slate-900 min-h-full p-8 sm:p-12 shadow-sm rounded-lg border border-slate-200 dark:border-slate-800">
+                        <div class="prose prose-slate dark:prose-invert max-w-none prose-headings:text-slate-800 dark:prose-headings:text-slate-200 prose-a:text-primary">
+                            {!! \Illuminate\Support\Str::markdown($generatedContent) !!}
+                        </div>
+                    </div>
+                @else
+                    <div class="h-full flex flex-col items-center justify-center text-slate-400 space-y-4">
+                        <div class="size-32 rounded-full border-4 border-dashed border-slate-200 dark:border-slate-800 flex items-center justify-center">
+                            <x-ui.icon name="o-document-magnifying-glass" class="size-16 opacity-30" />
+                        </div>
+                        <div class="text-center max-w-sm">
+                            <h4 class="font-bold text-slate-600 dark:text-slate-400 text-lg mb-2">Area Preview Modul</h4>
+                            <p class="text-sm opacity-80">Setelah AI memberikan jawaban, klik tombol <b>"Terapkan & Lihat"</b> pada pesan AI untuk menampilkan hasil akhirnya di sini.</p>
                         </div>
                     </div>
                 @endif
             </div>
 
-            {{-- Input Area --}}
-            <div class="p-4 bg-white dark:bg-slate-900 border-t border-slate-200 dark:border-slate-800">
-                <form wire:submit="sendMessage" class="flex gap-2">
-                    <input type="text" wire:model="newMessage" 
-                        class="flex-1 bg-slate-50 dark:bg-slate-950 border-none focus:ring-2 focus:ring-primary/20 rounded-xl px-4 text-sm"
-                        placeholder="Ketik instruksi atau jawaban..." :disabled="empty($messages) || $isGenerating">
-                    <x-ui.button type="submit" icon="o-paper-airplane" class="btn-primary rounded-xl" 
-                        spinner="sendMessage" :disabled="empty($messages) || $isGenerating" />
-                </form>
-            </div>
         </div>
+
     </div>
 </div>
 
 <script>
     document.addEventListener('livewire:initialized', () => {
-        Livewire.on('scrollToBottom', () => {
+        const scrollToBottom = () => {
             setTimeout(() => {
                 const el = document.getElementById('chat-messages');
-                el.scrollTop = el.scrollHeight;
+                if(el) {
+                    el.scrollTop = el.scrollHeight;
+                }
             }, 50);
-        });
+        };
+        
+        Livewire.on('scrollToBottom', scrollToBottom);
+        window.addEventListener('update-chat-scroll', scrollToBottom);
     });
 </script>
