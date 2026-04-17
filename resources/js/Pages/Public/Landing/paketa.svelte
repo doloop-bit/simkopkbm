@@ -1,9 +1,16 @@
 <script>
     import { onMount } from 'svelte';
     import { fade, fly, scale } from 'svelte/transition';
+    import { Link } from '@inertiajs/svelte';
     import ElegantLayout from '../../../components/ElegantLayout.svelte';
 
     let { programName = 'Paket A (Setara SD)', programLogo = null } = $props();
+
+    const navLinks = [
+        { name: 'Beranda', href: '#beranda' },
+        { name: 'Visi', href: '#visi' },
+        { name: 'Kurikulum', href: '#kurikulum' },
+    ];
 
     let visible = $state(false);
     onMount(() => {
@@ -58,10 +65,53 @@
     <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@24,400,0,0" />
 </svelte:head>
 
-<ElegantLayout {programName} {programLogo}>
+<ElegantLayout {programName} {programLogo} {navLinks}>
+    {#snippet footer()}
+        <footer class="bg-elegant-primary text-white py-16 font-body border-t-8 border-elegant-accent">
+            <div class="max-w-7xl mx-auto px-6 md:px-12 grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-12">
+                <div class="space-y-6">
+                    <div class="text-2xl font-headline font-extrabold tracking-tight">
+                        {programName.split(' ')[0]} <span class="text-elegant-accent">{programName.split(' ').slice(1).join(' ')}</span>
+                    </div>
+                    <p class="text-emerald-100/70 text-sm leading-relaxed">
+                        Pendidikan berkualitas setara SD dengan penguatan karakter Islami dan metode pembelajaran modern yang menyenangkan. 
+                    </p>
+                </div>
+                
+                <div class="space-y-6">
+                    <h4 class="font-headline font-bold text-elegant-accent uppercase tracking-widest text-xs">Navigasi Landing</h4>
+                    <ul class="space-y-3">
+                        {#each navLinks as link}
+                            <li><a href={link.href} class="text-emerald-50/80 hover:text-elegant-accent transition-colors text-sm font-medium">{link.name}</a></li>
+                        {/each}
+                        <li><Link href="/pendaftaran" class="text-elegant-accent hover:text-white transition-colors text-sm font-bold">Daftar Sekarang →</Link></li>
+                    </ul>
+                </div>
+
+                <div class="space-y-6" id="kontak">
+                    <h4 class="font-headline font-bold text-elegant-accent uppercase tracking-widest text-xs">Hubungi Kami</h4>
+                    <p class="text-emerald-50/80 text-sm">Ingin konsultasi lebih lanjut? Tim kami siap membantu Anda.</p>
+                    <div class="flex flex-wrap gap-4">
+                        <a href="https://wa.me/6281234567890" target="_blank" class="px-6 py-3 bg-white/10 hover:bg-white/20 rounded-xl transition-all flex items-center gap-3 text-sm font-bold border border-white/10">
+                            <span class="material-symbols-outlined text-elegant-accent">chat</span> WhatsApp
+                        </a>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="max-w-7xl mx-auto px-6 md:px-12 mt-16 pt-8 border-t border-white/5 flex flex-col md:flex-row justify-between items-center gap-6 text-[11px] text-emerald-500/60 uppercase tracking-widest font-bold">
+                <div>© 2026 {programName}. Dedicated Landing Page.</div>
+                <div class="flex gap-8">
+                    <Link href="/" class="hover:text-white transition-colors">Main Website</Link>
+                    <Link href="/pendaftaran" class="hover:text-white transition-colors">Pendaftaran</Link>
+                </div>
+            </div>
+        </footer>
+    {/snippet}
+
     {#if visible}
         <!-- Hero Section -->
-        <header class="relative min-h-[800px] flex items-center overflow-hidden bg-elegant-surface">
+        <header id="beranda" class="relative min-h-[800px] flex items-center overflow-hidden bg-elegant-surface">
             <div class="absolute inset-0 z-0">
                 <img class="w-full h-full object-cover opacity-20 scale-105" alt="Background" src="https://lh3.googleusercontent.com/aida-public/AB6AXuCdO8cP0243B64iV90_JzutnDPhNVHs8nCvY3utGulgeWCvaAxXYN_pLGbNbNaYqzjSMJOAEEGugS0m5PY-t6XZPnlzpyIWu5ew3JYgcEXPIUuf84SBK1aBLpCaJSJ_yuxWofQR3SutYnbHwJU8VGpJX_XtIuHsDpcYQBRLqmt4E2rZjICxdtbWcxJpdQrgNDpvB05fy56SIlQVTg-j2-hH6XGmMZ_z722UTPXRyrc-bQPcYnT8oScTeszIHvxrKtpkFKkehP8FM1xn"/>
                 <div class="absolute inset-0 bg-gradient-to-r from-elegant-surface via-elegant-surface/80 to-transparent"></div>
@@ -79,14 +129,14 @@
                         Mengintegrasikan kurikulum akademik unggulan dengan pembinaan akhlak mulia dan nilai-nilai Islami untuk mencetak pemimpin masa depan yang bertaqwa dan kompetitif.
                     </p>
                     <div class="flex flex-wrap gap-4 pt-4">
-                        <button class="elegant-btn-accent !px-10 !py-4">
+                        <Link href="/pendaftaran" class="elegant-btn-accent !px-10 !py-4 inline-block">
                             Daftar Sekarang
-                        </button>
-                        <button class="flex items-center gap-2 px-10 py-4 rounded-xl font-bold text-elegant-primary group relative overflow-hidden">
+                        </Link>
+                        <a href="#kurikulum" class="flex items-center gap-2 px-10 py-4 rounded-xl font-bold text-elegant-primary group relative overflow-hidden">
                             Pelajari Kurikulum
                             <span class="w-0 h-[2px] bg-elegant-accent group-hover:w-full transition-all duration-500 block absolute bottom-4 left-10"></span>
                             <span class="material-symbols-outlined text-elegant-accent group-hover:translate-x-1 transition-transform">arrow_forward</span>
-                        </button>
+                        </a>
                     </div>
                 </div>
                 
@@ -105,7 +155,7 @@
         </header>
 
         <!-- Vision Section -->
-        <section class="py-24 bg-[#f3f5f4] border-y border-elegant-accent-light/30">
+        <section id="visi" class="py-24 bg-[#f3f5f4] border-y border-elegant-accent-light/30">
             <div class="max-w-7xl mx-auto px-6 md:px-12">
                 <div class="grid grid-cols-1 lg:grid-cols-3 gap-12">
                     <div class="lg:col-span-1">
@@ -131,7 +181,7 @@
         </section>
 
         <!-- Programs Grid -->
-        <section class="py-24 bg-elegant-surface">
+        <section id="kurikulum" class="py-24 bg-elegant-surface">
             <div class="max-w-7xl mx-auto px-6 md:px-12">
                 <div class="text-center mb-16 space-y-4">
                     <span class="font-headline text-elegant-accent font-bold tracking-widest uppercase text-xs">Program Unggulan</span>
@@ -193,9 +243,9 @@
                             Mari bergabung dengan keluarga besar kami. Kami membatasi kuota peserta untuk memastikan setiap anak mendapat perhatian terbaik.
                         </p>
                         <div class="flex flex-wrap justify-center gap-6">
-                            <button class="elegant-btn-accent !px-12 !py-5 !text-lg !bg-white !text-elegant-primary !border-none hover:!bg-elegant-accent-light">
-                                Hubungi Konsultan 💬
-                            </button>
+                            <Link href="/pendaftaran" class="elegant-btn-accent !px-12 !py-5 !text-lg !bg-white !text-elegant-primary !border-none hover:!bg-elegant-accent-light">
+                                Daftar Sekarang ✨
+                            </Link>
                             <button class="px-12 py-5 rounded-xl font-bold border-2 border-white/30 hover:bg-white/10 transition-all">
                                 Download Brosur
                             </button>
