@@ -8,7 +8,7 @@ use Livewire\Attributes\Layout;
 use Livewire\Component;
 use Livewire\WithPagination;
 
-new #[Layout('components.admin.layouts.app')] class extends Component {
+new #[Layout('components.layouts.app')] class extends Component {
     use WithPagination;
 
     public string $search = '';
@@ -284,16 +284,20 @@ new #[Layout('components.admin.layouts.app')] class extends Component {
             @scope('cell_reg_status', $reg)
                 <div class="flex justify-center">
                     @php
-                        $statusClasses = [
-                            'pending' => 'bg-amber-50 text-amber-600 ring-amber-100',
-                            'accepted' => 'bg-sky-50 text-sky-600 ring-sky-100',
-                            'enrolled' => 'bg-emerald-50 text-emerald-600 ring-emerald-100',
-                            'rejected' => 'bg-rose-50 text-rose-600 ring-rose-100',
-                        ];
+                        $variant = match($reg->status) {
+                            'pending' => 'amber',
+                            'accepted' => 'sky',
+                            'enrolled' => 'emerald',
+                            'rejected' => 'rose',
+                            default => 'neutral'
+                        };
                     @endphp
                     <x-ui.badge 
                         :label="strtoupper($reg->status_label)" 
-                        class="border-none font-black italic text-[9px] px-3 py-1 ring-1 shadow-sm {{ $statusClasses[$reg->status] ?? 'bg-slate-50 text-slate-400 ring-slate-100' }}" 
+                        :variant="$variant"
+                        flat
+                        size="xs"
+                        class="px-3"
                     />
                 </div>
             @endscope
@@ -394,7 +398,7 @@ new #[Layout('components.admin.layouts.app')] class extends Component {
                                 </div>
                                 <div>
                                     <label class="text-[10px] font-black italic text-slate-400 uppercase tracking-widest mb-1 block">{{ __('Target Jenjang') }}</label>
-                                    <x-ui.badge :label="$viewing->preferredLevel?->name ?? '---'" class="bg-indigo-50 text-indigo-600 border-none font-black italic text-[10px] tracking-tighter" />
+                                    <x-ui.badge :label="$viewing->preferredLevel?->name ?? '---'" variant="indigo" flat size="xs" />
                                 </div>
                             </div>
                             <div>

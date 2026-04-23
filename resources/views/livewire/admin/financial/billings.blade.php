@@ -11,7 +11,7 @@ use Livewire\Attributes\Layout;
 use Livewire\Component;
 use Livewire\WithPagination;
 
-new #[Layout('components.admin.layouts.app')] class extends Component {
+new #[Layout('components.layouts.app')] class extends Component {
     use WithPagination;
 
     public ?int $academic_year_id = null;
@@ -201,32 +201,32 @@ new #[Layout('components.admin.layouts.app')] class extends Component {
         >
             @scope('cell_student_name', $billing)
                 <div class="flex flex-col">
-                    <span class="font-bold text-slate-900 dark:text-white">{{ $billing->student?->name ?? __('Siswa Dihapus') }}</span>
-                    <span class="text-[10px] text-slate-400 font-mono tracking-tighter">{{ $billing->student?->profiles?->first()?->profileable?->name ?? '-' }}</span>
+                    <span class="font-semibold text-slate-900 dark:text-white">{{ $billing->student?->name ?? __('Siswa Dihapus') }}</span>
+                    <span class="text-[11px] text-slate-500 font-mono italic">{{ $billing->student?->profiles?->first()?->profileable?->name ?? '-' }}</span>
                 </div>
             @endscope
 
             @scope('cell_category', $billing)
-                <span class="text-xs text-slate-500 font-medium uppercase tracking-tight">{{ $billing->feeCategory?->name ?? __('Kategori Dihapus') }}</span>
+                <span class="text-xs text-slate-600 dark:text-slate-400 font-medium tracking-wide uppercase">{{ $billing->feeCategory?->name ?? __('Kategori Dihapus') }}</span>
             @endscope
 
             @scope('cell_month_label', $billing)
-                <span class="text-xs font-black text-slate-400 font-mono">{{ $billing->month ?? '-' }}</span>
+                <span class="text-xs font-semibold text-slate-500 font-mono uppercase">{{ $billing->month ?? '-' }}</span>
             @endscope
 
             @scope('cell_amount_label', $billing)
-                <span class="font-mono text-sm font-bold text-slate-700 dark:text-slate-300 italic ring-1 ring-slate-100 dark:ring-slate-800 px-2 py-0.5 rounded-lg bg-slate-50 dark:bg-slate-900/50">
+                <span class="font-mono text-sm font-bold text-slate-900 dark:text-white whitespace-nowrap px-2 py-1 bg-slate-50 dark:bg-slate-900/50 rounded-lg ring-1 ring-slate-100 dark:ring-slate-800">
                     Rp {{ number_format($billing->amount, 0, ',', '.') }}
                 </span>
             @endscope
 
             @scope('cell_status_label', $billing)
                 @if($billing->status === 'paid')
-                    <x-ui.badge :label="strtoupper($billing->status)" class="bg-emerald-100 text-emerald-700 border-none text-[8px] font-black px-2 py-0.5" />
+                    <x-ui.badge :label="strtoupper($billing->status)" class="bg-emerald-100 text-emerald-700 border-none text-[10px] font-bold px-2 py-0.5 tracking-wider" />
                 @elseif($billing->status === 'partial')
-                    <x-ui.badge :label="strtoupper($billing->status)" class="bg-amber-100 text-amber-700 border-none text-[8px] font-black px-2 py-0.5" />
+                    <x-ui.badge :label="strtoupper($billing->status)" class="bg-amber-100 text-amber-700 border-none text-[10px] font-bold px-2 py-0.5 tracking-wider" />
                 @else
-                    <x-ui.badge :label="strtoupper($billing->status)" class="bg-rose-100 text-rose-700 border-none text-[8px] font-black px-2 py-0.5" />
+                    <x-ui.badge :label="strtoupper($billing->status)" class="bg-rose-100 text-rose-700 border-none text-[10px] font-bold px-2 py-0.5 tracking-wider" />
                 @endif
             @endscope
         </x-ui.table>
@@ -251,7 +251,7 @@ new #[Layout('components.admin.layouts.app')] class extends Component {
             <x-ui.input wire:model="month" type="month" :label="__('Bulan Tagihan')" :placeholder="__('Hanya untuk biaya bulanan/SPP')" />
             <x-ui.input wire:model="amount" type="number" :label="__('Nominal Tagihan (Rp)')" icon="o-banknotes" required />
             
-            <x-ui.alert icon="o-information-circle" class="bg-blue-50 text-blue-700 border-blue-100 mt-4 font-medium text-[10px]">
+            <x-ui.alert icon="o-information-circle" class="bg-blue-50 text-blue-700 border-blue-100 mt-4 font-medium text-xs leading-relaxed">
                 {{ __('Sistem akan menerapkan potongan/beasiswa secara otomatis berdasarkan profil siswa yang terdaftar.') }}
             </x-ui.alert>
         </div>

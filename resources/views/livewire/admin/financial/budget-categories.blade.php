@@ -113,23 +113,23 @@ new class extends Component {
             :rows="$categories"
         >
             @scope('cell_code_label', $category)
-                <span class="font-mono text-xs font-black text-indigo-600 italic bg-indigo-50 px-2 py-0.5 rounded shadow-sm ring-1 ring-indigo-100">
+                <span class="font-mono text-[11px] font-bold text-indigo-700 bg-indigo-50/50 px-2 py-0.5 rounded ring-1 ring-indigo-100">
                     {{ $category->code }}
                 </span>
             @endscope
 
             @scope('cell_name', $category)
-                <span class="font-bold text-slate-900 dark:text-white">{{ $category->name }}</span>
+                <span class="font-semibold text-slate-900 dark:text-white">{{ $category->name }}</span>
             @endscope
 
             @scope('cell_description', $category)
-                <span class="text-xs text-slate-500 italic">{{ $category->description ?? '-' }}</span>
+                <span class="text-xs text-slate-500 leading-relaxed">{{ $category->description ?? '-' }}</span>
             @endscope
 
             @scope('cell_status_label', $category)
                 <x-ui.badge 
                     :label="$category->is_active ? __('Aktif') : __('Non-Aktif')" 
-                    class="{{ $category->is_active ? 'bg-emerald-50 text-emerald-700' : 'bg-rose-50 text-rose-700' }} border-none text-[8px] font-black italic tracking-widest px-2 py-0.5" 
+                    class="{{ $category->is_active ? 'bg-emerald-50 text-emerald-700' : 'bg-rose-50 text-rose-700' }} border-none text-[10px] font-bold px-2 py-0.5 tracking-wider" 
                 />
             @endscope
 

@@ -1,8 +1,10 @@
 <?php
 
+declare(strict_types=1);
+
 use App\Models\User;
 use Laravel\Fortify\Features;
-use Livewire\Volt\Volt;
+use Livewire\Livewire;
 
 beforeEach(function () {
     if (! Features::canManageTwoFactorAuthentication()) {
@@ -13,6 +15,8 @@ beforeEach(function () {
         'confirm' => true,
         'confirmPassword' => true,
     ]);
+
+    $this->withoutVite();
 });
 
 test('two factor settings page can be rendered', function () {
@@ -58,9 +62,8 @@ test('two factor authentication disabled when confirmation abandoned between req
 
     $this->actingAs($user);
 
-    $component = Volt::test('settings.two-factor');
-
-    $component->assertSet('twoFactorEnabled', false);
+    Livewire::test('admin.settings.two-factor')
+        ->assertSet('twoFactorEnabled', false);
 
     $this->assertDatabaseHas('users', [
         'id' => $user->id,

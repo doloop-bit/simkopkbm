@@ -9,7 +9,16 @@ Route::middleware(['auth', 'verified'])->group(function () {
     })->name('admin.report-card.index');
 
     Route::livewire('admin/report-card/create', 'admin.report-card.create')
+        ->middleware('role:admin')
         ->name('admin.report-card.create');
-    Route::livewire('admin/report-card/grading', 'admin.assessments.grading')
+
+    Route::livewire('admin/report-card/grading', 'shared.assessments.grading')
         ->name('admin.report-card.grading');
+
+    Route::livewire('admin/report-card/diniyah-grading', 'admin.report-card.diniyah-grading')
+        ->name('admin.report-card.diniyah-grading');
+
+    Route::livewire('admin/report-card/diniyah', 'admin.report-card.diniyah-create')
+        ->middleware('role:admin')
+        ->name('admin.report-card.diniyah');
 });

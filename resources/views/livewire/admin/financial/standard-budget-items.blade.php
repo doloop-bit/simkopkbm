@@ -135,15 +135,15 @@ new class extends Component {
             @endscope
 
             @scope('cell_category_name', $item)
-                <x-ui.badge :label="$item->category->name" class="bg-indigo-50 text-indigo-600 border-none text-[8px] font-black italic shadow-sm" />
+                <x-ui.badge :label="$item->category->name" class="bg-indigo-50 text-indigo-700 border-none text-[10px] font-bold px-2 py-0.5 tracking-wide" />
             @endscope
 
             @scope('cell_unit_label', $item)
-                <span class="text-[10px] font-black text-slate-400 uppercase tracking-widest">{{ $item->unit }}</span>
+                <span class="text-[11px] font-semibold text-slate-500 uppercase tracking-wider">{{ $item->unit }}</span>
             @endscope
 
             @scope('cell_price_label', $item)
-                <span class="font-mono text-sm font-black text-slate-700 dark:text-slate-300 italic tracking-tighter">
+                <span class="font-mono text-sm font-bold text-slate-900 dark:text-white white-space-nowrap">
                     {{ $item->default_price ? 'Rp ' . number_format($item->default_price, 0, ',', '.') : '-' }}
                 </span>
             @endscope
@@ -151,7 +151,7 @@ new class extends Component {
             @scope('cell_status_label', $item)
                 <x-ui.badge 
                     :label="$item->is_active ? __('Aktif') : __('Non-Aktif')" 
-                    class="{{ $item->is_active ? 'bg-emerald-50 text-emerald-700' : 'bg-rose-50 text-rose-700' }} border-none text-[8px] font-black italic tracking-widest px-2 py-0.5" 
+                    class="{{ $item->is_active ? 'bg-emerald-50 text-emerald-700' : 'bg-rose-50 text-rose-700' }} border-none text-[10px] font-bold px-2 py-0.5 tracking-wider" 
                 />
             @endscope
 

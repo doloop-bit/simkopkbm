@@ -2,9 +2,7 @@
 
 namespace Database\Factories;
 
-use App\Models\AcademicYear;
 use App\Models\Classroom;
-use App\Models\Level;
 use Illuminate\Database\Eloquent\Factories\Factory;
 
 /**
@@ -23,8 +21,8 @@ class ClassroomFactory extends Factory
     {
         return [
             'name' => 'Kelas '.fake()->randomLetter(),
-            'academic_year_id' => AcademicYear::factory(),
-            'level_id' => Level::factory(),
+            'academic_year_id' => \App\Models\AcademicYear::where('is_active', true)->first() ?? \App\Models\AcademicYear::factory(),
+            'level_id' => \App\Models\Level::inRandomOrder()->first() ?? \App\Models\Level::factory(),
         ];
     }
 }

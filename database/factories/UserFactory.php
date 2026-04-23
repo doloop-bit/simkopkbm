@@ -2,12 +2,16 @@
 
 namespace Database\Factories;
 
+use App\Models\Profile;
+use App\Models\Role;
+use App\Models\StudentProfile;
+use App\Models\User;
 use Illuminate\Database\Eloquent\Factories\Factory;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Str;
 
 /**
- * @extends \Illuminate\Database\Eloquent\Factories\Factory<\App\Models\User>
+ * @extends Factory<User>
  */
 class UserFactory extends Factory
 {
@@ -64,7 +68,12 @@ class UserFactory extends Factory
     {
         return $this->state(fn (array $attributes) => [
             'role' => 'admin',
-        ]);
+        ])->afterCreating(function (User $user) {
+            $role = Role::where('slug', 'admin')->first();
+            if ($role) {
+                $user->roles()->syncWithoutDetaching([$role->id]);
+            }
+        });
     }
 
     /**
@@ -74,6 +83,80 @@ class UserFactory extends Factory
     {
         return $this->state(fn (array $attributes) => [
             'role' => 'guru',
-        ]);
+        ])->afterCreating(function (User $user) {
+            $role = Role::where('slug', 'guru')->first();
+            if ($role) {
+                $user->roles()->syncWithoutDetaching([$role->id]);
+            }
+        });
+    }
+
+    /**
+     * Indicate that the user is a student (siswa).
+     */
+    public function siswa(): static
+    {
+        return $this->state(fn (array $attributes) => [
+            'role' => 'siswa',
+        ])->afterCreating(function (User $user) {
+            $role = Role::where('slug', 'siswa')->first();
+            if ($role) {
+                $user->roles()->syncWithoutDetaching([$role->id]);
+            }
+
+            if (! $user->profiles()->exists()) {
+                $studentProfile = StudentProfile::factory()->create();
+                Profile::create([
+                    'user_id' => $user->id,
+                    'profileable_type' => StudentProfile::class,
+                    'profileable_id' => $studentProfile->id,
+                ]);
+            }
+        });
+    }
+
+    /**
+     * Indicate that the user is a treasurer (bendahara).
+     */
+    public function bendahara(): static
+    {
+        return $this->state(fn (array $attributes) => [
+            'role' => 'bendahara',
+        ])->afterCreating(function (User $user) {
+            $role = Role::where('slug', 'bendahara')->first();
+            if ($role) {
+                $user->roles()->syncWithoutDetaching([$role->id]);
+            }
+        });
+    }
+
+    /**
+     * Indicate that the user is a headmaster (kepsek).
+     */
+    public function kepsek(): static
+    {
+        return $this->state(fn (array $attributes) => [
+            'role' => 'kepsek',
+        ])->afterCreating(function (User $user) {
+            $role = Role::where('slug', 'kepsek')->first();
+            if ($role) {
+                $user->roles()->syncWithoutDetaching([$role->id]);
+            }
+        });
+    }
+
+    /**
+     * Indicate that the user is foundation (yayasan).
+     */
+    public function yayasan(): static
+    {
+        return $this->state(fn (array $attributes) => [
+            'role' => 'yayasan',
+        ])->afterCreating(function (User $user) {
+            $role = Role::where('slug', 'yayasan')->first();
+            if ($role) {
+                $user->roles()->syncWithoutDetaching([$role->id]);
+            }
+        });
     }
 }

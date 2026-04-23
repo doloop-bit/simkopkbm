@@ -155,13 +155,14 @@ describe('Gallery Management Route Access', function () {
 
         // Test that non-admin cannot access gallery management
         $this->actingAs($user)
-            ->get('/admin/galeri')
+            ->get(route('admin.gallery.index'))
             ->assertForbidden();
     });
 
     test('allows admin to access gallery management', function () {
         $this->actingAs($this->admin)
-            ->get('/admin/galeri')
-            ->assertSuccessful();
+            ->get(route('admin.gallery.index'))
+            ->assertSuccessful()
+            ->assertSeeLivewire('admin.web-content.gallery.index');
     });
 });

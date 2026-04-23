@@ -21,10 +21,26 @@
          class="absolute bottom-full left-0 mb-2 rounded-xl border border-slate-700 bg-slate-800 shadow-xl py-1 z-[900] overflow-hidden"
          :class="sidebarCollapsed ? 'min-w-48' : 'right-0'"
     >
-        <a href="{{ route('profile.edit') }}" wire:navigate class="flex items-center gap-2 px-4 py-2 text-sm text-slate-300 hover:bg-slate-700 transition-colors">
+        <div class="px-4 py-2 border-b border-slate-700 bg-slate-900/50">
+            <div class="text-[10px] uppercase font-black text-slate-500 tracking-widest mb-1">{{ __('Mode Akses') }}</div>
+            <div class="flex items-center gap-2">
+                <div class="size-2 rounded-full bg-emerald-500 animate-pulse"></div>
+                <div class="text-sm font-bold text-white">{{ auth()->user()->activeRole()?->name ?? auth()->user()->role }}</div>
+            </div>
+        </div>
+
+        <a href="{{ route('profile.edit') }}" wire:navigate class="flex items-center gap-2 px-4 py-2 text-sm text-slate-300 hover:bg-slate-700 transition-colors mt-1">
             <x-ui.icon name="o-cog-6-tooth" class="w-4 h-4" />
             Settings
         </a>
+
+        @if(auth()->user()->hasMultipleRoles())
+            <a href="{{ route('select-role') }}" wire:navigate class="flex items-center gap-2 px-4 py-2 text-sm text-emerald-400 hover:bg-slate-700 transition-colors">
+                <x-ui.icon name="o-arrow-path" class="w-4 h-4" />
+                Ganti Role
+            </a>
+        @endif
+
         <div class="border-t border-slate-700 my-1"></div>
         <form method="POST" action="{{ route('logout') }}">
             @csrf

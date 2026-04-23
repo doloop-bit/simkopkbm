@@ -17,18 +17,33 @@ Route::middleware(['auth', 'verified', 'role:guru'])->prefix('teacher')->name('t
     // Dashboard
     Route::livewire('/dashboard', 'teacher.dashboard')->name('dashboard');
 
-    // Students - filtered by assigned classrooms
+    // Data Master
+    Route::livewire('/profile', 'teacher.profile')->name('profile');
     Route::livewire('/students', 'teacher.data-master.students.index')->name('students.index');
+
+    // Academic
+    Route::livewire('/subjects', 'shared.academic.subjects')->name('academic.subjects');
+    Route::livewire('/diniyah-subjects', 'shared.academic.diniyah-subjects')->name('academic.diniyah-subjects');
+    Route::livewire('/extracurriculars', 'shared.academic.extracurriculars')->name('academic.extracurriculars');
 
     // Report Card & Assessments
     Route::livewire('/report-cards', 'teacher.report-card.index')->name('report-cards');
 
     // Assessments - filtered by assigned classrooms
-    Route::livewire('/assessments/grading', 'teacher.assessments.grading')
+    Route::livewire('/assessments/grading', 'shared.assessments.grading')
         ->name('assessments.grading');
-    Route::livewire('/assessments/extracurricular', 'teacher.assessments.extracurricular')
+    Route::livewire('/assessments/diniyah', 'teacher.assessments.diniyah-grading')
+        ->name('assessments.diniyah');
+    Route::livewire('/assessments/extracurricular', 'shared.assessments.extracurricular')
         ->name('assessments.extracurricular');
     Route::livewire('/assessments/paud', 'teacher.report-card.paud.developmental')->name('assessments.paud');
-    Route::livewire('/assessments/attendance', 'teacher.assessments.attendance')->name('assessments.attendance'); // Rekap Rapor
-    Route::livewire('/attendance/daily', 'teacher.attendance.daily')->name('attendance.daily'); // Presensi Harian
+    Route::livewire('/assessments/attendance', 'shared.assessments.attendance')->name('assessments.attendance'); // Rekap Rapor
+    Route::livewire('/attendance/daily', 'shared.attendance.daily')->name('attendance.daily'); // Presensi Harian
+
+    // AI Modul Ajar
+    Route::prefix('modul-ajar')->name('modul-ajar.')->group(function () {
+        Route::livewire('/', 'teacher.modul-ajar.index')->name('index');
+        Route::livewire('/create', 'teacher.modul-ajar.create')->name('create');
+        Route::livewire('/{id}', 'teacher.modul-ajar.show')->name('show');
+    });
 });

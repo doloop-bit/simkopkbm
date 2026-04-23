@@ -74,7 +74,7 @@ class CacheService
             return Program::active()
                 ->ordered()
                 ->with('level')
-                ->select(['id', 'level_id', 'name', 'slug', 'description', 'image_path', 'order'])
+                ->select(['id', 'level_id', 'name', 'slug', 'description', 'image_path', 'logo_path', 'order'])
                 ->get();
         });
     }

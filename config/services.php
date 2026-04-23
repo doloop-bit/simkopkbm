@@ -43,4 +43,9 @@ return [
         'api_url' => env('WILAYAH_API_URL', 'https://emsifa.github.io/api-wilayah-indonesia/api'),
     ],
 
+    'gemini' => [
+        'api_key' => env('GEMINI_API_KEY'),
+        'model' => env('GEMINI_MODEL', 'gemini-2.0-flash'),
+    ],
+
 ];

@@ -14,7 +14,7 @@ test('admin navigation includes CMS links', function () {
     ]);
 
     $this->actingAs($user)
-        ->get(route('dashboard'))
+        ->get(route('admin.school-profile.edit'))
         ->assertOk()
         ->assertSee('Profil Sekolah')
         ->assertSee('Berita & Artikel')
