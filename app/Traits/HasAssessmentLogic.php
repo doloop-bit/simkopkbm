@@ -32,12 +32,14 @@ trait HasAssessmentLogic
                 $classroom = Classroom::find($classroomId);
                 if ($classroom) {
                     $phase = $classroom->getPhase();
-                    $query->where(function ($q) use ($phase) {
-                        $q->whereNull('phase');
-                        if ($phase) {
-                            $q->orWhere('phase', $phase);
-                        }
-                    });
+
+                    if ($phase) {
+                        $query->where(function ($q) use ($phase) {
+                            $q->whereNull('phase')->orWhere('phase', $phase);
+                        });
+                    }
+                    // If no phase, we don't strictly filter out all phased subjects
+                    // as it implies the classroom's class_level isn't set yet.
                 }
             })
             ->when($user->isGuru(), fn ($q) => $q->whereIn('id', $user->getAssignedSubjectIds()))

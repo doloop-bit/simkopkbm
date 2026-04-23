@@ -118,6 +118,7 @@ class DummyDataSeeder extends Seeder
                 ],
                 [
                     'name' => 'Kelas 1 - '.$level->name,
+                    'class_level' => 1,
                 ]
             );
 

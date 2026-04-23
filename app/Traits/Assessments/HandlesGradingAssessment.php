@@ -30,6 +30,8 @@ trait HandlesGradingAssessment
     // Phase info for display
     public ?string $currentPhase = null;
 
+    protected ?\Illuminate\Database\Eloquent\Collection $cachedTps = null;
+
     public function mountHandlesGradingAssessment(): void
     {
         $activeYear = AcademicYear::where('is_active', true)->first();
@@ -199,8 +201,14 @@ trait HandlesGradingAssessment
 
     public function getFilteredTps()
     {
+        if ($this->cachedTps !== null) {
+            return $this->cachedTps;
+        }
+
         if (! $this->subject_id) {
-            return collect();
+            $this->cachedTps = new \Illuminate\Database\Eloquent\Collection;
+
+            return $this->cachedTps;
         }
 
         if ($this->currentPhase) {
@@ -209,15 +217,21 @@ trait HandlesGradingAssessment
                 ->first();
 
             if ($cp) {
-                return $cp->tps()->orderBy('code')->get();
+                $this->cachedTps = $cp->tps()->orderBy('code')->get();
+
+                return $this->cachedTps;
             }
 
-            return collect();
+            $this->cachedTps = new \Illuminate\Database\Eloquent\Collection;
+
+            return $this->cachedTps;
         }
 
-        return SubjectTp::whereHas('learningAchievement', function ($q) {
+        $this->cachedTps = SubjectTp::whereHas('learningAchievement', function ($q) {
             $q->where('subject_id', $this->subject_id);
         })->orderBy('code')->get();
+
+        return $this->cachedTps;
     }
 
     public function with(): array

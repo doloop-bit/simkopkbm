@@ -71,7 +71,7 @@
                             max="100" 
                             step="1" 
                             class="text-center font-black text-sm !w-24 !py-1.5 bg-slate-50 border-none shadow-sm ring-1 ring-slate-200" 
-                            :readonly="$isReadonly"
+                            :readonly="!$this->canEditAssessments()"
                         />
                     </div>
                 @endscope
@@ -79,10 +79,10 @@
                 @scope('cell_best_tp', $student)
                     <x-ui.select
                         wire:model="grades_data.{{ $student->id }}.best_tp_ids"
-                        :options="$tps"
+                        :options="$this->getFilteredTps()"
                         option-label="code"
                         :placeholder="__('Pilih TP Terbaik...')"
-                        :disabled="$isReadonly"
+                        :disabled="!$this->canEditAssessments()"
                         class="!py-1.5 !text-[10px] font-bold"
                         multiple
                     />
@@ -91,10 +91,10 @@
                 @scope('cell_improvement_tp', $student)
                     <x-ui.select
                         wire:model="grades_data.{{ $student->id }}.improvement_tp_ids"
-                        :options="$tps"
+                        :options="$this->getFilteredTps()"
                         option-label="code"
                         :placeholder="__('Pilih TP Lemah...')"
-                        :disabled="$isReadonly"
+                        :disabled="!$this->canEditAssessments()"
                         class="!py-1.5 !text-[10px] font-bold"
                         multiple
                     />

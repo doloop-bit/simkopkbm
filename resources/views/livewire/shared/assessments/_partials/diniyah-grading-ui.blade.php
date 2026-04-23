@@ -49,6 +49,7 @@
                             min="0" max="100" step="0.01"
                             class="!py-1 font-bold text-center !w-20"
                             placeholder="0-100"
+                            :readonly="!$this->canEditAssessments()"
                         />
                     </div>
                 @endscope
@@ -61,6 +62,7 @@
                             min="0" max="100" step="0.01"
                             class="!py-1 font-bold text-center !w-20"
                             placeholder="0-100"
+                            :readonly="!$this->canEditAssessments()"
                         />
                     </div>
                 @endscope
@@ -76,6 +78,7 @@
                                 ['id' => 'D', 'name' => 'D'],
                             ]" 
                             class="!py-1 font-black !w-16 text-center"
+                            :disabled="!$this->canEditAssessments()"
                         />
                     </div>
                 @endscope
@@ -86,6 +89,7 @@
                         wire:model="grades_data.{{ $student->id }}.achievement" 
                         placeholder="Contoh: Hafal 4 surat"
                         class="!py-1 text-sm border-none bg-slate-50/50"
+                        :readonly="!$this->canEditAssessments()"
                     />
                 @endscope
 
@@ -97,6 +101,7 @@
                             min="0" max="100" step="0.01"
                             class="!py-1 font-bold text-center !w-20"
                             placeholder="0-100"
+                            :readonly="!$this->canEditAssessments()"
                         />
                     </div>
                 @endscope
@@ -111,6 +116,7 @@
                             ]" 
                             class="!py-1 font-bold !w-28 text-sm"
                             placeholder="Pilih..."
+                            :disabled="!$this->canEditAssessments()"
                         />
                     </div>
                 @endscope

@@ -200,7 +200,20 @@ new #[Layout('components.layouts.app')] class extends Component {
                 
                 <div class="grid grid-cols-2 gap-4">
                     <x-ui.input wire:model="code" :label="__('Kode Mapel')" :placeholder="__('e.g. MAT-01')" />
-                    <x-ui.input wire:model="phase" :label="__('Fase (Kurikulum Merdeka)')" :placeholder="__('e.g. A, B, C, D')" />
+                    <x-ui.select 
+                        wire:model="phase" 
+                        :label="__('Fase (Kurikulum Merdeka)')" 
+                        :options="[
+                            ['id' => 'Fondasi', 'name' => 'Fase Fondasi (PAUD)'],
+                            ['id' => 'A', 'name' => 'Fase A (Kelas 1-2)'],
+                            ['id' => 'B', 'name' => 'Fase B (Kelas 3-4)'],
+                            ['id' => 'C', 'name' => 'Fase C (Kelas 5-6)'],
+                            ['id' => 'D', 'name' => 'Fase D (SMP)'],
+                            ['id' => 'E', 'name' => 'Fase E (Kelas 10)'],
+                            ['id' => 'F', 'name' => 'Fase F (Kelas 11-12)'],
+                        ]"
+                        :placeholder="__('Pilih Fase')" 
+                    />
                 </div>
 
                 <x-ui.textarea wire:model="description" :label="__('Keterangan (Opsional)')" rows="3" :placeholder="__('Deskripsi singkat mata pelajaran...')" />
