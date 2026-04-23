@@ -18,27 +18,55 @@ class ProgramFactory extends Factory
      */
     public function definition(): array
     {
-        $descriptions = [
-            'Program pendidikan untuk anak usia 3-6 tahun yang dirancang untuk mengembangkan potensi anak sejak dini.',
-            'Program pendidikan kesetaraan yang memberikan kesempatan kepada masyarakat untuk menyelesaikan pendidikan.',
-            'Program pendidikan kesetaraan yang dirancang untuk memberikan kesempatan melanjutkan pendidikan.',
-            'Program pendidikan kesetaraan yang memberikan kesempatan menyelesaikan pendidikan menengah.',
-        ];
-
-        $name = fake()->unique()->words(3, true);
-
         return [
             'level_id' => Level::factory(),
-            'name' => $name,
-            'slug' => Str::slug($name).'-'.fake()->unique()->randomNumber(4),
-            'description' => fake()->randomElement($descriptions),
-            'curriculum_overview' => fake()->optional()->paragraph(),
-            'duration' => fake()->randomElement(['1 tahun', '2 tahun', '2-3 tahun', '3 tahun']),
-            'requirements' => fake()->optional()->sentence(),
+            'name' => 'Program '.fake()->company(),
+            'slug' => fn (array $attributes) => Str::slug($attributes['name']).'-'.fake()->unique()->randomNumber(4),
+            'description' => fake()->paragraph(),
+            'curriculum_overview' => 'Fokus pada pengembangan karakter, literasi numerasi, dan penguatan Profil Pelajar Pancasila.',
+            'duration' => fake()->randomElement(['1 Tahun', '2 Semester', '6 Bulan (Intensif)']),
+            'requirements' => 'FC Ijazah Terakhir, Akta Kelahiran, Kartu Keluarga, dan Pas Foto 3x4.',
             'image_path' => null,
-            'order' => fake()->numberBetween(1, 10),
+            'logo_path' => null,
+            'order' => fake()->unique()->numberBetween(1, 100),
             'is_active' => true,
         ];
+    }
+
+    /**
+     * Set a realistic program based on education type.
+     */
+    public function levelSpecific(): static
+    {
+        return $this->state(function (array $attributes) {
+            $level = Level::find($attributes['level_id']) ?? Level::factory()->create();
+            $name = 'Program '.$level->name.' '.fake()->randomElement(['Unggulan', 'Reguler', 'Intensif', 'Digital']);
+
+            $desc = match (strtolower($level->education_level)) {
+                'paud' => 'Fokus pada pengembangan motorik, sosial-emosional, dan persiapan transisi menuju pendidikan dasar.',
+                'sd' => 'Penguatan literasi dasar, numerasi, dan karakter melalui pendekatan Kurikulum Merdeka yang menyenangkan.',
+                'smp' => 'Pendalaman materi akademik dasar dan pengembangan minat bakat melalui berbagai proyek kreatif.',
+                'sma' => 'Persiapan matang menuju pendidikan tinggi atau dunia kerja sesuai dengan minat dan bakat peserta didik.',
+                default => 'Program pendidikan fleksibel dengan pendekatan pembelajaran orang dewasa (Andragogi).',
+            };
+
+            return [
+                'name' => $name,
+                'description' => $desc,
+                'requirements' => $level->education_level === 'paud' ? 'FC Akta & KK' : 'FC Ijazah Sebelumnya, Akta & KK',
+            ];
+        });
+    }
+
+    /**
+     * Indicate that the program has a logo and image.
+     */
+    public function withBranding(): static
+    {
+        return $this->state(fn (array $attributes) => [
+            'image_path' => 'programs/'.fake()->uuid().'.jpg',
+            'logo_path' => 'programs/logos/'.fake()->uuid().'.png',
+        ]);
     }
 
     /**
@@ -61,15 +89,48 @@ class ProgramFactory extends Factory
         ]);
     }
 
-    /**
-     * Create a program for a specific level.
-     */
     public function forLevel(Level $level): static
     {
         return $this->state(fn (array $attributes) => [
             'level_id' => $level->id,
             'name' => $level->name,
-            'slug' => Str::slug($level->name).'-'.fake()->unique()->randomNumber(4),
+            'slug' => Str::slug(str_replace(' ', '', $level->name)),
+        ]);
+    }
+
+    public function paud(): static
+    {
+        return $this->state(fn (array $attributes) => [
+            'level_id' => Level::factory()->state(['education_level' => 'paud', 'name' => 'PAUD']),
+            'name' => 'Program PAUD',
+            'order' => 1,
+        ]);
+    }
+
+    public function paketA(): static
+    {
+        return $this->state(fn (array $attributes) => [
+            'level_id' => Level::factory()->state(['education_level' => 'sd', 'name' => 'PAKET A']),
+            'name' => 'Program Paket A',
+            'order' => 2,
+        ]);
+    }
+
+    public function paketB(): static
+    {
+        return $this->state(fn (array $attributes) => [
+            'level_id' => Level::factory()->state(['education_level' => 'smp', 'name' => 'PAKET B']),
+            'name' => 'Program Paket B',
+            'order' => 3,
+        ]);
+    }
+
+    public function paketC(): static
+    {
+        return $this->state(fn (array $attributes) => [
+            'level_id' => Level::factory()->state(['education_level' => 'sma', 'name' => 'PAKET C']),
+            'name' => 'Program Paket C',
+            'order' => 4,
         ]);
     }
 }

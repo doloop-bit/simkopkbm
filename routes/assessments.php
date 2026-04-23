@@ -8,10 +8,10 @@ Route::middleware(['auth'])->prefix('admin')->name('admin.')->group(function () 
         ->name('assessments.competency');
 
     // Extracurricular Assessment
-    Route::livewire('/assessments/extracurricular', 'admin.assessments.extracurricular')
+    Route::livewire('/assessments/extracurricular', 'shared.assessments.extracurricular')
         ->name('assessments.extracurricular');
 
     // Report Attendance Summary (Sick, Permit, Alpha)
-    Route::livewire('/assessments/attendance', 'admin.assessments.attendance')
+    Route::livewire('/assessments/attendance', 'shared.assessments.attendance')
         ->name('assessments.attendance');
 });

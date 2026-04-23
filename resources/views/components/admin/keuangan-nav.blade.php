@@ -1,5 +1,5 @@
 @php
-    $isTransaksi = request()->routeIs('financial.transactions') || request()->routeIs('financial.billings') || request()->routeIs('financial.discounts') || request()->routeIs('financial.categories');
+    $isTransaksi = request()->routeIs('financial.transactions') || request()->routeIs('financial.billings') || request()->routeIs('financial.discounts') || request()->routeIs('financial.categories') || request()->routeIs('financial.recap');
 
     $isAnggaran = request()->routeIs('financial.budget-plans') || request()->routeIs('financial.budget-categories') || request()->routeIs('financial.standard-items');
 
@@ -13,27 +13,38 @@
                 'route' => 'financial.transactions',
                 'route_pattern' => 'financial.transactions',
             ],
-            'billings' => [
+        ];
+
+        if (!auth()->user()->isYayasan() || auth()->user()->isHeadmaster()) {
+            $tabs['billings'] = [
                 'label' => 'Tagihan Siswa',
                 'label_short' => 'Tagihan',
                 'icon' => 'o-document-text',
                 'route' => 'financial.billings',
                 'route_pattern' => 'financial.billings',
-            ],
-            'discounts' => [
+            ];
+            $tabs['discounts'] = [
                 'label' => 'Potongan & Beasiswa',
                 'label_short' => 'Potongan',
                 'icon' => 'o-gift',
                 'route' => 'financial.discounts',
                 'route_pattern' => 'financial.discounts',
-            ],
-            'categories' => [
+            ];
+            $tabs['categories'] = [
                 'label' => 'Kategori Biaya',
                 'label_short' => 'Kategori',
                 'icon' => 'o-swatch',
                 'route' => 'financial.categories',
                 'route_pattern' => 'financial.categories',
-            ],
+            ];
+        }
+
+        $tabs['recap'] = [
+            'label' => 'Rekapitulasi',
+            'label_short' => 'Rekap',
+            'icon' => 'o-document-chart-bar',
+            'route' => 'financial.recap',
+            'route_pattern' => 'financial.recap',
         ];
     } elseif ($isAnggaran) {
         $tabs = [
@@ -44,22 +55,25 @@
                 'route' => 'financial.budget-plans',
                 'route_pattern' => 'financial.budget-plans',
             ],
-            'budget-categories' => [
+        ];
+
+        if (!auth()->user()->isYayasan() || auth()->user()->isHeadmaster()) {
+            $tabs['budget-categories'] = [
                 'label' => 'Kategori Anggaran',
                 'label_short' => 'Kategori',
                 'icon' => 'o-tag',
                 'route' => 'financial.budget-categories',
                 'route_pattern' => 'financial.budget-categories',
-            ],
-            'standard-items' => [
+            ];
+            $tabs['standard-items'] = [
                 'label' => 'Item Standar',
                 'label_short' => 'Item Standar',
                 'icon' => 'o-shopping-cart',
                 'route' => 'financial.standard-items',
                 'route_pattern' => 'financial.standard-items',
-            ],
-        ];
+            ];
+        }
     }
 @endphp
 
-<x-admin.sub-nav :tabs="$tabs" />
+<x-ui.sub-nav :tabs="$tabs" />

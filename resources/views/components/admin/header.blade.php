@@ -66,14 +66,22 @@
                 </x-slot:trigger>
 
                 <x-slot:content>
-                    <div class="px-4 py-3 border-b border-slate-200 dark:border-slate-700">
+                    <div class="px-4 py-3 border-b border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800/50">
                         <div class="font-bold text-slate-900 dark:text-white">{{ auth()->user()->name }}</div>
-                        <div class="text-xs text-slate-500">{{ auth()->user()->email }}</div>
+                        <div class="text-[10px] uppercase font-black text-emerald-600 dark:text-emerald-400 tracking-widest mt-1">
+                            Role: {{ auth()->user()->activeRole()?->name ?? auth()->user()->role }}
+                        </div>
                     </div>
                     <a href="{{ route('profile.edit') }}" wire:navigate class="flex items-center gap-2 px-4 py-2 text-sm text-slate-700 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors">
                         <x-ui.icon name="o-cog-6-tooth" class="w-4 h-4" />
                         Profile Settings
                     </a>
+                    @if(auth()->user()->hasMultipleRoles())
+                        <a href="{{ route('select-role') }}" wire:navigate class="flex items-center gap-2 px-4 py-2 text-sm text-emerald-600 dark:text-emerald-400 hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors">
+                            <x-ui.icon name="o-arrow-path" class="w-4 h-4" />
+                            Ganti Role
+                        </a>
+                    @endif
                     <div class="border-t border-slate-200 dark:border-slate-700"></div>
                     <form method="POST" action="{{ route('logout') }}">
                         @csrf

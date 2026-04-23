@@ -57,7 +57,7 @@ trait HandlesExtracurricularAssessment
         // Security check for Guru
         if (auth()->user()->isGuru() && ! auth()->user()->hasAccessToClassroom((int) $this->classroom_id)) {
             $this->assessments_data = [];
-            \Flux::toast(variant: 'danger', text: 'Anda tidak memiliki akses ke kelas ini.');
+            $this->dispatch('toast', type: 'error', message: 'Anda tidak memiliki akses ke kelas ini.');
 
             return;
         }
@@ -99,7 +99,7 @@ trait HandlesExtracurricularAssessment
     public function save(): void
     {
         if (! $this->canEditAssessments()) {
-            \Flux::toast(variant: 'danger', text: 'Anda tidak memiliki izin untuk menyimpan data.');
+            $this->dispatch('toast', type: 'error', message: 'Anda tidak memiliki izin untuk menyimpan data.');
 
             return;
         }
@@ -110,7 +110,7 @@ trait HandlesExtracurricularAssessment
 
         // Security check for Guru
         if (auth()->user()->isGuru() && ! auth()->user()->hasAccessToClassroom((int) $this->classroom_id)) {
-            \Flux::toast(variant: 'danger', text: 'Anda tidak memiliki akses untuk menyimpan penilaian ini.');
+            $this->dispatch('toast', type: 'error', message: 'Anda tidak memiliki akses untuk menyimpan penilaian ini.');
 
             return;
         }
@@ -136,7 +136,7 @@ trait HandlesExtracurricularAssessment
             }
         });
 
-        \Flux::toast('Penilaian ekstrakurikuler berhasil disimpan.');
+        $this->dispatch('toast', type: 'success', message: 'Penilaian ekstrakurikuler berhasil disimpan.');
     }
 
     public function with(): array

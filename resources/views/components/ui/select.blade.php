@@ -34,11 +34,9 @@
                 @endif
                 
                 @foreach($options as $option)
-                    @php
-                        $value = data_get($option, $optionValue, $option);
-                        $text = data_get($option, $optionLabel, $value);
-                    @endphp
-                    <option value="{{ $value }}">{{ $text }}</option>
+                    <option value="{{ data_get($option, $optionValue, $option) }}">
+                        {{ data_get($option, $optionLabel, data_get($option, $optionValue, $option)) }}
+                    </option>
                 @endforeach
             @endif
         </select>

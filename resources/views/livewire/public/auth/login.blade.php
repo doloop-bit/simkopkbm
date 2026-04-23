@@ -34,6 +34,7 @@
                 </div>
                 <div class="relative">
                     <input
+                        type="password"
                         :type="showPassword ? 'text' : 'password'"
                         id="password"
                         name="password"

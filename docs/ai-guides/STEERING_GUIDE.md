@@ -15,6 +15,7 @@ Before starting any development:
 3. ☐ Use MCP tools to understand current state
 4. ☐ Follow conventions strictly
 5. ☐ Test with tinker before UI testing
+6. ☐ Use 'zsh -i -c' for all build/node commands
 ```
 
 ---
@@ -114,11 +115,23 @@ npm run dev
 1.  **Extract Logic**: Create a Trait in `app/Traits/Assessments/`.
 2.  **Extract UI**: Create a Partial View in `resources/views/livewire/shared/_partials/`.
 3.  **Create Two Components**:
-    - `livewire/admin/.../feature.blade.php` -> uses `#[Layout('components.admin.layouts.app')]`
-    - `livewire/teacher/.../feature.blade.php` -> uses `#[Layout('components.teacher.layouts.app')]`
+    - `livewire/admin/.../feature.blade.php` -> uses `#[Layout('components.layouts.app')]`
+    - `livewire/teacher/.../feature.blade.php` -> uses `#[Layout('components.layouts.app')]`
 4.  **Route Explicitly**:
     - Admin route -> Admin component
     - Teacher route -> Teacher component
+
+---
+
+### **Workflow 5: Handling Multi-Role Access**
+
+1. **Check Role**: Use helper methods on the `User` model rather than raw string checks.
+   - ✅ `if (auth()->user()->isTreasurer())`
+   - ❌ `if (auth()->user()->role === 'bendahara')`
+
+2. **Middleware**: Routes are protected by `auth` and often by specific role check logic in components or `bootstrap/app.php`.
+
+3. **Active Role**: Access the active role via `auth()->user()->activeRole()`.
 
 ---
 
@@ -185,7 +198,7 @@ use Livewire\Attributes\Layout;
 use Livewire\Component;
 use Livewire\WithPagination;
 
-new #[Layout('components.admin.layouts.app')] class extends Component {
+new #[Layout('components.layouts.app')] class extends Component {
     use WithPagination;
 
     public $search = '';
@@ -247,5 +260,17 @@ new class extends Component {
 
 ---
 
-**Last Updated:** 2026-03-01
-**Version:** 3.0 (Native SFC + Custom UI Update)
+## 🐚 Shell Environment (WSL/Ubuntu)
+
+The project uses a specific `zsh` environment with tools like `nvm` or tailored aliases. Standard `bash` commands may use outdated system binaries (e.g., Node 18) instead of the project-required version (Node 24+).
+
+**Mandatory Rule:**
+Always execute build, sync, or package-related commands via an interactive `zsh` shell to load the specific environment.
+- ✅ `zsh -i -c "npm run build"`
+- ✅ `zsh -i -c "php artisan ..."`
+- ❌ `npm run build`
+
+---
+
+**Last Updated:** 2026-04-14
+**Version:** 3.2 (Shell Environment Update)

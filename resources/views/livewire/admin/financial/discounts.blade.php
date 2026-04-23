@@ -9,7 +9,7 @@ use Livewire\Attributes\Layout;
 use Livewire\Component;
 use Livewire\WithPagination;
 
-new #[Layout('components.admin.layouts.app')] class extends Component {
+new #[Layout('components.layouts.app')] class extends Component {
     use WithPagination;
 
     public ?int $student_id = null;
@@ -119,27 +119,27 @@ new #[Layout('components.admin.layouts.app')] class extends Component {
         >
             @scope('cell_student_name', $discount)
                 <div class="flex flex-col">
-                    <span class="font-bold text-slate-900 dark:text-white">{{ $discount->student?->name ?? __('Siswa Dihapus') }}</span>
-                    <span class="text-[9px] text-slate-400 font-mono tracking-tighter">{{ $discount->student?->email }}</span>
+                    <span class="font-semibold text-slate-900 dark:text-white">{{ $discount->student?->name ?? __('Siswa Dihapus') }}</span>
+                    <span class="text-[11px] text-slate-500 font-mono italic">{{ $discount->student?->email }}</span>
                 </div>
             @endscope
 
             @scope('cell_category_name', $discount)
                 <x-ui.badge 
                     :label="$discount->feeCategory?->name ?? __('Semua Kategori')" 
-                    class="{{ $discount->fee_category_id ? 'bg-slate-100 text-slate-600' : 'bg-amber-100 text-amber-700' }} border-none text-[8px] font-black uppercase tracking-widest px-2 py-0.5" 
+                    class="{{ $discount->fee_category_id ? 'bg-slate-100 text-slate-600' : 'bg-amber-100 text-amber-700 font-bold' }} border-none text-[10px] uppercase tracking-wider px-2 py-0.5" 
                 />
             @endscope
 
             @scope('cell_discount_name', $discount)
                 <div class="flex flex-col">
-                    <span class="font-medium text-slate-700 dark:text-slate-300">{{ $discount->name }}</span>
-                    <span class="text-[9px] text-slate-400 uppercase tracking-widest">{{ $discount->discount_type === 'percentage' ? __('Persentase') : __('Nominal Tetap') }}</span>
+                    <span class="font-semibold text-slate-700 dark:text-slate-300">{{ $discount->name }}</span>
+                    <span class="text-[10px] text-slate-500 font-medium uppercase tracking-wide">{{ $discount->discount_type === 'percentage' ? __('Persentase') : __('Nominal Tetap') }}</span>
                 </div>
             @endscope
 
             @scope('cell_value_label', $discount)
-                <span class="font-mono text-sm font-black text-emerald-600">
+                <span class="font-mono text-sm font-bold text-emerald-600 dark:text-emerald-400">
                     {{ $discount->discount_type === 'percentage' ? $discount->amount.'%' : 'Rp '.number_format($discount->amount, 0, ',', '.') }}
                 </span>
             @endscope
@@ -184,7 +184,7 @@ new #[Layout('components.admin.layouts.app')] class extends Component {
                 <x-ui.input wire:model="amount" type="number" :label="__('Nilai Potongan')" icon="o-currency-dollar" required />
             </div>
 
-            <x-ui.alert icon="o-information-circle" class="bg-blue-50 text-blue-700 border-blue-100 font-medium text-[10px]">
+            <x-ui.alert icon="o-information-circle" class="bg-blue-50 text-blue-700 border-blue-100 font-medium text-xs leading-relaxed">
                 {{ __('Potongan akan otomatis memotong nilai tagihan setiap kali tagihan di-generate untuk siswa tersebut.') }}
             </x-ui.alert>
         </div>

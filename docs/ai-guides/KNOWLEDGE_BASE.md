@@ -21,6 +21,23 @@
 
 ---
 
+## 🚀 Implementation Status
+
+| Module              | Status     | Notes                                               |
+| ------------------- | ---------- | --------------------------------------------------- |
+| **Core Admin**      | ✅ Done    | Dashboard, Sidebar, Base Layouts                    |
+| **Authentication**  | ✅ Done    | Fortify, Multi-Role, Role Selection                 |
+| **Student Master**  | ✅ Done    | Profiles, Registration (Local Address)              |
+| **Academic**        | ✅ Done    | Years, Levels, Classrooms, Subjects, Assignments    |
+| **Assessments**     | ✅ Done    | Numeric, Competency, P5, Extracurricular            |
+| **Report Cards**    | ✅ Done    | PDF Generation, Specialized Navigations             |
+| **Financial**       | ✅ Done    | Billing, Payments, Global Transactions, Adjustments |
+| **Public Website**  | ✅ Done    | Home, News, Gallery, Programs, Contact              |
+| **Teacher Portal**  | ✅ Done    | Mobile Optimized, Role-based access                 |
+| **Letters (Surat)** | 📅 Planned | Official school letter generation                   |
+
+---
+
 ## 📌 Application Overview
 
 ### **What is SIMKOPKBM?**
@@ -32,11 +49,12 @@
 | Feature                    | Description                                            |
 | -------------------------- | ------------------------------------------------------ |
 | **Student Management**     | Student data, enrollment, profiles                     |
-| **Student Registration**   | Online registration form, admin review, enrollment     |
+| **Student Registration**   | Online registration, admin review, uses local address  |
 | **Academic Management**    | Years, levels, classrooms, subjects                    |
 | **Assessment System**      | Grades (numeric) & Competency (Kurikulum Merdeka-PAUD) |
-| **Report Card Generation** | PDF report cards                                       |
-| **Financial Management**   | Billing, payments, transactions                        |
+| **Report Card Generation** | PDF report cards, specialized navigations              |
+| **Financial Management**   | Billing, payments, global transactions, adjustments    |
+| **Multi-Role System**      | Multi-role support (Admin, Guru, Bendahara, etc.)      |
 | **PTK Management**         | Teacher and staff data                                 |
 | **Public Website**         | School profile, news, gallery, programs, contact form  |
 | **SEO Optimization**       | Sitemap.xml, meta tags, slug-based URLs                |
@@ -52,9 +70,9 @@
 | Technology      | Version     | Purpose             | Notes              |
 | --------------- | ----------- | ------------------- | ------------------ |
 | PHP             | **8.4.18**  | Runtime             | -                  |
-| Laravel         | **12.52.1** | Framework           | -                  |
+| Laravel         | **12.53.0** | Framework           | -                  |
 | Livewire        | **4.x**     | Reactive Components | Native SFC Support |
-| Laravel Fortify | **1.33.0**  | Authentication      | -                  |
+| Laravel Fortify | **1.35.0**  | Authentication      | -                  |
 
 #### 📝 Notes on Livewire 4
 
@@ -69,7 +87,7 @@
 use Livewire\Attributes\Layout;
 use Livewire\Component;
 
-new #[Layout('components.admin.layouts.app')] class extends Component {
+new #[Layout('components.layouts.app')] class extends Component {
     // Component logic here
 }; ?>
 
@@ -90,7 +108,7 @@ new #[Layout('components.admin.layouts.app')] class extends Component {
 
 | Environment           | Engine       | Notes                                          |
 | --------------------- | ------------ | ---------------------------------------------- |
-| **Local/Development** | SQLite 3.49+ | URL: `http://simkopkbm.test` or localhost:8000 |
+| **Local/Development** | SQLite 3.49+ | URL: localhost:8000 or `http://simkopkbm.test` |
 | **Production**        | MySQL 8.x    | Full RDBMS features                            |
 
 ⚠️ **Cross-Database Compatibility Notes:**
@@ -105,8 +123,9 @@ new #[Layout('components.admin.layouts.app')] class extends Component {
 | Package                      | Version | Purpose             |
 | ---------------------------- | ------- | ------------------- |
 | `maatwebsite/excel`          | 3.1.x   | Excel import/export |
+| `laravolt/indonesia`         | 0.41.x  | Indonesian address  |
 | `intervention/image-laravel` | 1.5.x   | Image processing    |
-| `barryvdh/laravel-dompdf`    | -       | PDF generation      |
+| `barryvdh/laravel-dompdf`    | 3.1.x   | PDF generation      |
 
 ---
 
@@ -288,7 +307,7 @@ use App\Models\User;
 use Livewire\Attributes\Layout;
 use Livewire\Component;
 
-new #[Layout('components.admin.layouts.app')] class extends Component {
+new #[Layout('components.layouts.app')] class extends Component {
     // Properties
     public ?int $model_id = null;
     public array $data = [];
@@ -402,17 +421,59 @@ trait HandlesGrading {
 
 ```php
 // Teacher Component
-new #[Layout('components.teacher.layouts.app')] class extends Component {
+new #[Layout('components.layouts.app')] class extends Component {
     use HandlesGrading;
 }
 ```
 
 ```php
 // Admin Component
-new #[Layout('components.admin.layouts.app')] class extends Component {
+new #[Layout('components.layouts.app')] class extends Component {
     use HandlesGrading;
 }
 ```
+
+---
+
+## 🔑 Multi-Role System
+
+SIMKOPKBM supports a flexible multi-role system where a single user can have multiple access levels.
+
+### **Available Roles**
+
+| Slug            | Name              | Description                                      |
+| --------------- | ----------------- | ------------------------------------------------ |
+| `admin`         | Administrator     | Full system access                               |
+| `guru`          | Guru              | Academic data and student assessments            |
+| `bendahara`     | Bendahara         | Financial management, billing, and transactions  |
+| `kepsek`        | Kepala Sekolah    | Monitoring and report approvals                  |
+| `yayasan`       | Pengurus Yayasan  | High-level financial reporting and analytics      |
+
+### **Role Switching**
+
+- Role is controlled via `active_role_id` in the Session.
+- Users with multiple roles are prompted to select a role after login.
+- `User` model provides helpers to check the active role:
+  - `$user->isAdmin()`
+  - `$user->isGuru()`
+  - `$user->isTreasurer()`
+  - `$user->isHeadmaster()`
+  - `$user->isYayasan()`
+
+---
+
+## 💰 Financial Management Patterns
+
+### **Transaction Types**
+
+1. **Student Billing Payment**: Linked to `student_billing_id`. Usually for SPP or other student-specific fees.
+2. **Global Income**: Linked to `fee_category_id`. For income not associated with specific students (e.g., initial balance, donations).
+3. **Expense (Outcome)**: Linked to `budget_plan_item_id`. For operational spending.
+
+### **Adjustments & Attachments**
+
+- Transactions support `adjustment_amount` for fee changes.
+- Attachments (receipts, bukti transfer) are stored as JSON/Array in the `attachment` column.
 
 ---
 
@@ -795,7 +856,7 @@ $user->isGuru(): bool
 
 ---
 
-**Last Updated:** 2026-02-27
-**Version:** 2.3
+**Last Updated:** 2026-04-08
+**Version:** 3.0
 **Maintained By:** Antigravity AI Assistant
 ````

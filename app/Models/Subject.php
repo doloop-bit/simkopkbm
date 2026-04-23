@@ -2,20 +2,40 @@
 
 namespace App\Models;
 
+use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 
 class Subject extends Model
 {
-    protected $fillable = ['name', 'code', 'level_id', 'phase'];
+    use HasFactory;
+
+    protected $fillable = ['name', 'code', 'level_id', 'phase', 'type'];
+
+    protected function casts(): array
+    {
+        return [
+            'type' => 'string',
+        ];
+    }
 
     public function level()
     {
         return $this->belongsTo(Level::class);
     }
 
-    public function teacherAssignments()
+    public function assignments()
     {
         return $this->hasMany(TeacherAssignment::class);
+    }
+
+    public function scopeReguler($query)
+    {
+        return $query->where('type', 'reguler');
+    }
+
+    public function scopeDiniyah($query)
+    {
+        return $query->where('type', 'diniyah');
     }
 
     /**

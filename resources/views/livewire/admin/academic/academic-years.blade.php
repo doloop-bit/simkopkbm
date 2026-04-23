@@ -7,7 +7,7 @@ use Livewire\Attributes\Layout;
 use Livewire\Component;
 use Livewire\WithPagination;
 
-new #[Layout('components.admin.layouts.app')] class extends Component {
+new #[Layout('components.layouts.app')] class extends Component {
     use WithPagination;
 
     public string $name = '';
@@ -105,7 +105,9 @@ new #[Layout('components.admin.layouts.app')] class extends Component {
                 <div class="flex items-center gap-2">
                     <span class="font-bold text-slate-900 dark:text-white">{{ $year->name }}</span>
                     @if($year->is_active)
-                        <x-ui.badge :label="__('Aktif')" class="bg-emerald-100 text-emerald-700 dark:bg-emerald-900/30 dark:text-emerald-400 text-[10px]" />
+                        <x-ui.badge :label="__('Aktif')" flat size="xs" />
+                    @else
+                        <x-ui.badge :label="__('Non-aktif')" flat size="xs" />
                     @endif
                 </div>
             @endscope
@@ -119,7 +121,9 @@ new #[Layout('components.admin.layouts.app')] class extends Component {
             @scope('cell_status', $year)
                 <x-ui.badge 
                     :label="$year->status === 'open' ? __('Terbuka') : __('Ditutup')" 
-                    class="{{ $year->status === 'open' ? 'bg-slate-100 text-slate-700 dark:bg-slate-800 dark:text-slate-300' : 'bg-amber-100 text-amber-700 dark:bg-amber-900/30 dark:text-amber-400' }} text-[10px]" 
+                    :variant="$year->status === 'open' ? 'success' : 'amber'"
+                    flat
+                    size="xs"
                 />
             @endscope
 

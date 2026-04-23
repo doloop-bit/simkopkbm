@@ -73,13 +73,7 @@ return [
     |
     */
 
-    'home' => function () {
-        return match (auth()->user()->role) {
-            'admin' => '/admin/dashboard',
-            'guru' => '/teacher/dashboard',
-            default => '/',
-        };
-    },
+    'home' => '/admin/dashboard',
 
     /*
     |--------------------------------------------------------------------------

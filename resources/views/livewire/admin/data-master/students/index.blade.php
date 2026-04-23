@@ -13,13 +13,14 @@ use Livewire\Component;
 use Livewire\WithFileUploads;
 use Livewire\WithPagination;
 
-new #[Layout('components.admin.layouts.app')] class extends Component {
-    use WithFileUploads, WithPagination;
+use App\Traits\Shared\HandlesPeriodicRecord;
+
+new #[Layout('components.layouts.app')] class extends Component {
+    use WithFileUploads, WithPagination, HandlesPeriodicRecord;
 
     public string $search = '';
     public bool $studentModal = false;
     public bool $importModal = false;
-    public bool $periodicModal = false;
     public bool $detailModal = false;
     public string $sortField = 'created_at';
     public string $sortDirection = 'desc';
@@ -28,72 +29,32 @@ new #[Layout('components.admin.layouts.app')] class extends Component {
 
     // Form fields
     public string $name = '';
-
     public string $email = '';
-
     public string $nis = '';
-
     public string $nisn = '';
-
     public string $phone = '';
-
     public string $address = '';
-
     public string $dob = '';
-
     public string $pob = '';
-
     public ?int $classroom_id = null;
-
-    // New fields
     public $photo;
-
     public string $father_name = '';
-
     public string $mother_name = '';
-
     public string $guardian_name = '';
-
     public string $guardian_phone = '';
-
     public ?int $birth_order = null;
-
     public ?int $total_siblings = null;
-
     public string $previous_school = '';
-
     public string $status = 'baru';
-
     public string $nik = '';
-
     public string $nik_ayah = '';
-
     public string $nik_ibu = '';
-
     public string $no_kk = '';
-
     public string $no_akta = '';
 
-    // Periodic Data fields
-    public float $weight = 0;
-
-    public float $height = 0;
-
-    public float $head_circumference = 0;
-
-    public int $semester = 1;
-
-    public ?int $current_academic_year_id = null;
-
     public ?User $editing = null;
-
     public ?User $viewing = null;
-
     public ?string $existingPhoto = null;
-
-    public bool $hasExistingPeriodicData = false;
-
-    public ?string $periodicDataLastUpdated = null;
 
     public $importFile;
     public $importErrors = [];
@@ -131,11 +92,15 @@ new #[Layout('components.admin.layouts.app')] class extends Component {
 
     public function mount(): void
     {
-        $this->current_academic_year_id = \App\Models\AcademicYear::where('is_active', true)->first()?->id;
+        $this->mountHandlesPeriodicRecord();
     }
 
     public function save(): void
     {
+        if (auth()->user()->isYayasan()) {
+            session()->flash('error', 'Yayasan tidak diperbolehkan mengubah data.');
+            return;
+        }
         $this->validate();
 
         DB::transaction(function () {
@@ -252,57 +217,7 @@ new #[Layout('components.admin.layouts.app')] class extends Component {
         $this->detailModal = true;
     }
 
-    public function openPeriodic(User $user): void
-    {
-        $this->editing = $user;
-
-        // Preload existing periodic data for current academic year and semester
-        $profile = $user->latestProfile?->profileable;
-        if ($profile) {
-            $existingRecord = \App\Models\StudentPeriodicRecord::where('student_profile_id', $profile->id)->where('academic_year_id', $this->current_academic_year_id)->where('semester', $this->semester)->first();
-
-            if ($existingRecord) {
-                $this->weight = $existingRecord->weight;
-                $this->height = $existingRecord->height;
-                $this->head_circumference = $existingRecord->head_circumference;
-                $this->hasExistingPeriodicData = true;
-                $this->periodicDataLastUpdated = $existingRecord->updated_at->diffForHumans();
-            } else {
-                // Reset to default if no existing record
-                $this->weight = 0;
-                $this->height = 0;
-                $this->head_circumference = 0;
-                $this->hasExistingPeriodicData = false;
-                $this->periodicDataLastUpdated = null;
-            }
-        }
-
-        $this->periodicModal = true;
-    }
-
-    public function updatedSemester(): void
-    {
-        if ($this->editing) {
-            $profile = $this->editing->latestProfile?->profileable;
-            if ($profile) {
-                $existingRecord = \App\Models\StudentPeriodicRecord::where('student_profile_id', $profile->id)->where('academic_year_id', $this->current_academic_year_id)->where('semester', $this->semester)->first();
-
-                if ($existingRecord) {
-                    $this->weight = $existingRecord->weight;
-                    $this->height = $existingRecord->height;
-                    $this->head_circumference = $existingRecord->head_circumference;
-                    $this->hasExistingPeriodicData = true;
-                    $this->periodicDataLastUpdated = $existingRecord->updated_at->diffForHumans();
-                } else {
-                    $this->weight = 0;
-                    $this->height = 0;
-                    $this->head_circumference = 0;
-                    $this->hasExistingPeriodicData = false;
-                    $this->periodicDataLastUpdated = null;
-                }
-            }
-        }
-    }
+    // Periodic data methods handled by trait
 
     public function updatedFilterLevelId(): void
     {
@@ -327,39 +242,7 @@ new #[Layout('components.admin.layouts.app')] class extends Component {
         $this->studentModal = true;
     }
 
-    public function savePeriodic(int $studentProfileId): void
-    {
-        if (!$studentProfileId) {
-            session()->flash('error', 'Data profil siswa tidak ditemukan. Silakan edit siswa terlebih dahulu untuk membuat profil.');
-            return;
-        }
-
-        $this->validate([
-            'weight' => 'required|numeric|min:0',
-            'height' => 'required|numeric|min:0',
-            'head_circumference' => 'required|numeric|min:0',
-            'semester' => 'required|integer|in:1,2',
-        ]);
-
-        \App\Models\StudentPeriodicRecord::updateOrCreate(
-            [
-                'student_profile_id' => $studentProfileId,
-                'academic_year_id' => $this->current_academic_year_id,
-                'semester' => $this->semester,
-            ],
-            [
-                'weight' => $this->weight,
-                'height' => $this->height,
-                'head_circumference' => $this->head_circumference,
-                'recorded_by' => auth()->id(),
-            ],
-        );
-
-        $this->reset(['weight', 'height', 'head_circumference', 'semester', 'hasExistingPeriodicData', 'periodicDataLastUpdated']);
-
-        session()->flash('success', 'Data periodik berhasil disimpan!');
-        $this->dispatch('periodic-saved');
-    }
+    // savePeriodic handled by trait
 
     public function delete(User $user): void
     {
@@ -505,8 +388,10 @@ new #[Layout('components.admin.layouts.app')] class extends Component {
         <x-slot:actions>
             <div class="flex items-center gap-3">
                 <x-ui.input wire:model.live.debounce.300ms="search" :placeholder="__('Cari siswa...')" icon="o-magnifying-glass" class="w-64" clearable />
-                <x-ui.button :label="__('Import')" icon="o-arrow-up-tray" wire:click="$set('importModal', true)" ghost />
-                <x-ui.button :label="__('Tambah Siswa')" icon="o-plus" wire:click="createNew" class="btn-primary" />
+                @if(!auth()->user()->isYayasan())
+                    <x-ui.button :label="__('Import')" icon="o-arrow-up-tray" wire:click="$set('importModal', true)" ghost />
+                    <x-ui.button :label="__('Tambah Siswa')" icon="o-plus" wire:click="createNew" class="btn-primary" />
+                @endif
             </div>
         </x-slot:actions>
     </x-ui.header>
@@ -578,11 +463,15 @@ new #[Layout('components.admin.layouts.app')] class extends Component {
                             </td>
                             <td class="px-6 py-4">
                                 @if ($profile?->classroom)
-                                    <div class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-md bg-primary/5 text-primary border border-primary/10">
-                                        <span class="text-[10px] font-black tracking-widest uppercase">{{ $profile->classroom->name }}</span>
-                                    </div>
+                                    <x-ui.badge 
+                                        :label="$profile->classroom->name" 
+                                        variant="primary" 
+                                        rounded="md" 
+                                        size="xs"
+                                        class="px-2.5"
+                                    />
                                 @else
-                                    <span class="text-[10px] text-rose-500 font-black uppercase italic tracking-widest bg-rose-50 dark:bg-rose-950/30 px-2 py-0.5 rounded">{{ __('Belum ada kelas') }}</span>
+                                    <x-ui.badge :label="__('Belum ada kelas')" variant="error" rounded="md" size="xs" />
                                 @endif
                             </td>
                             <td class="px-6 py-4">
@@ -597,14 +486,16 @@ new #[Layout('components.admin.layouts.app')] class extends Component {
                             <td class="px-6 py-4 text-right">
                                 <div class="flex justify-end gap-1.5 opacity-0 group-hover:opacity-100 transition-opacity duration-200">
                                     <x-ui.button icon="o-chart-bar" wire:click="openPeriodic({{ $student->id }})" ghost class="hover:text-primary" />
-                                    <x-ui.button icon="o-pencil-square" wire:click="edit({{ $student->id }})" ghost class="hover:text-indigo-600" />
-                                    <x-ui.button 
-                                        icon="o-trash" 
-                                        class="text-red-500 dark:text-red-400 hover:bg-red-50 dark:hover:bg-red-900/10" 
-                                        wire:confirm="{{ __('Yakin ingin menghapus siswa ini?') }}"
-                                        wire:click="delete({{ $student->id }})"
-                                        ghost 
-                                    />
+                                    @if(!auth()->user()->isYayasan())
+                                        <x-ui.button icon="o-pencil-square" wire:click="edit({{ $student->id }})" ghost class="hover:text-indigo-600" />
+                                        <x-ui.button 
+                                            icon="o-trash" 
+                                            class="text-red-500 dark:text-red-400 hover:bg-red-50 dark:hover:bg-red-900/10" 
+                                            wire:confirm="{{ __('Yakin ingin menghapus siswa ini?') }}"
+                                            wire:click="delete({{ $student->id }})"
+                                            ghost 
+                                        />
+                                    @endif
                                 </div>
                             </td>
                         </tr>
@@ -738,6 +629,6 @@ new #[Layout('components.admin.layouts.app')] class extends Component {
 
     {{-- Modals --}}
     @include('livewire.admin.data-master.students.partials.import-modal')
-    @include('livewire.admin.data-master.students.partials.periodic-modal')
+    @include('livewire.admin.data-master.students.partials.periodic-modal', ['editing' => $editingUserForPeriodic])
     @include('livewire.admin.data-master.students.partials.detail-modal')
 </div>

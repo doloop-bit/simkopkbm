@@ -1,8 +1,14 @@
 <?php
 
+declare(strict_types=1);
+
 use App\Models\User;
 use Illuminate\Support\Facades\Hash;
-use Livewire\Volt\Volt;
+use Livewire\Livewire;
+
+beforeEach(function () {
+    $this->withoutVite();
+});
 
 test('password can be updated', function () {
     $user = User::factory()->create([
@@ -11,13 +17,12 @@ test('password can be updated', function () {
 
     $this->actingAs($user);
 
-    $response = Volt::test('settings.password')
+    Livewire::test('admin.settings.password')
         ->set('current_password', 'password')
         ->set('password', 'new-password')
         ->set('password_confirmation', 'new-password')
-        ->call('updatePassword');
-
-    $response->assertHasNoErrors();
+        ->call('updatePassword')
+        ->assertHasNoErrors();
 
     expect(Hash::check('new-password', $user->refresh()->password))->toBeTrue();
 });
@@ -29,11 +34,10 @@ test('correct password must be provided to update password', function () {
 
     $this->actingAs($user);
 
-    $response = Volt::test('settings.password')
+    Livewire::test('admin.settings.password')
         ->set('current_password', 'wrong-password')
         ->set('password', 'new-password')
         ->set('password_confirmation', 'new-password')
-        ->call('updatePassword');
-
-    $response->assertHasErrors(['current_password']);
+        ->call('updatePassword')
+        ->assertHasErrors(['current_password']);
 });

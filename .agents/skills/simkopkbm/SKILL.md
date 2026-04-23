@@ -42,7 +42,7 @@ Before implementing any feature, especially if unsure about syntax or best pract
 
 ### 3. Structural Patterns
 
-- **Layouts**: Use `#[Layout('components.admin.layouts.app')]`.
+- **Layouts**: Use `#[Layout('components.layouts.app')]`.
 - **SFC Components**: Use native Livewire 4 single-file components (`<?php ... ?>` tags).
 - **Multi-Role**: For shared features between Admin and Teacher:
     - Extract logic to Traits.

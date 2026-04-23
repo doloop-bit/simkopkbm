@@ -9,7 +9,7 @@ use Livewire\Attributes\Layout;
 use Livewire\Component;
 use Illuminate\Support\Facades\DB;
 
-new #[Layout('components.admin.layouts.app')] class extends Component {
+new #[Layout('components.layouts.app')] class extends Component {
     public ?int $student_id = null;
     public string $search = '';
     
@@ -117,7 +117,7 @@ new #[Layout('components.admin.layouts.app')] class extends Component {
     <div class="grid grid-cols-1 lg:grid-cols-3 gap-8">
         <div class="lg:col-span-1 space-y-8">
             <x-ui.card shadow>
-                <div class="text-[10px] font-black uppercase text-slate-400 tracking-widest mb-6">{{ __('Cari Siswa') }}</div>
+                <div class="text-xs font-bold uppercase text-slate-500 tracking-wider mb-6">{{ __('Cari Siswa') }}</div>
                 <div class="relative">
                     <x-ui.input 
                         wire:model.live.debounce.300ms="search" 
@@ -135,8 +135,8 @@ new #[Layout('components.admin.layouts.app')] class extends Component {
                                 wire:click="selectStudent({{ $student->id }})"
                                 class="w-full text-left px-5 py-3 hover:bg-slate-50 dark:hover:bg-slate-800/10 transition group"
                             >
-                                <div class="font-bold text-slate-900 dark:text-white group-hover:text-primary transition-colors">{{ $student->name }}</div>
-                                <div class="text-[10px] text-slate-400 font-mono tracking-tighter">{{ $student->email }}</div>
+                                <div class="font-semibold text-slate-900 dark:text-white group-hover:text-primary transition-colors">{{ $student->name }}</div>
+                                <div class="text-[11px] text-slate-500 font-mono italic">{{ $student->email }}</div>
                             </button>
                         @endforeach
                     </div>
@@ -146,7 +146,7 @@ new #[Layout('components.admin.layouts.app')] class extends Component {
             @if($student_id)
                 <x-ui.card shadow padding="false">
                     <div class="p-5 border-b border-slate-100 dark:border-slate-800 bg-slate-50/50 dark:bg-slate-900/50">
-                        <div class="text-[10px] font-black uppercase text-slate-400 tracking-widest">{{ __('Tagihan Terbuka') }}</div>
+                        <div class="text-xs font-bold uppercase text-slate-500 tracking-wider">{{ __('Tagihan Terbuka') }}</div>
                     </div>
                     <div class="p-2 space-y-2">
                         @forelse($billings as $billing)
@@ -156,14 +156,14 @@ new #[Layout('components.admin.layouts.app')] class extends Component {
                             >
                                 <div class="flex justify-between items-start">
                                     <div class="flex flex-col">
-                                        <span class="font-black text-xs text-slate-900 dark:text-white uppercase tracking-tight group-hover:text-primary transition-colors">{{ $billing->feeCategory?->name ?? __('Kategori Dihapus') }}</span>
-                                        <span class="text-[9px] font-black text-slate-400 uppercase tracking-widest">{{ $billing->month ?? __('Sekali Bayar') }}</span>
+                                        <span class="font-bold text-xs text-slate-900 dark:text-white uppercase tracking-wide group-hover:text-primary transition-colors">{{ $billing->feeCategory?->name ?? __('Kategori Dihapus') }}</span>
+                                        <span class="text-[10px] font-medium text-slate-500 uppercase tracking-widest">{{ $billing->month ?? __('Sekali Bayar') }}</span>
                                     </div>
-                                    <x-ui.badge :label="strtoupper($billing->status)" class="{{ $billing->status === 'partial' ? 'bg-amber-100 text-amber-700' : 'bg-rose-100 text-rose-700' }} border-none text-[8px] font-black px-1.5 py-0.5" />
+                                    <x-ui.badge :label="strtoupper($billing->status)" class="{{ $billing->status === 'partial' ? 'bg-amber-100 text-amber-700' : 'bg-rose-100 text-rose-700' }} border-none text-[10px] font-bold px-2 py-0.5" />
                                 </div>
                                 <div class="flex justify-between items-end pt-2 border-t border-slate-100 dark:border-slate-800">
-                                    <span class="text-[9px] font-black text-slate-400 uppercase tracking-widest">{{ __('Sisa:') }}</span>
-                                    <span class="font-mono text-sm font-black text-slate-900 dark:text-white tracking-tighter italic">Rp {{ number_format($billing->amount - $billing->paid_amount, 0, ',', '.') }}</span>
+                                    <span class="text-[10px] font-bold text-slate-400 uppercase tracking-wider">{{ __('Sisa:') }}</span>
+                                    <span class="font-mono text-sm font-bold text-slate-900 dark:text-white">Rp {{ number_format($billing->amount - $billing->paid_amount, 0, ',', '.') }}</span>
                                 </div>
                             </button>
                         @empty
@@ -183,12 +183,12 @@ new #[Layout('components.admin.layouts.app')] class extends Component {
                     
                     <div class="grid grid-cols-2 gap-8 mb-8">
                         <div class="flex flex-col gap-1">
-                            <span class="text-[9px] font-black text-slate-400 uppercase tracking-widest">{{ __('Siswa') }}</span>
-                            <span class="font-black text-xl text-slate-900 dark:text-white tracking-tight">{{ $selectedBilling->student?->name ?? __('Siswa Dihapus') }}</span>
+                            <span class="text-[10px] font-bold text-slate-500 uppercase tracking-wider">{{ __('Siswa') }}</span>
+                            <span class="font-bold text-xl text-slate-900 dark:text-white tracking-tight">{{ $selectedBilling->student?->name ?? __('Siswa Dihapus') }}</span>
                         </div>
                         <div class="flex flex-col gap-1">
-                            <span class="text-[9px] font-black text-slate-400 uppercase tracking-widest">{{ __('Kategori Biaya') }}</span>
-                            <span class="font-black text-xl text-slate-900 dark:text-white tracking-tight">{{ $selectedBilling->feeCategory?->name ?? __('Kategori Dihapus') }}</span>
+                            <span class="text-[10px] font-bold text-slate-500 uppercase tracking-wider">{{ __('Kategori Biaya') }}</span>
+                            <span class="font-bold text-xl text-slate-900 dark:text-white tracking-tight">{{ $selectedBilling->feeCategory?->name ?? __('Kategori Dihapus') }}</span>
                         </div>
                     </div>
 
@@ -221,8 +221,8 @@ new #[Layout('components.admin.layouts.app')] class extends Component {
                     <div class="w-16 h-16 bg-white dark:bg-slate-900 rounded-full shadow-xl flex items-center justify-center mb-6 ring-1 ring-slate-100 dark:ring-slate-800">
                         <x-ui.icon name="o-banknotes" class="size-8 text-slate-300" />
                     </div>
-                    <h3 class="text-xl font-black text-slate-800 dark:text-white mb-2">{{ __('Mulai Pencatatan') }}</h3>
-                    <p class="text-xs text-slate-400 max-w-xs leading-relaxed font-medium">
+                    <h3 class="text-xl font-bold text-slate-800 dark:text-white mb-2">{{ __('Mulai Pencatatan') }}</h3>
+                    <p class="text-xs text-slate-500 max-w-xs leading-relaxed font-normal">
                         {{ __('Pilih siswa dan klik salah satu tagihannya di panel kiri untuk membuka form pembayaran resmi.') }}
                     </p>
                 </div>
@@ -230,7 +230,7 @@ new #[Layout('components.admin.layouts.app')] class extends Component {
 
             <x-ui.card shadow padding="false">
                 <div class="p-5 border-b border-slate-100 dark:border-slate-800 bg-slate-50/50 dark:bg-slate-900/50 flex items-center justify-between">
-                    <div class="text-[11px] font-black uppercase text-slate-400 tracking-widest">{{ __('Riwayat Pembayaran Terbaru') }}</div>
+                    <div class="text-xs font-bold uppercase text-slate-500 tracking-wider">{{ __('Riwayat Pembayaran Terbaru') }}</div>
                     <x-ui.icon name="o-clock" class="size-4 text-slate-300" />
                 </div>
                 
@@ -244,19 +244,19 @@ new #[Layout('components.admin.layouts.app')] class extends Component {
                     :rows="$recentTransactions"
                 >
                     @scope('cell_payment_date', $tx)
-                        <span class="text-[11px] font-mono font-bold text-slate-400 uppercase tracking-tighter">{{ $tx->payment_date->format('d/m/Y') }}</span>
+                        <span class="text-[11px] font-mono font-semibold text-slate-500 dark:text-slate-400">{{ $tx->payment_date->format('d/m/Y') }}</span>
                     @endscope
 
                     @scope('cell_student', $tx)
-                        <span class="font-bold text-slate-900 dark:text-white">{{ $tx->billing?->student?->name ?? __('Siswa Dihapus') }}</span>
+                        <span class="font-semibold text-slate-900 dark:text-white">{{ $tx->billing?->student?->name ?? __('Siswa Dihapus') }}</span>
                     @endscope
 
                     @scope('cell_category', $tx)
-                        <x-ui.badge :label="$tx->billing?->feeCategory?->name ?? __('Kategori Dihapus')" class="bg-slate-100 text-slate-600 border-none text-[8px] font-black px-1.5 py-0.5" />
+                        <x-ui.badge :label="$tx->billing?->feeCategory?->name ?? __('Kategori Dihapus')" class="bg-slate-100 text-slate-600 border-none text-[10px] font-bold px-2 py-0.5 tracking-wide" />
                     @endscope
 
                     @scope('cell_amount_label', $tx)
-                        <div class="font-mono text-sm tracking-tighter font-black text-emerald-600 italic">
+                        <div class="font-mono text-sm font-bold text-emerald-600 dark:text-emerald-400">
                             Rp {{ number_format($tx->amount, 0, ',', '.') }}
                         </div>
                     @endscope

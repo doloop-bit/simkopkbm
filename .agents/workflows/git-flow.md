@@ -31,22 +31,20 @@ Pahami alur kerja berikut untuk setiap penambahan fitur atau perbaikan bug agar 
     php artisan test --compact
     ```
 
-4. **Deployment ke Demo (Testing Site)**
-    - Jika sudah OK secara lokal, gabungkan ke `develop` dan push.
+4. **Penyelesaian Lokal**
+    - Jika sudah OK secara lokal, gabungkan ke `develop`.
 
     ```powershell
     git add .
     git commit -m "feat: deskripsi singkat fitur"
     git checkout develop
     git merge feature/nama-fitur
-    git push origin develop
     ```
 
-    _Catatan: GitHub Actions akan otomatis men-deploy branch develop ke situs Demo._
+    _Catatan: Jangan lakukan push ke origin. User akan menarik perubahan tersebut secara mandiri._
 
-5. **Deployment ke Produksi (Live Site)**
-    - **PENTING**: Langkah ini HANYA boleh dilakukan jika user sudah memberikan instruksi eksplisit (seperti: "Deploy ke produksi" atau "Merge ke main").
-    - Jangan pernah menyarankan atau melakukan merge ke `main` secara otomatis sebelum user memverifikasi situs Demo.
+5. **Deployment ke Produksi (Saran Saja)**
+    - Jika user ingin deploy ke main secara mandiri, mereka bisa menjalankan:
 
     ```powershell
     git checkout main
@@ -54,11 +52,10 @@ Pahami alur kerja berikut untuk setiap penambahan fitur atau perbaikan bug agar 
     git push origin main
     ```
 
-    _Catatan: GitHub Actions akan otomatis men-deploy branch main ke situs Produksi._
+    _Catatan: AI tidak akan melakukan langkah ini. User yang akan mengeksekusinya._
 
-6. **Pembersihan**
-    - Hapus branch fitur yang sudah selesai untuk menjaga kerapihan repositori.
+6. **Pembersihan Lokal**
+    - Hapus branch fitur yang sudah selesai.
     ```powershell
     git branch -d feature/nama-fitur
-    git push origin --delete feature/nama-fitur
     ```

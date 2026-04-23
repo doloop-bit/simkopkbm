@@ -1,7 +1,7 @@
 <x-ui.modal wire:model="periodicModal" persistent>
     <x-ui.header :title="__('Data Periodik Siswa')" :subtitle="__('Input data berat badan, tinggi, dan lingkar kepala.')" separator />
 
-    <form wire:submit.prevent="savePeriodic({{ $editing?->latestProfile?->profileable_id ?? 0 }})" class="space-y-6">
+    <form wire:submit.prevent="savePeriodic" class="space-y-6">
         @if($hasExistingPeriodicData)
             <x-ui.alert :title="__('Data sudah ada')" icon="o-information-circle" class="bg-blue-50 text-blue-800 border-blue-100 shadow-sm">
                 {{ __('Terakhir diupdate') }} {{ $periodicDataLastUpdated }}

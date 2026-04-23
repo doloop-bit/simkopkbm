@@ -34,6 +34,7 @@ class SchoolProfile extends Model
             'is_active' => 'boolean',
             'latitude' => 'decimal:8',
             'longitude' => 'decimal:8',
+            'history' => 'array',
         ];
     }
 

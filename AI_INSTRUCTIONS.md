@@ -10,4 +10,7 @@ Sebelum menulis kode apapun untuk proyek SIMKOPKBM, KAMU WAJIB membaca file refe
 
 Juga terdapat berbagai referensi dokumen biner tambahan untuk acuan bisnis sekolah di folder `docs/references/` (misalnya `juknis.pdf` dan `mapel.pptx`).
 
-⚠️ **Tugas Wajib AI**: Pastikan kamu selalu meng-_update_ dokumen-dokumen di atas secara berkala jika kamu membuat fitur baru / arsitektur baru / route baru. Jangan biarkan _Knowledge Base_ usang.
+⚠️ **Tugas Wajib AI**: Pastikan kamu selalu meng-update dokumen-dokumen di atas secara berkala jika kamu membuat fitur baru / arsitektur baru / route baru. Jangan biarkan Knowledge Base usang.
+
+🔴 **KEBIJAKAN GIT PUSH**:
+**DILARANG KERAS** melakukan `git push` ke repositori remote (origin). Semua perubahan kode hanya boleh di-commit secara lokal. User akan melakukan push secara mandiri.
