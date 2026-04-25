@@ -3,13 +3,22 @@
     'icon' => null,
     'type' => 'text',
     'sm' => false,
+    'variant' => 'default', // default, subtle
 ])
 
 @php
     $wireModel = $attributes->wire('model')->value();
     $name = $attributes->get('name') ?? $wireModel;
-    $inputClasses = 'ui-input w-full rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-900 text-slate-900 dark:text-slate-100 placeholder-slate-400 dark:placeholder-slate-500 transition-all duration-200';
-    $sizeClasses = $sm ? 'px-2.5 py-1 text-xs' : 'px-3 py-1.5 text-sm';
+    
+    $baseClasses = 'ui-input w-full rounded-xl border transition-all duration-200 [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none';
+    
+    $variantClasses = match($variant) {
+        'subtle' => 'bg-slate-50 dark:bg-slate-900 border-slate-200 dark:border-slate-800 shadow-sm focus:border-primary/50 focus:ring-primary/10',
+        default => 'bg-white dark:bg-slate-900 border-slate-200 dark:border-slate-700 focus:border-primary focus:ring-primary/20',
+    };
+
+    $textClasses = 'text-slate-900 dark:text-slate-100 placeholder-slate-400 dark:placeholder-slate-500';
+    $sizeClasses = $sm ? 'px-2.5 py-1 h-8 text-xs' : 'px-3 py-1.5 text-sm';
     $iconPadding = $icon ? 'pl-10' : '';
 @endphp
 
@@ -30,7 +39,7 @@
         <input
             type="{{ $type }}"
             @if($name) id="{{ $name }}" name="{{ $name }}" @endif
-            {{ $attributes->except(['label', 'icon', 'sm'])->class([$inputClasses, $sizeClasses, $iconPadding]) }}
+            {{ $attributes->except(['label', 'icon', 'sm', 'variant'])->class([$baseClasses, $variantClasses, $textClasses, $sizeClasses, $iconPadding]) }}
         />
     </div>
 
