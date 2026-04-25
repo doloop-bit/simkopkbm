@@ -30,7 +30,8 @@
         value: @entangle($attributes->wire('model')),
     }"
     x-on:keydown.escape.window="open = false"
-    class="w-full"
+    {{ $attributes->only('class') }}
+    @class(['w-full' => !$attributes->has('class')])
 >
     @if($label)
         <label class="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1.5 ml-0.5">

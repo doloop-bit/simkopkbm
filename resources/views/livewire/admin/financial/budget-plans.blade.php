@@ -382,21 +382,20 @@ new class extends Component {
         </x-slot:actions>
     </x-ui.header>
 
-    <div class="flex flex-col md:flex-row gap-4">
-        <div class="flex-1">
-            <x-ui.input 
-                wire:model.live.debounce.300ms="search" 
-                :placeholder="__('Cari judul RAB...')" 
-                icon="o-magnifying-glass" 
-            />
-        </div>
+    <div class="flex flex-col md:flex-row gap-4 items-center mb-2">
+        <x-ui.input 
+            wire:model.live.debounce.300ms="search" 
+            :placeholder="__('Cari judul RAB...')" 
+            icon="o-magnifying-glass" 
+            class="flex-1"
+        />
         
         @if(Auth::user()->isAdmin() || Auth::user()->isYayasan())
             <x-ui.select 
                 wire:model.live="level_filter" 
                 :placeholder="__('Semua Jenjang')" 
                 :options="$levels" 
-                class="w-full md:w-48" 
+                class="w-full md:w-64" 
             />
         @endif
     </div>

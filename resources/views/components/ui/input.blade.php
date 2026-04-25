@@ -22,7 +22,7 @@
     $iconPadding = $icon ? 'pl-10' : '';
 @endphp
 
-<div>
+<div {{ $attributes->only('class') }} @class(['w-full' => !$attributes->has('class')])>
     @if($label)
         <label @if($name) for="{{ $name }}" @endif class="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1.5">
             {{ $label }}
