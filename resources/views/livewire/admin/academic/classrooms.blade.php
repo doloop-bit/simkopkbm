@@ -20,6 +20,12 @@ new #[Layout('components.layouts.app')] class extends Component {
     public ?int $homeroom_teacher_id = null;
     public bool $classroomModal = false;
 
+    // Filter and Sort
+    public string $search = '';
+    public ?int $filter_level_id = null;
+    public string $sortField = 'name';
+    public string $sortDirection = 'asc';
+
     public ?Classroom $editing = null;
     public array $classLevelOptions = [];
 
@@ -42,6 +48,26 @@ new #[Layout('components.layouts.app')] class extends Component {
     {
         $this->loadClassLevelOptions();
         $this->class_level = null;
+    }
+
+    public function updatedSearch(): void
+    {
+        $this->resetPage();
+    }
+
+    public function updatedFilterLevelId(): void
+    {
+        $this->resetPage();
+    }
+
+    public function updatedAcademicYearId(): void
+    {
+        $this->resetPage();
+    }
+
+    public function toggleSort(): void
+    {
+        $this->sortDirection = $this->sortDirection === 'asc' ? 'desc' : 'asc';
     }
 
     public function loadClassLevelOptions(): void
@@ -117,7 +143,9 @@ new #[Layout('components.layouts.app')] class extends Component {
         return [
             'classrooms' => Classroom::with(['academicYear', 'level', 'homeroomTeacher'])
                 ->when($this->academic_year_id, fn($q) => $q->where('academic_year_id', $this->academic_year_id))
-                ->latest()
+                ->when($this->filter_level_id, fn($q) => $q->where('level_id', $this->filter_level_id))
+                ->when($this->search, fn($q) => $q->where('name', 'like', "%{$this->search}%"))
+                ->orderBy($this->sortField, $this->sortDirection)
                 ->paginate(15),
             'years' => AcademicYear::all(),
             'levels' => Level::all(),
@@ -130,11 +158,34 @@ new #[Layout('components.layouts.app')] class extends Component {
     <x-ui.header :title="__('Manajemen Kelas')" :subtitle="__('Kelola rombongan belajar dan wali kelas.')" separator>
         <x-slot:actions>
             <div class="flex items-center gap-3">
-                <x-ui.select wire:model.live="academic_year_id" :options="$years" :placeholder="__('Semua Tahun')" class="w-48" />
+                <x-ui.input wire:model.live.debounce.300ms="search" :placeholder="__('Cari kelas...')" icon="o-magnifying-glass" class="w-64" clearable />
                 <x-ui.button :label="__('Tambah Kelas')" icon="o-plus" class="btn-primary" wire:click="createNew" wire:loading.attr="disabled" />
             </div>
         </x-slot:actions>
     </x-ui.header>
+
+    <div class="flex flex-col md:flex-row gap-4 mb-6 items-center justify-between bg-slate-50/50 dark:bg-slate-900/50 p-4 rounded-2xl border border-slate-100 dark:border-slate-800">
+        <div class="flex flex-1 gap-3 w-full md:w-auto">
+            <div class="w-full md:w-48">
+                <x-ui.select wire:model.live="academic_year_id" :options="$years" :placeholder="__('Semua Tahun')" />
+            </div>
+            <div class="w-full md:w-48">
+                <x-ui.select wire:model.live="filter_level_id" :options="$levels" :placeholder="__('Semua Jenjang')" />
+            </div>
+        </div>
+
+        <div class="flex gap-2 w-full md:w-auto justify-end">
+            <div class="w-full md:w-48">
+                <x-ui.select wire:model.live="sortField" :options="[
+                    ['id' => 'name', 'name' => __('Nama Kelas')],
+                    ['id' => 'level_id', 'name' => __('Jenjang')],
+                    ['id' => 'class_level', 'name' => __('Tingkat')],
+                    ['id' => 'created_at', 'name' => __('Tanggal Dibuat')],
+                ]" />
+            </div>
+            <x-ui.button :icon="$sortDirection === 'asc' ? 'o-chevron-up' : 'o-chevron-down'" wire:click="toggleSort" ghost />
+        </div>
+    </div>
 
     <x-ui.card shadow padding="false">
         <x-ui.table 
