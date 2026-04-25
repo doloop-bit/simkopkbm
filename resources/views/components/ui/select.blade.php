@@ -1,16 +1,27 @@
 @props([
     'label' => null,
+    'icon' => null,
     'options' => [],
     'placeholder' => null,
     'optionValue' => 'id',
     'optionLabel' => 'name',
     'sm' => false,
+    'variant' => 'default', // default, subtle
 ])
 
 @php
     $wireModel = $attributes->wire('model')->value();
     $name = $attributes->get('name') ?? $wireModel;
+    
+    $baseClasses = 'flex items-center justify-between w-full rounded-xl border transition-all duration-200 focus:outline-none cursor-pointer';
+    
+    $variantClasses = match($variant) {
+        'subtle' => 'bg-slate-50 dark:bg-slate-900 border-slate-200 dark:border-slate-800 focus:border-primary/50 focus:ring-4 focus:ring-primary/10',
+        default => 'bg-white dark:bg-slate-900 border-slate-200 dark:border-slate-700 focus:border-primary focus:ring-4 focus:ring-primary/10',
+    };
+
     $sizeClasses = $sm ? 'px-2.5 py-1 h-8 text-xs' : 'px-3 py-1.5 text-sm';
+    $iconPadding = $icon ? 'pl-10' : '';
 @endphp
 
 <div 
@@ -22,20 +33,26 @@
     class="w-full"
 >
     @if($label)
-        <label class="block text-[13px] font-semibold text-slate-600 dark:text-slate-400 mb-2 ml-1">
+        <label class="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1.5 ml-0.5">
             {{ $label }}
         </label>
     @endif
 
     <div class="relative">
+        @if($icon)
+            <div class="absolute inset-y-0 left-0 flex items-center pl-3 pointer-events-none text-slate-400 dark:text-slate-500">
+                <x-ui.icon :name="$icon" class="w-3.5 h-3.5" />
+            </div>
+        @endif
+
         <!-- Trigger Button -->
         <div 
+            tabindex="0"
             @click="open = !open"
             @click.away="open = false"
-            {{ $attributes->except(['label', 'options', 'placeholder', 'optionValue', 'optionLabel', 'sm'])->class(['flex items-center justify-between w-full rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-900 cursor-pointer shadow-sm hover:border-slate-300 dark:hover:border-slate-600 focus:outline-none transition-all duration-300', $sizeClasses]) }}
-            :class="{ 'ring-4 ring-primary/5 border-primary/50 shadow-md': open }"
+            {{ $attributes->except(['label', 'icon', 'options', 'placeholder', 'optionValue', 'optionLabel', 'sm', 'variant'])->class(['ui-select', $baseClasses, $variantClasses, $sizeClasses, $iconPadding]) }}
         >
-            <span class="truncate font-medium transition-colors duration-200" 
+            <span class="truncate transition-colors duration-200" 
                 :class="value ? 'text-slate-900 dark:text-slate-100' : 'text-slate-400 dark:text-slate-500'" 
                 x-text="
                     ({
@@ -82,7 +99,7 @@
                     @endphp
                     <div 
                         @click="value = '{{ $val }}'; open = false"
-                        class="flex items-center justify-between px-3 py-2.5 text-sm rounded-xl cursor-pointer transition-all duration-200 hover:bg-slate-50 dark:hover:bg-slate-800/50 group/item"
+                        class="flex items-center justify-between px-3 py-2 text-sm rounded-xl cursor-pointer transition-all duration-200 hover:bg-slate-50 dark:hover:bg-slate-800/50 group/item"
                         :class="String(value) === '{{ $val }}' ? 'bg-slate-100 dark:bg-slate-800 text-slate-900 dark:text-white font-bold' : 'text-slate-700 dark:text-slate-300'"
                     >
                         <span class="truncate" :class="{ 'translate-x-1': String(value) === '{{ $val }}' }">{{ $lbl }}</span>

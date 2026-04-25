@@ -468,7 +468,7 @@ new class extends Component {
             <div class="rounded-3xl border border-slate-200 dark:border-slate-800 bg-slate-50/10 dark:bg-slate-900/10 overflow-hidden">
                 <div class="p-4 border-b border-slate-200 dark:border-slate-800 flex items-center justify-between bg-white dark:bg-slate-900">
                     <span class="text-xs font-bold uppercase text-slate-500 tracking-wider">{{ __('Rincian Item Anggaran') }}</span>
-                    <x-ui.button :label="__('Tambah Baris')" icon="o-plus" wire:click="addItemRow" class="btn-sm btn-ghost text-xs font-bold" />
+                    <x-ui.button :label="__('Tambah Baris')" icon="o-plus" wire:click="addItemRow" variant="soft" class="btn-sm" />
                 </div>
                 
                 <div class="overflow-x-auto min-h-[200px]">
@@ -557,10 +557,10 @@ new class extends Component {
                                     <x-ui.money wire:model.live.debounce.1300ms="formItems.{{ $index }}.amount" class="text-right font-mono" variant="subtle" sm />
                                 </td>
                                 <td class="px-3 py-2 text-right align-top">
-                                    <div class="font-mono text-xs font-bold text-slate-900 dark:text-white whitespace-nowrap" wire:loading.remove wire:target="formItems.{{ $index }}.quantity, formItems.{{ $index }}.amount">
+                                    <div class="h-8 flex items-center justify-end font-mono text-sm font-bold text-slate-900 dark:text-white whitespace-nowrap" wire:loading.remove wire:target="formItems.{{ $index }}.quantity, formItems.{{ $index }}.amount">
                                         Rp {{ number_format($item['total'], 0, ',', '.') }}
                                     </div>
-                                    <div wire:loading wire:target="formItems.{{ $index }}.quantity, formItems.{{ $index }}.amount" class="flex justify-end">
+                                    <div wire:loading wire:target="formItems.{{ $index }}.quantity, formItems.{{ $index }}.amount" class="h-8 flex items-center justify-end">
                                         <span class="loading loading-spinner loading-xs text-primary"></span>
                                     </div>
                                 </td>
