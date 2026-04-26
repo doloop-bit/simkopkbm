@@ -5,7 +5,7 @@
             ['key' => 'classroom.name', 'label' => __('Kelas')],
             ['key' => 'subject_name', 'label' => __('Materi')],
             ['key' => 'percentage', 'label' => __('Kehadiran'), 'class' => 'text-center']
-        ]" :rows="$attendanceData">
+        ]" :rows="$attendanceData" with-pagination per-page="perPage" :per-page-values="[10, 25, 50, 100]">
             @scope('cell_date', $att)
                 <span class="text-xs font-medium text-slate-500 font-mono italic">{{ $att->date->format('d/m/Y') }}</span>
             @endscope

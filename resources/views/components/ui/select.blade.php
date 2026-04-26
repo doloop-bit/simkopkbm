@@ -7,6 +7,7 @@
     'optionLabel' => 'name',
     'sm' => false,
     'variant' => 'default', // default, subtle
+    'dropup' => false,
 ])
 
 @php
@@ -75,12 +76,12 @@
         <div 
             x-show="open"
             x-transition:enter="transition ease-out duration-200"
-            x-transition:enter-start="opacity-0 translate-y-1 scale-95"
+            x-transition:enter-start="opacity-0 {{ $dropup ? 'translate-y-1' : '-translate-y-1' }} scale-95"
             x-transition:enter-end="opacity-100 translate-y-0 scale-100"
             x-transition:leave="transition ease-in duration-100"
             x-transition:leave-start="opacity-100 translate-y-0 scale-100"
-            x-transition:leave-end="opacity-0 translate-y-1 scale-95"
-            class="absolute z-[100] mt-3 w-full bg-white dark:bg-slate-900 rounded-2xl shadow-[0_20px_50px_rgba(0,0,0,0.15)] dark:shadow-[0_20px_50px_rgba(0,0,0,0.4)] border border-slate-100 dark:border-slate-800 py-2 ring-1 ring-black/5 overflow-hidden"
+            x-transition:leave-end="opacity-0 {{ $dropup ? 'translate-y-1' : '-translate-y-1' }} scale-95"
+            class="absolute z-[100] {{ $dropup ? 'bottom-full mb-2' : 'top-full mt-2' }} w-full bg-white dark:bg-slate-900 rounded-2xl shadow-[0_20px_50px_rgba(0,0,0,0.15)] dark:shadow-[0_20px_50px_rgba(0,0,0,0.4)] border border-slate-100 dark:border-slate-800 py-2 ring-1 ring-black/5 overflow-hidden"
             style="display: none;"
         >
             <div class="max-h-64 overflow-y-auto px-1.5 space-y-0.5 scrollbar-thin scrollbar-thumb-slate-200 dark:scrollbar-thumb-slate-800">

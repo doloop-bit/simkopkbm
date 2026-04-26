@@ -22,7 +22,7 @@
             ['key' => 'category', 'label' => __('Kategori')],
             ['key' => 'month_label', 'label' => __('Bulan')],
             ['key' => 'amount_label', 'label' => __('Tunggakan'), 'class' => 'text-right'],
-        ]" :rows="$arrearsData">
+        ]" :rows="$arrearsData" with-pagination per-page="perPage" :per-page-values="[10, 25, 50, 100]">
             @scope('cell_checkbox', $billing)
                 <x-ui.checkbox wire:model.live="selected_billings" value="{{ $billing->id }}" />
             @endscope
