@@ -16,6 +16,9 @@ use Livewire\Component;
 
 new class extends Component
 {
+    public ?int $levelId = null;
+    public array $rabTrendLevelIds = [];
+
     public function with(): array
     {
         $user = auth()->user();
@@ -23,6 +26,11 @@ new class extends Component
         $isYayasan = $user->isYayasan();
         $isKepsek = $user->isHeadmaster();
         $hasFinancialAccess = $user->isAdmin() || $isTreasurer || $isYayasan || $isKepsek;
+
+        // Reset level filter if treasurer (they can only see their own level)
+        if ($isTreasurer) {
+            $this->levelId = $user->managed_level_id;
+        }
 
         $start = now()->startOfMonth();
         $end = now()->endOfMonth();
@@ -70,6 +78,7 @@ new class extends Component
 
         return [
             'isTreasurer' => $isTreasurer,
+            'levels' => Level::all(),
             'stats' => [
                 'students' => $totalStudents,
                 'teachers' => $totalTeachers,
@@ -91,16 +100,18 @@ new class extends Component
 
     private function getFinancialChartData(User $user): array
     {
-        $levelId = $user->isTreasurer() ? $user->managed_level_id : null;
+        $treasurerLevelId = $user->isTreasurer() ? $user->managed_level_id : null;
+        $filteredLevelId = $treasurerLevelId ?? $this->levelId;
+        $rabTrendFilteredIds = $treasurerLevelId ? [$treasurerLevelId] : $this->rabTrendLevelIds;
 
         return [
-            'cashFlow' => $this->getCashFlowData($levelId),
-            'incomeComposition' => $this->getIncomeCompositionData($levelId),
-            'expenseComposition' => $this->getExpenseCompositionData($levelId),
-            'collectionRate' => $this->getCollectionRateData($levelId),
-            'budgetRealization' => $this->getBudgetRealizationData($levelId),
-            'rabTrend' => $this->getRabTrendData($levelId),
-            'topDebtors' => ($user->isAdmin() || $user->isTreasurer()) ? $this->getTopDebtorsData($levelId) : [],
+            'cashFlow' => $this->getCashFlowData($filteredLevelId),
+            'incomeComposition' => $this->getIncomeCompositionData($filteredLevelId),
+            'expenseComposition' => $this->getExpenseCompositionData($filteredLevelId),
+            'collectionRate' => $this->getCollectionRateData($treasurerLevelId),
+            'budgetRealization' => $this->getBudgetRealizationData($treasurerLevelId),
+            'rabTrend' => $this->getRabTrendData($rabTrendFilteredIds),
+            'topDebtors' => ($user->isAdmin() || $user->isTreasurer()) ? $this->getTopDebtorsData($treasurerLevelId) : [],
         ];
     }
 
@@ -282,58 +293,70 @@ new class extends Component
     }
 
     /**
-     * ⑥ RAB yearly trend: cumulative monthly spending vs ceiling
+     * ⑥ RAB yearly trend: multiple lines for active plans
      */
-    private function getRabTrendData(?int $levelId): array
+    private function getRabTrendData(array $levelIds = []): array
     {
-        $query = BudgetPlan::where('is_active', true);
-        if ($levelId) {
-            $query->where('level_id', $levelId);
+        $query = BudgetPlan::where('is_active', true)->with('level');
+        if (!empty($levelIds)) {
+            $query->whereIn('level_id', $levelIds);
         }
 
-        $activePlan = $query->first();
-        if (! $activePlan) {
-            return ['months' => [], 'cumulative' => [], 'ceiling' => []];
+        $activePlans = $query->get();
+        if ($activePlans->isEmpty()) {
+            return ['months' => [], 'datasets' => []];
         }
 
         $year = now()->year;
         $currentMonth = now()->month;
         $monthLabels = [];
-        $monthlySpending = [];
 
         for ($m = 1; $m <= 12; $m++) {
             $monthLabels[] = Carbon::createFromDate($year, $m, 1)->translatedFormat('M');
-
-            if ($m <= $currentMonth) {
-                $start = Carbon::createFromDate($year, $m, 1)->startOfDay();
-                $end = $start->copy()->endOfMonth()->endOfDay();
-
-                $monthlySpending[] = (float) Transaction::where('type', 'expense')
-                    ->where('budget_plan_id', $activePlan->id)
-                    ->whereBetween('payment_date', [$start, $end])
-                    ->sum('amount');
-            } else {
-                $monthlySpending[] = null;
-            }
         }
 
-        $cumulative = [];
-        $runningTotal = 0;
-        foreach ($monthlySpending as $val) {
-            if ($val !== null) {
-                $runningTotal += $val;
-                $cumulative[] = $runningTotal;
-            } else {
-                $cumulative[] = null;
-            }
-        }
+        $datasets = [];
+        $palette = ['#10b981', '#3b82f6', '#f59e0b', '#8b5cf6', '#06b6d4', '#ec4899', '#14b8a6'];
 
-        $ceiling = array_fill(0, 12, (float) $activePlan->total_amount);
+        foreach ($activePlans as $index => $plan) {
+            $monthlySpending = [];
+            for ($m = 1; $m <= 12; $m++) {
+                if ($m <= $currentMonth) {
+                    $start = Carbon::createFromDate($year, $m, 1)->startOfDay();
+                    $end = $start->copy()->endOfMonth()->endOfDay();
+
+                    $monthlySpending[] = (float) Transaction::where('type', 'expense')
+                        ->where('budget_plan_id', $plan->id)
+                        ->whereBetween('payment_date', [$start, $end])
+                        ->sum('amount');
+                } else {
+                    $monthlySpending[] = null;
+                }
+            }
+
+            $cumulative = [];
+            $runningTotal = 0;
+            foreach ($monthlySpending as $val) {
+                if ($val !== null) {
+                    $runningTotal += $val;
+                    $cumulative[] = $runningTotal;
+                } else {
+                    $cumulative[] = null;
+                }
+            }
+
+            $color = $palette[$index % count($palette)];
+
+            $datasets[] = [
+                'label' => $plan->level ? $plan->level->name : $plan->title,
+                'data' => $cumulative,
+                'color' => $color,
+            ];
+        }
 
         return [
             'months' => $monthLabels,
-            'cumulative' => $cumulative,
-            'ceiling' => $ceiling,
+            'datasets' => $datasets,
         ];
     }
 
@@ -347,6 +370,12 @@ new class extends Component
             ->groupBy('student_id')
             ->orderByDesc('total_unpaid')
             ->limit(10);
+
+        if ($levelId) {
+            $query->whereHas('student.studentProfile.classroom', function ($q) use ($levelId) {
+                $q->where('level_id', $levelId);
+            });
+        }
 
         $results = $query->get();
 

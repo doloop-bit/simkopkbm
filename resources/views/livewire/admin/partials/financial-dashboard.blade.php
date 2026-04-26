@@ -8,13 +8,15 @@
 @if($hasFinancialData)
 <div class="space-y-6" id="financial-dashboard-section">
     {{-- Section Header --}}
-    <div class="flex items-center gap-3 pt-2">
-        <div class="p-2 bg-emerald-50 dark:bg-emerald-950/30 rounded-xl">
-            <x-ui.icon name="o-chart-bar-square" class="size-6 text-emerald-600 dark:text-emerald-400" />
-        </div>
-        <div>
-            <h2 class="text-lg font-extrabold text-slate-900 dark:text-white tracking-tight">{{ __('Analisis Keuangan') }}</h2>
-            <p class="text-xs text-slate-500 dark:text-slate-400 font-medium">{{ __('Ringkasan keuangan dan anggaran') }}</p>
+    <div class="flex flex-col md:flex-row md:items-center justify-between gap-4 pt-2">
+        <div class="flex items-center gap-3">
+            <div class="p-2 bg-emerald-50 dark:bg-emerald-950/30 rounded-xl">
+                <x-ui.icon name="o-chart-bar-square" class="size-6 text-emerald-600 dark:text-emerald-400" />
+            </div>
+            <div>
+                <h2 class="text-lg font-extrabold text-slate-900 dark:text-white tracking-tight">{{ __('Analisis Keuangan') }}</h2>
+                <p class="text-xs text-slate-500 dark:text-slate-400 font-medium">{{ __('Ringkasan keuangan dan anggaran') }}</p>
+            </div>
         </div>
     </div>
 
@@ -22,12 +24,29 @@
     <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
         {{-- ① Cash Flow Chart (2 cols wide) --}}
         <x-ui.card class="lg:col-span-2" padding="false">
-            <div class="p-5 pb-3">
-                <h3 class="text-sm font-bold text-slate-900 dark:text-white">{{ __('Arus Kas Bulanan') }}</h3>
-                <p class="text-xs text-slate-400 mt-0.5">{{ __('6 bulan terakhir') }}</p>
+            <div class="p-5 pb-3 flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+                <div>
+                    <h3 class="text-sm font-bold text-slate-900 dark:text-white">{{ __('Arus Kas Bulanan') }}</h3>
+                    <p class="text-xs text-slate-400 mt-0.5">{{ __('6 bulan terakhir') }}</p>
+                </div>
+                @if(!$isTreasurer)
+                    <div class="flex items-center gap-2">
+                        <x-ui.select 
+                            wire:model.live="levelId" 
+                            :options="$levels" 
+                            option-value="id" 
+                            option-label="name" 
+                            placeholder="{{ __('Semua Jenjang') }}"
+                            sm
+                            class="w-40"
+                        />
+                    </div>
+                @endif
             </div>
             <div class="px-5 pb-5">
                 <div class="relative h-64"
+                     wire:key="cash-flow-chart-{{ md5(json_encode($chartData['cashFlow'])) }}"
+                     wire:ignore
                      x-data="cashFlowChart(@js($chartData['cashFlow']))"
                      x-init="initChart()"
                 >
@@ -45,6 +64,8 @@
             <div class="px-5 pb-5">
                 @if(!empty($chartData['incomeComposition']['labels']))
                     <div class="relative h-56"
+                         wire:key="income-comp-chart-{{ md5(json_encode($chartData['incomeComposition'])) }}"
+                         wire:ignore
                          x-data="compositionChart(@js($chartData['incomeComposition']), 'income')"
                          x-init="initChart()"
                     >
@@ -81,6 +102,8 @@
             <div class="px-5 pb-5">
                 @if(!empty($chartData['expenseComposition']['labels']))
                     <div class="relative h-56"
+                         wire:key="expense-comp-chart-{{ md5(json_encode($chartData['expenseComposition'])) }}"
+                         wire:ignore
                          x-data="compositionChart(@js($chartData['expenseComposition']), 'expense')"
                          x-init="initChart()"
                     >
@@ -139,7 +162,9 @@
                                     </span>
                                 </div>
                                 <div class="h-3 bg-slate-100 dark:bg-slate-800 rounded-full overflow-hidden">
-                                    <div class="{{ $barColor }} h-full rounded-full transition-all duration-700 ease-out" style="width: {{ $percentage }}%"></div>
+                                    <div class="{{ $barColor }} h-full rounded-full transition-all duration-700 ease-out" 
+                                         wire:key="collection-bar-{{ $level['name'] }}-{{ $levelId ?? 'all' }}"
+                                         style="width: {{ $percentage }}%"></div>
                                 </div>
                             </div>
                         @endforeach
@@ -164,6 +189,8 @@
             <div class="px-5 pb-5">
                 @if(!empty($chartData['budgetRealization']['labels']))
                     <div class="relative h-64"
+                         wire:key="budget-realization-chart-{{ md5(json_encode($chartData['budgetRealization'])) }}"
+                         wire:ignore
                          x-data="budgetRealizationChart(@js($chartData['budgetRealization']))"
                          x-init="initChart()"
                     >
@@ -179,13 +206,28 @@
 
         {{-- ⑥ RAB Yearly Trend (Line) --}}
         <x-ui.card padding="false">
-            <div class="p-5 pb-3">
-                <h3 class="text-sm font-bold text-slate-900 dark:text-white">{{ __('Tren RAB Tahunan') }}</h3>
-                <p class="text-xs text-slate-400 mt-0.5">{{ __('Akumulasi pengeluaran vs pagu anggaran') }} {{ now()->year }}</p>
+            <div class="p-5 pb-3 flex flex-col sm:flex-row sm:items-start justify-between gap-3">
+                <div>
+                    <h3 class="text-sm font-bold text-slate-900 dark:text-white">{{ __('Tren RAB Tahunan') }}</h3>
+                    <p class="text-xs text-slate-400 mt-0.5">{{ __('Perbandingan akumulasi pengeluaran') }} {{ now()->year }}</p>
+                </div>
+                @if(!$isTreasurer)
+                    <div class="flex flex-wrap items-center gap-3">
+                        @foreach($levels as $level)
+                            <label class="flex items-center gap-1.5 cursor-pointer">
+                                <input type="checkbox" wire:model.live="rabTrendLevelIds" value="{{ $level->id }}" 
+                                    class="w-3.5 h-3.5 rounded text-primary border-slate-300 dark:border-slate-700 dark:bg-slate-900 focus:ring-primary focus:ring-offset-0">
+                                <span class="text-xs text-slate-600 dark:text-slate-400 font-medium">{{ $level->name }}</span>
+                            </label>
+                        @endforeach
+                    </div>
+                @endif
             </div>
             <div class="px-5 pb-5">
-                @if(!empty($chartData['rabTrend']['months']))
+                @if(!empty($chartData['rabTrend']['datasets']))
                     <div class="relative h-64"
+                         wire:key="rab-trend-chart-{{ md5(json_encode($chartData['rabTrend'])) }}"
+                         wire:ignore
                          x-data="rabTrendChart(@js($chartData['rabTrend']))"
                          x-init="initChart()"
                     >
@@ -471,35 +513,28 @@
         Alpine.data('rabTrendChart', (data) => ({
             chart: null,
             initChart() {
+                const chartDatasets = data.datasets.map(ds => {
+                    return {
+                        label: ds.label,
+                        data: ds.data,
+                        borderColor: ds.color,
+                        backgroundColor: ds.color + '1A', // 10% opacity
+                        fill: false,
+                        tension: 0.3,
+                        borderWidth: 2.5,
+                        pointRadius: 4,
+                        pointBackgroundColor: ds.color,
+                        pointBorderColor: '#fff',
+                        pointBorderWidth: 2,
+                        pointHoverRadius: 6,
+                    };
+                });
+
                 this.chart = new Chart(this.$refs.canvas, {
                     type: 'line',
                     data: {
                         labels: data.months,
-                        datasets: [
-                            {
-                                label: 'Akumulasi Pengeluaran',
-                                data: data.cumulative,
-                                borderColor: 'rgb(16, 185, 129)',
-                                backgroundColor: 'rgba(16, 185, 129, 0.08)',
-                                fill: true,
-                                tension: 0.3,
-                                borderWidth: 2.5,
-                                pointRadius: 4,
-                                pointBackgroundColor: 'rgb(16, 185, 129)',
-                                pointBorderColor: '#fff',
-                                pointBorderWidth: 2,
-                                pointHoverRadius: 6,
-                            },
-                            {
-                                label: 'Pagu Anggaran',
-                                data: data.ceiling,
-                                borderColor: 'rgb(244, 63, 94)',
-                                borderDash: [8, 4],
-                                borderWidth: 2,
-                                pointRadius: 0,
-                                fill: false,
-                            }
-                        ]
+                        datasets: chartDatasets
                     },
                     options: {
                         responsive: true,

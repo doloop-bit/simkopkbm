@@ -184,3 +184,39 @@ it('shows budget realization when active budget plans exist', function () {
         ->assertSee('Realisasi RAB')
         ->assertSee('Tren RAB Tahunan');
 });
+
+it('filters data when a level is selected', function () {
+    $user = User::factory()->admin()->create();
+    $this->actingAs($user);
+
+    $level1 = Level::factory()->create(['name' => 'Jenjang A']);
+    $level2 = Level::factory()->create(['name' => 'Jenjang B']);
+
+    $category1 = FeeCategory::factory()->create(['level_id' => $level1->id, 'name' => 'Tagihan Jenjang A']);
+    $category2 = FeeCategory::factory()->create(['level_id' => $level2->id, 'name' => 'Tagihan Jenjang B']);
+
+    Transaction::create([
+        'type' => 'income',
+        'fee_category_id' => $category1->id,
+        'amount' => 100000,
+        'payment_date' => now(),
+        'payment_method' => 'cash',
+        'user_id' => $user->id,
+    ]);
+
+    Transaction::create([
+        'type' => 'income',
+        'fee_category_id' => $category2->id,
+        'amount' => 200000,
+        'payment_date' => now(),
+        'payment_method' => 'cash',
+        'user_id' => $user->id,
+    ]);
+
+    Livewire::test('admin.dashboard')
+        ->assertSee('Tagihan Jenjang A')
+        ->assertSee('Tagihan Jenjang B')
+        ->set('levelId', $level1->id)
+        ->assertSee('Tagihan Jenjang A')
+        ->assertDontSee('Tagihan Jenjang B');
+});
