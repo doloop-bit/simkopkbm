@@ -16,5 +16,11 @@ Route::middleware(['auth', 'verified', 'role:admin,bendahara,yayasan,kepsek'])->
     // RAB / Budget Plans
     Route::livewire('/financial/budget-plans', 'admin.financial.budget-plans')->name('financial.budget-plans');
 
+    // Penggajian / Payroll
+    Route::livewire('/financial/salary-templates', 'admin.financial.salary-templates')->name('financial.salary-templates');
+    Route::livewire('/financial/payroll-process', 'admin.financial.payroll-process')->name('financial.payroll-process');
+    Route::get('/financial/payroll/{payroll}/slip', [App\Http\Controllers\Admin\Financial\PayrollController::class, 'downloadSlip'])
+        ->name('financial.payroll.slip');
+
     Route::livewire('/reports', 'admin.reports')->name('reports');
 });

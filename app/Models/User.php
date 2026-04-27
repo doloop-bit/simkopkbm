@@ -92,6 +92,16 @@ class User extends Authenticatable
             ->where('profiles.profileable_type', StudentProfile::class);
     }
 
+    public function salaryTemplate(): \Illuminate\Database\Eloquent\Relations\HasOne
+    {
+        return $this->hasOne(SalaryTemplate::class);
+    }
+
+    public function payrolls(): \Illuminate\Database\Eloquent\Relations\HasMany
+    {
+        return $this->hasMany(Payroll::class);
+    }
+
     // Teacher Assignment Relationships
     public function teacherAssignments()
     {

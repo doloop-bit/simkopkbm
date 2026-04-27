@@ -81,6 +81,7 @@
         <x-ui.menu-sub title="Keuangan" icon="o-banknotes" :active="request()->routeIs('financial.*')">
             <x-ui.menu-item title="Transaksi Keuangan" icon="o-wallet" :link="route('financial.transactions')" />
             <x-ui.menu-item title="RAB / Anggaran" icon="o-document-currency-dollar" :link="route('financial.budget-plans')" />
+            <x-ui.menu-item title="Penggajian" icon="o-currency-dollar" :link="route('financial.salary-templates')" />
         </x-ui.menu-sub>
 
         @if(auth()->user()->isAdmin())

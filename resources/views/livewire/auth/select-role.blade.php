@@ -27,7 +27,7 @@ new #[Layout('components.layouts.plain')] class extends Component {
                 default => route('dashboard'),
             };
 
-            $this->redirect($redirectUrl, navigate: true);
+            $this->redirect($redirectUrl);
         }
     }
 };
