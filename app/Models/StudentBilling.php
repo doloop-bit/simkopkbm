@@ -54,4 +54,13 @@ class StudentBilling extends Model
     {
         return $this->amount - $this->paid_amount;
     }
+
+    public function applicableDiscounts()
+    {
+        return $this->hasMany(StudentFeeDiscount::class, 'student_id', 'student_id')
+            ->where(function ($query) {
+                $query->where('fee_category_id', $this->fee_category_id)
+                    ->orWhereNull('fee_category_id');
+            });
+    }
 }

@@ -123,7 +123,7 @@ new #[Layout('components.layouts.app')] class extends Component {
 
     public function with(): array
     {
-        $billings = StudentBilling::with(['student', 'feeCategory'])
+        $billings = StudentBilling::with(['student.profiles.profileable', 'feeCategory', 'applicableDiscounts'])
             ->when($this->classroom_id, function($q) {
                 $q->whereHas('student.profiles', function($pq) {
                     $pq->whereHasMorph('profileable', [\App\Models\StudentProfile::class], function($sq) {
@@ -194,7 +194,9 @@ new #[Layout('components.layouts.app')] class extends Component {
                 ['key' => 'student_name', 'label' => __('Siswa')],
                 ['key' => 'category', 'label' => __('Kategori')],
                 ['key' => 'month_label', 'label' => __('Bulan')],
-                ['key' => 'amount_label', 'label' => __('Nominal'), 'class' => 'text-right'],
+                ['key' => 'original_amount', 'label' => __('Nominal Pokok'), 'class' => 'text-right'],
+                ['key' => 'discount_label', 'label' => __('Potongan'), 'class' => 'text-right'],
+                ['key' => 'amount_label', 'label' => __('Tagihan Net'), 'class' => 'text-right'],
                 ['key' => 'status_label', 'label' => __('Status'), 'class' => 'text-center']
             ]" 
             :rows="$billings"
@@ -214,8 +216,36 @@ new #[Layout('components.layouts.app')] class extends Component {
                 <span class="text-xs font-semibold text-slate-500 font-mono uppercase">{{ $billing->month ?? '-' }}</span>
             @endscope
 
+            @scope('cell_original_amount', $billing)
+                @php
+                    $originalAmount = (float) ($billing->feeCategory?->default_amount ?? 0);
+                @endphp
+                <span class="text-xs text-slate-500 line-through">
+                    Rp {{ number_format($originalAmount, 0, ',', '.') }}
+                </span>
+            @endscope
+
+            @scope('cell_discount_label', $billing)
+                @php
+                    $originalAmount = (float) ($billing->feeCategory?->default_amount ?? 0);
+                    $discountAmount = $originalAmount - (float) $billing->amount;
+                @endphp
+                @if($discountAmount > 0)
+                    <div class="flex flex-col items-end">
+                        <span class="text-xs font-bold text-rose-500">
+                            - Rp {{ number_format($discountAmount, 0, ',', '.') }}
+                        </span>
+                        @if($billing->notes)
+                            <span class="text-[9px] text-slate-400 italic">{{ Str::limit(str_replace('Potongan/Beasiswa: ', '', $billing->notes), 20) }}</span>
+                        @endif
+                    </div>
+                @else
+                    <span class="text-xs text-slate-300">-</span>
+                @endif
+            @endscope
+
             @scope('cell_amount_label', $billing)
-                <span class="font-mono text-sm font-bold text-slate-900 dark:text-white whitespace-nowrap px-2 py-1 bg-slate-50 dark:bg-slate-900/50 rounded-lg ring-1 ring-slate-100 dark:ring-slate-800">
+                <span class="font-mono text-sm font-bold text-primary-600 dark:text-primary-400 whitespace-nowrap px-2 py-1 bg-primary-50 dark:bg-primary-900/20 rounded-lg ring-1 ring-primary-100 dark:ring-primary-800">
                     Rp {{ number_format($billing->amount, 0, ',', '.') }}
                 </span>
             @endscope
