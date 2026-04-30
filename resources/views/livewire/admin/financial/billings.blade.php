@@ -5,6 +5,7 @@ declare(strict_types=1);
 use App\Models\User;
 use App\Models\FeeCategory;
 use App\Models\StudentBilling;
+use App\Models\StudentFeeDiscount;
 use App\Models\AcademicYear;
 use App\Models\Classroom;
 use Livewire\Attributes\Layout;
@@ -22,6 +23,63 @@ new #[Layout('components.layouts.app')] class extends Component {
 
     public string $search = '';
     public bool $billingModal = false;
+    public bool $bulkDeleteModal = false;
+
+    public function deleteBilling(int $id): void
+    {
+        $billing = StudentBilling::findOrFail($id);
+        
+        if ($billing->status !== 'unpaid') {
+            session()->flash('error', __('Tagihan yang sudah dibayar tidak dapat dihapus.'));
+            return;
+        }
+
+        // Reset 'once' discounts if this billing used them
+        StudentFeeDiscount::where('student_id', $billing->student_id)
+            ->where('fee_category_id', $billing->fee_category_id)
+            ->where('frequency', 'once')
+            ->where('is_applied', true)
+            ->update(['is_applied' => false]);
+
+        $billing->delete();
+        session()->flash('success', __('Tagihan berhasil dihapus.'));
+    }
+
+    public function bulkDelete(): void
+    {
+        if (!$this->classroom_id || !$this->fee_category_id) {
+            session()->flash('error', __('Pilih Kelas dan Kategori Biaya terlebih dahulu untuk hapus massal.'));
+            return;
+        }
+
+        $query = StudentBilling::where('fee_category_id', $this->fee_category_id)
+            ->where('status', 'unpaid')
+            ->when($this->month, fn($q) => $q->where('month', $this->month))
+            ->whereHas('student.profiles', function($pq) {
+                $pq->whereHasMorph('profileable', [\App\Models\StudentProfile::class], function($sq) {
+                    $sq->where('classroom_id', $this->classroom_id);
+                });
+            });
+
+        $count = $query->count();
+        
+        if ($count === 0) {
+            session()->flash('error', __('Tidak ada tagihan belum dibayar yang ditemukan untuk kriteria tersebut.'));
+            return;
+        }
+
+        $studentIds = $query->pluck('student_id')->unique();
+        
+        StudentFeeDiscount::whereIn('student_id', $studentIds)
+            ->where('fee_category_id', $this->fee_category_id)
+            ->where('frequency', 'once')
+            ->where('is_applied', true)
+            ->update(['is_applied' => false]);
+
+        $query->delete();
+
+        session()->flash('success', __(":count Tagihan berhasil dihapus.", ['count' => $count]));
+    }
 
     public function mount(): void
     {
@@ -57,6 +115,13 @@ new #[Layout('components.layouts.app')] class extends Component {
                 $q->where(function ($query) {
                     $query->where('fee_category_id', $this->fee_category_id)
                           ->orWhereNull('fee_category_id');
+                })
+                ->where(function ($query) {
+                    $query->where('frequency', 'recurring')
+                          ->orWhere(function ($q) {
+                              $q->where('frequency', 'once')
+                                ->where('is_applied', false);
+                          });
                 });
             }])
             ->whereHas('profiles', function ($q) {
@@ -90,6 +155,11 @@ new #[Layout('components.layouts.app')] class extends Component {
                             $finalAmount -= $discountValue;
                         }
                         $notes .= "Potongan/Beasiswa: {$discount->name} ";
+                        
+                        // Mark 'once' frequency discounts as applied
+                        if ($discount->frequency === 'once') {
+                            $discount->update(['is_applied' => true]);
+                        }
                     }
                     if ($finalAmount < 0) {
                         $finalAmount = 0;
@@ -168,6 +238,7 @@ new #[Layout('components.layouts.app')] class extends Component {
 
     <x-ui.header :title="__('Tagihan Siswa')" :subtitle="__('Manajemen penagihan biaya pendidikan siswa secara kolektif.')" separator>
         <x-slot:actions>
+            <x-ui.button :label="__('Hapus Tagihan Filtered')" icon="o-trash" class="btn-outline btn-error" wire:click="$set('bulkDeleteModal', true)" />
             <x-ui.button :label="__('Generate Tagihan Kelas')" icon="o-document-plus" class="btn-primary" wire:click="$set('billingModal', true)" />
         </x-slot:actions>
     </x-ui.header>
@@ -197,7 +268,8 @@ new #[Layout('components.layouts.app')] class extends Component {
                 ['key' => 'original_amount', 'label' => __('Nominal Pokok'), 'class' => 'text-right'],
                 ['key' => 'discount_label', 'label' => __('Potongan'), 'class' => 'text-right'],
                 ['key' => 'amount_label', 'label' => __('Tagihan Net'), 'class' => 'text-right'],
-                ['key' => 'status_label', 'label' => __('Status'), 'class' => 'text-center']
+                ['key' => 'status_label', 'label' => __('Status'), 'class' => 'text-center'],
+                ['key' => 'actions', 'label' => '', 'class' => 'text-right']
             ]" 
             :rows="$billings"
         >
@@ -259,6 +331,12 @@ new #[Layout('components.layouts.app')] class extends Component {
                     <x-ui.badge :label="strtoupper($billing->status)" class="bg-rose-100 text-rose-700 border-none text-[10px] font-bold px-2 py-0.5 tracking-wider" />
                 @endif
             @endscope
+
+            @scope('cell_actions', $billing)
+                @if($billing->status === 'unpaid')
+                    <x-ui.button icon="o-trash" class="btn-ghost btn-sm text-rose-500" wire:click="deleteBilling({{ $billing->id }})" wire:confirm="{{ __('Hapus tagihan ini?') }}" />
+                @endif
+            @endscope
         </x-ui.table>
 
         @if($billings->isEmpty())
@@ -289,6 +367,40 @@ new #[Layout('components.layouts.app')] class extends Component {
         <div class="flex justify-end gap-3 mt-8 pt-6 border-t border-slate-100 dark:border-slate-800">
             <x-ui.button :label="__('Batal')" wire:click="$set('billingModal', false)" />
             <x-ui.button :label="__('Generate Sekarang')" class="btn-primary" wire:click="generateBillings" spinner="generateBillings" />
+        </div>
+    </x-ui.modal>
+
+    <x-ui.modal wire:model="bulkDeleteModal">
+        <x-ui.header :title="__('Hapus Tagihan Massal')" :subtitle="__('Hapus tagihan berdasarkan filter yang aktif.')" separator />
+
+        <div class="space-y-4">
+            <p class="text-sm text-slate-600 dark:text-slate-400">
+                {{ __('Anda akan menghapus tagihan dengan kriteria berikut:') }}
+            </p>
+            
+            <div class="bg-slate-50 dark:bg-slate-900/50 p-4 rounded-lg space-y-2 border border-slate-100 dark:border-slate-800">
+                <div class="flex justify-between text-xs">
+                    <span class="text-slate-500">{{ __('Kelas:') }}</span>
+                    <span class="font-bold">{{ $classroom_id ? $classrooms->find($classroom_id)?->name : '-' }}</span>
+                </div>
+                <div class="flex justify-between text-xs">
+                    <span class="text-slate-500">{{ __('Kategori:') }}</span>
+                    <span class="font-bold">{{ $fee_category_id ? $categories->find($fee_category_id)?->name : '-' }}</span>
+                </div>
+                <div class="flex justify-between text-xs">
+                    <span class="text-slate-500">{{ __('Bulan:') }}</span>
+                    <span class="font-bold font-mono">{{ $month ?: '-' }}</span>
+                </div>
+            </div>
+
+            <x-ui.alert icon="o-exclamation-triangle" class="bg-rose-50 text-rose-700 border-rose-100 font-medium text-xs">
+                {{ __('Hanya tagihan berstatus "UNPAID" yang akan dihapus. Potongan sekali pakai (jika ada) akan di-reset agar bisa digunakan kembali.') }}
+            </x-ui.alert>
+        </div>
+
+        <div class="flex justify-end gap-3 mt-8 pt-6 border-t border-slate-100 dark:border-slate-800">
+            <x-ui.button :label="__('Batal')" wire:click="$set('bulkDeleteModal', false)" />
+            <x-ui.button :label="__('Ya, Hapus Sekarang')" class="btn-error" wire:click="bulkDelete" spinner="bulkDelete" />
         </div>
     </x-ui.modal>
 </div>

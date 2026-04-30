@@ -61,6 +61,13 @@ class StudentBilling extends Model
             ->where(function ($query) {
                 $query->where('fee_category_id', $this->fee_category_id)
                     ->orWhereNull('fee_category_id');
+            })
+            ->where(function ($query) {
+                $query->where('frequency', 'recurring')
+                    ->orWhere(function ($q) {
+                        $q->where('frequency', 'once')
+                            ->where('is_applied', false);
+                    });
             });
     }
 }

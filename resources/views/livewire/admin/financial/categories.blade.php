@@ -15,6 +15,7 @@ new #[Layout('components.layouts.app')] class extends Component {
     public string $code = '';
     public string $description = '';
     public float $default_amount = 0;
+    public string $billing_type = 'monthly';
     public ?int $level_id = null;
 
     public ?FeeCategory $editing = null;
@@ -29,13 +30,14 @@ new #[Layout('components.layouts.app')] class extends Component {
             'code' => 'required|string|max:15|unique:fee_categories,code,' . ($this->editing?->id ?? 'NULL'),
             'description' => 'nullable|string',
             'default_amount' => 'required|numeric|min:0',
+            'billing_type' => 'required|in:monthly,one_time',
             'level_id' => 'nullable|exists:levels,id',
         ];
     }
 
     public function create(): void
     {
-        $this->reset(['name', 'code', 'description', 'default_amount', 'level_id', 'editing']);
+        $this->reset(['name', 'code', 'description', 'default_amount', 'level_id', 'billing_type', 'editing']);
         $this->categoryModal = true;
     }
 
@@ -46,6 +48,7 @@ new #[Layout('components.layouts.app')] class extends Component {
         $this->code = $category->code;
         $this->description = $category->description ?? '';
         $this->default_amount = (float) $category->default_amount;
+        $this->billing_type = $category->billing_type;
         $this->level_id = $category->level_id;
         $this->categoryModal = true;
     }
@@ -60,6 +63,7 @@ new #[Layout('components.layouts.app')] class extends Component {
                 'code' => $this->code,
                 'description' => $this->description,
                 'default_amount' => $this->default_amount,
+                'billing_type' => $this->billing_type,
                 'level_id' => $this->level_id ?: null,
             ]);
             session()->flash('success', __('Kategori biaya berhasil diperbarui.'));
@@ -69,13 +73,14 @@ new #[Layout('components.layouts.app')] class extends Component {
                 'code' => $this->code,
                 'description' => $this->description,
                 'default_amount' => $this->default_amount,
+                'billing_type' => $this->billing_type,
                 'level_id' => $this->level_id ?: null,
             ]);
             session()->flash('success', __('Kategori biaya berhasil ditambahkan.'));
         }
 
         $this->categoryModal = false;
-        $this->reset(['name', 'code', 'description', 'default_amount', 'level_id', 'editing']);
+        $this->reset(['name', 'code', 'description', 'default_amount', 'level_id', 'billing_type', 'editing']);
     }
 
     public function confirmDelete(int $id): void
@@ -133,6 +138,7 @@ new #[Layout('components.layouts.app')] class extends Component {
             :headers="[
                 ['key' => 'code', 'label' => __('Kode')],
                 ['key' => 'name_label', 'label' => __('Nama Kategori')],
+                ['key' => 'type_label', 'label' => __('Tipe')],
                 ['key' => 'level_name', 'label' => __('Jenjang')],
                 ['key' => 'amount_label', 'label' => __('Nominal Default'), 'class' => 'text-right'],
                 ['key' => 'actions', 'label' => __('Aksi'), 'class' => 'text-right']
@@ -150,6 +156,13 @@ new #[Layout('components.layouts.app')] class extends Component {
                         <span class="text-[11px] text-slate-500 italic line-clamp-1 max-w-[200px]">{{ $category->description }}</span>
                     @endif
                 </div>
+            @endscope
+
+            @scope('cell_type_label', $category)
+                <x-ui.badge 
+                    :label="$category->billing_type === 'monthly' ? __('Bulanan') : __('Sekali Bayar')" 
+                    class="{{ $category->billing_type === 'monthly' ? 'bg-blue-100 text-blue-700' : 'bg-purple-100 text-purple-700' }} border-none text-[10px] uppercase tracking-wider px-2 py-0.5" 
+                />
             @endscope
 
             @scope('cell_level_name', $category)
@@ -190,7 +203,18 @@ new #[Layout('components.layouts.app')] class extends Component {
         <div class="space-y-6">
             <x-ui.input wire:model="name" :label="__('Nama Kategori')" required :placeholder="__('Contoh: SPP Bulanan')" />
             <x-ui.input wire:model="code" :label="__('Kode Unik')" required :placeholder="__('Contoh: SPP-BULAN')" />
-            <x-ui.input wire:model="default_amount" type="number" :label="__('Nominal Default (Rp)')" icon="o-banknotes" required />
+            <div class="grid grid-cols-2 gap-4">
+                <x-ui.input wire:model="default_amount" type="number" :label="__('Nominal Default (Rp)')" icon="o-banknotes" required />
+                <x-ui.select 
+                    wire:model="billing_type" 
+                    :label="__('Tipe Tagihan')" 
+                    :options="[
+                        ['id' => 'monthly', 'name' => __('Bulanan (Setiap Bulan)')],
+                        ['id' => 'one_time', 'name' => __('Sekali Bayar (Non-Bulanan)')]
+                    ]" 
+                    required 
+                />
+            </div>
             <x-ui.select wire:model="level_id" :label="__('Khusus Jenjang (Opsional)')" :placeholder="__('Tersedia untuk semua jenjang')" :options="$levels" />
             <x-ui.textarea wire:model="description" :label="__('Deskripsi Keterangan')" rows="2" />
         </div>
