@@ -359,13 +359,48 @@ new #[Layout('components.layouts.app')] class extends Component {
                         </div>
                         <div class="space-y-0.5" wire:click.stop>
                             @foreach(array_slice($dayEvents, 0, 3) as $evt)
+                                @php
+                                    $isMultiDay = $evt->end_date && !$evt->start_date->eq($evt->end_date);
+                                    $isStart = $isMultiDay && $day->isSameDay($evt->start_date);
+                                    $isEnd = $isMultiDay && $day->isSameDay($evt->end_date);
+                                    $isMiddle = $isMultiDay && !$isStart && !$isEnd;
+
+                                    $roundedClass = 'rounded';
+                                    $marginClass = '';
+                                    $borderStyle = "border-left: 2px solid {$evt->display_color};";
+                                    $titleText = $evt->title;
+
+                                    if ($isMultiDay) {
+                                        if ($isStart) {
+                                            $roundedClass = 'rounded-l rounded-r-none';
+                                            $marginClass = '-mr-1.5';
+                                        } elseif ($isEnd) {
+                                            $roundedClass = 'rounded-r rounded-l-none';
+                                            $marginClass = '-ml-1.5';
+                                            $borderStyle = '';
+                                            $titleText = '';
+                                        } else {
+                                            $roundedClass = 'rounded-none';
+                                            $marginClass = '-mx-1.5';
+                                            $borderStyle = '';
+                                            $titleText = '';
+                                        }
+
+                                        if (($isMiddle || $isEnd) && $day->dayOfWeek === \Carbon\Carbon::MONDAY) {
+                                            $marginClass = $isEnd ? '' : '-mr-1.5';
+                                            $roundedClass = $isEnd ? 'rounded' : 'rounded-l rounded-r-none';
+                                            $borderStyle = "border-left: 2px solid {$evt->display_color};";
+                                            $titleText = $evt->title;
+                                        }
+                                    }
+                                @endphp
                                 <div
                                     wire:click="viewEvent({{ $evt->id }})"
-                                    class="text-[10px] md:text-[11px] leading-tight px-1.5 py-0.5 rounded truncate cursor-pointer font-medium transition-opacity hover:opacity-80"
-                                    style="background-color: {{ $evt->display_color }}20; color: {{ $evt->display_color }}; border-left: 2px solid {{ $evt->display_color }};"
+                                    class="text-[10px] md:text-[11px] leading-tight px-1.5 py-0.5 {{ $roundedClass }} {{ $marginClass }} truncate cursor-pointer font-medium transition-opacity hover:opacity-80"
+                                    style="background-color: {{ $evt->display_color }}20; color: {{ $evt->display_color }}; {{ $borderStyle }}"
                                     title="{{ $evt->title }}"
                                 >
-                                    {{ $evt->title }}
+                                    {!! $titleText ? e($titleText) : '&nbsp;' !!}
                                 </div>
                             @endforeach
                         </div>
