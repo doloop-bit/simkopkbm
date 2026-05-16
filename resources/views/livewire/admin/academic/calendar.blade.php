@@ -225,10 +225,38 @@ new #[Layout('components.layouts.app')] class extends Component {
         foreach ($events as $event) {
             $start = $event->start_date;
             $end = $event->end_date ?? $event->start_date;
+            
+            // Find a slot that is free for the entire duration of the event
+            $slot = 0;
+            while (true) {
+                $isFree = true;
+                $check = $start->copy();
+                while ($check <= $end) {
+                    $key = $check->format('Y-m-d');
+                    if (isset($eventsByDate[$key][$slot]) && $eventsByDate[$key][$slot] !== null) {
+                        $isFree = false;
+                        break;
+                    }
+                    $check->addDay();
+                }
+                if ($isFree) {
+                    break;
+                }
+                $slot++;
+            }
+            
+            // Assign the event to the found slot for its entire duration
             $current = $start->copy();
             while ($current <= $end) {
                 $key = $current->format('Y-m-d');
-                $eventsByDate[$key][] = $event;
+                if (!isset($eventsByDate[$key])) {
+                    $eventsByDate[$key] = [];
+                }
+                // Pad with nulls if the slot is higher than current array length
+                while (count($eventsByDate[$key]) <= $slot) {
+                    $eventsByDate[$key][] = null;
+                }
+                $eventsByDate[$key][$slot] = $event;
                 $current->addDay();
             }
         }
@@ -353,55 +381,64 @@ new #[Layout('components.layouts.app')] class extends Component {
                             ])>
                                 {{ $day->format('j') }}
                             </span>
-                            @if(count($dayEvents) > 3)
-                                <span class="text-[10px] font-medium text-slate-400">+{{ count($dayEvents) - 3 }}</span>
+                            @php
+                                $validEventsCount = count(array_filter($dayEvents));
+                            @endphp
+                            @if($validEventsCount > 3)
+                                <span class="text-[10px] font-medium text-slate-400">+{{ $validEventsCount - 3 }}</span>
                             @endif
                         </div>
                         <div class="space-y-0.5" wire:click.stop>
                             @foreach(array_slice($dayEvents, 0, 3) as $evt)
-                                @php
-                                    $isMultiDay = $evt->end_date && !$evt->start_date->eq($evt->end_date);
-                                    $isStart = $isMultiDay && $day->isSameDay($evt->start_date);
-                                    $isEnd = $isMultiDay && $day->isSameDay($evt->end_date);
-                                    $isMiddle = $isMultiDay && !$isStart && !$isEnd;
+                                @if($evt)
+                                    @php
+                                        $isMultiDay = $evt->end_date && !$evt->start_date->eq($evt->end_date);
+                                        $isStart = $isMultiDay && $day->isSameDay($evt->start_date);
+                                        $isEnd = $isMultiDay && $day->isSameDay($evt->end_date);
+                                        $isMiddle = $isMultiDay && !$isStart && !$isEnd;
 
-                                    $roundedClass = 'rounded';
-                                    $marginClass = '';
-                                    $borderStyle = "border-left: 2px solid {$evt->display_color};";
-                                    $titleText = $evt->title;
+                                        $roundedClass = 'rounded';
+                                        $marginClass = '';
+                                        $borderStyle = "border-left: 2px solid {$evt->display_color};";
+                                        $titleText = $evt->title;
 
-                                    if ($isMultiDay) {
-                                        if ($isStart) {
-                                            $roundedClass = 'rounded-l rounded-r-none';
-                                            $marginClass = '-mr-1.5';
-                                        } elseif ($isEnd) {
-                                            $roundedClass = 'rounded-r rounded-l-none';
-                                            $marginClass = '-ml-1.5';
-                                            $borderStyle = '';
-                                            $titleText = '';
-                                        } else {
-                                            $roundedClass = 'rounded-none';
-                                            $marginClass = '-mx-1.5';
-                                            $borderStyle = '';
-                                            $titleText = '';
+                                        if ($isMultiDay) {
+                                            if ($isStart) {
+                                                $roundedClass = 'rounded-l rounded-r-none';
+                                                $marginClass = '-mr-1.5';
+                                            } elseif ($isEnd) {
+                                                $roundedClass = 'rounded-r rounded-l-none';
+                                                $marginClass = '-ml-1.5';
+                                                $borderStyle = '';
+                                                $titleText = '';
+                                            } else {
+                                                $roundedClass = 'rounded-none';
+                                                $marginClass = '-mx-1.5';
+                                                $borderStyle = '';
+                                                $titleText = '';
+                                            }
+
+                                            if (($isMiddle || $isEnd) && $day->dayOfWeek === \Carbon\Carbon::MONDAY) {
+                                                $marginClass = $isEnd ? '' : '-mr-1.5';
+                                                $roundedClass = $isEnd ? 'rounded' : 'rounded-l rounded-r-none';
+                                                $borderStyle = "border-left: 2px solid {$evt->display_color};";
+                                                $titleText = $evt->title;
+                                            }
                                         }
-
-                                        if (($isMiddle || $isEnd) && $day->dayOfWeek === \Carbon\Carbon::MONDAY) {
-                                            $marginClass = $isEnd ? '' : '-mr-1.5';
-                                            $roundedClass = $isEnd ? 'rounded' : 'rounded-l rounded-r-none';
-                                            $borderStyle = "border-left: 2px solid {$evt->display_color};";
-                                            $titleText = $evt->title;
-                                        }
-                                    }
-                                @endphp
-                                <div
-                                    wire:click="viewEvent({{ $evt->id }})"
-                                    class="text-[10px] md:text-[11px] leading-tight px-1.5 py-0.5 {{ $roundedClass }} {{ $marginClass }} truncate cursor-pointer font-medium transition-opacity hover:opacity-80"
-                                    style="background-color: {{ $evt->display_color }}20; color: {{ $evt->display_color }}; {{ $borderStyle }}"
-                                    title="{{ $evt->title }}"
-                                >
-                                    {!! $titleText ? e($titleText) : '&nbsp;' !!}
-                                </div>
+                                    @endphp
+                                    <div
+                                        wire:click="viewEvent({{ $evt->id }})"
+                                        class="text-[10px] md:text-[11px] leading-tight px-1.5 py-0.5 {{ $roundedClass }} {{ $marginClass }} truncate cursor-pointer font-medium transition-opacity hover:opacity-80"
+                                        style="background-color: {{ $evt->display_color }}20; color: {{ $evt->display_color }}; {{ $borderStyle }}"
+                                        title="{{ $evt->title }}"
+                                    >
+                                        {!! $titleText ? e($titleText) : '&nbsp;' !!}
+                                    </div>
+                                @else
+                                    <div class="text-[10px] md:text-[11px] leading-tight px-1.5 py-0.5 opacity-0 pointer-events-none">
+                                        &nbsp;
+                                    </div>
+                                @endif
                             @endforeach
                         </div>
                     </div>
