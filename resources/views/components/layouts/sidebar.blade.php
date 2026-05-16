@@ -18,6 +18,7 @@
             <x-ui.menu-item title="Mapel Diniyah" icon="o-book-open" link="{{ route('teacher.academic.diniyah-subjects') }}" />
             <x-ui.menu-item title="Presensi Harian" icon="o-check-badge" link="{{ route('teacher.attendance.daily') }}" />
             <x-ui.menu-item title="Ekstrakurikuler" icon="o-trophy" link="{{ route('teacher.academic.extracurriculars') }}" />
+            <x-ui.menu-item title="Kalender" icon="o-calendar-days" link="{{ route('calendar.index') }}" />
         </x-ui.menu-sub>
 
         <x-ui.menu-sub title="Penilaian & Raport" icon="o-pencil-square" :active="request()->routeIs('teacher.assessments.*') || request()->routeIs('teacher.report-cards')">
@@ -66,6 +67,7 @@
                 <x-ui.menu-item title="Presensi" icon="o-check-badge" :link="route('academic.attendance')" />
                 <x-ui.menu-item title="Ekstrakurikuler" icon="o-trophy" :link="route('academic.extracurriculars')" />
                 <x-ui.menu-item title="Modul Ajar AI" icon="o-sparkles" :link="route('admin.modul-ajar.index')" />
+                <x-ui.menu-item title="Kalender" icon="o-calendar-days" :link="route('calendar.index')" />
             </x-ui.menu-sub>
 
             <x-ui.menu-sub title="Penilaian & Raport" icon="o-pencil-square" :active="request()->routeIs('admin.assessments.*') || request()->routeIs('admin.report-card.*')">
