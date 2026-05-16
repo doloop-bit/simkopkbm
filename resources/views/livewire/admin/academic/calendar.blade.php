@@ -404,18 +404,40 @@ new #[Layout('components.layouts.app')] class extends Component {
                                         $marginClass = '';
                                         $borderStyle = "border-left: 2px solid {$evt->display_color};";
                                         $titleText = $evt->title;
+                                        $widthStyle = '';
+                                        $zIndex = 'z-0';
+                                        $isGhost = false;
 
                                         if ($isMultiDay) {
+                                            // Calculate span for this week
+                                            if ($isStart || $day->dayOfWeek === \Carbon\Carbon::MONDAY) {
+                                                $daysInWeekLeft = 8 - $day->dayOfWeekIso; // Mon=7, Sun=1
+                                                $eventDaysLeft = (int) $day->diffInDays($evt->end_date) + 1;
+                                                $span = min($daysInWeekLeft, $eventDaysLeft);
+                                                
+                                                if ($span > 1) {
+                                                    $widthStyle = "width: calc({$span}00% + " . ($span - 1) . " * (0.75rem + 1px));";
+                                                    $zIndex = 'z-10';
+                                                    $roundedClass = $isStart ? 'rounded-l' : 'rounded-none';
+                                                    if ($day->addDays($span - 1)->isSameDay($evt->end_date)) {
+                                                        $roundedClass .= ' rounded-r';
+                                                    }
+                                                }
+                                            } else {
+                                                $isGhost = true;
+                                            }
+
+                                            // Styling for the bar segments (fallback for mobile or non-spanning)
                                             if ($isStart) {
-                                                $roundedClass = 'rounded-l rounded-r-none';
+                                                $roundedClass = $roundedClass ?: 'rounded-l rounded-r-none';
                                                 $marginClass = '-mr-1.5';
                                             } elseif ($isEnd) {
-                                                $roundedClass = 'rounded-r rounded-l-none';
+                                                $roundedClass = $roundedClass ?: 'rounded-r rounded-l-none';
                                                 $marginClass = '-ml-1.5';
                                                 $borderStyle = '';
                                                 $titleText = '';
                                             } else {
-                                                $roundedClass = 'rounded-none';
+                                                $roundedClass = $roundedClass ?: 'rounded-none';
                                                 $marginClass = '-mx-1.5';
                                                 $borderStyle = '';
                                                 $titleText = '';
@@ -431,11 +453,22 @@ new #[Layout('components.layouts.app')] class extends Component {
                                     @endphp
                                     <div
                                         wire:click="viewEvent({{ $evt->id }})"
-                                        class="text-[10px] md:text-[11px] leading-tight px-1.5 py-0.5 {{ $roundedClass }} {{ $marginClass }} truncate cursor-pointer font-medium transition-opacity hover:opacity-80 h-[1.375rem]"
-                                        style="background-color: {{ $evt->display_color }}20; color: {{ $evt->display_color }}; {{ $borderStyle }}"
+                                        @class([
+                                            'text-[10px] md:text-[11px] leading-tight px-1.5 py-0.5 truncate cursor-pointer font-medium transition-opacity hover:opacity-80 h-[1.375rem]',
+                                            $roundedClass,
+                                            $marginClass,
+                                            $zIndex,
+                                            'whitespace-nowrap overflow-visible' => $widthStyle !== '',
+                                            'opacity-0 md:opacity-100' => $isGhost,
+                                        ])
+                                        style="background-color: {{ $evt->display_color }}20; color: {{ $evt->display_color }}; {{ $borderStyle }} {{ $widthStyle }}"
                                         title="{{ $evt->title }}"
                                     >
-                                        {!! $titleText ? e($titleText) : '&nbsp;' !!}
+                                        @if(!$isGhost || $widthStyle !== '')
+                                            {{ $evt->title }}
+                                        @else
+                                            &nbsp;
+                                        @endif
                                     </div>
                                 @else
                                     <div class="text-[10px] md:text-[11px] leading-tight px-1.5 py-0.5 opacity-0 pointer-events-none h-[1.375rem]">
