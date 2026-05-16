@@ -226,12 +226,15 @@ new #[Layout('components.layouts.app')] class extends Component {
             $start = $event->start_date;
             $end = $event->end_date ?? $event->start_date;
             
-            // Find a slot that is free for the entire duration of the event
+            // Find a slot that is free for the entire visible duration of the event
             $slot = 0;
+            $visibleStart = $start->max($startOfCalendar);
+            $visibleEnd = $end->min($endOfCalendar);
+
             while (true) {
                 $isFree = true;
-                $check = $start->copy();
-                while ($check <= $end) {
+                $check = $visibleStart->copy();
+                while ($check <= $visibleEnd) {
                     $key = $check->format('Y-m-d');
                     if (isset($eventsByDate[$key][$slot]) && $eventsByDate[$key][$slot] !== null) {
                         $isFree = false;
@@ -245,9 +248,9 @@ new #[Layout('components.layouts.app')] class extends Component {
                 $slot++;
             }
             
-            // Assign the event to the found slot for its entire duration
-            $current = $start->copy();
-            while ($current <= $end) {
+            // Assign the event to the found slot for its visible duration
+            $current = $visibleStart->copy();
+            while ($current <= $visibleEnd) {
                 $key = $current->format('Y-m-d');
                 if (!isset($eventsByDate[$key])) {
                     $eventsByDate[$key] = [];
@@ -372,7 +375,7 @@ new #[Layout('components.layouts.app')] class extends Component {
                             'bg-slate-50/70 dark:bg-slate-900/50' => !$isCurrentMonth,
                         ])
                     >
-                        <div class="flex items-center justify-between mb-1">
+                        <div class="flex items-center justify-between h-7 mb-1.5">
                             <span @class([
                                 'text-xs font-medium leading-none',
                                 'w-6 h-6 flex items-center justify-center rounded-full bg-primary text-white font-bold' => $isToday,
@@ -385,7 +388,7 @@ new #[Layout('components.layouts.app')] class extends Component {
                                 $validEventsCount = count(array_filter($dayEvents));
                             @endphp
                             @if($validEventsCount > 3)
-                                <span class="text-[10px] font-medium text-slate-400">+{{ $validEventsCount - 3 }}</span>
+                                <span class="text-[10px] font-medium text-slate-400 self-center">+{{ $validEventsCount - 3 }}</span>
                             @endif
                         </div>
                         <div class="space-y-0.5" wire:click.stop>
@@ -428,14 +431,14 @@ new #[Layout('components.layouts.app')] class extends Component {
                                     @endphp
                                     <div
                                         wire:click="viewEvent({{ $evt->id }})"
-                                        class="text-[10px] md:text-[11px] leading-tight px-1.5 py-0.5 {{ $roundedClass }} {{ $marginClass }} truncate cursor-pointer font-medium transition-opacity hover:opacity-80"
+                                        class="text-[10px] md:text-[11px] leading-tight px-1.5 py-0.5 {{ $roundedClass }} {{ $marginClass }} truncate cursor-pointer font-medium transition-opacity hover:opacity-80 h-[1.375rem]"
                                         style="background-color: {{ $evt->display_color }}20; color: {{ $evt->display_color }}; {{ $borderStyle }}"
                                         title="{{ $evt->title }}"
                                     >
                                         {!! $titleText ? e($titleText) : '&nbsp;' !!}
                                     </div>
                                 @else
-                                    <div class="text-[10px] md:text-[11px] leading-tight px-1.5 py-0.5 opacity-0 pointer-events-none">
+                                    <div class="text-[10px] md:text-[11px] leading-tight px-1.5 py-0.5 opacity-0 pointer-events-none h-[1.375rem]">
                                         &nbsp;
                                     </div>
                                 @endif
