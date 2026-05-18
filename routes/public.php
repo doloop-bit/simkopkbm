@@ -16,6 +16,7 @@ Route::controller(PublicSvelteController::class)->group(function () {
     Route::get('/galeri', 'gallery')->name('public.gallery');
     Route::get('/kontak', 'contact')->name('public.contact');
     Route::get('/pendaftaran', 'registration')->name('public.register');
+    Route::get('/akademik/kalender-pendidikan', 'calendar')->name('public.calendar');
 
     // Region APIs
     Route::get('/api/regions/regencies/{provinceId}', 'getRegencies')->name('api.regions.regencies');
