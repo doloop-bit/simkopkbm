@@ -225,7 +225,7 @@ new #[Layout('components.layouts.app')] class extends Component {
         foreach ($events as $event) {
             $start = $event->start_date;
             $end = $event->end_date ?? $event->start_date;
-            
+
             // Find a slot that is free for the entire visible duration of the event
             $slot = 0;
             $visibleStart = $start->max($startOfCalendar);
@@ -247,7 +247,7 @@ new #[Layout('components.layouts.app')] class extends Component {
                 }
                 $slot++;
             }
-            
+
             // Assign the event to the found slot for its visible duration
             $current = $visibleStart->copy();
             while ($current <= $visibleEnd) {
@@ -283,7 +283,7 @@ new #[Layout('components.layouts.app')] class extends Component {
             'listEvents' => $listQuery->orderBy('start_date')->get(),
             'levels' => Level::all(),
             'academicYears' => AcademicYear::orderByDesc('is_active')->orderByDesc('start_date')->get(),
-            'typeOptions' => collect(CalendarEvent::TYPE_LABELS)->map(fn ($label, $key) => ['id' => $key, 'name' => $label])->values()->toArray(),
+            'typeOptions' => collect(CalendarEvent::TYPE_LABELS)->map(fn($label, $key) => ['id' => $key, 'name' => $label])->values()->toArray(),
             'monthLabel' => \Carbon\Carbon::create($this->currentYear, $this->currentMonth, 1)->translatedFormat('F Y'),
         ];
     }
@@ -302,35 +302,32 @@ new #[Layout('components.layouts.app')] class extends Component {
             wire:model.live="academicYearId"
             :label="__('Tahun Ajaran')"
             :options="$academicYears"
-            :placeholder="__('Semua')"
-        />
+            :placeholder="__('Semua')" />
         <x-ui.select
             wire:model.live="filterLevelId"
             :label="__('Jenjang')"
             :options="$levels"
-            :placeholder="__('Semua Jenjang')"
-        />
+            :placeholder="__('Semua Jenjang')" />
         <x-ui.select
             wire:model.live="filterType"
             :label="__('Tipe Event')"
             :options="$typeOptions"
-            :placeholder="__('Semua Tipe')"
-        />
+            :placeholder="__('Semua Tipe')" />
         <div class="flex items-end gap-2">
             <x-ui.button
                 :label="__('Kalender')"
                 icon="o-calendar-days"
                 wire:click="$set('viewMode', 'calendar')"
-                @class(['btn-primary' => $viewMode === 'calendar'])
+                @class(['btn-primary'=> $viewMode === 'calendar'])
                 ghost
-            />
-            <x-ui.button
-                :label="__('Daftar')"
-                icon="o-list-bullet"
-                wire:click="$set('viewMode', 'list')"
-                @class(['btn-primary' => $viewMode === 'list'])
-                ghost
-            />
+                />
+                <x-ui.button
+                    :label="__('Daftar')"
+                    icon="o-list-bullet"
+                    wire:click="$set('viewMode', 'list')"
+                    @class(['btn-primary'=> $viewMode === 'list'])
+                    ghost
+                    />
         </div>
     </div>
 
@@ -354,140 +351,133 @@ new #[Layout('components.layouts.app')] class extends Component {
             <div class="grid grid-cols-7 gap-px bg-slate-200 dark:bg-slate-700 rounded-xl overflow-hidden border border-slate-200 dark:border-slate-700">
                 {{-- Day Headers --}}
                 @foreach(['Sen', 'Sel', 'Rab', 'Kam', 'Jum', 'Sab', 'Min'] as $dayName)
-                    <div class="bg-slate-50 dark:bg-slate-800 px-2 py-2.5 text-center text-xs font-semibold text-slate-500 dark:text-slate-400 uppercase tracking-wider">
-                        {{ $dayName }}
-                    </div>
+                <div class="bg-slate-50 dark:bg-slate-800 px-2 py-2.5 text-center text-xs font-semibold text-slate-500 dark:text-slate-400 uppercase tracking-wider">
+                    {{ $dayName }}
+                </div>
                 @endforeach
 
                 {{-- Day Cells --}}
                 @foreach($this->calendarDays as $day)
-                    @php
-                        $dateKey = $day->format('Y-m-d');
-                        $isCurrentMonth = $day->month === $currentMonth;
-                        $isToday = $day->isToday();
-                        $dayEvents = $eventsByDate[$dateKey] ?? [];
-                    @endphp
-                    <div
-                        wire:click="createNew('{{ $dateKey }}')"
-                        @class([
-                            'min-h-[90px] md:min-h-[110px] p-1.5 cursor-pointer transition-colors group',
-                            'bg-white dark:bg-slate-900 hover:bg-blue-50/50 dark:hover:bg-slate-800/80' => $isCurrentMonth,
-                            'bg-slate-50/70 dark:bg-slate-900/50' => !$isCurrentMonth,
-                        ])
+                @php
+                $dateKey = $day->format('Y-m-d');
+                $isCurrentMonth = $day->month === $currentMonth;
+                $isToday = $day->isToday();
+                $dayEvents = $eventsByDate[$dateKey] ?? [];
+                @endphp
+                <div
+                    wire:click="createNew('{{ $dateKey }}')"
+                    @class([ 'min-h-[90px] md:min-h-[110px] p-1.5 cursor-pointer transition-colors group' , 'bg-white dark:bg-slate-900 hover:bg-blue-50/50 dark:hover:bg-slate-800/80'=> $isCurrentMonth,
+                    'bg-slate-50/70 dark:bg-slate-900/50' => !$isCurrentMonth,
+                    ])
                     >
-                        <div class="flex items-center justify-between h-7 mb-1.5">
-                            <span @class([
-                                'text-xs font-medium leading-none',
-                                'w-6 h-6 flex items-center justify-center rounded-full bg-primary text-white font-bold' => $isToday,
-                                'text-slate-900 dark:text-white' => $isCurrentMonth && !$isToday,
-                                'text-slate-400 dark:text-slate-600' => !$isCurrentMonth,
+                    <div class="flex items-center justify-between h-7 mb-1.5">
+                        <span @class([ 'text-xs font-medium leading-none' , 'w-6 h-6 flex items-center justify-center rounded-full bg-primary text-white font-bold'=> $isToday,
+                            'text-slate-900 dark:text-white' => $isCurrentMonth && !$isToday,
+                            'text-slate-400 dark:text-slate-600' => !$isCurrentMonth,
                             ])>
-                                {{ $day->format('j') }}
-                            </span>
-                            @php
-                                $validEventsCount = count(array_filter($dayEvents));
-                            @endphp
-                            @if($validEventsCount > 3)
-                                <span class="text-[10px] font-medium text-slate-400 self-center">+{{ $validEventsCount - 3 }}</span>
+                            {{ $day->format('j') }}
+                        </span>
+                        @php
+                        $validEventsCount = count(array_filter($dayEvents));
+                        @endphp
+                        @if($validEventsCount > 3)
+                        <span class="text-[10px] font-medium text-slate-400 self-center">+{{ $validEventsCount - 3 }}</span>
+                        @endif
+                    </div>
+                    <div class="space-y-0.5" wire:click.stop>
+                        @foreach(array_slice($dayEvents, 0, 3) as $evt)
+                        @if($evt)
+                        @php
+                        $isMultiDay = $evt->end_date && !$evt->start_date->eq($evt->end_date);
+                        $isStart = $isMultiDay && $day->isSameDay($evt->start_date);
+                        $isEnd = $isMultiDay && $day->isSameDay($evt->end_date);
+                        $isMiddle = $isMultiDay && !$isStart && !$isEnd;
+
+                        $roundedClass = 'rounded';
+                        $marginClass = '';
+                        $borderStyle = "border-left: 2px solid {$evt->display_color};";
+                        $widthStyle = '';
+                        $zIndex = 'z-0';
+                        $isGhost = false;
+
+                        if ($isMultiDay) {
+                        // Calculate span for this week
+                        if ($isStart || $day->dayOfWeek === \Carbon\Carbon::MONDAY) {
+                        $daysInWeekLeft = 8 - $day->dayOfWeekIso; // Mon=7, Sun=1
+                        $eventDaysLeft = (int) $day->diffInDays($evt->end_date) + 1;
+                        $span = min($daysInWeekLeft, $eventDaysLeft);
+
+                        if ($span > 1) {
+                        $widthStyle = "width: calc({$span}00% + " . ($span - 1) . " * (0.75rem + 1px));";
+                        $zIndex = 'z-10';
+                        $roundedClass = $isStart ? 'rounded-l' : 'rounded-none';
+                        if ($day->copy()->addDays($span - 1)->isSameDay($evt->end_date)) {
+                        $roundedClass .= ' rounded-r';
+                        }
+                        }
+                        } else {
+                        $isGhost = true;
+                        }
+
+                        // Styling for the bar segments (fallback for mobile or non-spanning)
+                        if ($isStart) {
+                        $roundedClass = $roundedClass ?: 'rounded-l rounded-r-none';
+                        $marginClass = '-mr-1.5';
+                        } elseif ($isEnd) {
+                        $roundedClass = $roundedClass ?: 'rounded-r rounded-l-none';
+                        $marginClass = '-ml-1.5';
+                        $borderStyle = '';
+                        } else {
+                        $roundedClass = $roundedClass ?: 'rounded-none';
+                        $marginClass = '-mx-1.5';
+                        $borderStyle = '';
+                        }
+
+                        if (($isMiddle || $isEnd) && $day->dayOfWeek === \Carbon\Carbon::MONDAY) {
+                        $marginClass = $isEnd ? '' : '-mr-1.5';
+                        $roundedClass = $isEnd ? 'rounded' : 'rounded-l rounded-r-none';
+                        $borderStyle = "border-left: 2px solid {$evt->display_color};";
+                        }
+                        }
+                        @endphp
+                        <div
+                            wire:click="viewEvent({{ $evt->id }})"
+                            @class([ 'text-[10px] md:text-[11px] leading-tight px-1.5 py-0.5 truncate font-medium transition-all duration-150 h-[1.375rem]' ,
+                            $roundedClass=> !$isGhost,
+                            $marginClass => !$isGhost,
+                            $zIndex => !$isGhost,
+                            'relative' => !$isGhost && $widthStyle !== '',
+                            'cursor-pointer' => !$isGhost,
+                            'pointer-events-none opacity-0' => $isGhost,
+                            'hover:!bg-[var(--evt-bg-hover)]' => !$isGhost,
+                            ])
+                            style="{{ $isGhost ? '' : 'background-color: ' . $evt->display_color . '20; --evt-bg-hover: ' . $evt->display_color . '40; color: ' . $evt->display_color . '; ' . $borderStyle . ' ' . $widthStyle }}"
+                            title="{{ $isGhost ? '' : $evt->title }}"
+                            >
+                            @if(!$isGhost)
+                            {{ $evt->title }}
+                            @else
+                            &nbsp;
                             @endif
                         </div>
-                        <div class="space-y-0.5" wire:click.stop>
-                            @foreach(array_slice($dayEvents, 0, 3) as $evt)
-                                @if($evt)
-                                    @php
-                                        $isMultiDay = $evt->end_date && !$evt->start_date->eq($evt->end_date);
-                                        $isStart = $isMultiDay && $day->isSameDay($evt->start_date);
-                                        $isEnd = $isMultiDay && $day->isSameDay($evt->end_date);
-                                        $isMiddle = $isMultiDay && !$isStart && !$isEnd;
-
-                                        $roundedClass = 'rounded';
-                                        $marginClass = '';
-                                        $borderStyle = "border-left: 2px solid {$evt->display_color};";
-                                        $titleText = $evt->title;
-                                        $widthStyle = '';
-                                        $zIndex = 'z-0';
-                                        $isGhost = false;
-
-                                        if ($isMultiDay) {
-                                            // Calculate span for this week
-                                            if ($isStart || $day->dayOfWeek === \Carbon\Carbon::MONDAY) {
-                                                $daysInWeekLeft = 8 - $day->dayOfWeekIso; // Mon=7, Sun=1
-                                                $eventDaysLeft = (int) $day->diffInDays($evt->end_date) + 1;
-                                                $span = min($daysInWeekLeft, $eventDaysLeft);
-                                                
-                                                if ($span > 1) {
-                                                    $widthStyle = "width: calc({$span}00% + " . ($span - 1) . " * (0.75rem + 1px));";
-                                                    $zIndex = 'z-10';
-                                                    $roundedClass = $isStart ? 'rounded-l' : 'rounded-none';
-                                                    if ($day->addDays($span - 1)->isSameDay($evt->end_date)) {
-                                                        $roundedClass .= ' rounded-r';
-                                                    }
-                                                }
-                                            } else {
-                                                $isGhost = true;
-                                            }
-
-                                            // Styling for the bar segments (fallback for mobile or non-spanning)
-                                            if ($isStart) {
-                                                $roundedClass = $roundedClass ?: 'rounded-l rounded-r-none';
-                                                $marginClass = '-mr-1.5';
-                                            } elseif ($isEnd) {
-                                                $roundedClass = $roundedClass ?: 'rounded-r rounded-l-none';
-                                                $marginClass = '-ml-1.5';
-                                                $borderStyle = '';
-                                                $titleText = '';
-                                            } else {
-                                                $roundedClass = $roundedClass ?: 'rounded-none';
-                                                $marginClass = '-mx-1.5';
-                                                $borderStyle = '';
-                                                $titleText = '';
-                                            }
-
-                                            if (($isMiddle || $isEnd) && $day->dayOfWeek === \Carbon\Carbon::MONDAY) {
-                                                $marginClass = $isEnd ? '' : '-mr-1.5';
-                                                $roundedClass = $isEnd ? 'rounded' : 'rounded-l rounded-r-none';
-                                                $borderStyle = "border-left: 2px solid {$evt->display_color};";
-                                                $titleText = $evt->title;
-                                            }
-                                        }
-                                    @endphp
-                                    <div
-                                        wire:click="viewEvent({{ $evt->id }})"
-                                        @class([
-                                            'text-[10px] md:text-[11px] leading-tight px-1.5 py-0.5 truncate cursor-pointer font-medium transition-opacity hover:opacity-80 h-[1.375rem]',
-                                            $roundedClass,
-                                            $marginClass,
-                                            $zIndex,
-                                            'whitespace-nowrap overflow-visible' => $widthStyle !== '',
-                                            'opacity-0 md:opacity-100' => $isGhost,
-                                        ])
-                                        style="background-color: {{ $evt->display_color }}20; color: {{ $evt->display_color }}; {{ $borderStyle }} {{ $widthStyle }}"
-                                        title="{{ $evt->title }}"
-                                    >
-                                        @if(!$isGhost || $widthStyle !== '')
-                                            {{ $evt->title }}
-                                        @else
-                                            &nbsp;
-                                        @endif
-                                    </div>
-                                @else
-                                    <div class="text-[10px] md:text-[11px] leading-tight px-1.5 py-0.5 opacity-0 pointer-events-none h-[1.375rem]">
-                                        &nbsp;
-                                    </div>
-                                @endif
-                            @endforeach
+                        @else
+                        <div class="text-[10px] md:text-[11px] leading-tight px-1.5 py-0.5 opacity-0 pointer-events-none h-[1.375rem]">
+                            &nbsp;
                         </div>
+                        @endif
+                        @endforeach
                     </div>
+                </div>
                 @endforeach
             </div>
 
             {{-- Legend --}}
             <div class="flex flex-wrap gap-3 mt-4 pt-3 border-t border-slate-200 dark:border-slate-700">
                 @foreach(\App\Models\CalendarEvent::TYPE_COLORS as $typeKey => $typeColor)
-                    <div class="flex items-center gap-1.5">
-                        <span class="w-2.5 h-2.5 rounded-full" style="background-color: {{ $typeColor }};"></span>
-                        <span class="text-xs text-slate-500 dark:text-slate-400">{{ \App\Models\CalendarEvent::TYPE_LABELS[$typeKey] }}</span>
-                    </div>
+                <div class="flex items-center gap-1.5">
+                    <span class="w-2.5 h-2.5 rounded-full" style="background-color: {{ $typeColor }};"></span>
+                    <span class="text-xs text-slate-500 dark:text-slate-400">{{ \App\Models\CalendarEvent::TYPE_LABELS[$typeKey] }}</span>
+                </div>
                 @endforeach
             </div>
         </div>
@@ -506,52 +496,50 @@ new #[Layout('components.layouts.app')] class extends Component {
                 ['key' => 'location', 'label' => __('Lokasi')],
                 ['key' => 'actions', 'label' => '', 'class' => 'text-right'],
             ]"
-            :rows="$listEvents"
-        >
+            :rows="$listEvents">
             @scope('cell_date', $event)
-                <span class="text-sm font-medium text-slate-900 dark:text-white">
-                    {{ $event->start_date->format('d M Y') }}
-                </span>
-                @if($event->end_date && !$event->start_date->eq($event->end_date))
-                    <span class="text-xs text-slate-400"> - {{ $event->end_date->format('d M Y') }}</span>
-                @endif
-                @if(!$event->is_all_day && $event->start_time)
-                    <div class="text-xs text-slate-400">{{ $event->start_time }} @if($event->end_time)- {{ $event->end_time }}@endif</div>
-                @endif
+            <span class="text-sm font-medium text-slate-900 dark:text-white">
+                {{ $event->start_date->format('d M Y') }}
+            </span>
+            @if($event->end_date && !$event->start_date->eq($event->end_date))
+            <span class="text-xs text-slate-400"> - {{ $event->end_date->format('d M Y') }}</span>
+            @endif
+            @if(!$event->is_all_day && $event->start_time)
+            <div class="text-xs text-slate-400">{{ $event->start_time }} @if($event->end_time)- {{ $event->end_time }}@endif</div>
+            @endif
             @endscope
 
             @scope('cell_title', $event)
-                <span class="font-semibold text-slate-900 dark:text-white">{{ $event->title }}</span>
+            <span class="font-semibold text-slate-900 dark:text-white">{{ $event->title }}</span>
             @endscope
 
             @scope('cell_type', $event)
-                <x-ui.badge :label="$event->type_label" flat size="xs" />
+            <x-ui.badge :label="$event->type_label" flat size="xs" />
             @endscope
 
             @scope('cell_scope_info', $event)
-                @if($event->scope === 'level' && $event->level)
-                    <x-ui.badge :label="$event->level->name" flat size="xs" variant="info" />
-                @else
-                    <x-ui.badge :label="$event->scope_label" flat size="xs" variant="amber" />
-                @endif
+            @if($event->scope === 'level' && $event->level)
+            <x-ui.badge :label="$event->level->name" flat size="xs" variant="info" />
+            @else
+            <x-ui.badge :label="$event->scope_label" flat size="xs" variant="amber" />
+            @endif
             @endscope
 
             @scope('cell_location', $event)
-                <span class="text-sm text-slate-500">{{ $event->location ?? '-' }}</span>
+            <span class="text-sm text-slate-500">{{ $event->location ?? '-' }}</span>
             @endscope
 
             @scope('cell_actions', $event)
-                <div class="flex justify-end gap-1">
-                    <x-ui.button icon="o-eye" wire:click="viewEvent({{ $event->id }})" ghost sm />
-                    <x-ui.button icon="o-pencil-square" wire:click="edit({{ $event->id }})" ghost sm />
-                    <x-ui.button
-                        icon="o-trash"
-                        class="text-red-600 dark:text-red-400 hover:bg-red-50 dark:hover:bg-red-900/20"
-                        wire:confirm="{{ __('Yakin ingin menghapus event ini?') }}"
-                        wire:click="delete({{ $event->id }})"
-                        ghost sm
-                    />
-                </div>
+            <div class="flex justify-end gap-1">
+                <x-ui.button icon="o-eye" wire:click="viewEvent({{ $event->id }})" ghost sm />
+                <x-ui.button icon="o-pencil-square" wire:click="edit({{ $event->id }})" ghost sm />
+                <x-ui.button
+                    icon="o-trash"
+                    class="text-red-600 dark:text-red-400 hover:bg-red-50 dark:hover:bg-red-900/20"
+                    wire:confirm="{{ __('Yakin ingin menghapus event ini?') }}"
+                    wire:click="delete({{ $event->id }})"
+                    ghost sm />
+            </div>
             @endscope
         </x-ui.table>
     </x-ui.card>
@@ -562,8 +550,7 @@ new #[Layout('components.layouts.app')] class extends Component {
         <x-ui.header
             :title="$editingId ? __('Edit Event') : __('Tambah Event Baru')"
             :subtitle="__('Isi detail event kalender.')"
-            separator
-        />
+            separator />
 
         <form wire:submit="save" class="space-y-4">
             <x-ui.input wire:model="title" :label="__('Judul Event')" required />
@@ -572,38 +559,35 @@ new #[Layout('components.layouts.app')] class extends Component {
                 <x-ui.select
                     wire:model.live="type"
                     :label="__('Tipe Event')"
-                    :options="$typeOptions"
-                />
+                    :options="$typeOptions" />
 
                 @if(!isset(\App\Models\CalendarEvent::AUTO_SCOPE_TYPES[$type]))
-                    <x-ui.select
-                        wire:model.live="scope"
-                        :label="__('Cakupan')"
-                        :options="[
+                <x-ui.select
+                    wire:model.live="scope"
+                    :label="__('Cakupan')"
+                    :options="[
                             ['id' => 'level', 'name' => 'Jenjang'],
                             ['id' => 'pkbm', 'name' => 'PKBM (Semua)'],
                             ['id' => 'yayasan', 'name' => 'Yayasan'],
-                        ]"
-                    />
+                        ]" />
                 @else
-                    <div>
-                        <label class="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1.5">{{ __('Cakupan') }}</label>
-                        <div class="px-3 py-2 rounded-xl bg-slate-100 dark:bg-slate-800 text-sm text-slate-600 dark:text-slate-400">
-                            {{ \App\Models\CalendarEvent::SCOPE_LABELS[$scope] ?? $scope }}
-                            <span class="text-xs text-slate-400">(otomatis)</span>
-                        </div>
+                <div>
+                    <label class="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1.5">{{ __('Cakupan') }}</label>
+                    <div class="px-3 py-2 rounded-xl bg-slate-100 dark:bg-slate-800 text-sm text-slate-600 dark:text-slate-400">
+                        {{ \App\Models\CalendarEvent::SCOPE_LABELS[$scope] ?? $scope }}
+                        <span class="text-xs text-slate-400">(otomatis)</span>
                     </div>
+                </div>
                 @endif
             </div>
 
             @if($scope === 'level')
-                <x-ui.select
-                    wire:model="levelId"
-                    :label="__('Jenjang')"
-                    :options="$levels"
-                    :placeholder="__('Pilih Jenjang')"
-                    required
-                />
+            <x-ui.select
+                wire:model="levelId"
+                :label="__('Jenjang')"
+                :options="$levels"
+                :placeholder="__('Pilih Jenjang')"
+                required />
             @endif
 
             <div class="grid grid-cols-2 gap-4">
@@ -614,10 +598,10 @@ new #[Layout('components.layouts.app')] class extends Component {
             <x-ui.checkbox wire:model.live="isAllDay" :label="__('Seharian')" />
 
             @if(!$isAllDay)
-                <div class="grid grid-cols-2 gap-4">
-                    <x-ui.input wire:model="startTime" type="time" :label="__('Jam Mulai')" />
-                    <x-ui.input wire:model="endTime" type="time" :label="__('Jam Selesai')" />
-                </div>
+            <div class="grid grid-cols-2 gap-4">
+                <x-ui.input wire:model="startTime" type="time" :label="__('Jam Mulai')" />
+                <x-ui.input wire:model="endTime" type="time" :label="__('Jam Selesai')" />
+            </div>
             @endif
 
             <x-ui.input wire:model="location" :label="__('Lokasi')" icon="o-map-pin" />
@@ -633,11 +617,10 @@ new #[Layout('components.layouts.app')] class extends Component {
                     ['id' => 'daily', 'name' => 'Harian'],
                     ['id' => 'weekly', 'name' => 'Mingguan'],
                     ['id' => 'monthly', 'name' => 'Bulanan'],
-                ]"
-            />
+                ]" />
 
             @if($recurrenceType !== 'none')
-                <x-ui.input wire:model="recurrenceEndDate" type="date" :label="__('Berulang Sampai')" />
+            <x-ui.input wire:model="recurrenceEndDate" type="date" :label="__('Berulang Sampai')" />
             @endif
 
             <div class="flex justify-end gap-2 pt-4">
@@ -650,68 +633,67 @@ new #[Layout('components.layouts.app')] class extends Component {
     {{-- Event Detail Modal --}}
     <x-ui.modal wire:model="detailModal" maxWidth="max-w-md">
         @if($viewingEvent)
-            <div class="space-y-4">
-                <div class="flex items-start gap-3">
-                    <div class="w-3 h-3 rounded-full mt-1.5 shrink-0" style="background-color: {{ $viewingEvent->display_color }};"></div>
-                    <div>
-                        <h3 class="text-lg font-bold text-slate-900 dark:text-white">{{ $viewingEvent->title }}</h3>
-                        <x-ui.badge :label="$viewingEvent->type_label" flat size="xs" class="mt-1" />
-                        @if($viewingEvent->scope === 'level' && $viewingEvent->level)
-                            <x-ui.badge :label="$viewingEvent->level->name" flat size="xs" variant="info" class="mt-1" />
-                        @else
-                            <x-ui.badge :label="$viewingEvent->scope_label" flat size="xs" variant="amber" class="mt-1" />
-                        @endif
-                    </div>
-                </div>
-
-                <div class="space-y-2 text-sm">
-                    <div class="flex items-center gap-2 text-slate-600 dark:text-slate-400">
-                        <x-ui.icon name="o-calendar" class="w-4 h-4" />
-                        <span>{{ $viewingEvent->start_date->translatedFormat('l, d F Y') }}</span>
-                        @if($viewingEvent->end_date && !$viewingEvent->start_date->eq($viewingEvent->end_date))
-                            <span>- {{ $viewingEvent->end_date->translatedFormat('d F Y') }}</span>
-                        @endif
-                    </div>
-
-                    @if(!$viewingEvent->is_all_day && $viewingEvent->start_time)
-                        <div class="flex items-center gap-2 text-slate-600 dark:text-slate-400">
-                            <x-ui.icon name="o-clock" class="w-4 h-4" />
-                            <span>{{ $viewingEvent->start_time }} @if($viewingEvent->end_time)- {{ $viewingEvent->end_time }}@endif</span>
-                        </div>
+        <div class="space-y-4">
+            <div class="flex items-start gap-3">
+                <div class="w-3 h-3 rounded-full mt-1.5 shrink-0" style="background-color: {{ $viewingEvent->display_color }};"></div>
+                <div>
+                    <h3 class="text-lg font-bold text-slate-900 dark:text-white">{{ $viewingEvent->title }}</h3>
+                    <x-ui.badge :label="$viewingEvent->type_label" flat size="xs" class="mt-1" />
+                    @if($viewingEvent->scope === 'level' && $viewingEvent->level)
+                    <x-ui.badge :label="$viewingEvent->level->name" flat size="xs" variant="info" class="mt-1" />
+                    @else
+                    <x-ui.badge :label="$viewingEvent->scope_label" flat size="xs" variant="amber" class="mt-1" />
                     @endif
-
-                    @if($viewingEvent->location)
-                        <div class="flex items-center gap-2 text-slate-600 dark:text-slate-400">
-                            <x-ui.icon name="o-map-pin" class="w-4 h-4" />
-                            <span>{{ $viewingEvent->location }}</span>
-                        </div>
-                    @endif
-
-                    @if($viewingEvent->creator)
-                        <div class="flex items-center gap-2 text-slate-600 dark:text-slate-400">
-                            <x-ui.icon name="o-user" class="w-4 h-4" />
-                            <span>{{ $viewingEvent->creator->name }}</span>
-                        </div>
-                    @endif
-                </div>
-
-                @if($viewingEvent->description)
-                    <div class="pt-3 border-t border-slate-200 dark:border-slate-700">
-                        <p class="text-sm text-slate-600 dark:text-slate-400 whitespace-pre-line">{{ $viewingEvent->description }}</p>
-                    </div>
-                @endif
-
-                <div class="flex justify-end gap-2 pt-3 border-t border-slate-200 dark:border-slate-700">
-                    <x-ui.button icon="o-pencil-square" :label="__('Edit')" wire:click="edit({{ $viewingEvent->id }})" ghost sm />
-                    <x-ui.button
-                        icon="o-trash" :label="__('Hapus')"
-                        class="text-red-600 dark:text-red-400"
-                        wire:confirm="{{ __('Yakin ingin menghapus event ini?') }}"
-                        wire:click="delete({{ $viewingEvent->id }})"
-                        ghost sm
-                    />
                 </div>
             </div>
+
+            <div class="space-y-2 text-sm">
+                <div class="flex items-center gap-2 text-slate-600 dark:text-slate-400">
+                    <x-ui.icon name="o-calendar" class="w-4 h-4" />
+                    <span>{{ $viewingEvent->start_date->translatedFormat('l, d F Y') }}</span>
+                    @if($viewingEvent->end_date && !$viewingEvent->start_date->eq($viewingEvent->end_date))
+                    <span>- {{ $viewingEvent->end_date->translatedFormat('d F Y') }}</span>
+                    @endif
+                </div>
+
+                @if(!$viewingEvent->is_all_day && $viewingEvent->start_time)
+                <div class="flex items-center gap-2 text-slate-600 dark:text-slate-400">
+                    <x-ui.icon name="o-clock" class="w-4 h-4" />
+                    <span>{{ $viewingEvent->start_time }} @if($viewingEvent->end_time)- {{ $viewingEvent->end_time }}@endif</span>
+                </div>
+                @endif
+
+                @if($viewingEvent->location)
+                <div class="flex items-center gap-2 text-slate-600 dark:text-slate-400">
+                    <x-ui.icon name="o-map-pin" class="w-4 h-4" />
+                    <span>{{ $viewingEvent->location }}</span>
+                </div>
+                @endif
+
+                @if($viewingEvent->creator)
+                <div class="flex items-center gap-2 text-slate-600 dark:text-slate-400">
+                    <x-ui.icon name="o-user" class="w-4 h-4" />
+                    <span>{{ $viewingEvent->creator->name }}</span>
+                </div>
+                @endif
+            </div>
+
+            @if($viewingEvent->description)
+            <div class="pt-3 border-t border-slate-200 dark:border-slate-700">
+                <p class="text-sm text-slate-600 dark:text-slate-400 whitespace-pre-line">{{ $viewingEvent->description }}</p>
+            </div>
+            @endif
+
+            <div class="flex justify-end gap-2 pt-3 border-t border-slate-200 dark:border-slate-700">
+                <x-ui.button icon="o-pencil-square" :label="__('Edit')" wire:click="edit({{ $viewingEvent->id }})" ghost sm />
+                <x-ui.button
+                    icon="o-trash" :label="__('Hapus')"
+                    class="text-red-600 dark:text-red-400"
+                    wire:confirm="{{ __('Yakin ingin menghapus event ini?') }}"
+                    wire:click="delete({{ $viewingEvent->id }})"
+                    ghost sm />
+            </div>
+        </div>
         @endif
     </x-ui.modal>
 </div>
