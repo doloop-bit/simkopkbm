@@ -11,7 +11,7 @@
         "svelte": "^5.55.5"
     },
     "optionalDependencies": {
-        "@rollup/rollup-linux-x64-gnu": "4.60.3",
+        "@rollup/rollup-linux-x64-gnu": "4.60.4",
         "@tailwindcss/oxide-linux-x64-gnu": "^4.2.4",
         "lightningcss-linux-x64-gnu": "^1.32.0"
     },
