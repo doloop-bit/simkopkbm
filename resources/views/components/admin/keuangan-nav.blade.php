@@ -3,6 +3,8 @@
 
     $isAnggaran = request()->routeIs('financial.budget-plans') || request()->routeIs('financial.budget-categories') || request()->routeIs('financial.standard-items');
 
+    $isPenggajian = request()->routeIs('financial.salary-templates') || request()->routeIs('financial.payroll-process');
+
     $tabs = [];
     if ($isTransaksi) {
         $tabs = [
@@ -73,6 +75,23 @@
                 'route_pattern' => 'financial.standard-items',
             ];
         }
+    } elseif ($isPenggajian) {
+        $tabs = [
+            'salary-templates' => [
+                'label' => 'Template Gaji',
+                'label_short' => 'Template',
+                'icon' => 'o-document-text',
+                'route' => 'financial.salary-templates',
+                'route_pattern' => 'financial.salary-templates',
+            ],
+            'payroll-process' => [
+                'label' => 'Proses Penggajian',
+                'label_short' => 'Proses',
+                'icon' => 'o-banknotes',
+                'route' => 'financial.payroll-process',
+                'route_pattern' => 'financial.payroll-process',
+            ],
+        ];
     }
 @endphp
 

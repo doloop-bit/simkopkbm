@@ -17,6 +17,7 @@ new #[Layout('components.layouts.app')] class extends Component {
     public string $name = '';
     public string $discount_type = 'fixed';
     public float $amount = 0;
+    public string $frequency = 'recurring';
 
     public ?StudentFeeDiscount $editing = null;
     public bool $discountModal = false;
@@ -29,12 +30,13 @@ new #[Layout('components.layouts.app')] class extends Component {
             'name' => 'required|string|max:255',
             'discount_type' => 'required|in:percentage,fixed',
             'amount' => 'required|numeric|min:0',
+            'frequency' => 'required|in:recurring,once',
         ];
     }
 
     public function create(): void
     {
-        $this->reset(['student_id', 'fee_category_id', 'name', 'discount_type', 'amount', 'editing']);
+        $this->reset(['student_id', 'fee_category_id', 'name', 'discount_type', 'amount', 'frequency', 'editing']);
         $this->discountModal = true;
     }
 
@@ -49,6 +51,7 @@ new #[Layout('components.layouts.app')] class extends Component {
                 'name' => $this->name,
                 'discount_type' => $this->discount_type,
                 'amount' => $this->amount,
+                'frequency' => $this->frequency,
             ]);
             session()->flash('success', __('Potongan/Beasiswa berhasil diperbarui.'));
         } else {
@@ -58,12 +61,13 @@ new #[Layout('components.layouts.app')] class extends Component {
                 'name' => $this->name,
                 'discount_type' => $this->discount_type,
                 'amount' => $this->amount,
+                'frequency' => $this->frequency,
             ]);
             session()->flash('success', __('Potongan/Beasiswa berhasil ditambahkan.'));
         }
 
         $this->discountModal = false;
-        $this->reset(['student_id', 'fee_category_id', 'name', 'discount_type', 'amount', 'editing']);
+        $this->reset(['student_id', 'fee_category_id', 'name', 'discount_type', 'amount', 'frequency', 'editing']);
     }
 
     public function edit(StudentFeeDiscount $discount): void
@@ -74,6 +78,7 @@ new #[Layout('components.layouts.app')] class extends Component {
         $this->name = $discount->name;
         $this->discount_type = $discount->discount_type;
         $this->amount = (float) $discount->amount;
+        $this->frequency = $discount->frequency;
         $this->discountModal = true;
     }
 
@@ -134,7 +139,17 @@ new #[Layout('components.layouts.app')] class extends Component {
             @scope('cell_discount_name', $discount)
                 <div class="flex flex-col">
                     <span class="font-semibold text-slate-700 dark:text-slate-300">{{ $discount->name }}</span>
-                    <span class="text-[10px] text-slate-500 font-medium uppercase tracking-wide">{{ $discount->discount_type === 'percentage' ? __('Persentase') : __('Nominal Tetap') }}</span>
+                    <div class="flex items-center gap-2">
+                        <span class="text-[10px] text-slate-500 font-medium uppercase tracking-wide">{{ $discount->discount_type === 'percentage' ? __('Persentase') : __('Nominal Tetap') }}</span>
+                        <span class="text-[10px] text-slate-300">•</span>
+                        @if($discount->frequency === 'recurring')
+                            <span class="text-[10px] text-blue-500 font-bold uppercase tracking-wide">{{ __('Berulang') }}</span>
+                        @else
+                            <span class="text-[10px] {{ $discount->is_applied ? 'text-slate-400 line-through' : 'text-purple-600' }} font-bold uppercase tracking-wide">
+                                {{ $discount->is_applied ? __('Sudah Digunakan') : __('Sekali Pakai') }}
+                            </span>
+                        @endif
+                    </div>
                 </div>
             @endscope
 
@@ -183,6 +198,16 @@ new #[Layout('components.layouts.app')] class extends Component {
                 />
                 <x-ui.input wire:model="amount" type="number" :label="__('Nilai Potongan')" icon="o-currency-dollar" required />
             </div>
+
+            <x-ui.select 
+                wire:model="frequency" 
+                :label="__('Frekuensi Potongan')" 
+                :options="[
+                    ['id' => 'recurring', 'name' => __('Berulang (Setiap kali tagihan dibuat)')],
+                    ['id' => 'once', 'name' => __('Sekali Pakai (Hanya untuk satu kali tagihan)')]
+                ]" 
+                required 
+            />
 
             <x-ui.alert icon="o-information-circle" class="bg-blue-50 text-blue-700 border-blue-100 font-medium text-xs leading-relaxed">
                 {{ __('Potongan akan otomatis memotong nilai tagihan setiap kali tagihan di-generate untuk siswa tersebut.') }}

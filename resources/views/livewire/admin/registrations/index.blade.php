@@ -199,56 +199,44 @@ new #[Layout('components.layouts.app')] class extends Component {
     {{-- Status Dashboard & Navigation --}}
     <x-ui.card shadow padding="false" class="border-none ring-1 ring-slate-100 dark:ring-slate-800 overflow-hidden">
         <div class="p-4 bg-slate-50/50 dark:bg-slate-900/50 flex flex-wrap items-center gap-3">
-            <x-ui.button 
+            <x-ui.status-button 
                 wire:click="$set('filterStatus', '')"
                 :label="__('Semua')"
-                size="sm"
-                class="rounded-full px-5 font-black italic tracking-tight {{ !$filterStatus ? 'bg-slate-900 text-white border-none shadow-lg' : 'btn-ghost hover:bg-slate-100 dark:hover:bg-slate-800' }}"
-            >
-                <x-slot:append>
-                    <span class="ml-2 text-[10px] opacity-60">({{ $statusCounts['all'] }})</span>
-                </x-slot:append>
-            </x-ui.button>
-            <x-ui.button 
+                :count="$statusCounts['all']"
+                :active="!$filterStatus"
+            />
+
+            <x-ui.status-button 
                 wire:click="$set('filterStatus', 'pending')"
                 :label="__('Pending')"
-                size="sm"
-                class="rounded-full px-5 font-black italic tracking-tight {{ $filterStatus === 'pending' ? 'bg-amber-500 text-white border-none shadow-lg' : 'btn-ghost text-amber-600 hover:bg-amber-50' }}"
-            >
-                <x-slot:append>
-                    <span class="ml-2 text-[10px] opacity-60">({{ $statusCounts['pending'] }})</span>
-                </x-slot:append>
-            </x-ui.button>
-            <x-ui.button 
+                :count="$statusCounts['pending']"
+                :active="$filterStatus === 'pending'"
+                color="amber"
+            />
+
+            <x-ui.status-button 
                 wire:click="$set('filterStatus', 'accepted')"
                 :label="__('Diterima')"
-                size="sm"
-                class="rounded-full px-5 font-black italic tracking-tight {{ $filterStatus === 'accepted' ? 'bg-sky-500 text-white border-none shadow-lg' : 'btn-ghost text-sky-600 hover:bg-sky-50' }}"
-            >
-                <x-slot:append>
-                    <span class="ml-2 text-[10px] opacity-60">({{ $statusCounts['accepted'] }})</span>
-                </x-slot:append>
-            </x-ui.button>
-            <x-ui.button 
+                :count="$statusCounts['accepted']"
+                :active="$filterStatus === 'accepted'"
+                color="sky"
+            />
+
+            <x-ui.status-button 
                 wire:click="$set('filterStatus', 'enrolled')"
                 :label="__('Telah Enroll')"
-                size="sm"
-                class="rounded-full px-5 font-black italic tracking-tight {{ $filterStatus === 'enrolled' ? 'bg-emerald-500 text-white border-none shadow-lg' : 'btn-ghost text-emerald-600 hover:bg-emerald-50' }}"
-            >
-                <x-slot:append>
-                    <span class="ml-2 text-[10px] opacity-60">({{ $statusCounts['enrolled'] }})</span>
-                </x-slot:append>
-            </x-ui.button>
-            <x-ui.button 
+                :count="$statusCounts['enrolled']"
+                :active="$filterStatus === 'enrolled'"
+                color="emerald"
+            />
+
+            <x-ui.status-button 
                 wire:click="$set('filterStatus', 'rejected')"
                 :label="__('Ditolak')"
-                size="sm"
-                class="rounded-full px-5 font-black italic tracking-tight {{ $filterStatus === 'rejected' ? 'bg-rose-500 text-white border-none shadow-lg' : 'btn-ghost text-rose-600 hover:bg-rose-50' }}"
-            >
-                <x-slot:append>
-                    <span class="ml-2 text-[10px] opacity-60">({{ $statusCounts['rejected'] }})</span>
-                </x-slot:append>
-            </x-ui.button>
+                :count="$statusCounts['rejected']"
+                :active="$filterStatus === 'rejected'"
+                color="rose"
+            />
         </div>
 
         {{-- Table View --}}

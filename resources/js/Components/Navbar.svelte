@@ -6,6 +6,7 @@
     let { schoolProfile, currentRoute } = $props();
     let mobileMenuOpen = $state(false);
     let aboutDropdownOpen = $state(false);
+    let academicDropdownOpen = $state(false);
 
     // Fallback to shared props if not passed directly
     const profile = $derived(schoolProfile || page.props.schoolProfile || {});
@@ -167,7 +168,7 @@
                 </Link>
 
                 <!-- About Dropdown -->
-                <div 
+                <div
                     class="relative h-full flex items-center"
                     role="menu"
                     tabindex="-1"
@@ -269,6 +270,70 @@
                     {/if}
                 </div>
 
+                <!-- Akademik Dropdown -->
+                <div
+                    class="relative h-full flex items-center"
+                    role="menu"
+                    tabindex="-1"
+                    onmouseenter={() => (academicDropdownOpen = true)}
+                    onmouseleave={() => (academicDropdownOpen = false)}
+                >
+                    <button
+                        onclick={() =>
+                            (academicDropdownOpen = !academicDropdownOpen)}
+                        class="inline-flex items-center px-1 pt-1 border-b-2 text-sm font-semibold transition-all duration-200 h-full {[
+                            'Calendar',
+                        ].includes(currentRoute)
+                            ? 'border-amber-400 text-amber-400'
+                            : 'border-transparent text-slate-300 hover:text-white hover:border-slate-300'}"
+                    >
+                        Akademik
+                        <svg
+                            class="ml-1 h-4 w-4 transition-transform duration-200"
+                            class:rotate-180={academicDropdownOpen}
+                            fill="none"
+                            stroke="currentColor"
+                            viewBox="0 0 24 24"
+                        >
+                            <path
+                                stroke-linecap="round"
+                                stroke-linejoin="round"
+                                stroke-width="2"
+                                d="M19 9l-7 7-7-7"
+                            />
+                        </svg>
+                    </button>
+                    {#if academicDropdownOpen}
+                        <div
+                            class="absolute left-1/2 -translate-x-1/2 top-full w-56 rounded-xl bg-slate-800 border border-slate-700 shadow-xl z-9999 animate-in fade-in slide-in-from-top-2 duration-200"
+                            role="menu"
+                            tabindex="-1"
+                        >
+                            <div class="py-2">
+                                <Link
+                                    href="/akademik/kalender-pendidikan"
+                                    class="flex items-center px-4 py-3 text-sm text-slate-300 hover:bg-slate-700 hover:text-amber-400 transition-colors duration-150"
+                                >
+                                    <svg
+                                        class="w-4 h-4 mr-3 text-amber-500"
+                                        fill="none"
+                                        stroke="currentColor"
+                                        viewBox="0 0 24 24"
+                                    >
+                                        <path
+                                            stroke-linecap="round"
+                                            stroke-linejoin="round"
+                                            stroke-width="2"
+                                            d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"
+                                        />
+                                    </svg>
+                                    Kalender Pendidikan
+                                </Link>
+                            </div>
+                        </div>
+                    {/if}
+                </div>
+
                 <Link
                     href="/program-pendidikan"
                     class="inline-flex items-center px-1 pt-1 border-b-2 text-sm font-semibold transition-all duration-200 h-full {currentRoute &&
@@ -312,7 +377,7 @@
                     href="/login"
                     class="inline-flex items-center px-6 py-2.5 rounded-full text-sm font-bold border-2 border-slate-700 text-slate-300 hover:bg-slate-800 hover:text-white hover:border-amber-500 hover:shadow-lg hover:shadow-amber-500/50 transition-all duration-200 transform hover:-translate-y-0.5"
                 >
-                    Login Admin
+                    Login
                 </a>
                 <Link
                     href="/pendaftaran"
@@ -405,6 +470,24 @@
                 >
                     Fasilitas
                 </Link>
+
+                <div class="py-1">
+                    <div
+                        class="px-3 py-1.5 text-xs font-bold text-slate-500 uppercase tracking-wider"
+                    >
+                        Akademik
+                    </div>
+                    <Link
+                        href="/akademik/kalender-pendidikan"
+                        class="flex items-center px-6 py-2.5 rounded-lg text-base font-medium {currentRoute ===
+                        'Calendar'
+                            ? 'bg-white/10 text-amber-400'
+                            : 'text-slate-300'}"
+                    >
+                        Kalender Pendidikan
+                    </Link>
+                </div>
+
                 <Link
                     href="/program-pendidikan"
                     class="flex items-center px-3 py-3 rounded-lg text-base font-medium {currentRoute &&

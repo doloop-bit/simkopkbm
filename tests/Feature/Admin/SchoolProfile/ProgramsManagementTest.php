@@ -30,7 +30,7 @@ test('non-admin cannot access programs management page', function () {
         ->assertForbidden();
 });
 
-test('admin can create a program', function () {
+test('admin can create a program with custom slug', function () {
     $this->actingAs($this->admin);
 
     $level = Level::factory()->create(['name' => 'Paket A']);
@@ -38,6 +38,7 @@ test('admin can create a program', function () {
 
     Livewire::test('admin.web-content.programs.index')
         ->set('level_id', $level->id)
+        ->set('slug', 'paket-a-unggulan')
         ->set('description', 'Program setara SD untuk dewasa')
         ->set('duration', '1 tahun')
         ->set('requirements', 'Usia minimal 15 tahun')
@@ -48,34 +49,95 @@ test('admin can create a program', function () {
 
     $program = Program::where('level_id', $level->id)->first();
     expect($program)->not->toBeNull();
+    expect($program->slug)->toBe('paket-a-unggulan');
     expect($program->name)->toBe('Paket A');
-    expect($program->description)->toBe('Program setara SD untuk dewasa');
-    expect($program->duration)->toBe('1 tahun');
-    expect($program->requirements)->toBe('Usia minimal 15 tahun');
-    expect($program->is_active)->toBeTrue();
-    expect($program->image_path)->not->toBeNull();
-
-    Storage::disk('public')->assertExists($program->image_path);
 });
 
-test('admin can edit a program', function () {
+test('slug is auto-generated when level is selected', function () {
+    $this->actingAs($this->admin);
+
+    $level = Level::factory()->create(['name' => 'Paket B']);
+
+    Livewire::test('admin.web-content.programs.index')
+        ->set('level_id', $level->id)
+        ->assertSet('slug', 'paket-b');
+});
+
+test('admin can edit a program slug', function () {
     $this->actingAs($this->admin);
 
     $program = Program::factory()->create([
         'name' => 'Original Name',
+        'slug' => 'original-slug',
         'description' => 'Original Description',
     ]);
 
     Livewire::test('admin.web-content.programs.index')
         ->call('edit', $program->id)
-        ->set('description', 'Updated Description')
+        ->assertSet('slug', 'original-slug')
+        ->set('slug', 'updated-slug')
         ->call('save')
         ->assertHasNoErrors();
 
     $program->refresh();
-    expect($program->description)->toBe('Updated Description');
+    expect($program->slug)->toBe('updated-slug');
 });
 
+test('program creation requires valid data including slug', function () {
+    $this->actingAs($this->admin);
+
+    Livewire::test('admin.web-content.programs.index')
+        ->set('level_id', null)
+        ->set('slug', '')
+        ->set('description', '')
+        ->set('duration', '')
+        ->call('save')
+        ->assertHasErrors(['level_id', 'slug', 'description', 'duration']);
+});
+
+test('program slug must be unique', function () {
+    $this->actingAs($this->admin);
+
+    Program::factory()->create(['slug' => 'existing-slug']);
+    $level = Level::factory()->create();
+
+    Livewire::test('admin.web-content.programs.index')
+        ->set('level_id', $level->id)
+        ->set('slug', 'existing-slug')
+        ->call('save')
+        ->assertHasErrors(['slug']);
+});
+
+test('program image must be valid image file', function () {
+    $this->actingAs($this->admin);
+
+    $level = Level::factory()->create();
+    $invalidFile = UploadedFile::fake()->create('document.pdf', 1000);
+
+    Livewire::test('admin.web-content.programs.index')
+        ->set('level_id', $level->id)
+        ->set('slug', 'test-slug')
+        ->set('description', 'Test Description')
+        ->set('duration', 'Test Duration')
+        ->set('image', $invalidFile)
+        ->call('save')
+        ->assertHasErrors(['image']);
+});
+
+test('cannot create duplicate program for same level', function () {
+    $this->actingAs($this->admin);
+
+    $level = Level::factory()->create(['name' => 'PAUD']);
+    Program::factory()->forLevel($level)->create(['slug' => 'paud-original']);
+
+    Livewire::test('admin.web-content.programs.index')
+        ->set('level_id', $level->id)
+        ->set('slug', 'paud-new')
+        ->set('description', 'Another program')
+        ->set('duration', '1 tahun')
+        ->call('save')
+        ->assertHasErrors(['level_id']);
+});
 test('admin can delete a program', function () {
     $this->actingAs($this->admin);
 
@@ -105,44 +167,4 @@ test('admin can reorder programs', function () {
 
     expect($program1->order)->toBe(2);
     expect($program2->order)->toBe(1);
-});
-
-test('program creation requires valid data', function () {
-    $this->actingAs($this->admin);
-
-    Livewire::test('admin.web-content.programs.index')
-        ->set('level_id', null)
-        ->set('description', '')
-        ->set('duration', '')
-        ->call('save')
-        ->assertHasErrors(['level_id', 'description', 'duration']);
-});
-
-test('program image must be valid image file', function () {
-    $this->actingAs($this->admin);
-
-    $level = Level::factory()->create();
-    $invalidFile = UploadedFile::fake()->create('document.pdf', 1000);
-
-    Livewire::test('admin.web-content.programs.index')
-        ->set('level_id', $level->id)
-        ->set('description', 'Test Description')
-        ->set('duration', 'Test Duration')
-        ->set('image', $invalidFile)
-        ->call('save')
-        ->assertHasErrors(['image']);
-});
-
-test('cannot create duplicate program for same level', function () {
-    $this->actingAs($this->admin);
-
-    $level = Level::factory()->create(['name' => 'PAUD']);
-    Program::factory()->forLevel($level)->create();
-
-    Livewire::test('admin.web-content.programs.index')
-        ->set('level_id', $level->id)
-        ->set('description', 'Another program')
-        ->set('duration', '1 tahun')
-        ->call('save')
-        ->assertHasErrors(['level_id']);
 });

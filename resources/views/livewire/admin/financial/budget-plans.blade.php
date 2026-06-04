@@ -27,7 +27,14 @@ new class extends Component {
     public $formItems = []; // Array of ['standard_item_id', 'name', 'unit', 'quantity', 'amount', 'total', 'category_name']
     public $itemSearches = []; // Per row search input
 
-    // Master Data Cache
+    // Quick Create Master Data
+    public bool $quickCreateModal = false;
+    public $newItemName = '';
+    public $newItemCategoryId = '';
+    public $newItemUnit = 'Unit';
+    public $newItemPrice = 0;
+    public $newItemIndex = null;
+
     public $standardItems = [];
     public bool $planModal = false;
     
@@ -55,6 +62,7 @@ new class extends Component {
             'plans' => $query->latest()->paginate(10),
             'levels' => Level::all(), // For filter (Admin)
             'years' => AcademicYear::where('is_active', true)->orWhere('status', 'open')->get(),
+            'categories' => BudgetCategory::all(),
         ];
     }
 
@@ -280,6 +288,49 @@ new class extends Component {
         $this->planModal = false;
     }
 
+    public function createSubItem($index, $name): void
+    {
+        $this->newItemName = $name;
+        $this->newItemIndex = $index;
+        $this->newItemUnit = 'Unit';
+        $this->newItemPrice = 0;
+        $this->newItemCategoryId = BudgetCategory::first()?->id ?? '';
+        $this->quickCreateModal = true;
+    }
+
+    public function saveNewStandardItem(): void
+    {
+        $this->validate([
+            'newItemName' => 'required|string|max:255',
+            'newItemCategoryId' => 'required|exists:budget_categories,id',
+            'newItemUnit' => 'required|string|max:50',
+            'newItemPrice' => 'required|numeric|min:0',
+        ]);
+
+        $item = StandardBudgetItem::create([
+            'name' => $this->newItemName,
+            'budget_category_id' => $this->newItemCategoryId,
+            'unit' => $this->newItemUnit,
+            'default_price' => $this->newItemPrice,
+            'is_active' => true,
+        ]);
+
+        // Update local cache and form
+        $this->standardItems = StandardBudgetItem::with('category')->where('is_active', true)->get();
+        
+        $index = $this->newItemIndex;
+        $this->formItems[$index]['standard_item_id'] = $item->id;
+        $this->formItems[$index]['name'] = $item->name;
+        $this->formItems[$index]['unit'] = $item->unit;
+        $this->formItems[$index]['amount'] = $item->default_price;
+        $this->formItems[$index]['category_name'] = $item->category->name ?? '-';
+        $this->calculateRowTotal($index);
+        $this->itemSearches[$index] = $item->name;
+
+        $this->quickCreateModal = false;
+        session()->flash('success', 'Master data item baru berhasil ditambahkan.');
+    }
+
     public function delete(BudgetPlan $plan): void
     {
         if ($plan->status !== 'draft' && !Auth::user()->isAdmin()) {
@@ -288,14 +339,6 @@ new class extends Component {
         }
         $plan->delete();
         session()->flash('success', 'RAB berhasil dihapus.');
-    }
-
-    public function createSubItem($index, $name): void
-    {
-        $this->formItems[$index]['name'] = $name;
-        $this->formItems[$index]['standard_item_id'] = ''; // Ensure it's empty/null for manual items
-        $this->formItems[$index]['category_name'] = 'Manual / Lainnya';
-        $this->itemSearches[$index] = $name;
     }
 
     public function exportPdf(BudgetPlan $plan)
@@ -339,21 +382,20 @@ new class extends Component {
         </x-slot:actions>
     </x-ui.header>
 
-    <div class="flex flex-col md:flex-row gap-4">
-        <div class="flex-1">
-            <x-ui.input 
-                wire:model.live.debounce.300ms="search" 
-                :placeholder="__('Cari judul RAB...')" 
-                icon="o-magnifying-glass" 
-            />
-        </div>
+    <div class="flex flex-col md:flex-row gap-4 items-center mb-2">
+        <x-ui.input 
+            wire:model.live.debounce.300ms="search" 
+            :placeholder="__('Cari judul RAB...')" 
+            icon="o-magnifying-glass" 
+            class="flex-1"
+        />
         
         @if(Auth::user()->isAdmin() || Auth::user()->isYayasan())
             <x-ui.select 
                 wire:model.live="level_filter" 
                 :placeholder="__('Semua Jenjang')" 
                 :options="$levels" 
-                class="w-full md:w-48" 
+                class="w-full md:w-64" 
             />
         @endif
     </div>
@@ -387,17 +429,7 @@ new class extends Component {
             @endscope
 
             @scope('cell_status_label', $plan)
-                @php
-                    $statusClass = match($plan->status) {
-                        'draft' => 'bg-slate-100 text-slate-600',
-                        'submitted' => 'bg-amber-100 text-amber-700',
-                        'approved' => 'bg-emerald-100 text-emerald-700',
-                        'transferred' => 'bg-blue-100 text-blue-700',
-                        'rejected' => 'bg-rose-100 text-rose-700',
-                        default => 'bg-slate-100 text-slate-500'
-                    };
-                @endphp
-                <x-ui.badge :label="strtoupper($plan->status)" class="{{ $statusClass }} border-none text-[10px] font-bold px-2 py-0.5 tracking-wider" />
+                <x-ui.badge :label="$plan->status" size="xs" />
             @endscope
 
             @scope('cell_actions', $plan)
@@ -435,7 +467,7 @@ new class extends Component {
             <div class="rounded-3xl border border-slate-200 dark:border-slate-800 bg-slate-50/10 dark:bg-slate-900/10 overflow-hidden">
                 <div class="p-4 border-b border-slate-200 dark:border-slate-800 flex items-center justify-between bg-white dark:bg-slate-900">
                     <span class="text-xs font-bold uppercase text-slate-500 tracking-wider">{{ __('Rincian Item Anggaran') }}</span>
-                    <x-ui.button :label="__('Tambah Baris')" icon="o-plus" wire:click="addItemRow" class="btn-sm btn-ghost text-xs font-bold" />
+                    <x-ui.button :label="__('Tambah Baris')" icon="o-plus" wire:click="addItemRow" variant="soft" class="btn-sm" />
                 </div>
                 
                 <div class="overflow-x-auto min-h-[200px]">
@@ -453,7 +485,7 @@ new class extends Component {
                         <tbody class="divide-y divide-slate-100 dark:divide-slate-800">
                             @foreach($formItems as $index => $item)
                             <tr wire:key="item-{{ $index }}" class="hover:bg-white/50 dark:hover:bg-slate-800/30 transition-colors">
-                                <td class="px-3 py-2">
+                                <td class="px-3 py-2 align-top">
                                     <div class="relative" 
                                         x-data="{ 
                                             open: false, 
@@ -483,7 +515,8 @@ new class extends Component {
                                             x-on:focus="open = true"
                                             x-on:input="open = true"
                                             :placeholder="__('Cari atau ketik item baru...')"
-                                            class="!py-1 !text-xs"
+                                            variant="subtle"
+                                            sm
                                         />
                                         
                                         <div x-show="open" 
@@ -507,28 +540,30 @@ new class extends Component {
                                             </div>
                                         </div>
                                     </div>
-                                    <div class="mt-0.5">
-                                        <span class="text-[10px] text-slate-500 font-medium tracking-wide">{{ $item['category_name'] ?: __('Umum') }}</span>
+                                    <div class="mt-0.5 px-1">
+                                        <span class="text-[9px] text-slate-400 font-medium uppercase tracking-tighter">{{ $item['category_name'] ?: __('Umum') }}</span>
                                     </div>
                                 </td>
-                                <td class="px-3 py-2">
-                                    <x-ui.input type="number" wire:model.live.debounce.1000ms="formItems.{{ $index }}.quantity" class="text-center !py-1 font-mono text-xs w-20" min="1" />
+                                <td class="px-3 py-2 align-top">
+                                    <div class="flex justify-center">
+                                        <x-ui.number wire:model.live.debounce.300ms="formItems.{{ $index }}.quantity" min="1" />
+                                    </div>
                                 </td>
-                                <td class="px-3 py-2">
-                                    <x-ui.input wire:model="formItems.{{ $index }}.unit" :placeholder="__('Pcs')" class="text-center !py-1 text-xs w-20" />
+                                <td class="px-3 py-2 align-top">
+                                    <x-ui.input wire:model="formItems.{{ $index }}.unit" :placeholder="__('Pcs')" class="text-center" variant="subtle" sm />
                                 </td>
-                                <td class="px-3 py-2">
-                                    <x-ui.input type="number" wire:model.live.debounce.1300ms="formItems.{{ $index }}.amount" class="text-right !py-1 font-mono text-xs" min="0" />
+                                <td class="px-3 py-2 align-top">
+                                    <x-ui.money wire:model.live.debounce.1300ms="formItems.{{ $index }}.amount" class="text-right font-mono" variant="subtle" sm />
                                 </td>
-                                <td class="px-3 py-2 text-right">
-                                    <div class="font-mono text-xs font-bold text-slate-900 dark:text-white whitespace-nowrap" wire:loading.remove wire:target="formItems.{{ $index }}.quantity, formItems.{{ $index }}.amount">
+                                <td class="px-3 py-2 text-right align-top">
+                                    <div class="h-8 flex items-center justify-end font-mono text-sm font-bold text-slate-900 dark:text-white whitespace-nowrap" wire:loading.remove wire:target="formItems.{{ $index }}.quantity, formItems.{{ $index }}.amount">
                                         Rp {{ number_format($item['total'], 0, ',', '.') }}
                                     </div>
-                                    <div wire:loading wire:target="formItems.{{ $index }}.quantity, formItems.{{ $index }}.amount" class="flex justify-end">
+                                    <div wire:loading wire:target="formItems.{{ $index }}.quantity, formItems.{{ $index }}.amount" class="h-8 flex items-center justify-end">
                                         <span class="loading loading-spinner loading-xs text-primary"></span>
                                     </div>
                                 </td>
-                                <td class="px-2 py-2 text-center">
+                                <td class="px-2 py-2 text-center align-top">
                                     <button wire:click="removeItemRow({{ $index }})" class="p-1 rounded-lg text-slate-300 hover:text-rose-500 hover:bg-rose-50 dark:hover:bg-rose-950/30 transition-colors">
                                         <x-ui.icon name="o-trash" class="size-4" />
                                     </button>
@@ -573,6 +608,22 @@ new class extends Component {
                     @endif
                 </div>
             </div>
+        </div>
+    </x-ui.modal>
+
+    <x-ui.modal wire:model="quickCreateModal" title="{{ __('Tambah Item Master Data') }}" subtitle="{{ __('Item ini akan disimpan sebagai referensi untuk penggunaan berikutnya.') }}">
+        <div class="space-y-4">
+            <x-ui.input wire:model="newItemName" :label="__('Nama Item')" required />
+            <div class="grid grid-cols-2 gap-4">
+                <x-ui.select wire:model="newItemCategoryId" :label="__('Kategori')" :options="$categories" required />
+                <x-ui.input wire:model="newItemUnit" :label="__('Satuan')" placeholder="Pcs, Rim, Box..." required />
+            </div>
+            <x-ui.input type="number" wire:model="newItemPrice" :label="__('Harga Estimasi (Opsional)')" />
+            
+            <x-slot:actions>
+                <x-ui.button :label="__('Batal')" wire:click="$set('quickCreateModal', false)" />
+                <x-ui.button :label="__('Simpan & Tambahkan')" class="btn-primary" wire:click="saveNewStandardItem" spinner="saveNewStandardItem" />
+            </x-slot:actions>
         </div>
     </x-ui.modal>
 </div>

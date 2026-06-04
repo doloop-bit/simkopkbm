@@ -2,6 +2,8 @@
     'headers' => [],
     'rows' => [],
     'withPagination' => false,
+    'perPage' => null,
+    'perPageValues' => null,
     'striped' => false,
 ])
 
@@ -54,7 +56,49 @@
 </div>
 
 @if($withPagination && method_exists($rows, 'links'))
-    <div class="mt-4 px-4">
-        {{ $rows->links() }}
+    <div class="p-3 border-t border-slate-100 dark:border-slate-800 bg-white dark:bg-slate-900 flex items-center justify-end gap-6 rounded-b-xl">
+        
+        @if(!empty($perPageValues) && $perPage)
+            @php
+                $perPageOptions = collect($perPageValues)->map(fn($val) => [
+                    'id' => $val, 
+                    'name' => $val . ' ' . __('halaman')
+                ])->toArray();
+            @endphp
+            <x-ui.select 
+                wire:model.live="{{ $perPage }}" 
+                :options="$perPageOptions" 
+                option-value="id" 
+                option-label="name"
+                sm
+                dropup
+                class="w-36"
+            />
+        @endif
+
+        <div class="flex items-center gap-4">
+            @if($rows instanceof \Illuminate\Pagination\LengthAwarePaginator)
+                <span class="text-xs font-medium text-slate-500 dark:text-slate-400">
+                    {{ $rows->firstItem() ?? 0 }}-{{ $rows->lastItem() ?? 0 }} {{ __('dari') }} {{ $rows->total() }}
+                </span>
+            @endif
+
+            <div class="flex items-center gap-1 border border-slate-200 dark:border-slate-700 rounded-lg p-0.5 shadow-sm bg-white dark:bg-slate-900">
+                <button 
+                    wire:click="previousPage('{{ method_exists($rows, 'getPageName') ? $rows->getPageName() : 'page' }}')"
+                    @if($rows->onFirstPage()) disabled @endif
+                    class="p-1 rounded hover:bg-slate-100 dark:hover:bg-slate-800 text-slate-500 dark:text-slate-400 disabled:opacity-30 disabled:hover:bg-transparent transition-colors"
+                >
+                    <x-ui.icon name="o-chevron-left" class="size-4" />
+                </button>
+                <button 
+                    wire:click="nextPage('{{ method_exists($rows, 'getPageName') ? $rows->getPageName() : 'page' }}')"
+                    @if(!$rows->hasMorePages()) disabled @endif
+                    class="p-1 rounded hover:bg-slate-100 dark:hover:bg-slate-800 text-slate-500 dark:text-slate-400 disabled:opacity-30 disabled:hover:bg-transparent transition-colors"
+                >
+                    <x-ui.icon name="o-chevron-right" class="size-4" />
+                </button>
+            </div>
+        </div>
     </div>
 @endif

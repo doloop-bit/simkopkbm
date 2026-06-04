@@ -9,7 +9,7 @@ class FeeCategory extends Model
 {
     use HasFactory;
 
-    protected $fillable = ['name', 'code', 'description', 'default_amount', 'level_id'];
+    protected $fillable = ['name', 'code', 'description', 'default_amount', 'level_id', 'billing_type'];
 
     public function billings()
     {

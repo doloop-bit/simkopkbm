@@ -2,29 +2,44 @@
 
 declare(strict_types=1);
 
-use App\Models\User;
-use App\Models\Transaction;
-use App\Models\StudentBilling;
-use App\Models\Classroom;
+use App\Models\AcademicYear;
 use App\Models\Attendance;
+use App\Models\BudgetPlan;
+use App\Models\Classroom;
+use App\Models\Level;
+use App\Models\StudentBilling;
+use App\Models\Transaction;
+use App\Models\User;
+use Carbon\Carbon;
+use Illuminate\Support\Facades\DB;
 use Livewire\Component;
 
-new class extends Component {
+new class extends Component
+{
+    public ?int $levelId = null;
+    public array $rabTrendLevelIds = [];
+
     public function with(): array
     {
         $user = auth()->user();
-        $isTreasurer = $user->role === 'bendahara';
+        $isTreasurer = $user->isTreasurer();
+        $isYayasan = $user->isYayasan();
+        $isKepsek = $user->isHeadmaster();
+        $hasFinancialAccess = $user->isAdmin() || $isTreasurer || $isYayasan || $isKepsek;
+
+        // Reset level filter if treasurer (they can only see their own level)
+        if ($isTreasurer) {
+            $this->levelId = $user->managed_level_id;
+        }
 
         $start = now()->startOfMonth();
         $end = now()->endOfMonth();
 
-        // Basic Stats
         $totalStudents = User::where('role', 'siswa')->count();
         $totalTeachers = User::where('role', 'guru')->count();
         $totalStaff = User::whereNotIn('role', ['siswa', 'guru'])->count();
         $totalClassrooms = Classroom::count();
 
-        // Financial Stats
         $incomeMonth = Transaction::where('type', 'income')
             ->whereBetween('payment_date', [$start, $end])
             ->sum('amount');
@@ -33,16 +48,15 @@ new class extends Component {
             ->whereBetween('payment_date', [$start, $end])
             ->sum('amount');
 
-        $pendingBillings = StudentBilling::where('status', '!=', 'paid')->sum(\Illuminate\Support\Facades\DB::raw('amount - paid_amount'));
+        $pendingBillings = StudentBilling::where('status', '!=', 'paid')->sum(DB::raw('amount - paid_amount'));
 
-        // Recent Activity
         $recentTransactions = Transaction::with(['billing.student', 'billing.feeCategory', 'budgetPlan', 'budgetItem'])
             ->latest()
             ->limit(10)
             ->get();
 
         $recentAttendance = [];
-        if (!$isTreasurer) {
+        if (! $isTreasurer) {
             $recentAttendance = Attendance::with(['classroom'])
                 ->withCount('items')
                 ->latest()
@@ -52,11 +66,19 @@ new class extends Component {
 
         $activeBudgetPlans = [];
         if ($isTreasurer || $user->isAdmin()) {
-            $activeBudgetPlans = \App\Models\BudgetPlan::where('is_active', true)->withCount('items')->latest()->limit(5)->get();
+            $activeBudgetPlans = BudgetPlan::where('is_active', true)->withCount('items')->latest()->limit(5)->get();
+        }
+
+        $chartData = [];
+        $showDebtors = false;
+        if ($hasFinancialAccess) {
+            $chartData = $this->getFinancialChartData($user);
+            $showDebtors = $user->isAdmin() || $isTreasurer;
         }
 
         return [
             'isTreasurer' => $isTreasurer,
+            'levels' => Level::all(),
             'stats' => [
                 'students' => $totalStudents,
                 'teachers' => $totalTeachers,
@@ -70,12 +92,345 @@ new class extends Component {
             'recentTransactions' => $recentTransactions,
             'recentAttendance' => $recentAttendance,
             'activeBudgetPlans' => $activeBudgetPlans,
+            'chartData' => $chartData,
+            'showDebtors' => $showDebtors,
+            'hasFinancialAccess' => $hasFinancialAccess,
         ];
+    }
+
+    private function getFinancialChartData(User $user): array
+    {
+        $treasurerLevelId = $user->isTreasurer() ? $user->managed_level_id : null;
+        $filteredLevelId = $treasurerLevelId ?? $this->levelId;
+        $rabTrendFilteredIds = $treasurerLevelId ? [$treasurerLevelId] : $this->rabTrendLevelIds;
+
+        return [
+            'cashFlow' => $this->getCashFlowData($filteredLevelId),
+            'incomeComposition' => $this->getIncomeCompositionData($filteredLevelId),
+            'expenseComposition' => $this->getExpenseCompositionData($filteredLevelId),
+            'collectionRate' => $this->getCollectionRateData($treasurerLevelId),
+            'budgetRealization' => $this->getBudgetRealizationData($treasurerLevelId),
+            'rabTrend' => $this->getRabTrendData($rabTrendFilteredIds),
+            'topDebtors' => ($user->isAdmin() || $user->isTreasurer()) ? $this->getTopDebtorsData($treasurerLevelId) : [],
+        ];
+    }
+
+    /**
+     * ① Cash Flow: Last 6 months income vs expense
+     */
+    private function getCashFlowData(?int $levelId): array
+    {
+        $months = collect();
+        for ($i = 5; $i >= 0; $i--) {
+            $months->push(now()->subMonths($i));
+        }
+
+        $labels = $months->map(fn (Carbon $d) => $d->translatedFormat('M Y'))->toArray();
+        $income = [];
+        $expense = [];
+
+        foreach ($months as $month) {
+            $start = $month->copy()->startOfMonth();
+            $end = $month->copy()->endOfMonth();
+
+            $incomeQuery = Transaction::where('type', 'income')
+                ->whereBetween('payment_date', [$start, $end]);
+            $expenseQuery = Transaction::where('type', 'expense')
+                ->whereBetween('payment_date', [$start, $end]);
+
+            if ($levelId) {
+                $this->applyLevelFilter($incomeQuery, $levelId);
+                $this->applyLevelFilter($expenseQuery, $levelId);
+            }
+
+            $income[] = (float) $incomeQuery->sum('amount');
+            $expense[] = (float) $expenseQuery->sum('amount');
+        }
+
+        return compact('labels', 'income', 'expense');
+    }
+
+    /**
+     * ② Income composition by fee category (current month)
+     */
+    private function getIncomeCompositionData(?int $levelId): array
+    {
+        $start = now()->startOfMonth();
+        $end = now()->endOfMonth();
+
+        $query = Transaction::where('type', 'income')
+            ->whereBetween('payment_date', [$start, $end])
+            ->select('fee_category_id', DB::raw('SUM(amount) as total'))
+            ->groupBy('fee_category_id')
+            ->with('feeCategory');
+
+        if ($levelId) {
+            $this->applyLevelFilter($query, $levelId);
+        }
+
+        $results = $query->get();
+
+        $palette = ['#10b981', '#3b82f6', '#f59e0b', '#8b5cf6', '#06b6d4', '#ec4899', '#14b8a6'];
+        $colors = [];
+        foreach ($results as $i => $r) {
+            $colors[] = $palette[$i % count($palette)];
+        }
+
+        return [
+            'labels' => $results->map(fn ($r) => $r->feeCategory?->name ?? 'Lainnya')->values()->all(),
+            'values' => $results->pluck('total')->map(fn ($v) => (float) $v)->values()->all(),
+            'colors' => $colors,
+        ];
+    }
+
+    /**
+     * ③ Expense composition by budget plan item (current month)
+     */
+    private function getExpenseCompositionData(?int $levelId): array
+    {
+        $start = now()->startOfMonth();
+        $end = now()->endOfMonth();
+
+        $query = Transaction::where('type', 'expense')
+            ->whereBetween('payment_date', [$start, $end])
+            ->select('budget_plan_item_id', DB::raw('SUM(amount) as total'))
+            ->groupBy('budget_plan_item_id')
+            ->with('budgetItem');
+
+        if ($levelId) {
+            $this->applyLevelFilter($query, $levelId);
+        }
+
+        $results = $query->get();
+
+        $palette = ['#f43f5e', '#f97316', '#ec4899', '#ef4444', '#d946ef', '#e11d48', '#fb923c'];
+        $colors = [];
+        foreach ($results as $i => $r) {
+            $colors[] = $palette[$i % count($palette)];
+        }
+
+        return [
+            'labels' => $results->map(fn ($r) => $r->budgetItem?->name ?? 'Lainnya')->values()->all(),
+            'values' => $results->pluck('total')->map(fn ($v) => (float) $v)->values()->all(),
+            'colors' => $colors,
+        ];
+    }
+
+    /**
+     * ④ Billing collection rate per level
+     */
+    private function getCollectionRateData(?int $levelId): array
+    {
+        $activeYear = AcademicYear::where('is_active', true)->first();
+        if (! $activeYear) {
+            return [];
+        }
+
+        $levelsQuery = Level::query();
+        if ($levelId) {
+            $levelsQuery->where('id', $levelId);
+        }
+
+        $levels = $levelsQuery->get();
+        $result = [];
+
+        foreach ($levels as $level) {
+            $classroomIds = Classroom::where('level_id', $level->id)->pluck('id');
+
+            $studentIds = DB::table('student_profiles')
+                ->whereIn('classroom_id', $classroomIds)
+                ->pluck('id');
+
+            $userIds = DB::table('profiles')
+                ->where('profileable_type', 'App\Models\StudentProfile')
+                ->whereIn('profileable_id', $studentIds)
+                ->pluck('user_id');
+
+            $billingData = StudentBilling::whereIn('student_id', $userIds)
+                ->where('academic_year_id', $activeYear->id)
+                ->selectRaw('COALESCE(SUM(amount), 0) as total, COALESCE(SUM(paid_amount), 0) as paid')
+                ->first();
+
+            $result[] = [
+                'name' => $level->name,
+                'total' => (float) ($billingData->total ?? 0),
+                'paid' => (float) ($billingData->paid ?? 0),
+            ];
+        }
+
+        return $result;
+    }
+
+    /**
+     * ⑤ Budget realization: planned vs actual per active budget plan
+     */
+    private function getBudgetRealizationData(?int $levelId): array
+    {
+        $query = BudgetPlan::where('is_active', true);
+        if ($levelId) {
+            $query->where('level_id', $levelId);
+        }
+
+        $plans = $query->get();
+
+        if ($plans->isEmpty()) {
+            return ['labels' => [], 'planned' => [], 'realized' => []];
+        }
+
+        $labels = [];
+        $planned = [];
+        $realized = [];
+
+        foreach ($plans as $plan) {
+            $labels[] = $plan->title;
+            $planned[] = (float) $plan->total_amount;
+            $realized[] = (float) Transaction::where('type', 'expense')
+                ->where('budget_plan_id', $plan->id)
+                ->sum('amount');
+        }
+
+        return compact('labels', 'planned', 'realized');
+    }
+
+    /**
+     * ⑥ RAB yearly trend: multiple lines for active plans
+     */
+    private function getRabTrendData(array $levelIds = []): array
+    {
+        $query = BudgetPlan::where('is_active', true)->with('level');
+        if (!empty($levelIds)) {
+            $query->whereIn('level_id', $levelIds);
+        }
+
+        $activePlans = $query->get();
+        if ($activePlans->isEmpty()) {
+            return ['months' => [], 'datasets' => []];
+        }
+
+        $year = now()->year;
+        $currentMonth = now()->month;
+        $monthLabels = [];
+
+        for ($m = 1; $m <= 12; $m++) {
+            $monthLabels[] = Carbon::createFromDate($year, $m, 1)->translatedFormat('M');
+        }
+
+        $datasets = [];
+        $palette = ['#10b981', '#3b82f6', '#f59e0b', '#8b5cf6', '#06b6d4', '#ec4899', '#14b8a6'];
+
+        foreach ($activePlans as $index => $plan) {
+            $monthlySpending = [];
+            for ($m = 1; $m <= 12; $m++) {
+                if ($m <= $currentMonth) {
+                    $start = Carbon::createFromDate($year, $m, 1)->startOfDay();
+                    $end = $start->copy()->endOfMonth()->endOfDay();
+
+                    $monthlySpending[] = (float) Transaction::where('type', 'expense')
+                        ->where('budget_plan_id', $plan->id)
+                        ->whereBetween('payment_date', [$start, $end])
+                        ->sum('amount');
+                } else {
+                    $monthlySpending[] = null;
+                }
+            }
+
+            $cumulative = [];
+            $runningTotal = 0;
+            foreach ($monthlySpending as $val) {
+                if ($val !== null) {
+                    $runningTotal += $val;
+                    $cumulative[] = $runningTotal;
+                } else {
+                    $cumulative[] = null;
+                }
+            }
+
+            $color = $palette[$index % count($palette)];
+
+            $datasets[] = [
+                'label' => $plan->level ? $plan->level->name : $plan->title,
+                'data' => $cumulative,
+                'color' => $color,
+            ];
+        }
+
+        return [
+            'months' => $monthLabels,
+            'datasets' => $datasets,
+        ];
+    }
+
+    /**
+     * ⑦ Top debtors: students with highest unpaid balance
+     */
+    private function getTopDebtorsData(?int $levelId): array
+    {
+        $query = StudentBilling::where('status', '!=', 'paid')
+            ->select('student_id', DB::raw('SUM(amount - paid_amount) as total_unpaid'), DB::raw('COUNT(*) as billing_count'))
+            ->groupBy('student_id')
+            ->orderByDesc('total_unpaid')
+            ->limit(10);
+
+        if ($levelId) {
+            $query->whereHas('student.studentProfile.classroom', function ($q) use ($levelId) {
+                $q->where('level_id', $levelId);
+            });
+        }
+
+        $results = $query->get();
+
+        $debtors = [];
+        foreach ($results as $row) {
+            $student = User::find($row->student_id);
+            if (! $student) {
+                continue;
+            }
+
+            $levelName = '-';
+            $studentProfile = $student->studentProfile;
+            if ($studentProfile) {
+                $classroom = Classroom::find($studentProfile->classroom_id);
+                if ($classroom) {
+                    if ($levelId && $classroom->level_id !== $levelId) {
+                        continue;
+                    }
+                    $level = Level::find($classroom->level_id);
+                    $levelName = $level?->name ?? '-';
+                }
+            }
+
+            $debtors[] = [
+                'name' => $student->name,
+                'level' => $levelName,
+                'unpaid' => (float) $row->total_unpaid,
+                'billing_count' => (int) $row->billing_count,
+            ];
+        }
+
+        return $debtors;
+    }
+
+    /**
+     * @param  \Illuminate\Database\Eloquent\Builder  $query
+     */
+    private function applyLevelFilter($query, int $levelId): void
+    {
+        $query->where(function ($q) use ($levelId) {
+            $q->whereHas('billing.student.studentProfile.classroom', function ($sq) use ($levelId) {
+                $sq->where('level_id', $levelId);
+            })
+                ->orWhereHas('feeCategory', function ($fq) use ($levelId) {
+                    $fq->where('level_id', $levelId);
+                })
+                ->orWhereHas('budgetPlan', function ($bq) use ($levelId) {
+                    $bq->where('level_id', $levelId);
+                });
+        });
     }
 }; ?>
 
 <div class="space-y-6">
-    <!-- Header -->
+    {{-- Header --}}
     <x-ui.header :title="__('Selamat Datang, :name', ['name' => auth()->user()->name])" :subtitle="__('Ringkasan aktivitas PKBM hari ini.')">
         <x-slot:actions>
             <div
@@ -85,7 +440,7 @@ new class extends Component {
         </x-slot:actions>
     </x-ui.header>
 
-    <!-- Stats Grid -->
+    {{-- Stats Grid --}}
     <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-4">
         @if ($isTreasurer)
             <x-ui.stat :title="__('Pemasukan (Bulan Ini)')" :value="'Rp ' . number_format($stats['income_month'], 0, ',', '.')" icon="o-arrow-trending-up"
@@ -113,9 +468,14 @@ new class extends Component {
         @endif
     </div>
 
-    <!-- Main Content -->
+    {{-- Financial Dashboard Charts --}}
+    @if($hasFinancialAccess)
+        @include('livewire.admin.partials.financial-dashboard')
+    @endif
+
+    {{-- Main Content --}}
     <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
-        <!-- Recent Transactions -->
+        {{-- Recent Transactions --}}
         <x-ui.card :title="__('Aktivitas Keuangan Terbaru')" separator shadow>
             <x-slot:actions>
                 <x-ui.button :label="__('Lihat Semua')" :link="route('financial.transactions')" wire:navigate ghost />
@@ -173,7 +533,7 @@ new class extends Component {
         </x-ui.card>
 
         @if ($isTreasurer)
-            <!-- Budget Plans for Treasurer -->
+            {{-- Budget Plans for Treasurer --}}
             <x-ui.card :title="__('Rencana Anggaran (RAB) Aktif')" separator shadow>
                 <x-slot:actions>
                     <x-ui.button :label="__('Lihat Semua')" :link="route('financial.budget-plans')" wire:navigate ghost />
@@ -208,7 +568,7 @@ new class extends Component {
                 </div>
             </x-ui.card>
         @else
-            <!-- Recent Attendance for Admin/Guru -->
+            {{-- Recent Attendance for Admin/Guru --}}
             <x-ui.card :title="__('Input Presensi Terakhir')" separator shadow>
                 <x-slot:actions>
                     <x-ui.button :label="__('Lihat Semua')" :link="route('academic.attendance')" wire:navigate ghost />
@@ -243,5 +603,4 @@ new class extends Component {
             </x-ui.card>
         @endif
     </div>
-</div>
 </div>

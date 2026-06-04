@@ -20,6 +20,7 @@ class FeeCategoryFactory extends Factory
             'name' => $this->faker->word(),
             'code' => $this->faker->unique()->lexify('FEE-????'),
             'default_amount' => 100000,
+            'billing_type' => 'monthly',
             'level_id' => \App\Models\Level::factory(),
         ];
     }

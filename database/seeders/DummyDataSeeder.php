@@ -65,13 +65,14 @@ class DummyDataSeeder extends Seeder
             ]);
         }
 
-        // 1. Ensure levels exist
+        // 1. Ensure levels exist with phase maps
         if (Level::count() === 0) {
-            $this->command->info('Creating 4 essential levels...');
-            Level::create(['name' => 'PAUD', 'education_level' => 'paud', 'type' => 'class_teacher']);
-            Level::create(['name' => 'Paket A', 'education_level' => 'sd', 'type' => 'class_teacher']);
-            Level::create(['name' => 'Paket B', 'education_level' => 'smp', 'type' => 'subject_teacher']);
-            Level::create(['name' => 'Paket C', 'education_level' => 'sma', 'type' => 'subject_teacher']);
+            $this->command->info('Creating 4 essential levels with phase maps...');
+            $phases = Level::defaultPhases();
+            Level::create(['name' => 'PAUD', 'education_level' => 'paud', 'type' => 'class_teacher', 'phase_map' => $phases['paud']]);
+            Level::create(['name' => 'Paket A', 'education_level' => 'sd', 'type' => 'class_teacher', 'phase_map' => $phases['sd']]);
+            Level::create(['name' => 'Paket B', 'education_level' => 'smp', 'type' => 'subject_teacher', 'phase_map' => $phases['smp']]);
+            Level::create(['name' => 'Paket C', 'education_level' => 'sma', 'type' => 'subject_teacher', 'phase_map' => $phases['sma']]);
         }
 
         $levels = Level::all();
@@ -85,7 +86,7 @@ class DummyDataSeeder extends Seeder
         $this->command->info('Creating 5 dummy teachers...');
         $teachers = User::factory()->count(5)->guru()->create();
 
-        // 2. Create Dummy Programs
+        // 3. Create Dummy Programs
         if (Program::count() === 0) {
             $this->command->info('Creating realistic public programs for each level...');
             foreach ($levels as $level) {
@@ -97,63 +98,58 @@ class DummyDataSeeder extends Seeder
             }
         }
 
-        // 3. Create Dummy News
+        // 4. Create Dummy News
         if (NewsArticle::count() === 0) {
-            $this->command->info('Creating dummy news articles...');
-            NewsArticle::factory()->count(8)->create(['author_id' => User::where('role', 'admin')->first()->id ?? $teachers->first()->id]);
+            $this->command->info('Creating 10 news articles...');
+            NewsArticle::factory()->count(10)->create();
         }
 
-        // 4. Create Dummy Gallery
+        // 5. Create Dummy Gallery
         if (GalleryPhoto::count() === 0) {
-            $this->command->info('Creating dummy gallery photos...');
-            GalleryPhoto::factory()->count(10)->create(['is_published' => true]);
+            $this->command->info('Creating 12 gallery photos...');
+            GalleryPhoto::factory()->count(12)->create();
         }
 
-        // 5. Create Classrooms & Students
+        // 6. Create Classrooms & Students
+        $this->command->info('Creating classrooms for each class level...');
         foreach ($levels as $level) {
-            $classroom = Classroom::firstOrCreate(
-                [
-                    'level_id' => $level->id,
-                    'academic_year_id' => $academicYear->id,
-                ],
-                [
-                    'name' => 'Kelas 1 - '.$level->name,
-                    'class_level' => 1,
-                ]
-            );
-
-            // Create Homeroom Teacher
-            \App\Models\TeacherAssignment::firstOrCreate([
-                'academic_year_id' => $academicYear->id,
-                'classroom_id' => $classroom->id,
-                'teacher_id' => $teachers->random()->id,
-                'type' => 'class_teacher',
-            ]);
-
-            // Assign some extra subject teachers
-            foreach (\App\Models\Subject::where('level_id', $level->id)->take(2)->get() as $subject) {
-                \App\Models\TeacherAssignment::firstOrCreate([
-                    'academic_year_id' => $academicYear->id,
-                    'classroom_id' => $classroom->id,
-                    'subject_id' => $subject->id,
-                    'teacher_id' => $teachers->random()->id,
-                    'type' => 'subject_teacher',
-                ]);
+            if (! $level->phase_map) {
+                continue;
             }
 
-            $currentStudentCount = $classroom->students()->count();
+            foreach ($level->phase_map as $classLevel => $phase) {
+                $classroom = Classroom::firstOrCreate(
+                    [
+                        'level_id' => $level->id,
+                        'academic_year_id' => $academicYear->id,
+                        'class_level' => (int) $classLevel,
+                    ],
+                    [
+                        'name' => "Kelas {$classLevel} - {$level->name}",
+                    ]
+                );
 
-            if ($currentStudentCount < 10) {
-                $this->command->info("Membuat siswa untuk: {$classroom->name}");
-
-                // Use factory state to create 'siswa', which automatically creates StudentProfile!
-                // We update their profile to belong to this classroom.
-                $students = User::factory()->count(10 - $currentStudentCount)->siswa()->create();
-
-                foreach ($students as $student) {
-                    $student->studentProfile->update([
+                // Create Homeroom Teacher assignment if not exists
+                if ($classroom->teacherAssignments()->where('type', 'class_teacher')->count() === 0) {
+                    \App\Models\TeacherAssignment::create([
+                        'teacher_id' => $teachers->random()->id,
                         'classroom_id' => $classroom->id,
+                        'academic_year_id' => $academicYear->id,
+                        'type' => 'class_teacher',
                     ]);
+                }
+
+                // Create some students if count < 5
+                $currentStudentCount = $classroom->students()->count();
+                if ($currentStudentCount < 5) {
+                    $this->command->info("Membuat siswa untuk: {$classroom->name}");
+                    $students = User::factory()->count(5 - $currentStudentCount)->siswa()->create();
+
+                    foreach ($students as $student) {
+                        $student->studentProfile->update([
+                            'classroom_id' => $classroom->id,
+                        ]);
+                    }
                 }
             }
         }

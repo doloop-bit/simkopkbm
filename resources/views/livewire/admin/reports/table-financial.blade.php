@@ -6,7 +6,7 @@
             ['key' => 'category', 'label' => __('Kategori/RAB')],
             ['key' => 'payment_method', 'label' => __('Metode'), 'class' => 'text-[10px] uppercase font-bold tracking-wider'],
             ['key' => 'amount_real', 'label' => __('Realisasi'), 'class' => 'text-right font-bold']
-        ]" :rows="$financialData">
+        ]" :rows="$financialData" with-pagination per-page="perPage" :per-page-values="[10, 25, 50, 100]">
             @scope('cell_payment_date', $tx)
                 <span class="text-xs font-medium text-slate-500 font-mono italic">{{ $tx->payment_date->format('d/m/Y') }}</span>
             @endscope

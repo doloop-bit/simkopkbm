@@ -94,7 +94,7 @@ class ProgramFactory extends Factory
         return $this->state(fn (array $attributes) => [
             'level_id' => $level->id,
             'name' => $level->name,
-            'slug' => Str::slug(str_replace(' ', '', $level->name)),
+            'slug' => Str::slug($level->name),
         ]);
     }
 

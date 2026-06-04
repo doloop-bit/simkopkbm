@@ -13,8 +13,10 @@
 
     if (!$variant) {
         $variant = match (strtolower(trim($text))) {
-            'aktif', 'active', 'lunas', 'selesai', 'verified', 'open', 'terbuka' => 'primary',
-            'non aktif', 'inactive', 'ditunda', 'pending', 'closed', 'ditutup' => 'neutral',
+            'aktif', 'active', 'lunas', 'selesai', 'verified', 'open', 'terbuka', 'approved' => 'success',
+            'non aktif', 'inactive', 'ditunda', 'pending', 'closed', 'ditutup', 'draft' => 'neutral',
+            'submitted', 'pengajuan' => 'warning',
+            'transferred', 'dicairkan' => 'info',
             'non-aktif', 'ditolak', 'rejected', 'error', 'batal' => 'error',
             default => 'neutral',
         };

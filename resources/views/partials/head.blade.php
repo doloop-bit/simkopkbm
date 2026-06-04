@@ -60,6 +60,9 @@
         document.addEventListener('livewire:navigated', () => {
             applyTheme();
             applySidebar();
+            
+            // Safety: Remove any lingering modal backdrops from previous pages
+            document.querySelectorAll('.fixed.inset-0.bg-black\\/50.backdrop-blur-sm').forEach(el => el.remove());
         });
     })();
 </script>

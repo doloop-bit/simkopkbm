@@ -2,6 +2,7 @@
     'label' => null,
     'icon' => null,
     'type' => 'button',
+    'variant' => 'default', // default, primary, secondary, ghost, outline, danger
     'ghost' => false,
     'sm' => false,
     'spinner' => null,
@@ -11,15 +12,28 @@
 @php
     $tag = $link ? 'a' : 'button';
     $baseClasses = 'inline-flex items-center justify-center gap-2 font-medium rounded-xl transition-all duration-200 cursor-pointer select-none disabled:opacity-50 disabled:cursor-not-allowed focus:outline-none focus:ring-2 focus:ring-primary/30 active:scale-95';
+    
+    // Support legacy ghost prop
+    $effectiveVariant = ($variant === 'default' && $ghost) ? 'ghost' : $variant;
+    
+    $variantClasses = match($effectiveVariant) {
+        'primary' => 'btn-primary',
+        'secondary' => 'bg-slate-800 hover:bg-slate-900 text-white shadow-lg shadow-slate-800/20',
+        'ghost' => 'btn-ghost text-slate-600 dark:text-slate-300',
+        'outline' => 'border border-slate-200 dark:border-slate-700 hover:bg-slate-50 dark:hover:bg-slate-800 text-slate-600 dark:text-slate-300',
+        'soft' => 'bg-primary/10 text-primary hover:bg-primary/20 border-none',
+        'danger' => 'bg-red-500 hover:bg-red-600 text-white shadow-lg shadow-red-500/20',
+        default => '',
+    };
+    
     $sizeClasses = $sm ? 'px-3 py-1 text-xs' : 'px-4 py-1.5 text-sm';
-    $ghostClasses = $ghost ? 'bg-transparent hover:bg-slate-100 dark:hover:bg-slate-800 text-slate-600 dark:text-slate-300' : '';
     $spinnerTarget = $spinner === true ? null : $spinner;
 @endphp
 
 <{{ $tag }}
     @if($link) href="{{ $link }}" wire:navigate @endif
     @if($tag === 'button') type="{{ $type }}" @endif
-    {{ $attributes->class([$baseClasses, $sizeClasses, $ghostClasses]) }}
+    {{ $attributes->class([$baseClasses, $sizeClasses, $variantClasses]) }}
     @if($spinnerTarget)
         wire:loading.attr="disabled"
         wire:target="{{ $spinnerTarget }}"

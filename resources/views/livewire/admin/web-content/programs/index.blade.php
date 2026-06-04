@@ -13,6 +13,7 @@ new #[Layout('components.layouts.app')] class extends Component {
     use WithFileUploads;
 
     public ?int $level_id = null;
+    public string $slug = '';
     public string $description = '';
     public string $duration = '';
     public string $requirements = '';
@@ -26,6 +27,7 @@ new #[Layout('components.layouts.app')] class extends Component {
     {
         return [
             'level_id' => 'required|exists:levels,id',
+            'slug' => 'required|string|max:100|unique:programs,slug,' . ($this->editingId ?? 'NULL') . ',id',
             'description' => 'required|string',
             'duration' => 'required|string|max:100',
             'requirements' => 'nullable|string',
@@ -39,12 +41,23 @@ new #[Layout('components.layouts.app')] class extends Component {
     {
         return [
             'level_id' => 'jenjang',
+            'slug' => 'slug URL',
             'description' => 'deskripsi',
             'duration' => 'durasi',
             'requirements' => 'persyaratan',
             'image' => 'gambar ilustrasi',
             'logo' => 'logo branding',
         ];
+    }
+
+    public function updatedLevelId($value): void
+    {
+        if ($value && !$this->editingId) {
+            $level = Level::find($value);
+            if ($level) {
+                $this->slug = \Illuminate\Support\Str::slug($level->name);
+            }
+        }
     }
 
     public function save(): void
@@ -56,7 +69,7 @@ new #[Layout('components.layouts.app')] class extends Component {
         $data = [
             'level_id' => $this->level_id,
             'name' => $level->name,
-            'slug' => \Illuminate\Support\Str::slug($level->name),
+            'slug' => $this->slug,
             'description' => $this->description,
             'duration' => $this->duration,
             'requirements' => $this->requirements,
@@ -121,6 +134,7 @@ new #[Layout('components.layouts.app')] class extends Component {
 
         $this->editingId = $id;
         $this->level_id = $program->level_id;
+        $this->slug = $program->slug;
         $this->description = $program->description;
         $this->duration = $program->duration;
         $this->requirements = $program->requirements ?? '';
@@ -216,9 +230,12 @@ new #[Layout('components.layouts.app')] class extends Component {
         </div>
         <div class="p-8">
             <form wire:submit="save" class="space-y-8">
-                <div class="grid grid-cols-1 md:grid-cols-2 gap-8">
-                    <x-ui.select wire:model="level_id" :label="__('Target Jenjang Pendidikan')" :placeholder="__('Pilih jenjang akademik...')" :options="$levels"
+                <div class="grid grid-cols-1 md:grid-cols-3 gap-8">
+                    <x-ui.select wire:model.live="level_id" :label="__('Target Jenjang Pendidikan')" :placeholder="__('Pilih jenjang akademik...')" :options="$levels"
                         class="tracking-tight" />
+
+                    <x-ui.input wire:model="slug" :label="__('Slug URL Program')" :placeholder="__('Contoh: paud, paket-a')" icon="o-link"
+                        class="font-medium" />
 
                     <x-ui.input wire:model="duration" :label="__('Estimasi Durasi Belajar')" :placeholder="__('Contoh: 6 Bulan / 1 Semester')" icon="o-clock"
                         class="font-medium" />

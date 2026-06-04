@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use App\Models\AcademicYear;
+use App\Models\CalendarEvent;
 use App\Models\GalleryPhoto;
 use App\Models\Level;
 use App\Models\NewsArticle;
@@ -68,15 +69,17 @@ class PublicSvelteController extends Controller
     {
         $program = Program::where('slug', $slug)->with('level')->firstOrFail();
 
-        // Check for specific landing pages
-        if ($slug === 'paud') {
+        $educationLevel = strtolower($program->level?->education_level ?? '');
+
+        // Check for specific landing pages based on education level
+        if ($educationLevel === 'paud') {
             return Inertia::render('Public/Landing/paud', [
                 'programName' => $program->name,
                 'programLogo' => $program->logo_path ? asset('storage/'.$program->logo_path) : null,
             ]);
         }
 
-        if ($slug === 'paket-a') {
+        if ($educationLevel === 'sd') {
             return Inertia::render('Public/Landing/paketa', [
                 'programName' => $program->name,
                 'programLogo' => $program->logo_path ? asset('storage/'.$program->logo_path) : null,
@@ -135,6 +138,53 @@ class PublicSvelteController extends Controller
             'academicYears' => AcademicYear::orderByDesc('start_date')->get(),
             'provinces' => Province::orderBy('name')->get(),
             'cities' => City::orderBy('name')->limit(50)->get(), // Initial cities limited for performance
+        ]);
+    }
+
+    public function calendar(Request $request)
+    {
+        $levels = Level::orderBy('name')->get();
+
+        $activeYear = AcademicYear::where('is_active', true)->first();
+
+        $query = CalendarEvent::query()
+            ->with(['level'])
+            ->parentsOnly();
+
+        if ($activeYear) {
+            $query->forAcademicYear($activeYear->id);
+        }
+
+        $events = $query->orderBy('start_date')->orderBy('start_time')->get()
+            ->map(function ($event) {
+                return [
+                    'id' => $event->id,
+                    'title' => $event->title,
+                    'description' => $event->description,
+                    'type' => $event->type,
+                    'type_label' => $event->type_label,
+                    'scope' => $event->scope,
+                    'scope_label' => $event->scope_label,
+                    'level_id' => $event->level_id,
+                    'level' => $event->level ? [
+                        'id' => $event->level->id,
+                        'name' => $event->level->name,
+                    ] : null,
+                    'start_date' => $event->start_date->format('Y-m-d'),
+                    'end_date' => $event->end_date ? $event->end_date->format('Y-m-d') : null,
+                    'start_time' => $event->start_time ? substr($event->start_time, 0, 5) : null,
+                    'end_time' => $event->end_time ? substr($event->end_time, 0, 5) : null,
+                    'location' => $event->location,
+                    'display_color' => $event->display_color,
+                    'is_all_day' => $event->is_all_day,
+                ];
+            });
+
+        return Inertia::render('Public/Calendar', [
+            'levels' => $levels,
+            'events' => $events,
+            'typeLabels' => CalendarEvent::TYPE_LABELS,
+            'typeColors' => CalendarEvent::TYPE_COLORS,
         ]);
     }
 

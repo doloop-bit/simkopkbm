@@ -2,9 +2,6 @@
 
 use Illuminate\Support\Facades\Route;
 
-// Public website routes
-require __DIR__.'/public.php';
-
 Route::view('admin/dashboard', 'dashboard')
     ->middleware(['auth', 'verified'])
     ->name('dashboard');
@@ -28,6 +25,10 @@ require __DIR__.'/assessments.php';
 require __DIR__.'/teacher.php';
 require __DIR__.'/users.php';
 require __DIR__.'/registrations.php';
+require __DIR__.'/calendar.php';
+
+// Public website routes (placed last because it contains a catch-all root-level /{slug} route)
+require __DIR__.'/public.php';
 
 Route::livewire('/test-modal', 'test-modal')
     ->middleware(['auth', 'verified']);

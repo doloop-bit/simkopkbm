@@ -16,6 +16,7 @@ Route::controller(PublicSvelteController::class)->group(function () {
     Route::get('/galeri', 'gallery')->name('public.gallery');
     Route::get('/kontak', 'contact')->name('public.contact');
     Route::get('/pendaftaran', 'registration')->name('public.register');
+    Route::get('/akademik/kalender-pendidikan', 'calendar')->name('public.calendar');
 
     // Region APIs
     Route::get('/api/regions/regencies/{provinceId}', 'getRegencies')->name('api.regions.regencies');
@@ -44,15 +45,9 @@ Route::prefix('v1')->name('v1.')->group(function () {
     Route::livewire('/pendaftaran', 'public.register')->name('register');
 });
 
-// PAUD Landing Page
-Route::get('/paud', function (PublicSvelteController $controller) {
-    return $controller->programShow('paud');
-})->name('public.paud');
-
-// Paket A Landing Page
-Route::get('/paket-a', function (PublicSvelteController $controller) {
-    return $controller->programShow('paket-a');
-})->name('public.paket-a');
+// Program Landing Pages (Root level access for specific slugs)
+Route::get('/{slug}', [PublicSvelteController::class, 'programShow'])
+    ->name('public.program.direct');
 
 // SEO Routes
 Route::get('/sitemap.xml', function () {

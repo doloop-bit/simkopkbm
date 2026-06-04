@@ -86,10 +86,25 @@ class User extends Authenticatable
         return $this->hasMany(StudentFeeDiscount::class, 'student_id');
     }
 
+    public function billings()
+    {
+        return $this->hasMany(StudentBilling::class, 'student_id');
+    }
+
     public function studentProfile()
     {
         return $this->hasOneThrough(StudentProfile::class, Profile::class, 'user_id', 'id', 'id', 'profileable_id')
             ->where('profiles.profileable_type', StudentProfile::class);
+    }
+
+    public function salaryTemplate(): \Illuminate\Database\Eloquent\Relations\HasOne
+    {
+        return $this->hasOne(SalaryTemplate::class);
+    }
+
+    public function payrolls(): \Illuminate\Database\Eloquent\Relations\HasMany
+    {
+        return $this->hasMany(Payroll::class);
     }
 
     // Teacher Assignment Relationships

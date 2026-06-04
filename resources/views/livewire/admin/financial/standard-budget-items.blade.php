@@ -183,7 +183,7 @@ new class extends Component {
             
             <div class="grid grid-cols-1 md:grid-cols-2 gap-6 p-4 bg-slate-50 dark:bg-slate-900/50 rounded-2xl border border-slate-100 dark:border-slate-800">
                 <x-ui.input wire:model="unit" :label="__('Satuan Ukuran')" :placeholder="__('Contoh: Rim, Box, Pack')" required />
-                <x-ui.input wire:model="default_price" type="number" :label="__('Estimasi Harga Unit (Rp)')" placeholder="0" />
+                <x-ui.money wire:model="default_price" :label="__('Estimasi Harga Unit (Rp)')" placeholder="0" />
             </div>
             
             <x-ui.checkbox wire:model="is_active" :label="__('Item ini aktif & muncul di pencarian RAB')" />
