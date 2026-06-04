@@ -212,12 +212,12 @@ trait HandlesGradingAssessment
         }
 
         if ($this->currentPhase) {
-            $cp = LearningAchievement::where('subject_id', $this->subject_id)
+            $cpIds = LearningAchievement::where('subject_id', $this->subject_id)
                 ->where('phase', $this->currentPhase)
-                ->first();
+                ->pluck('id');
 
-            if ($cp) {
-                $this->cachedTps = $cp->tps()->orderBy('code')->get();
+            if ($cpIds->isNotEmpty()) {
+                $this->cachedTps = SubjectTp::whereIn('learning_achievement_id', $cpIds)->orderBy('code')->get();
 
                 return $this->cachedTps;
             }
