@@ -70,7 +70,8 @@
                             min="0"
                             max="100" 
                             step="1" 
-                            class="text-center font-black text-sm !w-24 !py-1.5 bg-slate-50 border-none shadow-sm ring-1 ring-slate-200" 
+                            variant="subtle"
+                            class="text-center font-black text-sm !w-24 !py-1.5" 
                             :readonly="!$this->canEditAssessments()"
                         />
                     </div>
