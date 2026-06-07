@@ -33,7 +33,7 @@
                             required 
                         />
 
-                        <x-ui.input :label="__('Jenis Kurikulum')" value="Kurikulum Merdeka" readonly disabled class="bg-slate-50 border-none italic font-bold text-slate-400" />
+                        <x-ui.input :label="__('Jenis Kurikulum')" value="Kurikulum Merdeka" readonly disabled variant="subtle" class="italic font-bold text-slate-400" />
                     </div>
 
                     @if (count($students) > 0)
