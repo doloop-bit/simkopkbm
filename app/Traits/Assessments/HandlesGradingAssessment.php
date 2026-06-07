@@ -157,20 +157,37 @@ trait HandlesGradingAssessment
             return;
         }
 
-        // Validate duplicates locally
+        // Normalize and validate duplicates locally
+        $normalizedGrades = [];
         foreach ($this->grades_data as $studentId => $data) {
-            if (! empty($data['best_tp_ids']) && ! empty($data['improvement_tp_ids'])) {
-                if (array_intersect($data['best_tp_ids'], $data['improvement_tp_ids'])) {
+            $bestTps = isset($data['best_tp_ids'])
+                ? (is_array($data['best_tp_ids']) ? $data['best_tp_ids'] : [$data['best_tp_ids']])
+                : [];
+            $bestTps = array_filter($bestTps);
+
+            $impTps = isset($data['improvement_tp_ids'])
+                ? (is_array($data['improvement_tp_ids']) ? $data['improvement_tp_ids'] : [$data['improvement_tp_ids']])
+                : [];
+            $impTps = array_filter($impTps);
+
+            if (! empty($bestTps) && ! empty($impTps)) {
+                if (array_intersect($bestTps, $impTps)) {
                     $studentName = User::find($studentId)?->name ?? 'Siswa';
                     $this->dispatch('toast', type: 'error', message: "TP yang sama tidak boleh dipilih sebagai Terbaik dan Perlu Peningkatan sekaligus untuk $studentName.");
 
                     return;
                 }
             }
+
+            $normalizedGrades[$studentId] = [
+                'grade' => $data['grade'] ?? null,
+                'best_tp_ids' => $bestTps,
+                'improvement_tp_ids' => $impTps,
+            ];
         }
 
-        DB::transaction(function () {
-            foreach ($this->grades_data as $studentId => $data) {
+        DB::transaction(function () use ($normalizedGrades) {
+            foreach ($normalizedGrades as $studentId => $data) {
                 $hasGrade = isset($data['grade']) && $data['grade'] !== '';
                 $hasBestTp = ! empty($data['best_tp_ids']);
                 $hasImpTp = ! empty($data['improvement_tp_ids']);
@@ -189,8 +206,8 @@ trait HandlesGradingAssessment
                     ],
                     [
                         'grade' => $hasGrade ? (float) $data['grade'] : 0,
-                        'best_tp_ids' => $data['best_tp_ids'] ?: null,
-                        'improvement_tp_ids' => $data['improvement_tp_ids'] ?: null,
+                        'best_tp_ids' => $hasBestTp ? array_values($data['best_tp_ids']) : null,
+                        'improvement_tp_ids' => $hasImpTp ? array_values($data['improvement_tp_ids']) : null,
                     ]
                 );
             }
