@@ -66,7 +66,7 @@
                 <tr>
                     <td style="border: 1px solid #000; padding: 6px; text-align: center;">{{ $index + 1 }}</td>
                     <td style="border: 1px solid #000; padding: 6px;">{{ $grade['subject_name'] }}</td>
-                    <td style="border: 1px solid #000; padding: 6px; text-align: center; font-weight: bold;">{{ round($grade['grade']) }}</td>
+                    <td style="border: 1px solid #000; padding: 6px; text-align: center; font-weight: bold;">{{ number_format($grade['grade'], 2, ',', '.') }}</td>
                     <td style="border: 1px solid #000; padding: 6px; font-size: 10px;">
                         @if(!empty($grade['best_tp']))
                             <div style="margin-bottom: 5px;">
