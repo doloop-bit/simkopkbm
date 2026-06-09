@@ -7,6 +7,25 @@
     $c = $classroom;
     $ay = $academicYear;
     $t = $teacher;
+
+    $subjectGrades = collect($r->scores['subject_grades'] ?? []);
+
+    // Group 1: Muatan Lokal (Bahasa Jawa or Muatan Lokal)
+    $muatanLokal = $subjectGrades->filter(function($grade) {
+        $name = strtolower($grade['subject_name'] ?? '');
+        return str_contains($name, 'jawa') || str_contains($name, 'lokal') || str_contains($name, 'mulok');
+    });
+
+    // Group 2: Muatan Pemberdayaan dan Keterampilan (Prakarya, Pemberdayaan, Keterampilan)
+    $pemberdayaanKeterampilan = $subjectGrades->filter(function($grade) {
+        $name = strtolower($grade['subject_name'] ?? '');
+        return str_contains($name, 'prakarya') || str_contains($name, 'pemberdayaan') || str_contains($name, 'keterampilan') || str_contains($name, 'vokasional');
+    });
+
+    // Group 3: Mata Pelajaran Umum (everything else)
+    $umum = $subjectGrades->reject(function($grade) use ($muatanLokal, $pemberdayaanKeterampilan) {
+        return $muatanLokal->contains($grade) || $pemberdayaanKeterampilan->contains($grade);
+    });
 @endphp
 
 <div>
@@ -59,12 +78,13 @@
                 </tr>
             </thead>
             <tbody>
+                <!-- Kelompok Pelajaran Umum -->
                 <tr>
                     <td colspan="4" style="border: 1px solid #000; padding: 6px; background: #f9fafb; font-style: italic; font-weight: bold;">Kelompok Pelajaran Umum</td>
                 </tr>
-                @forelse($r->scores['subject_grades'] ?? [] as $index => $grade)
+                @forelse($umum as $index => $grade)
                 <tr>
-                    <td style="border: 1px solid #000; padding: 6px; text-align: center;">{{ $index + 1 }}</td>
+                    <td style="border: 1px solid #000; padding: 6px; text-align: center;">{{ $loop->iteration }}</td>
                     <td style="border: 1px solid #000; padding: 6px;">{{ $grade['subject_name'] }}</td>
                     <td style="border: 1px solid #000; padding: 6px; text-align: center; font-weight: bold;">{{ number_format($grade['grade'], 2, ',', '.') }}</td>
                     <td style="border: 1px solid #000; padding: 6px; font-size: 10px;">
@@ -90,11 +110,78 @@
                     </td>
                 </tr>
                 @empty
-                <tr><td colspan="4" style="border: 1px solid #000; padding: 20px; text-align: center; color: #999;">Tidak ada data nilai</td></tr>
+                <tr><td colspan="4" style="border: 1px solid #000; padding: 10px; text-align: center; color: #999;">Tidak ada data nilai kelompok umum</td></tr>
                 @endforelse
+
+                <!-- Kelompok Muatan Pemberdayaan dan Keterampilan -->
                 <tr>
-                    <td colspan="4" style="border: 1px solid #000; padding: 6px; background: #f9fafb; font-style: italic; font-weight: bold;">Muatan pemberdayaan dan keterampilan</td>
+                    <td colspan="4" style="border: 1px solid #000; padding: 6px; background: #f9fafb; font-style: italic; font-weight: bold;">Muatan Pemberdayaan dan Keterampilan</td>
                 </tr>
+                @forelse($pemberdayaanKeterampilan as $index => $grade)
+                <tr>
+                    <td style="border: 1px solid #000; padding: 6px; text-align: center;">{{ $loop->iteration }}</td>
+                    <td style="border: 1px solid #000; padding: 6px;">{{ $grade['subject_name'] }}</td>
+                    <td style="border: 1px solid #000; padding: 6px; text-align: center; font-weight: bold;">{{ number_format($grade['grade'], 2, ',', '.') }}</td>
+                    <td style="border: 1px solid #000; padding: 6px; font-size: 10px;">
+                        @if(!empty($grade['best_tp']))
+                            <div style="margin-bottom: 5px;">
+                                <strong>Menunjukkan penguasaan dalam:</strong>
+                                @foreach((array)$grade['best_tp'] as $tp)
+                                    <div style="margin-left: 10px;">- {{ $tp }}</div>
+                                @endforeach
+                            </div>
+                        @endif
+                        @if(!empty($grade['improvement_tp']))
+                            <div>
+                                <strong>Perlu bantuan dalam:</strong>
+                                @foreach((array)$grade['improvement_tp'] as $tp)
+                                    <div style="margin-left: 10px;">- {{ $tp }}</div>
+                                @endforeach
+                            </div>
+                        @endif
+                        @if(empty($grade['best_tp']) && empty($grade['improvement_tp']))
+                            <span style="color: #999; font-style: italic;">Belum ada deskripsi capaian</span>
+                        @endif
+                    </td>
+                </tr>
+                @empty
+                <tr><td colspan="4" style="border: 1px solid #000; padding: 10px; text-align: center; color: #999;">Tidak ada data nilai kelompok pemberdayaan dan keterampilan</td></tr>
+                @endforelse
+
+                <!-- Kelompok Muatan Lokal -->
+                <tr>
+                    <td colspan="4" style="border: 1px solid #000; padding: 6px; background: #f9fafb; font-style: italic; font-weight: bold;">Muatan Lokal</td>
+                </tr>
+                @forelse($muatanLokal as $index => $grade)
+                <tr>
+                    <td style="border: 1px solid #000; padding: 6px; text-align: center;">{{ $loop->iteration }}</td>
+                    <td style="border: 1px solid #000; padding: 6px;">{{ $grade['subject_name'] }}</td>
+                    <td style="border: 1px solid #000; padding: 6px; text-align: center; font-weight: bold;">{{ number_format($grade['grade'], 2, ',', '.') }}</td>
+                    <td style="border: 1px solid #000; padding: 6px; font-size: 10px;">
+                        @if(!empty($grade['best_tp']))
+                            <div style="margin-bottom: 5px;">
+                                <strong>Menunjukkan penguasaan dalam:</strong>
+                                @foreach((array)$grade['best_tp'] as $tp)
+                                    <div style="margin-left: 10px;">- {{ $tp }}</div>
+                                @endforeach
+                            </div>
+                        @endif
+                        @if(!empty($grade['improvement_tp']))
+                            <div>
+                                <strong>Perlu bantuan dalam:</strong>
+                                @foreach((array)$grade['improvement_tp'] as $tp)
+                                    <div style="margin-left: 10px;">- {{ $tp }}</div>
+                                @endforeach
+                            </div>
+                        @endif
+                        @if(empty($grade['best_tp']) && empty($grade['improvement_tp']))
+                            <span style="color: #999; font-style: italic;">Belum ada deskripsi capaian</span>
+                        @endif
+                    </td>
+                </tr>
+                @empty
+                <tr><td colspan="4" style="border: 1px solid #000; padding: 10px; text-align: center; color: #999;">Tidak ada data nilai kelompok muatan lokal</td></tr>
+                @endforelse
             </tbody>
         </table>
     @endif
@@ -159,7 +246,7 @@
             </td>
             <td style="width: 33%;"></td>
             <td style="text-align: center; width: 33%;">
-                {{ config('app.city', 'Malang') }}, {{ date('d F Y') }}<br>Guru Kelas
+                {{ config('app.city', 'Kab. Semarang') }}, {{ date('d F Y') }}<br>Guru Kelas
                 <div style="height: 60px;"></div>
                 <span style="font-weight: bold; text-decoration: underline;">{{ $t->name }}</span>
             </td>
