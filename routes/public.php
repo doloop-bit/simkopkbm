@@ -45,6 +45,9 @@ Route::prefix('v1')->name('v1.')->group(function () {
     Route::livewire('/pendaftaran', 'public.register')->name('register');
 });
 
+// Portal PAUD
+Route::livewire('/portal-paud/{token}', 'public.paud-report')->name('public.paud-report');
+
 // Program Landing Pages (Root level access for specific slugs)
 Route::get('/{slug}', [PublicSvelteController::class, 'programShow'])
     ->name('public.program.direct');

@@ -47,6 +47,8 @@
         ],
     ] : [];
 
+
+
     // Teacher-only home back button if needed, or keep it consistent
     if ($isGuru && !empty($tabs)) {
         $tabs['home'] = [

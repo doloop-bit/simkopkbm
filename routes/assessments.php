@@ -3,9 +3,6 @@
 use Illuminate\Support\Facades\Route;
 
 Route::middleware(['auth'])->prefix('admin')->name('admin.')->group(function () {
-    // Competency Assessment (PAUD)
-    Route::livewire('/assessments/competency', 'admin.report-card.paud.competency-assessment')
-        ->name('assessments.competency');
 
     // Extracurricular Assessment
     Route::livewire('/assessments/extracurricular', 'shared.assessments.extracurricular')

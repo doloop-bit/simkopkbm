@@ -21,14 +21,14 @@
             <x-ui.menu-item title="Kalender" icon="o-calendar-days" link="{{ route('calendar.index') }}" />
         </x-ui.menu-sub>
 
-        <x-ui.menu-sub title="Penilaian & Raport" icon="o-pencil-square" :active="request()->routeIs('teacher.assessments.*') || request()->routeIs('teacher.report-cards')">
+        <x-ui.menu-sub title="Penilaian & Raport" icon="o-pencil-square" :active="request()->routeIs('teacher.assessments.*') || request()->routeIs('teacher.report-cards') || request()->routeIs('admin.report-card.paud.*')">
             <x-ui.menu-item title="Rekap Absensi" icon="o-clipboard-document-list" link="{{ route('teacher.assessments.attendance') }}" />
             <x-ui.menu-item title="Nilai Ekskul" icon="o-star" link="{{ route('teacher.assessments.extracurricular') }}" />
             <x-ui.menu-item title="Raport Kesetaraan" icon="o-document-chart-bar" link="{{ route('teacher.assessments.grading') }}" />
             <x-ui.menu-item title="Nilai Diniyah" icon="o-sparkles" link="{{ route('teacher.assessments.diniyah') }}" />
 
             @if(auth()->user()->teachesPaudLevel())
-                <x-ui.menu-item title="Nilai PAUD" icon="o-face-smile" link="{{ route('teacher.assessments.paud') }}" />
+                <x-ui.menu-item title="Rapor PAUD" icon="o-face-smile" :link="route('admin.report-card.paud.grading')" />
             @endif
 
             <x-ui.menu-item title="Modul Ajar AI" icon="o-sparkles" link="{{ route('teacher.modul-ajar.index') }}" />
@@ -71,7 +71,7 @@
             </x-ui.menu-sub>
 
             <x-ui.menu-sub title="Penilaian & Raport" icon="o-pencil-square" :active="request()->routeIs('admin.assessments.*') || request()->routeIs('admin.report-card.*')">
-                <x-ui.menu-item title="Penilaian PAUD" icon="o-clipboard-document-check" :link="route('admin.assessments.competency')" />
+                <x-ui.menu-item title="Rapor PAUD" icon="o-face-smile" :link="route('admin.report-card.paud.grading')" />
                 <x-ui.menu-item title="Raport Kesetaraan" icon="o-document-chart-bar" :link="route('admin.report-card.grading')" />
                 <x-ui.menu-item title="Nilai Diniyah" icon="o-sparkles" :link="route('admin.report-card.diniyah-grading')" />
                 <x-ui.menu-item title="Rapor Diniyah" icon="o-book-open" :link="route('admin.report-card.diniyah')" />

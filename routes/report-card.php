@@ -21,4 +21,19 @@ Route::middleware(['auth', 'verified'])->group(function () {
     Route::livewire('admin/report-card/diniyah', 'admin.report-card.diniyah-create')
         ->middleware('role:admin')
         ->name('admin.report-card.diniyah');
+
+    // PAUD Routes
+    Route::livewire('admin/report-card/paud/master', 'admin.report-card.paud.paud-master-data')
+        ->middleware('role:admin')
+        ->name('admin.report-card.paud.master');
+
+    Route::livewire('admin/report-card/paud/tp', 'admin.report-card.paud.paud-tp-management')
+        ->name('admin.report-card.paud.tp');
+
+    Route::livewire('admin/report-card/paud/grading', 'admin.report-card.paud.paud-tp-grading')
+        ->name('admin.report-card.paud.grading');
+
+    Route::livewire('admin/report-card/paud/generate', 'admin.report-card.paud.paud-report-create')
+        ->middleware('role:admin')
+        ->name('admin.report-card.paud.generate');
 });

@@ -19,6 +19,8 @@ class DatabaseSeeder extends Seeder
             AdminSeeder::class,                 // Akun Admin Utama
             LevelSeeder::class,                 // Jenjang & Phase Map (Kurikulum Merdeka)
             DevelopmentalAspectsSeeder::class,  // Indikator Penilaian PAUD
+            PaudCpElementSeeder::class,         // PAUD CP Elements
+            PaudSklItemSeeder::class,           // PAUD SKL Items
         ]);
 
         $this->command->info('Database seeding completed successfully!');

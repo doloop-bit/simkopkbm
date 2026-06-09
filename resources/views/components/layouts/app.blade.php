@@ -10,6 +10,8 @@
     $dashboardRoute = $isGuru ? route('teacher.dashboard') : route('dashboard');
     
     // Determine sub-nav visibility
+    $hasPaudSubNav = request()->routeIs('admin.report-card.paud.*');
+
     $hasAdminSubNav = request()->routeIs(
         'admin.school-profile.*', 
         'admin.news.*', 
@@ -22,7 +24,7 @@
         'admin.report-card.diniyah-grading',
         'admin.report-card.diniyah',
         'financial.*'
-    );
+    ) && !$hasPaudSubNav;
     
     $hasTeacherSubNav = request()->routeIs(
         'teacher.report-cards', 
@@ -32,7 +34,7 @@
         'teacher.assessments.extracurricular'
     );
     
-    $hasSubNav = $isGuru ? $hasTeacherSubNav : $hasAdminSubNav;
+    $hasSubNav = $isGuru ? ($hasTeacherSubNav || $hasPaudSubNav) : ($hasAdminSubNav || $hasPaudSubNav);
 @endphp
 
 <x-layouts.dashboard
@@ -44,10 +46,18 @@
     @if ($hasSubNav)
         <x-slot:subNav>
             @if($isGuru)
-                <x-layouts.report-card-nav />
+                @if($hasPaudSubNav)
+                    <x-layouts.paud-nav />
+                @else
+                    <x-layouts.report-card-nav />
+                @endif
             @else
                 <x-admin.konten-web-nav />
-                <x-layouts.report-card-nav />
+                @if($hasPaudSubNav)
+                    <x-layouts.paud-nav />
+                @else
+                    <x-layouts.report-card-nav />
+                @endif
                 <x-admin.keuangan-nav />
             @endif
         </x-slot:subNav>
