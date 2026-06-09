@@ -16,7 +16,7 @@
         "lightningcss-linux-x64-gnu": "^1.32.0"
     },
     "devDependencies": {
-        "@inertiajs/svelte": "^3.1.1",
+        "@inertiajs/svelte": "^3.3.0",
         "@sveltejs/vite-plugin-svelte": "^7.1.2",
         "@tailwindcss/vite": "^4.2.4",
         "autoprefixer": "^10.5.0",
