@@ -467,7 +467,6 @@ new class extends Component {
             <div class="rounded-3xl border border-slate-200 dark:border-slate-800 bg-slate-50/10 dark:bg-slate-900/10 overflow-hidden">
                 <div class="p-4 border-b border-slate-200 dark:border-slate-800 flex items-center justify-between bg-white dark:bg-slate-900">
                     <span class="text-xs font-bold uppercase text-slate-500 tracking-wider">{{ __('Rincian Item Anggaran') }}</span>
-                    <x-ui.button :label="__('Tambah Baris')" icon="o-plus" wire:click="addItemRow" variant="soft" class="btn-sm" />
                 </div>
                 
                 <div class="overflow-x-auto min-h-[200px]">
@@ -573,7 +572,10 @@ new class extends Component {
                         </tbody>
                         <tfoot class="bg-slate-100 dark:bg-slate-800/80 border-t-2 border-slate-200 dark:border-slate-700">
                             <tr>
-                                <td colspan="4" class="px-4 py-4 text-right text-xs font-bold uppercase tracking-wider text-slate-500">{{ __('Total Estimasi Anggaran') }}</td>
+                                <td class="px-3 py-3 align-middle">
+                                    <x-ui.button :label="__('Tambah Baris')" icon="o-plus" wire:click="addItemRow" variant="soft" class="btn-sm" />
+                                </td>
+                                <td colspan="3" class="px-4 py-4 text-right text-xs font-bold uppercase tracking-wider text-slate-500">{{ __('Total Estimasi Anggaran') }}</td>
                                 <td class="px-3 py-4 text-right">
                                     <span class="font-mono text-lg font-bold text-emerald-600 dark:text-emerald-400 whitespace-nowrap">
                                         Rp {{ number_format($this->totalAmount, 0, ',', '.') }}

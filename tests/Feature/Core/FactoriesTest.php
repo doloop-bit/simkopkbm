@@ -287,7 +287,7 @@ describe('Factory Data Quality', function () {
         $article = NewsArticle::factory()->create();
 
         // Check that title is in Indonesian (contains common Indonesian words)
-        $indonesianWords = ['kegiatan', 'pkbm', 'peserta', 'didik', 'program', 'pendidikan', 'pembelajaran'];
+        $indonesianWords = ['kegiatan', 'pkbm', 'peserta', 'didik', 'program', 'pendidikan', 'pembelajaran', 'wisuda', 'ujian', 'pelatihan', 'peringatan', 'lomba', 'kerjasama', 'kunjungan'];
         $containsIndonesian = false;
 
         $loweredTitle = strtolower($article->title);

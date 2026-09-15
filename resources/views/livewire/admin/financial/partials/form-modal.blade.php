@@ -87,10 +87,7 @@
 
                 {{-- TRANSACTION DETAIL COLUMN --}}
                 <div class="space-y-4">
-                    <div class="grid grid-cols-2 gap-4">
-                        <x-ui.input wire:model="pay_amount" type="number" :label="__('Nominal Bayar (Rp)')" icon="o-banknotes" required />
-                        <x-ui.input wire:model="adjustment_amount" type="number" :label="__('Adjusment (+/-)')" icon="o-adjustments-horizontal" :placeholder="__('Contoh: -500')" />
-                    </div>
+                    <x-ui.input wire:model="pay_amount" type="number" :label="__('Nominal Bayar (Rp)')" icon="o-banknotes" required />
                     
                     <x-ui.select 
                         wire:model="payment_method" 
