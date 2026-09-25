@@ -28,6 +28,7 @@ class User extends Authenticatable
         'role',
         'is_active',
         'managed_level_id',
+        'managed_financial_unit_id',
     ];
 
     public function roles(): BelongsToMany
@@ -289,6 +290,16 @@ class User extends Authenticatable
         return $this->belongsTo(Level::class, 'managed_level_id');
     }
 
+    public function managedFinancialUnit()
+    {
+        return $this->belongsTo(FinancialUnit::class, 'managed_financial_unit_id');
+    }
+
+    public function managedFinancialUnitId(): ?int
+    {
+        return $this->managed_financial_unit_id ?? $this->managedLevel?->financial_unit_id;
+    }
+
     public function isTreasurer(): bool
     {
         return $this->activeRoleSlug() === 'bendahara';
@@ -311,6 +322,15 @@ class User extends Authenticatable
         }
 
         return $this->managed_level_id === $levelId;
+    }
+
+    public function canManageFinancialUnit(int $financialUnitId): bool
+    {
+        if ($this->isAdmin() || $this->isYayasan()) {
+            return true;
+        }
+
+        return (int) $this->managedFinancialUnitId() === (int) $financialUnitId;
     }
 
     public function hasMultipleRoles(): bool

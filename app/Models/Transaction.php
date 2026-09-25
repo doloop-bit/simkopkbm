@@ -10,6 +10,7 @@ class Transaction extends Model
     use HasTransactionRelationships;
 
     protected $fillable = [
+        'financial_unit_id',
         'type',
         'student_billing_id',
         'fee_category_id',

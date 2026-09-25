@@ -27,9 +27,17 @@ new class extends Component
         $isKepsek = $user->isHeadmaster();
         $hasFinancialAccess = $user->isAdmin() || $isTreasurer || $isYayasan || $isKepsek;
 
-        // Reset level filter if treasurer (they can only see their own level)
+        // Reset level filter if treasurer (they can only see their own level or unit)
         if ($isTreasurer) {
             $this->levelId = $user->managed_level_id;
+        }
+
+        $managedUnitId = $isTreasurer ? $user->managedFinancialUnitId() : null;
+        $unitLevels = [];
+        if ($isTreasurer && $managedUnitId) {
+            $unitLevels = Level::where('financial_unit_id', $managedUnitId)->pluck('id')->toArray();
+        } elseif ($isTreasurer && $user->managed_level_id) {
+            $unitLevels = [$user->managed_level_id];
         }
 
         $start = now()->startOfMonth();
@@ -40,20 +48,48 @@ new class extends Component
         $totalStaff = User::whereNotIn('role', ['siswa', 'guru'])->count();
         $totalClassrooms = Classroom::count();
 
-        $incomeMonth = Transaction::where('type', 'income')
-            ->whereBetween('payment_date', [$start, $end])
-            ->sum('amount');
+        $incomeQuery = Transaction::where('type', 'income')
+            ->whereBetween('payment_date', [$start, $end]);
+        if ($isTreasurer && $managedUnitId) {
+            $incomeQuery->where(function ($q) use ($managedUnitId, $unitLevels) {
+                $q->where('financial_unit_id', $managedUnitId);
+                if (! empty($unitLevels)) {
+                    $q->orWhere(fn ($oq) => $this->applyLevelFilter($oq, $unitLevels));
+                }
+            });
+        }
+        $incomeMonth = (float) $incomeQuery->sum('amount');
 
-        $expenseMonth = Transaction::where('type', 'expense')
-            ->whereBetween('payment_date', [$start, $end])
-            ->sum('amount');
+        $expenseQuery = Transaction::where('type', 'expense')
+            ->whereBetween('payment_date', [$start, $end]);
+        if ($isTreasurer && $managedUnitId) {
+            $expenseQuery->where(function ($q) use ($managedUnitId, $unitLevels) {
+                $q->where('financial_unit_id', $managedUnitId);
+                if (! empty($unitLevels)) {
+                    $q->orWhere(fn ($oq) => $this->applyLevelFilter($oq, $unitLevels));
+                }
+            });
+        }
+        $expenseMonth = (float) $expenseQuery->sum('amount');
 
-        $pendingBillings = StudentBilling::where('status', '!=', 'paid')->sum(DB::raw('amount - paid_amount'));
+        $pendingQuery = StudentBilling::where('status', '!=', 'paid');
+        if ($isTreasurer && ! empty($unitLevels)) {
+            $pendingQuery->whereHas('student.studentProfile.classroom', function ($q) use ($unitLevels) {
+                $q->whereIn('level_id', $unitLevels);
+            });
+        }
+        $pendingBillings = (float) $pendingQuery->sum(DB::raw('amount - paid_amount'));
 
-        $recentTransactions = Transaction::with(['billing.student', 'billing.feeCategory', 'budgetPlan', 'budgetItem'])
-            ->latest()
-            ->limit(10)
-            ->get();
+        $recentTxQuery = Transaction::with(['billing.student', 'billing.feeCategory', 'budgetPlan', 'budgetItem']);
+        if ($isTreasurer && $managedUnitId) {
+            $recentTxQuery->where(function ($q) use ($managedUnitId, $unitLevels) {
+                $q->where('financial_unit_id', $managedUnitId);
+                if (! empty($unitLevels)) {
+                    $q->orWhere(fn ($oq) => $this->applyLevelFilter($oq, $unitLevels));
+                }
+            });
+        }
+        $recentTransactions = $recentTxQuery->latest()->limit(10)->get();
 
         $recentAttendance = [];
         if (! $isTreasurer) {
@@ -66,7 +102,11 @@ new class extends Component
 
         $activeBudgetPlans = [];
         if ($isTreasurer || $user->isAdmin()) {
-            $activeBudgetPlans = BudgetPlan::where('is_active', true)->withCount('items')->latest()->limit(5)->get();
+            $budgetPlanQuery = BudgetPlan::where('is_active', true)->withCount('items');
+            if ($isTreasurer && ! empty($unitLevels)) {
+                $budgetPlanQuery->whereIn('level_id', $unitLevels);
+            }
+            $activeBudgetPlans = $budgetPlanQuery->latest()->limit(5)->get();
         }
 
         $chartData = [];
@@ -100,25 +140,34 @@ new class extends Component
 
     private function getFinancialChartData(User $user): array
     {
-        $treasurerLevelId = $user->isTreasurer() ? $user->managed_level_id : null;
-        $filteredLevelId = $treasurerLevelId ?? $this->levelId;
-        $rabTrendFilteredIds = $treasurerLevelId ? [$treasurerLevelId] : $this->rabTrendLevelIds;
+        $isTreasurer = $user->isTreasurer();
+        $managedUnitId = $isTreasurer ? $user->managedFinancialUnitId() : null;
+        $unitLevels = [];
+        if ($isTreasurer && $managedUnitId) {
+            $unitLevels = Level::where('financial_unit_id', $managedUnitId)->pluck('id')->toArray();
+        } elseif ($isTreasurer && $user->managed_level_id) {
+            $unitLevels = [$user->managed_level_id];
+        }
+
+        $treasurerLevelIds = $isTreasurer ? (! empty($unitLevels) ? $unitLevels : ($user->managed_level_id ? [$user->managed_level_id] : null)) : null;
+        $filteredLevelIds = $treasurerLevelIds ?? ($this->levelId ? [$this->levelId] : null);
+        $rabTrendFilteredIds = $treasurerLevelIds ?? $this->rabTrendLevelIds;
 
         return [
-            'cashFlow' => $this->getCashFlowData($filteredLevelId),
-            'incomeComposition' => $this->getIncomeCompositionData($filteredLevelId),
-            'expenseComposition' => $this->getExpenseCompositionData($filteredLevelId),
-            'collectionRate' => $this->getCollectionRateData($treasurerLevelId),
-            'budgetRealization' => $this->getBudgetRealizationData($treasurerLevelId),
+            'cashFlow' => $this->getCashFlowData($filteredLevelIds, $isTreasurer ? $managedUnitId : null),
+            'incomeComposition' => $this->getIncomeCompositionData($filteredLevelIds, $isTreasurer ? $managedUnitId : null),
+            'expenseComposition' => $this->getExpenseCompositionData($filteredLevelIds, $isTreasurer ? $managedUnitId : null),
+            'collectionRate' => $this->getCollectionRateData($treasurerLevelIds),
+            'budgetRealization' => $this->getBudgetRealizationData($treasurerLevelIds),
             'rabTrend' => $this->getRabTrendData($rabTrendFilteredIds),
-            'topDebtors' => ($user->isAdmin() || $user->isTreasurer()) ? $this->getTopDebtorsData($treasurerLevelId) : [],
+            'topDebtors' => ($user->isAdmin() || $user->isTreasurer()) ? $this->getTopDebtorsData($treasurerLevelIds) : [],
         ];
     }
 
     /**
      * ① Cash Flow: Last 6 months income vs expense
      */
-    private function getCashFlowData(?int $levelId): array
+    private function getCashFlowData(?array $levelIds = null, ?int $unitId = null): array
     {
         $months = collect();
         for ($i = 5; $i >= 0; $i--) {
@@ -138,9 +187,22 @@ new class extends Component
             $expenseQuery = Transaction::where('type', 'expense')
                 ->whereBetween('payment_date', [$start, $end]);
 
-            if ($levelId) {
-                $this->applyLevelFilter($incomeQuery, $levelId);
-                $this->applyLevelFilter($expenseQuery, $levelId);
+            if ($unitId) {
+                $incomeQuery->where(function ($q) use ($unitId, $levelIds) {
+                    $q->where('financial_unit_id', $unitId);
+                    if ($levelIds) {
+                        $q->orWhere(fn ($oq) => $this->applyLevelFilter($oq, $levelIds));
+                    }
+                });
+                $expenseQuery->where(function ($q) use ($unitId, $levelIds) {
+                    $q->where('financial_unit_id', $unitId);
+                    if ($levelIds) {
+                        $q->orWhere(fn ($oq) => $this->applyLevelFilter($oq, $levelIds));
+                    }
+                });
+            } elseif ($levelIds) {
+                $this->applyLevelFilter($incomeQuery, $levelIds);
+                $this->applyLevelFilter($expenseQuery, $levelIds);
             }
 
             $income[] = (float) $incomeQuery->sum('amount');
@@ -153,7 +215,7 @@ new class extends Component
     /**
      * ② Income composition by fee category (current month)
      */
-    private function getIncomeCompositionData(?int $levelId): array
+    private function getIncomeCompositionData(?array $levelIds = null, ?int $unitId = null): array
     {
         $start = now()->startOfMonth();
         $end = now()->endOfMonth();
@@ -164,8 +226,15 @@ new class extends Component
             ->groupBy('fee_category_id')
             ->with('feeCategory');
 
-        if ($levelId) {
-            $this->applyLevelFilter($query, $levelId);
+        if ($unitId) {
+            $query->where(function ($q) use ($unitId, $levelIds) {
+                $q->where('financial_unit_id', $unitId);
+                if ($levelIds) {
+                    $q->orWhere(fn ($oq) => $this->applyLevelFilter($oq, $levelIds));
+                }
+            });
+        } elseif ($levelIds) {
+            $this->applyLevelFilter($query, $levelIds);
         }
 
         $results = $query->get();
@@ -186,7 +255,7 @@ new class extends Component
     /**
      * ③ Expense composition by budget plan item (current month)
      */
-    private function getExpenseCompositionData(?int $levelId): array
+    private function getExpenseCompositionData(?array $levelIds = null, ?int $unitId = null): array
     {
         $start = now()->startOfMonth();
         $end = now()->endOfMonth();
@@ -197,8 +266,15 @@ new class extends Component
             ->groupBy('budget_plan_item_id')
             ->with('budgetItem');
 
-        if ($levelId) {
-            $this->applyLevelFilter($query, $levelId);
+        if ($unitId) {
+            $query->where(function ($q) use ($unitId, $levelIds) {
+                $q->where('financial_unit_id', $unitId);
+                if ($levelIds) {
+                    $q->orWhere(fn ($oq) => $this->applyLevelFilter($oq, $levelIds));
+                }
+            });
+        } elseif ($levelIds) {
+            $this->applyLevelFilter($query, $levelIds);
         }
 
         $results = $query->get();
@@ -219,7 +295,7 @@ new class extends Component
     /**
      * ④ Billing collection rate per level
      */
-    private function getCollectionRateData(?int $levelId): array
+    private function getCollectionRateData(?array $levelIds = null): array
     {
         $activeYear = AcademicYear::where('is_active', true)->first();
         if (! $activeYear) {
@@ -227,8 +303,8 @@ new class extends Component
         }
 
         $levelsQuery = Level::query();
-        if ($levelId) {
-            $levelsQuery->where('id', $levelId);
+        if ($levelIds) {
+            $levelsQuery->whereIn('id', $levelIds);
         }
 
         $levels = $levelsQuery->get();
@@ -264,11 +340,11 @@ new class extends Component
     /**
      * ⑤ Budget realization: planned vs actual per active budget plan
      */
-    private function getBudgetRealizationData(?int $levelId): array
+    private function getBudgetRealizationData(?array $levelIds = null): array
     {
         $query = BudgetPlan::where('is_active', true);
-        if ($levelId) {
-            $query->where('level_id', $levelId);
+        if ($levelIds) {
+            $query->whereIn('level_id', $levelIds);
         }
 
         $plans = $query->get();
@@ -298,7 +374,7 @@ new class extends Component
     private function getRabTrendData(array $levelIds = []): array
     {
         $query = BudgetPlan::where('is_active', true)->with('level');
-        if (!empty($levelIds)) {
+        if (! empty($levelIds)) {
             $query->whereIn('level_id', $levelIds);
         }
 
@@ -363,7 +439,7 @@ new class extends Component
     /**
      * ⑦ Top debtors: students with highest unpaid balance
      */
-    private function getTopDebtorsData(?int $levelId): array
+    private function getTopDebtorsData(?array $levelIds = null): array
     {
         $query = StudentBilling::where('status', '!=', 'paid')
             ->select('student_id', DB::raw('SUM(amount - paid_amount) as total_unpaid'), DB::raw('COUNT(*) as billing_count'))
@@ -371,9 +447,9 @@ new class extends Component
             ->orderByDesc('total_unpaid')
             ->limit(10);
 
-        if ($levelId) {
-            $query->whereHas('student.studentProfile.classroom', function ($q) use ($levelId) {
-                $q->where('level_id', $levelId);
+        if ($levelIds) {
+            $query->whereHas('student.studentProfile.classroom', function ($q) use ($levelIds) {
+                $q->whereIn('level_id', $levelIds);
             });
         }
 
@@ -391,7 +467,7 @@ new class extends Component
             if ($studentProfile) {
                 $classroom = Classroom::find($studentProfile->classroom_id);
                 if ($classroom) {
-                    if ($levelId && $classroom->level_id !== $levelId) {
+                    if ($levelIds && ! in_array($classroom->level_id, $levelIds)) {
                         continue;
                     }
                     $level = Level::find($classroom->level_id);
@@ -412,18 +488,20 @@ new class extends Component
 
     /**
      * @param  \Illuminate\Database\Eloquent\Builder  $query
+     * @param  int|array  $levelId
      */
-    private function applyLevelFilter($query, int $levelId): void
+    private function applyLevelFilter($query, int|array $levelId): void
     {
-        $query->where(function ($q) use ($levelId) {
-            $q->whereHas('billing.student.studentProfile.classroom', function ($sq) use ($levelId) {
-                $sq->where('level_id', $levelId);
+        $ids = (array) $levelId;
+        $query->where(function ($q) use ($ids) {
+            $q->whereHas('billing.student.studentProfile.classroom', function ($sq) use ($ids) {
+                $sq->whereIn('level_id', $ids);
             })
-                ->orWhereHas('feeCategory', function ($fq) use ($levelId) {
-                    $fq->where('level_id', $levelId);
+                ->orWhereHas('feeCategory', function ($fq) use ($ids) {
+                    $fq->whereIn('level_id', $ids);
                 })
-                ->orWhereHas('budgetPlan', function ($bq) use ($levelId) {
-                    $bq->where('level_id', $levelId);
+                ->orWhereHas('budgetPlan', function ($bq) use ($ids) {
+                    $bq->whereIn('level_id', $ids);
                 });
         });
     }

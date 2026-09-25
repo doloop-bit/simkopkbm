@@ -2,23 +2,25 @@
 
 declare(strict_types=1);
 
-use App\Models\Transaction;
-use Livewire\Attributes\Layout;
-use Livewire\Component;
+use App\Models\FinancialUnit;
 use App\Models\Level;
 use App\Models\SchoolProfile;
-use Carbon\Carbon;
+use App\Models\Transaction;
 use Barryvdh\DomPDF\Facade\Pdf;
+use Carbon\Carbon;
+use Livewire\Attributes\Layout;
+use Livewire\Component;
 
 new #[Layout('components.layouts.app')] class extends Component {
     public string $tab = 'bku'; // 'bku', 'bank', 'tunai'
-    
+
     public int $month;
     public int $year;
     public ?int $level_id = null;
+    public ?int $financial_unit_id = null;
 
     public float $startBalance = 0;
-    
+
     public function mount(): void
     {
         $this->month = (int) now()->format('m');
@@ -26,7 +28,8 @@ new #[Layout('components.layouts.app')] class extends Component {
 
         // Access Restriction for Treasurer
         $user = auth()->user();
-        if ($user->role === 'bendahara') {
+        if ($user && $user->isTreasurer()) {
+            $this->financial_unit_id = $user->managedFinancialUnitId();
             $this->level_id = $user->managed_level_id;
         }
     }
@@ -39,7 +42,10 @@ new #[Layout('components.layouts.app')] class extends Component {
     public function exportPdf()
     {
         $data = $this->getRecapData();
-        
+
+        $unitName = $this->financial_unit_id ? FinancialUnit::find($this->financial_unit_id)?->name : null;
+        $levelName = $unitName ?? (Level::find($this->level_id)?->name ?? __('Seluruh Unit / Jenjang'));
+
         $pdf = Pdf::loadView('pdf.financial-recap', [
             'transactions' => $data['transactions'],
             'startBalance' => $data['startBalance'],
@@ -47,7 +53,7 @@ new #[Layout('components.layouts.app')] class extends Component {
             'month' => $this->month,
             'year' => $this->year,
             'monthName' => Carbon::createFromDate($this->year, $this->month, 1)->translatedFormat('F'),
-            'levelName' => Level::find($this->level_id)?->name ?? __('Seluruh Jenjang'),
+            'levelName' => $levelName,
             'schoolName' => SchoolProfile::active()?->name ?? config('app.name'),
         ]);
 
@@ -61,13 +67,16 @@ new #[Layout('components.layouts.app')] class extends Component {
     public function getRecapData(): array
     {
         $user = auth()->user();
-        
-        // Treasurer Restriction: Force level_id to managed_level_id
-        if ($user->role === 'bendahara') {
+        $isTreasurer = $user?->isTreasurer();
+        $managedUnitId = $isTreasurer ? $user->managedFinancialUnitId() : null;
+
+        // Treasurer Restriction: Force unit / level
+        if ($isTreasurer) {
+            $this->financial_unit_id = $managedUnitId;
             $this->level_id = $user->managed_level_id;
-            
-            // If they don't have an assigned level, return empty (as requested)
-            if (!$this->level_id) {
+
+            // If they don't have an assigned unit or level, return empty
+            if (! $this->financial_unit_id && ! $this->level_id) {
                 return [
                     'startBalance' => 0,
                     'transactions' => collect(),
@@ -88,31 +97,43 @@ new #[Layout('components.layouts.app')] class extends Component {
             $baseQuery = Transaction::where('payment_method', 'cash');
         }
 
-        if ($this->level_id) {
+        if ($this->financial_unit_id) {
+            $unitLevels = Level::where('financial_unit_id', $this->financial_unit_id)->pluck('id')->toArray();
+            $baseQuery->where(function ($q) use ($unitLevels) {
+                $q->where('financial_unit_id', $this->financial_unit_id);
+                if (! empty($unitLevels)) {
+                    $q->orWhere(function ($oq) use ($unitLevels) {
+                        $oq->whereHas('billing.student.studentProfile.classroom', fn ($sq) => $sq->whereIn('level_id', $unitLevels))
+                            ->orWhereHas('feeCategory', fn ($fq) => $fq->whereIn('level_id', $unitLevels))
+                            ->orWhereHas('budgetPlan', fn ($bq) => $bq->whereIn('level_id', $unitLevels));
+                    });
+                }
+            });
+        } elseif ($this->level_id) {
             $baseQuery->where(function ($q) {
                 $q->whereHas('billing.student.studentProfile.classroom', function ($sq) {
                     $sq->where('level_id', $this->level_id);
                 })
-                ->orWhereHas('feeCategory', function ($fq) {
-                    $fq->where('level_id', $this->level_id);
-                })
-                ->orWhereHas('budgetPlan', function ($bq) {
-                    $bq->where('level_id', $this->level_id);
-                });
+                    ->orWhereHas('feeCategory', function ($fq) {
+                        $fq->where('level_id', $this->level_id);
+                    })
+                    ->orWhereHas('budgetPlan', function ($bq) {
+                        $bq->where('level_id', $this->level_id);
+                    });
             });
         }
 
         // Clone for historical balance
         $historyQuery = clone $baseQuery;
-        
+
         $historicalIn = $historyQuery->clone()->where('type', 'income')->where('payment_date', '<', $startDate)->sum('amount');
         $historicalOut = $historyQuery->clone()->where('type', 'expense')->where('payment_date', '<', $startDate)->sum('amount');
-        
+
         $startBalance = (float) ($historicalIn - $historicalOut);
         $this->startBalance = $startBalance;
 
         // Current month transactions
-        $transactions = $baseQuery->with(['billing.student', 'billing.feeCategory', 'feeCategory', 'budgetPlan', 'budgetItem', 'user'])
+        $transactions = $baseQuery->with(['billing.student', 'billing.feeCategory', 'feeCategory', 'budgetPlan', 'budgetItem', 'user', 'financialUnit'])
             ->whereBetween('payment_date', [$startDate, $endDate])
             ->orderBy('payment_date', 'asc')
             ->orderBy('id', 'asc')
@@ -127,14 +148,24 @@ new #[Layout('components.layouts.app')] class extends Component {
     public function with(): array
     {
         $user = auth()->user();
-        $levels = Level::query();
+        $isTreasurer = $user?->isTreasurer();
+        $managedUnitId = $isTreasurer ? $user->managedFinancialUnitId() : null;
 
-        if ($user->role === 'bendahara') {
+        $levels = Level::query();
+        if ($isTreasurer && $user->managed_level_id) {
             $levels->where('id', $user->managed_level_id);
+        }
+
+        $financialUnits = FinancialUnit::query();
+        if ($isTreasurer && $managedUnitId) {
+            $financialUnits->where('id', $managedUnitId);
         }
 
         return array_merge($this->getRecapData(), [
             'levels' => $levels->get(),
+            'financialUnits' => $financialUnits->get(),
+            'isTreasurer' => $isTreasurer,
+            'currentUnit' => $this->financial_unit_id ? FinancialUnit::find($this->financial_unit_id) : null,
         ]);
     }
 }; ?>
@@ -177,16 +208,27 @@ new #[Layout('components.layouts.app')] class extends Component {
                 </button>
             </div>
 
-            {{-- Period & Level Filter --}}
+            {{-- Period & Unit / Level Filter --}}
             <div class="flex flex-wrap items-center gap-3">
-                <div class="w-48">
-                    <x-ui.select 
-                        wire:model.live="level_id" 
-                        :options="$levels"
-                        :placeholder="__('Seluruh Jenjang')"
-                        icon="o-academic-cap"
-                    />
-                </div>
+                @if(!$isTreasurer)
+                    <div class="w-48">
+                        <x-ui.select 
+                            wire:model.live="financial_unit_id" 
+                            :options="$financialUnits"
+                            option-value="id"
+                            option-label="name"
+                            :placeholder="__('Seluruh Unit Kas')"
+                            icon="o-banknotes"
+                        />
+                    </div>
+                @else
+                    @if($currentUnit)
+                        <div class="px-3 py-2 bg-blue-50 dark:bg-blue-950/40 text-blue-700 dark:text-blue-300 rounded-xl text-xs font-bold flex items-center gap-2 border border-blue-100 dark:border-blue-900">
+                            <x-ui.icon name="o-banknotes" class="size-4" />
+                            <span>{{ $currentUnit->name }}</span>
+                        </div>
+                    @endif
+                @endif
                 <div class="w-40">
                     <x-ui.select 
                         wire:model.live="month" 

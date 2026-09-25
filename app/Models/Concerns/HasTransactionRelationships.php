@@ -5,12 +5,18 @@ namespace App\Models\Concerns;
 use App\Models\BudgetPlan;
 use App\Models\BudgetPlanItem;
 use App\Models\FeeCategory;
+use App\Models\FinancialUnit;
 use App\Models\StudentBilling;
 use App\Models\User;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 
 trait HasTransactionRelationships
 {
+    public function financialUnit(): BelongsTo
+    {
+        return $this->belongsTo(FinancialUnit::class, 'financial_unit_id');
+    }
+
     public function billing(): BelongsTo
     {
         return $this->belongsTo(StudentBilling::class, 'student_billing_id');

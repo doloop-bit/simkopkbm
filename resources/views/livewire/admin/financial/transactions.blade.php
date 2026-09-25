@@ -2,21 +2,27 @@
 
 declare(strict_types=1);
 
-use App\Models\User;
-use App\Models\StudentBilling;
-use App\Models\Transaction;
-use App\Models\FeeCategory;
+use App\Models\AcademicYear;
 use App\Models\BudgetPlan;
 use App\Models\BudgetPlanItem;
-use App\Models\AcademicYear;
+use App\Models\FeeCategory;
+use App\Models\FinancialUnit;
+use App\Models\Level;
+use App\Models\StudentBilling;
+use App\Models\Transaction;
+use App\Models\User;
+use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Storage;
 use Livewire\Attributes\Layout;
 use Livewire\Component;
 use Livewire\WithFileUploads;
-use Illuminate\Support\Facades\DB;
-use Illuminate\Support\Facades\Storage;
 
 new #[Layout('components.layouts.app')] class extends Component {
     use WithFileUploads;
+
+    // Financial Unit Filter / Context
+    public ?int $financial_unit_id = null;
+
     // General Form
     public string $type = 'income'; // 'income' or 'expense'
     public float $pay_amount = 0;
@@ -45,6 +51,12 @@ new #[Layout('components.layouts.app')] class extends Component {
     public function mount(): void
     {
         $this->payment_date = now()->format('Y-m-d');
+
+        $user = auth()->user();
+        if ($user && $user->isTreasurer()) {
+            $this->financial_unit_id = $user->managedFinancialUnitId();
+        }
+
         // Auto-select the first active budget plan if exists
         $activePlan = BudgetPlan::where('is_active', true)->first();
         if ($activePlan) {
@@ -168,7 +180,11 @@ new #[Layout('components.layouts.app')] class extends Component {
 
                 if ($this->type === 'income') {
                     if ($this->is_global) {
+                        $cat = FeeCategory::find($this->fee_category_id);
+                        $financialUnitId = $cat?->level?->financial_unit_id ?? auth()->user()->managedFinancialUnitId();
+
                         $txData = [
+                            'financial_unit_id' => $financialUnitId,
                             'type' => 'income',
                             'fee_category_id' => $this->fee_category_id,
                             'student_billing_id' => null,
@@ -191,8 +207,8 @@ new #[Layout('components.layouts.app')] class extends Component {
                         session()->flash('success', $this->editingTransactionId ? __('Transaksi diperbarui.') : __('Pemasukan dicatat.'));
                     } else {
                         $billing = $this->selectedBilling;
-                        
-                        if (!$billing) {
+
+                        if (! $billing) {
                             $activeYear = AcademicYear::where('is_active', true)->first();
                             $billing = StudentBilling::create([
                                 'student_id' => $this->student_id,
@@ -200,11 +216,16 @@ new #[Layout('components.layouts.app')] class extends Component {
                                 'academic_year_id' => $activeYear ? $activeYear->id : null,
                                 'amount' => $this->pay_amount,
                                 'paid_amount' => 0,
-                                'status' => 'unpaid'
+                                'status' => 'unpaid',
                             ]);
                         }
 
+                        $financialUnitId = $billing->student?->studentProfile?->classroom?->level?->financial_unit_id
+                            ?? FeeCategory::find($this->fee_category_id)?->level?->financial_unit_id
+                            ?? auth()->user()->managedFinancialUnitId();
+
                         $txData = [
+                            'financial_unit_id' => $financialUnitId,
                             'type' => 'income',
                             'student_billing_id' => $billing->id,
                             'fee_category_id' => $this->fee_category_id,
@@ -235,7 +256,11 @@ new #[Layout('components.layouts.app')] class extends Component {
                         session()->flash('success', $this->editingTransactionId ? __('Transaksi diperbarui.') : __('Pemasukan dicatat.'));
                     }
                 } else {
+                    $plan = BudgetPlan::find($this->budget_plan_id);
+                    $financialUnitId = $plan?->level?->financial_unit_id ?? auth()->user()->managedFinancialUnitId();
+
                     $txData = [
+                        'financial_unit_id' => $financialUnitId,
                         'type' => 'expense',
                         'budget_plan_id' => $this->budget_plan_id,
                         'budget_plan_item_id' => $this->budget_plan_item_id,
@@ -326,46 +351,78 @@ new #[Layout('components.layouts.app')] class extends Component {
     public function with(): array
     {
         $user = auth()->user();
-        
+        $isTreasurer = $user->isTreasurer();
+        $managedUnitId = $user->managedFinancialUnitId();
+
+        $unitLevels = [];
+        if ($isTreasurer && $managedUnitId) {
+            $unitLevels = Level::where('financial_unit_id', $managedUnitId)->pluck('id')->toArray();
+        } elseif ($user->managed_level_id) {
+            $unitLevels = [$user->managed_level_id];
+        }
+
         $students = [];
-        if (strlen($this->student_search) > 2 && !$this->student_id) {
+        if (strlen($this->student_search) > 2 && ! $this->student_id) {
             $studentQuery = User::where('role', 'siswa')
                 ->where('name', 'like', "%{$this->student_search}%");
-                
-            if ($user->role === 'bendahara' && $user->managed_level_id) {
-                // Limit student search to bendahara's level
-                $studentQuery->whereHas('studentProfile.classroom', function ($q) use ($user) {
-                    $q->where('level_id', $user->managed_level_id);
+
+            if ($isTreasurer && ! empty($unitLevels)) {
+                $studentQuery->whereHas('studentProfile.classroom', function ($q) use ($unitLevels) {
+                    $q->whereIn('level_id', $unitLevels);
                 });
             }
-                
+
             $students = $studentQuery->limit(5)->get();
         }
 
         $feeQuery = FeeCategory::query();
         $budgetQuery = BudgetPlan::where('is_active', true);
 
-        if ($user->role === 'bendahara' && $user->managed_level_id) {
-            $feeQuery->where(function($q) use ($user) {
-                $q->where('level_id', $user->managed_level_id)->orWhereNull('level_id');
+        if ($isTreasurer && ! empty($unitLevels)) {
+            $feeQuery->where(function ($q) use ($unitLevels) {
+                $q->whereIn('level_id', $unitLevels)->orWhereNull('level_id');
             });
-            $budgetQuery->where(function($q) use ($user) {
-                $q->where('level_id', $user->managed_level_id)->orWhereNull('level_id');
+            $budgetQuery->where(function ($q) use ($unitLevels) {
+                $q->whereIn('level_id', $unitLevels)->orWhereNull('level_id');
             });
         }
 
         $feeCategories = $feeQuery->get();
         $activeBudgetPlans = $budgetQuery->get();
-        
+
         $budgetItems = [];
         if ($this->budget_plan_id) {
             $budgetItems = BudgetPlanItem::where('budget_plan_id', $this->budget_plan_id)->get();
         }
 
-        $recentTransactions = Transaction::with(['billing.student', 'billing.feeCategory', 'budgetPlan', 'budgetItem'])
-            ->latest()
-            ->limit(15)
-            ->get();
+        $recentTxQuery = Transaction::with(['billing.student', 'billing.feeCategory', 'budgetPlan', 'budgetItem', 'financialUnit']);
+
+        if ($isTreasurer && $managedUnitId) {
+            $recentTxQuery->where(function ($q) use ($managedUnitId, $unitLevels) {
+                $q->where('financial_unit_id', $managedUnitId);
+                if (! empty($unitLevels)) {
+                    $q->orWhere(function ($oq) use ($unitLevels) {
+                        $oq->whereHas('billing.student.studentProfile.classroom', fn ($sq) => $sq->whereIn('level_id', $unitLevels))
+                            ->orWhereHas('feeCategory', fn ($fq) => $fq->whereIn('level_id', $unitLevels))
+                            ->orWhereHas('budgetPlan', fn ($bq) => $bq->whereIn('level_id', $unitLevels));
+                    });
+                }
+            });
+        } elseif ($this->financial_unit_id) {
+            $filterLevels = Level::where('financial_unit_id', $this->financial_unit_id)->pluck('id')->toArray();
+            $recentTxQuery->where(function ($q) use ($filterLevels) {
+                $q->where('financial_unit_id', $this->financial_unit_id);
+                if (! empty($filterLevels)) {
+                    $q->orWhere(function ($oq) use ($filterLevels) {
+                        $oq->whereHas('billing.student.studentProfile.classroom', fn ($sq) => $sq->whereIn('level_id', $filterLevels))
+                            ->orWhereHas('feeCategory', fn ($fq) => $fq->whereIn('level_id', $filterLevels))
+                            ->orWhereHas('budgetPlan', fn ($bq) => $bq->whereIn('level_id', $filterLevels));
+                    });
+                }
+            });
+        }
+
+        $recentTransactions = $recentTxQuery->latest()->limit(15)->get();
 
         return [
             'students' => $students,
@@ -373,6 +430,8 @@ new #[Layout('components.layouts.app')] class extends Component {
             'activeBudgetPlans' => $activeBudgetPlans,
             'budgetItems' => $budgetItems,
             'recentTransactions' => $recentTransactions,
+            'financialUnits' => FinancialUnit::all(),
+            'managedUnit' => $managedUnitId ? FinancialUnit::find($managedUnitId) : null,
         ];
     }
 }; ?>

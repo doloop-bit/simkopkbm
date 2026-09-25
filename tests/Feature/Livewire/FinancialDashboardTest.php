@@ -220,3 +220,60 @@ it('filters data when a level is selected', function () {
         ->assertSee('Tagihan Jenjang A')
         ->assertDontSee('Tagihan Jenjang B');
 });
+
+it('shows combined Paket B and C transactions for Paket BC treasurer in dashboard', function () {
+    $unitBC = \App\Models\FinancialUnit::firstOrCreate(['code' => 'PAKET_BC'], ['name' => 'Kas Paket B & C']);
+    $unitPaud = \App\Models\FinancialUnit::firstOrCreate(['code' => 'PAUD'], ['name' => 'Kas PAUD']);
+
+    $levelB = Level::factory()->create(['name' => 'Level Paket B', 'financial_unit_id' => $unitBC->id]);
+    $levelC = Level::factory()->create(['name' => 'Level Paket C', 'financial_unit_id' => $unitBC->id]);
+    $levelPaud = Level::factory()->create(['name' => 'Level PAUD', 'financial_unit_id' => $unitPaud->id]);
+
+    $catB = FeeCategory::factory()->create(['level_id' => $levelB->id, 'name' => 'SPP Paket B']);
+    $catC = FeeCategory::factory()->create(['level_id' => $levelC->id, 'name' => 'SPP Paket C']);
+    $catPaud = FeeCategory::factory()->create(['level_id' => $levelPaud->id, 'name' => 'SPP PAUD']);
+
+    $admin = User::factory()->admin()->create();
+
+    Transaction::create([
+        'financial_unit_id' => $unitBC->id,
+        'fee_category_id' => $catB->id,
+        'type' => 'income',
+        'amount' => 150000,
+        'payment_date' => now(),
+        'payment_method' => 'cash',
+        'user_id' => $admin->id,
+    ]);
+
+    Transaction::create([
+        'financial_unit_id' => $unitBC->id,
+        'fee_category_id' => $catC->id,
+        'type' => 'income',
+        'amount' => 250000,
+        'payment_date' => now(),
+        'payment_method' => 'cash',
+        'user_id' => $admin->id,
+    ]);
+
+    Transaction::create([
+        'financial_unit_id' => $unitPaud->id,
+        'fee_category_id' => $catPaud->id,
+        'type' => 'income',
+        'amount' => 500000,
+        'payment_date' => now(),
+        'payment_method' => 'cash',
+        'user_id' => $admin->id,
+    ]);
+
+    $bendaharaBC = User::factory()->bendahara()->create([
+        'managed_financial_unit_id' => $unitBC->id,
+        'managed_level_id' => $levelB->id,
+    ]);
+
+    $this->actingAs($bendaharaBC);
+
+    Livewire::test('admin.dashboard')
+        ->assertSee('SPP Paket B')
+        ->assertSee('SPP Paket C')
+        ->assertDontSee('SPP PAUD');
+});

@@ -4,6 +4,7 @@ namespace App\Models;
 
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasOne;
 
 class Level extends Model
@@ -24,13 +25,18 @@ class Level extends Model
         ];
     }
 
-    protected $fillable = ['name', 'type', 'education_level', 'phase_map'];
+    protected $fillable = ['name', 'type', 'education_level', 'financial_unit_id', 'phase_map'];
 
     protected function casts(): array
     {
         return [
             'phase_map' => 'array',
         ];
+    }
+
+    public function financialUnit(): BelongsTo
+    {
+        return $this->belongsTo(FinancialUnit::class);
     }
 
     public function program(): HasOne

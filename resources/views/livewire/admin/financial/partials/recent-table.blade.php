@@ -1,8 +1,26 @@
 <div class="space-y-4">
     <x-ui.card shadow padding="false">
-        <div class="p-5 border-b border-slate-100 dark:border-slate-800 bg-slate-50/50 dark:bg-slate-900/50 flex items-center justify-between">
-            <div class="text-xs font-bold uppercase text-slate-500 tracking-wider">{{ __('Riwayat Transaksi Terbaru') }}</div>
-            <div class="text-[10px] font-bold text-slate-500 uppercase tracking-wider bg-white dark:bg-slate-800 px-3 py-1 rounded-full ring-1 ring-slate-100 dark:ring-slate-700 shadow-sm">{{ __('Real-time Update') }}</div>
+        <div class="p-5 border-b border-slate-100 dark:border-slate-800 bg-slate-50/50 dark:bg-slate-900/50 flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+            <div class="flex items-center gap-2">
+                <div class="text-xs font-bold uppercase text-slate-500 tracking-wider">{{ __('Riwayat Transaksi Terbaru') }}</div>
+                @if(auth()->user()->isTreasurer() && $managedUnit)
+                    <x-ui.badge :label="$managedUnit->name" class="bg-blue-50 text-blue-700 border-blue-200 text-[10px] font-bold" />
+                @endif
+            </div>
+            <div class="flex items-center gap-3">
+                @if(!auth()->user()->isTreasurer())
+                    <x-ui.select 
+                        wire:model.live="financial_unit_id" 
+                        :options="$financialUnits" 
+                        option-value="id" 
+                        option-label="name" 
+                        :placeholder="__('Semua Unit Kas')" 
+                        sm 
+                        class="w-48"
+                    />
+                @endif
+                <div class="text-[10px] font-bold text-slate-500 uppercase tracking-wider bg-white dark:bg-slate-800 px-3 py-1 rounded-full ring-1 ring-slate-100 dark:ring-slate-700 shadow-sm">{{ __('Real-time Update') }}</div>
+            </div>
         </div>
 
         <x-ui.table 
@@ -51,6 +69,11 @@
                             @endif
                         </div>
                         <span class="text-[10px] font-semibold uppercase tracking-wide text-slate-500 truncate max-w-[150px]">{{ $tx->budgetPlan?->title ?? __('RAB Terpadu') }}</span>
+                    @endif
+                    @if($tx->financialUnit)
+                        <span class="inline-flex items-center px-1.5 py-0.5 rounded text-[9px] font-medium bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300 w-fit mt-0.5">
+                            {{ $tx->financialUnit->name }}
+                        </span>
                     @endif
                 </div>
             @endscope

@@ -18,6 +18,7 @@ class DatabaseSeeder extends Seeder
             RoleSeeder::class,                  // User Roles (Essential for RBAC)
             AdminSeeder::class,                 // Akun Admin Utama
             LevelSeeder::class,                 // Jenjang & Phase Map (Kurikulum Merdeka)
+            FinancialUnitSeeder::class,         // Unit Pengelolaan Keuangan Jenjang
             DevelopmentalAspectsSeeder::class,  // Indikator Penilaian PAUD
         ]);
 

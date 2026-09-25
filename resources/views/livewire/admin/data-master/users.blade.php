@@ -3,6 +3,7 @@
 use App\Models\User;
 use App\Models\Role;
 use App\Models\Level;
+use App\Models\FinancialUnit;
 use Illuminate\Validation\Rule;
 use Illuminate\Support\Facades\Hash;
 use Livewire\Component;
@@ -21,6 +22,7 @@ new class extends Component {
     public $password = '';
     public $role = 'user';
     public $managed_level_id = '';
+    public $managed_financial_unit_id = '';
     public $is_active = true;
     public array $role_ids = [];
 
@@ -35,13 +37,14 @@ new class extends Component {
                 ->latest()
                 ->paginate(10),
             'levels' => Level::orderBy('name')->get(),
+            'financialUnits' => FinancialUnit::orderBy('name')->get(),
             'allRoles' => Role::all(),
         ];
     }
 
     public function createNew(): void
     {
-        $this->reset(['name', 'email', 'phone', 'password', 'role', 'role_ids', 'managed_level_id', 'is_active', 'editing']);
+        $this->reset(['name', 'email', 'phone', 'password', 'role', 'role_ids', 'managed_level_id', 'managed_financial_unit_id', 'is_active', 'editing']);
         $this->role = 'user';
         $this->role_ids = [];
         $this->is_active = true;
@@ -58,6 +61,7 @@ new class extends Component {
         $this->role = $user->role;
         $this->role_ids = $user->roles->pluck('id')->toArray();
         $this->managed_level_id = $user->managed_level_id;
+        $this->managed_financial_unit_id = $user->managed_financial_unit_id;
         $this->is_active = $user->is_active;
         $this->password = ''; // Don't fill password
         
@@ -72,6 +76,7 @@ new class extends Component {
             'phone' => 'nullable|string|max:20',
             'role_ids' => 'required|array|min:1',
             'managed_level_id' => 'nullable|exists:levels,id',
+            'managed_financial_unit_id' => 'nullable|exists:financial_units,id',
             'is_active' => 'boolean',
         ];
 
@@ -87,12 +92,22 @@ new class extends Component {
         $selectedRoles = Role::whereIn('id', $this->role_ids)->get();
         $primaryRole = $selectedRoles->first()->slug ?? 'user';
 
+        $financialUnitId = null;
+        if ($selectedRoles->where('slug', 'bendahara')->isNotEmpty()) {
+            if ($this->managed_financial_unit_id) {
+                $financialUnitId = $this->managed_financial_unit_id;
+            } elseif ($this->managed_level_id) {
+                $financialUnitId = Level::find($this->managed_level_id)?->financial_unit_id;
+            }
+        }
+
         $data = [
             'name' => $this->name,
             'email' => $this->email,
             'phone' => $this->phone,
             'role' => $primaryRole,
             'managed_level_id' => $selectedRoles->whereIn('slug', ['bendahara', 'kepsek'])->isNotEmpty() ? $this->managed_level_id : null,
+            'managed_financial_unit_id' => $financialUnitId,
             'is_active' => $this->is_active,
         ];
 
@@ -111,7 +126,7 @@ new class extends Component {
 
         $this->dispatch('user-saved');
         $this->userModal = false;
-        $this->reset(['name', 'email', 'phone', 'password', 'role', 'role_ids', 'managed_level_id', 'is_active', 'editing']);
+        $this->reset(['name', 'email', 'phone', 'password', 'role', 'role_ids', 'managed_level_id', 'managed_financial_unit_id', 'is_active', 'editing']);
     }
 
     public function delete(User $user): void
@@ -182,9 +197,12 @@ new class extends Component {
             @endscope
 
             @scope('cell_managed_level_id', $user)
-                <span class="text-xs text-slate-500 font-medium">
-                    {{ $user->managedLevel->name ?? '-' }}
-                </span>
+                <div class="flex flex-col text-xs text-slate-500 font-medium">
+                    <span>{{ $user->managedLevel->name ?? '-' }}</span>
+                    @if($user->managedFinancialUnit)
+                        <span class="text-[10px] text-blue-600 dark:text-blue-400 font-semibold">{{ $user->managedFinancialUnit->name }}</span>
+                    @endif
+                </div>
             @endscope
 
             @scope('cell_is_active', $user)
@@ -249,10 +267,19 @@ new class extends Component {
             @php
                 $selectedSlugs = \App\Models\Role::whereIn('id', $this->role_ids)->pluck('slug');
                 $showManagedLevel = $selectedSlugs->intersect(['bendahara', 'kepsek'])->isNotEmpty();
+                $isBendahara = $selectedSlugs->contains('bendahara');
             @endphp
 
             @if($showManagedLevel)
                 <x-ui.select wire:model="managed_level_id" :label="__('Kelola Jenjang')" :placeholder="__('Pilih Jenjang')" :options="$levels" />
+                @if($isBendahara)
+                    <x-ui.select 
+                        wire:model="managed_financial_unit_id" 
+                        :label="__('Unit Kas Keuangan (Opsional / Otomatis)')" 
+                        :placeholder="__('Pilih Unit Kas (Default: Sesuai Jenjang)')" 
+                        :options="$financialUnits" 
+                    />
+                @endif
             @endif
             
             <x-ui.input wire:model="password" type="password" :label="$editing ? __('Password (Kosongkan jika tidak diubah)') : __('Password')" :required="!$editing" />

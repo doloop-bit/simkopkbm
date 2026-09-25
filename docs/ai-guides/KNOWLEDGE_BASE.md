@@ -475,6 +475,19 @@ SIMKOPKBM supports a flexible multi-role system where a single user can have mul
 - Transactions support `adjustment_amount` for fee changes.
 - Attachments (receipts, bukti transfer) are stored as JSON/Array in the `attachment` column.
 
+### **Separasi Unit Kas Keuangan (Financial Units)**
+
+Pengelolaan keuangan dipisahkan ke dalam Unit Kas (`FinancialUnit`) untuk merefleksikan buku kas nyata:
+1. **Kas PAUD** (`PAUD`): Terikat pada Jenjang PAUD.
+2. **Kas Paket A** (`PAKET_A`): Terikat pada Jenjang Paket A (Setara SD).
+3. **Kas Paket B & C** (`PAKET_BC`): Kas gabungan untuk Jenjang Paket B (Setara SMP) dan Paket C (Setara SMA).
+
+- **Tabel `financial_units`**: `id`, `name`, `code`, `description`.
+- **Kolom `levels.financial_unit_id`**: Menghubungkan setiap level ke unit kasnya (Paket B dan C sama-sama mengarah ke `PAKET_BC`).
+- **Kolom `transactions.financial_unit_id`**: Auto-tagging saat transaksi dicatat (income/expense) untuk performa query cepat.
+- **Kolom `users.managed_financial_unit_id`**: Menentukan unit kas yang dikelola bendahara. Bendahara Kas Paket B & C dapat melihat dan mengelola seluruh transaksi Paket B dan Paket C secara terintegrasi.
+- **Dashboard & BKU Recap**: Laporan BKU, Buku Bank, Buku Tunai, dan Analisis Keuangan difilter per unit kas.
+
 ---
 
 ## 🔗 Route & Navigation
