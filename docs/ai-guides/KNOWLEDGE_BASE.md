@@ -34,6 +34,7 @@
 | **Financial**       | ✅ Done    | Billing, Payments, Global Transactions, Adjustments |
 | **Public Website**  | ✅ Done    | Home, News, Gallery, Programs, Contact              |
 | **Teacher Portal**  | ✅ Done    | Mobile Optimized, Role-based access                 |
+| **E-Learning**      | ✅ Done    | Materi Daring, Ulangan Online, Rekap Nilai Siswa    |
 | **Letters (Surat)** | 📅 Planned | Official school letter generation                   |
 
 ---
@@ -52,6 +53,7 @@
 | **Student Registration**   | Online registration, admin review, uses local address  |
 | **Academic Management**    | Years, levels, classrooms, subjects                    |
 | **Assessment System**      | Grades (numeric) & Competency (Kurikulum Merdeka-PAUD) |
+| **E-Learning (Daring)**    | Materi online, ulangan online (PG auto-koreksi & essay)|
 | **Report Card Generation** | PDF report cards, specialized navigations              |
 | **Financial Management**   | Billing, payments, global transactions, adjustments    |
 | **Multi-Role System**      | Multi-role support (Admin, Guru, Bendahara, etc.)      |
@@ -856,6 +858,10 @@ $user->getAssignedSubjectIds(): array
 // Check user roles
 $user->isAdmin(): bool
 $user->isGuru(): bool
+$user->isSiswa(): bool
+$user->isTreasurer(): bool
+$user->isHeadmaster(): bool
+$user->isYayasan(): bool
 ```
 
 **Usage Example:**
@@ -869,7 +875,34 @@ $user->isGuru(): bool
 
 ---
 
-**Last Updated:** 2026-04-08
-**Version:** 3.0
+## 💻 Modul E-Learning (Daring)
+
+Modul E-Learning diperuntukkan bagi siswa daring untuk mengakses materi dan mengerjakan ulangan secara online, dilengkapi dashboard rekap nilai untuk admin/guru:
+
+### **1. Struktur Model & Database**
+- `OnlineMaterial` (`online_materials`): Materi teks/rich-text, file attachments (PDF/gambar/dokumen), target kelas & mapel, status publikasi.
+- `OnlineExam` (`online_exams`): Paket ulangan/ujian (harian, UTS, UAS), durasi menit (countdown timer), jadwal mulai/selesai, KKM/passing grade, opsi acak soal.
+- `OnlineExamQuestion` (`online_exam_questions`): Soal dengan tipe `multiple_choice`, `essay`, dan `file_upload`. Poin bobot nilai per soal.
+- `OnlineExamSubmission` (`online_exam_submissions`): Pengerjaan siswa, status (`in_progress`, `submitted`, `graded`), nilai total (`autoGrade()` otomatis untuk PG, manual untuk essay).
+- `OnlineExamAnswer` (`online_exam_answers`): Jawaban per butir soal, koreksi benar/salah, nilai essay, file upload, feedback guru.
+
+### **2. Route & Hak Akses**
+- **Admin**:
+  - `admin.elearning.materials` — Manajemen materi daring
+  - `admin.elearning.exams` — Manajemen ulangan daring
+  - `admin.elearning.exam-questions` — Kelola butir soal ulangan
+  - `admin.elearning.grade-recap` — Dashboard rekap nilai seluruh siswa & filter kelas/mapel
+  - `admin.elearning.submission-detail` — Detail jawaban & form koreksi manual essay
+- **Siswa**:
+  - `student.dashboard` — Dashboard siswa (ringkasan tugas, materi terbaru, rata-rata nilai)
+  - `student.materials` & `student.material-detail` — Daftar materi & pembaca materi
+  - `student.exams` — Daftar ulangan aktif & riwayat pengerjaan
+  - `student.take-exam` — Ruang ujian dengan timer hitung mundur dan auto-save jawaban
+  - `student.exam-result` — Review hasil pengerjaan, skor, status kelulusan, dan feedback guru
+
+---
+
+**Last Updated:** 2026-10-02
+**Version:** 3.1 (E-Learning Feature Added)
 **Maintained By:** Antigravity AI Assistant
-````
+

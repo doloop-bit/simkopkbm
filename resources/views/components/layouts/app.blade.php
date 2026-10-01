@@ -5,9 +5,12 @@
 @php
     $user = auth()->user();
     $isGuru = $user->isGuru();
+    $isSiswa = $user->isSiswa();
     
     // Determine dashboard route
-    $dashboardRoute = $isGuru ? route('teacher.dashboard') : route('dashboard');
+    $dashboardRoute = $isSiswa
+        ? route('student.dashboard')
+        : ($isGuru ? route('teacher.dashboard') : route('dashboard'));
     
     // Determine sub-nav visibility
     $hasAdminSubNav = request()->routeIs(

@@ -26,6 +26,7 @@ require __DIR__.'/teacher.php';
 require __DIR__.'/users.php';
 require __DIR__.'/registrations.php';
 require __DIR__.'/calendar.php';
+require __DIR__.'/elearning.php';
 
 // Public website routes (placed last because it contains a catch-all root-level /{slug} route)
 require __DIR__.'/public.php';

@@ -315,6 +315,11 @@ class User extends Authenticatable
         return $this->activeRoleSlug() === 'yayasan';
     }
 
+    public function isSiswa(): bool
+    {
+        return $this->activeRoleSlug() === 'siswa' || $this->role === 'siswa';
+    }
+
     public function canManageLevel(int $levelId): bool
     {
         if ($this->isAdmin() || $this->isYayasan()) {

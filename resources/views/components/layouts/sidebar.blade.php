@@ -76,6 +76,12 @@
                 <x-ui.menu-item title="Nilai Diniyah" icon="o-sparkles" :link="route('admin.report-card.diniyah-grading')" />
                 <x-ui.menu-item title="Rapor Diniyah" icon="o-book-open" :link="route('admin.report-card.diniyah')" />
             </x-ui.menu-sub>
+
+            <x-ui.menu-sub title="E-Learning" icon="o-computer-desktop" :active="request()->routeIs('admin.elearning.*')">
+                <x-ui.menu-item title="Materi Online" icon="o-book-open" :link="route('admin.elearning.materials')" />
+                <x-ui.menu-item title="Ulangan Online" icon="o-clipboard-document-check" :link="route('admin.elearning.exams')" />
+                <x-ui.menu-item title="Rekap Nilai" icon="o-chart-bar" :link="route('admin.elearning.grade-recap')" />
+            </x-ui.menu-sub>
         @endif
     @endif
 
