@@ -30,7 +30,7 @@
         <x-ui.icon :name="$icon" class="w-5 h-5 shrink-0" />
     @endif
     @if($title)
-        <span x-show="!sidebarCollapsed || inFlyout" class="truncate">{{ $title }}</span>
+        <span x-show="!sidebarCollapsed || inFlyout" class="truncate">{!! $title !!}</span>
     @endif
     {{ $slot }}
     @if($badge)
@@ -44,7 +44,7 @@
         <div x-cloak 
              class="fixed left-20 ml-2 w-max px-3 py-1.5 rounded-lg border border-slate-700 bg-slate-800 text-sm font-semibold text-white shadow-xl z-[999] pointer-events-none"
              :style="'top: ' + tooltipTop + 'px; transform: translateY(-50%);'">
-            {{ $title }}
+            {!! $title !!}
         </div>
     </template>
 </{{ $tag }}>

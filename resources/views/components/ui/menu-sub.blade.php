@@ -30,7 +30,7 @@
                 <x-ui.icon :name="$icon" class="w-5 h-5 shrink-0" />
             @endif
             @if($title)
-                <span x-show="!sidebarCollapsed || inFlyout" x-cloak class="truncate">{{ $title }}</span>
+                <span x-show="!sidebarCollapsed || inFlyout" x-cloak class="truncate">{!! $title !!}</span>
             @endif
         </span>
         <svg x-show="!sidebarCollapsed || inFlyout" x-cloak :class="{ 'rotate-180': open }" class="w-4 h-4 shrink-0 transition-transform duration-200" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -68,7 +68,7 @@
         :style="'top: ' + flyoutTop + 'px;'"
     >
         <div class="px-4 py-2 border-b border-slate-700/50 mb-2">
-            <span class="text-xs font-bold text-slate-300 uppercase tracking-wider">{{ $title }}</span>
+            <span class="text-xs font-bold text-slate-300 uppercase tracking-wider">{!! $title !!}</span>
         </div>
         
         <div class="px-2 pb-1 space-y-1">
