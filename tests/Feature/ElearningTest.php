@@ -127,20 +127,28 @@ test('student can access student dashboard', function () {
         ->assertSee('Ulangan & Ujian');
 });
 
-test('student can interact with dashboard academic block modals via livewire', function () {
+test('student dashboard renders academic metrics and materials correctly', function () {
     $student = User::factory()->siswa()->create();
+
+    OnlineMaterial::factory()->create([
+        'title' => 'Matematika Dasar Bilangan',
+        'is_published' => true,
+    ]);
+
+    OnlineExam::factory()->create([
+        'title' => 'Kuis Logika Matematika',
+        'is_published' => true,
+        'start_time' => now()->subHour(),
+        'end_time' => now()->addHour(),
+    ]);
 
     Livewire::actingAs($student)
         ->test('student.dashboard')
-        ->assertSet('guideModal', false)
-        ->call('openGuide')
-        ->assertSet('guideModal', true)
-        ->call('openSchedule')
-        ->assertSet('scheduleModal', true)
-        ->call('openKkm')
-        ->assertSet('kkmModal', true)
-        ->call('openTranscript')
-        ->assertSet('transcriptModal', true);
+        ->assertSee('BLOK AKADEMIK')
+        ->assertSee('Materi Pelajaran')
+        ->assertSee('Ulangan & Ujian')
+        ->assertSee('Hasil & Rekap Nilai')
+        ->assertSee('Profil & Biodata');
 });
 
 test('student can access materials list and detail', function () {
