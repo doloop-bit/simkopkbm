@@ -92,9 +92,13 @@ new #[Layout('components.layouts.student')] class extends Component {
     {{-- Header Identitas Siswa --}}
     <div class="bg-white dark:bg-slate-800 rounded-2xl p-6 border border-slate-200 dark:border-slate-700 shadow-sm flex flex-col md:flex-row md:items-center md:justify-between gap-4">
         <div class="flex items-center gap-4">
-            <div class="w-14 h-14 rounded-2xl bg-emerald-600 dark:bg-emerald-500 text-white font-bold text-2xl flex items-center justify-center shrink-0 shadow-sm">
-                {{ strtoupper(substr($student->name, 0, 1)) }}
-            </div>
+            @if($student->photo_url)
+                <img src="{{ $student->photo_url }}" alt="{{ $student->name }}" class="w-14 h-14 rounded-2xl object-cover shrink-0 shadow-sm border border-slate-200 dark:border-slate-700">
+            @else
+                <div class="w-14 h-14 rounded-2xl bg-emerald-600 dark:bg-emerald-500 text-white font-bold text-2xl flex items-center justify-center shrink-0 shadow-sm">
+                    {{ strtoupper(substr($student->name, 0, 1)) }}
+                </div>
+            @endif
             <div>
                 <div class="flex flex-wrap items-center gap-2 mb-1">
                     <span class="px-2 py-0.5 rounded-full text-xs font-semibold bg-emerald-100 text-emerald-800 dark:bg-emerald-900/50 dark:text-emerald-300">

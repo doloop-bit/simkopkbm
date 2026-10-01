@@ -103,3 +103,63 @@ test('student cannot delete their account', function () {
 
     expect($student->fresh())->not->toBeNull();
 });
+
+test('user can upload profile photo', function () {
+    Storage::fake('public');
+
+    $user = User::factory()->create();
+    $this->actingAs($user);
+
+    $file = Illuminate\Http\UploadedFile::fake()->image('profile.jpg', 200, 200);
+
+    Livewire::test('admin.settings.profile')
+        ->set('photo', $file)
+        ->call('updateProfileInformation')
+        ->assertHasNoErrors();
+
+    $user->refresh();
+
+    expect($user->photo)->not->toBeNull();
+    Storage::disk('public')->assertExists($user->photo);
+});
+
+test('student profile photo upload also syncs to student profile', function () {
+    Storage::fake('public');
+
+    $student = User::factory()->siswa()->create();
+    $this->actingAs($student);
+
+    $file = Illuminate\Http\UploadedFile::fake()->image('student.png', 200, 200);
+
+    Livewire::test('admin.settings.profile')
+        ->set('photo', $file)
+        ->call('updateProfileInformation')
+        ->assertHasNoErrors();
+
+    $student->refresh();
+    $studentProfile = $student->studentProfile ?? $student->latestProfile?->profileable;
+
+    expect($student->photo)->not->toBeNull();
+    expect($studentProfile->photo)->toEqual($student->photo);
+    Storage::disk('public')->assertExists($student->photo);
+});
+
+test('user can remove profile photo', function () {
+    Storage::fake('public');
+
+    $user = User::factory()->create();
+    $this->actingAs($user);
+
+    $file = Illuminate\Http\UploadedFile::fake()->image('avatar.jpg');
+    $path = $file->store('avatars', 'public');
+    $user->update(['photo' => $path]);
+
+    Livewire::test('admin.settings.profile')
+        ->call('deletePhoto')
+        ->assertHasNoErrors();
+
+    $user->refresh();
+
+    expect($user->photo)->toBeNull();
+    Storage::disk('public')->assertMissing($path);
+});

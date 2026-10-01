@@ -24,6 +24,7 @@ class User extends Authenticatable
         'name',
         'email',
         'phone',
+        'photo',
         'password',
         'role',
         'is_active',
@@ -96,6 +97,20 @@ class User extends Authenticatable
     {
         return $this->hasOneThrough(StudentProfile::class, Profile::class, 'user_id', 'id', 'id', 'profileable_id')
             ->where('profiles.profileable_type', StudentProfile::class);
+    }
+
+    public function getPhotoUrlAttribute(): ?string
+    {
+        $path = $this->photo;
+        if (! $path && $this->isSiswa()) {
+            $path = $this->studentProfile?->photo ?? $this->latestProfile?->profileable?->photo;
+        }
+
+        if ($path && \Illuminate\Support\Facades\Storage::disk('public')->exists($path)) {
+            return \Illuminate\Support\Facades\Storage::url($path);
+        }
+
+        return null;
     }
 
     public function salaryTemplate(): \Illuminate\Database\Eloquent\Relations\HasOne

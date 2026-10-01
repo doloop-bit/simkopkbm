@@ -1,7 +1,20 @@
 <div x-data="{ open: false }" class="relative w-full">
     <button @click="open = !open" @click.outside="open = false" type="button" class="flex items-center w-full px-2 py-2 rounded-xl hover:bg-slate-800/50 transition-colors cursor-pointer" :class="sidebarCollapsed ? 'justify-center' : 'gap-3'">
         <div x-show="sidebarCollapsed" x-cloak>
-            <x-ui.icon name="o-user-circle" class="w-6 h-6 text-slate-400 shrink-0" />
+            @if(auth()->user()->photo_url)
+                <img src="{{ auth()->user()->photo_url }}" class="w-6 h-6 rounded-full object-cover shrink-0" alt="{{ auth()->user()->name }}" />
+            @else
+                <x-ui.icon name="o-user-circle" class="w-6 h-6 text-slate-400 shrink-0" />
+            @endif
+        </div>
+        <div x-show="!sidebarCollapsed" class="shrink-0" x-cloak>
+            @if(auth()->user()->photo_url)
+                <img src="{{ auth()->user()->photo_url }}" class="w-8 h-8 rounded-full object-cover shrink-0 ring-1 ring-slate-700" alt="{{ auth()->user()->name }}" />
+            @else
+                <div class="w-8 h-8 rounded-full bg-slate-800 ring-1 ring-slate-700 grid place-items-center text-xs font-bold text-slate-300">
+                    {{ strtoupper(substr(auth()->user()->name, 0, 1)) }}
+                </div>
+            @endif
         </div>
         <div class="flex-1 min-w-0 text-left" x-show="!sidebarCollapsed" x-cloak>
             <div class="text-sm font-semibold text-slate-200 truncate">{{ auth()->user()->name }}</div>
