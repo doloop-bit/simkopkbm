@@ -58,6 +58,28 @@ new class extends Component {
     @include('partials.settings-heading')
 
     <x-admin.settings.layout :heading="__('Profile')" :subheading="__('Update your name, email, and phone number')">
+        @if(auth()->user()?->isSiswa())
+            @php
+                $studentUser = auth()->user();
+                $studentProfile = $studentUser->studentProfile ?? $studentUser->latestProfile?->profileable;
+                $classroom = $studentProfile?->classroom;
+            @endphp
+            @if($studentProfile)
+                <div class="mb-6 p-4 rounded-xl bg-slate-50 dark:bg-slate-800/60 border border-slate-200 dark:border-slate-700 space-y-2 text-xs sm:text-sm">
+                    <div class="font-bold text-slate-800 dark:text-slate-200 flex items-center gap-2">
+                        <x-ui.icon name="o-academic-cap" class="w-4 h-4 text-emerald-600" />
+                        {{ __('Informasi Akademik Siswa') }}
+                    </div>
+                    <div class="grid grid-cols-1 sm:grid-cols-2 gap-2 text-slate-600 dark:text-slate-400">
+                        <div>NIS: <strong class="text-slate-900 dark:text-white">{{ $studentProfile->nis ?? '-' }}</strong></div>
+                        <div>NISN: <strong class="text-slate-900 dark:text-white">{{ $studentProfile->nisn ?? '-' }}</strong></div>
+                        <div>Kelas: <strong class="text-slate-900 dark:text-white">{{ $classroom?->name ?? '-' }}</strong></div>
+                        <div>Status: <span class="font-semibold text-emerald-600 dark:text-emerald-400">{{ __('Siswa Aktif Daring') }}</span></div>
+                    </div>
+                </div>
+            @endif
+        @endif
+
         <form wire:submit="updateProfileInformation" class="my-6 w-full space-y-6">
             <x-ui.input wire:model="name" :label="__('Name')" type="text" required autofocus autocomplete="name" />
             
@@ -94,6 +116,8 @@ new class extends Component {
             </div>
         </form>
 
-        <livewire:admin.settings.delete-user-form />
+        @if(!auth()->user()?->isSiswa())
+            <livewire:admin.settings.delete-user-form />
+        @endif
     </x-admin.settings.layout>
 </section>

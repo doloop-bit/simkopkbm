@@ -78,3 +78,28 @@ test('correct password must be provided to delete account', function () {
 
     expect($user->fresh())->not->toBeNull();
 });
+
+test('student profile page does not show delete account button', function () {
+    $student = User::factory()->siswa()->create();
+
+    $this->actingAs($student)
+        ->get(route('profile.edit'))
+        ->assertOk()
+        ->assertDontSee('Delete account')
+        ->assertDontSee('Delete your account');
+});
+
+test('student cannot delete their account', function () {
+    $student = User::factory()->siswa()->create([
+        'password' => Hash::make('password'),
+    ]);
+
+    $this->actingAs($student);
+
+    Livewire::test('admin.settings.delete-user-form')
+        ->set('password', 'password')
+        ->call('deleteUser')
+        ->assertForbidden();
+
+    expect($student->fresh())->not->toBeNull();
+});
