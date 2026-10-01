@@ -43,6 +43,12 @@
     :dashboard-route="$dashboardRoute"
     :has-sub-nav="$hasSubNav"
 >
+    @if ($isSiswa)
+        <x-slot:sidebarMenu>
+            <x-layouts.student-sidebar />
+        </x-slot:sidebarMenu>
+    @endif
+
     {{-- Unified Sub Navigation --}}
     @if ($hasSubNav)
         <x-slot:subNav>

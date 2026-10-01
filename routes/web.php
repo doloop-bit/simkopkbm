@@ -2,9 +2,17 @@
 
 use Illuminate\Support\Facades\Route;
 
-Route::view('admin/dashboard', 'dashboard')
-    ->middleware(['auth', 'verified'])
-    ->name('dashboard');
+Route::get('admin/dashboard', function () {
+    $user = auth()->user();
+    if ($user->isSiswa()) {
+        return redirect()->route('student.dashboard');
+    }
+    if ($user->isGuru()) {
+        return redirect()->route('teacher.dashboard');
+    }
+
+    return view('dashboard');
+})->middleware(['auth', 'verified'])->name('dashboard');
 
 Route::livewire('/select-role', 'auth.select-role')
     ->middleware(['auth', 'verified'])

@@ -108,6 +108,14 @@ test('admin can view grade recap page', function () {
         ->assertSee('Rekap Nilai');
 });
 
+test('student accessing admin dashboard is redirected to student dashboard', function () {
+    $student = User::factory()->siswa()->create();
+
+    $this->actingAs($student)
+        ->get('/admin/dashboard')
+        ->assertRedirect(route('student.dashboard'));
+});
+
 test('student can access student dashboard', function () {
     $student = User::factory()->siswa()->create();
 

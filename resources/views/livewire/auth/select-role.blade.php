@@ -23,7 +23,7 @@ new #[Layout('components.layouts.plain')] class extends Component {
             // Redirect based on role slug
             $redirectUrl = match ($role->slug) {
                 'guru' => route('teacher.dashboard'),
-                'siswa' => route('home'),
+                'siswa' => route('student.dashboard'),
                 default => route('dashboard'),
             };
 

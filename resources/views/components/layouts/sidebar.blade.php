@@ -1,6 +1,8 @@
 <x-ui.menu activate-by-route>
     {{-- Common Dashboard --}}
-    @if(auth()->user()->isGuru())
+    @if(auth()->user()->isSiswa())
+        <x-layouts.student-sidebar />
+    @elseif(auth()->user()->isGuru())
         <x-ui.menu-item title="Dashboard" icon="o-home" :link="route('teacher.dashboard')" />
     @else
         <x-ui.menu-item title="Dashboard" icon="o-home" :link="route('dashboard')" />
