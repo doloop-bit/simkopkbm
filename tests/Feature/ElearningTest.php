@@ -114,7 +114,25 @@ test('student can access student dashboard', function () {
     $this->actingAs($student)
         ->get(route('student.dashboard'))
         ->assertOk()
-        ->assertSee('Dashboard Siswa');
+        ->assertSee('BLOK AKADEMIK')
+        ->assertSee('Materi Pelajaran')
+        ->assertSee('Ulangan & Ujian');
+});
+
+test('student can interact with dashboard academic block modals via livewire', function () {
+    $student = User::factory()->siswa()->create();
+
+    Livewire::actingAs($student)
+        ->test('student.dashboard')
+        ->assertSet('guideModal', false)
+        ->call('openGuide')
+        ->assertSet('guideModal', true)
+        ->call('openSchedule')
+        ->assertSet('scheduleModal', true)
+        ->call('openKkm')
+        ->assertSet('kkmModal', true)
+        ->call('openTranscript')
+        ->assertSet('transcriptModal', true);
 });
 
 test('student can access materials list and detail', function () {
