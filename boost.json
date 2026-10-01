@@ -2,19 +2,18 @@
     "agents": [
         "gemini"
     ],
+    "cloud": false,
     "guidelines": true,
-    "herd_mcp": false,
     "mcp": true,
-    "nightwatch_mcp": false,
-    "packages": [
-        "laravel/fortify"
-    ],
+    "nightwatch": false,
     "sail": false,
     "skills": [
+        "ai-sdk-development",
+        "developing-with-fortify",
+        "laravel-best-practices",
         "livewire-development",
-        "volt-development",
         "pest-testing",
-        "tailwindcss-development",
-        "developing-with-fortify"
+        "inertia-svelte-development",
+        "tailwindcss-development"
     ]
 }

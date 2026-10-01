@@ -3,8 +3,8 @@
         "laravel-boost": {
             "command": "wsl.exe",
             "args": [
-                "/usr/bin/php8.4",
-                "/home/doloop/projects/simkopkbm/artisan",
+                "/home/doloop/.config/herd-lite/bin/php",
+                "/home/doloop/simkopkbm/artisan",
                 "boost:mcp"
             ]
         }
