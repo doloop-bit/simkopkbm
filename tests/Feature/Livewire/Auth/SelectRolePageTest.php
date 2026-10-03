@@ -91,7 +91,7 @@ test('user with single role is automatically assigned when accessing protected r
 
     $this->actingAs($user)
         ->get(route('dashboard'))
-        ->assertOk();
+        ->assertRedirect(route('teacher.dashboard'));
 
     expect(Session::get('active_role_id'))->toBe($guruRole->id);
 });

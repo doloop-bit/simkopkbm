@@ -25,6 +25,8 @@ class OnlineExam extends Model
         'is_published',
         'passing_grade',
         'shuffle_questions',
+        'attachment_path',
+        'attachment_name',
         'created_by',
     ];
 

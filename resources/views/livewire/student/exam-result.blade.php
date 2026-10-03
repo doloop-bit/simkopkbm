@@ -17,6 +17,10 @@ new #[Layout('components.layouts.student')] class extends Component {
     }
 }; ?>
 
+@once
+    @vite(['resources/js/rich-editor.js'])
+@endonce
+
 <div class="p-6 space-y-6">
     <x-ui.header
         :title="__('Hasil Ulangan')"
@@ -90,33 +94,39 @@ new #[Layout('components.layouts.student')] class extends Component {
                         @endif
                     </div>
 
-                    <div class="text-slate-900 dark:text-white font-medium whitespace-pre-line">{{ $answer->question->question_text }}</div>
+                    <div class="text-slate-900 dark:text-white font-medium prose dark:prose-invert max-w-none exam-content-render" x-init="$nextTick(() => window.renderMathInElement($el))">
+                        {!! $answer->question->question_text !!}
+                    </div>
 
                     <div class="p-3 bg-slate-50 dark:bg-slate-800 rounded-lg">
                         <div class="text-xs font-medium text-slate-500 mb-1">{{ __('Jawaban Anda:') }}</div>
                         @if($answer->question->isMultipleChoice())
-                            <span class="font-semibold {{ $answer->is_correct ? 'text-emerald-600' : 'text-red-600' }}">
-                                {{ $answer->selected_option }}
+                            <div class="font-semibold flex items-start gap-1 {{ $answer->is_correct ? 'text-emerald-600' : 'text-red-600' }}">
+                                <span>{{ $answer->selected_option }}</span>
                                 @if($answer->question->options && $answer->selected_option)
                                     @php
                                         $selectedText = $answer->question->options[$answer->selected_option] 
                                             ?? (isset($answer->question->options[ord($answer->selected_option) - 65]) ? $answer->question->options[ord($answer->selected_option) - 65] : null);
                                     @endphp
                                     @if($selectedText)
-                                        — {{ $selectedText }}
+                                        <div class="inline-block exam-content-render font-normal" x-init="$nextTick(() => window.renderMathInElement($el))">
+                                            — {!! $selectedText !!}
+                                        </div>
                                     @endif
                                 @endif
-                            </span>
+                            </div>
                             @if($answer->is_correct === false)
-                                <div class="text-sm text-emerald-600 mt-1">
-                                    {{ __('Jawaban benar:') }} {{ $answer->question->correct_answer }}
+                                <div class="text-sm text-emerald-600 mt-1 flex items-start gap-1">
+                                    <span>{{ __('Jawaban benar:') }} {{ $answer->question->correct_answer }}</span>
                                     @if($answer->question->options && $answer->question->correct_answer)
                                         @php
                                             $correctText = $answer->question->options[$answer->question->correct_answer] 
                                                 ?? (isset($answer->question->options[ord($answer->question->correct_answer) - 65]) ? $answer->question->options[ord($answer->question->correct_answer) - 65] : null);
                                         @endphp
                                         @if($correctText)
-                                            — {{ $correctText }}
+                                            <div class="inline-block exam-content-render" x-init="$nextTick(() => window.renderMathInElement($el))">
+                                                — {!! $correctText !!}
+                                            </div>
                                         @endif
                                     @endif
                                 </div>

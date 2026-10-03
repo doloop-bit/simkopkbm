@@ -19,6 +19,8 @@ class OnlineExamQuestion extends Model
         'correct_answer',
         'points',
         'order',
+        'attachment_path',
+        'attachment_name',
     ];
 
     protected function casts(): array

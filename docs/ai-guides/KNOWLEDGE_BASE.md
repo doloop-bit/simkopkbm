@@ -53,7 +53,7 @@
 | **Student Registration**   | Online registration, admin review, uses local address  |
 | **Academic Management**    | Years, levels, classrooms, subjects                    |
 | **Assessment System**      | Grades (numeric) & Competency (Kurikulum Merdeka-PAUD) |
-| **E-Learning (Daring)**    | Materi online, ulangan online (PG auto-koreksi & essay)|
+| **E-Learning (Daring)**    | Materi online, ulangan online (WYSIWYG Tiptap, upload gambar/grafik, rumus KaTeX, lampiran soal Word/PDF, auto-koreksi PG & essay) |
 | **Report Card Generation** | PDF report cards, specialized navigations              |
 | **Financial Management**   | Billing, payments, global transactions, adjustments    |
 | **Multi-Role System**      | Multi-role support (Admin, Guru, Bendahara, etc.)      |

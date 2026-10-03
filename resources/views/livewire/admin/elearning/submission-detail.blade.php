@@ -68,6 +68,10 @@ new #[Layout('components.layouts.app')] class extends Component {
     }
 }; ?>
 
+@once
+    @vite(['resources/js/rich-editor.js'])
+@endonce
+
 <div class="p-6 space-y-6">
     <x-ui.header
         :title="__('Detail Pengerjaan')"
@@ -140,27 +144,47 @@ new #[Layout('components.layouts.app')] class extends Component {
                     </div>
 
                     {{-- Question text --}}
-                    <div class="text-slate-900 dark:text-white font-medium whitespace-pre-line">{{ $answer->question->question_text }}</div>
+                    <div class="text-slate-900 dark:text-white font-medium prose dark:prose-invert max-w-none exam-content-render" x-init="$nextTick(() => window.renderMathInElement($el))">
+                        {!! $answer->question->question_text !!}
+                    </div>
+
+                    @if($answer->question->attachment_path)
+                        <div class="mb-2">
+                            <a
+                                href="{{ route('elearning.questions.download-attachment', $answer->question->id) }}"
+                                target="_blank"
+                                class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded bg-slate-100 hover:bg-slate-200 dark:bg-slate-800 dark:hover:bg-slate-700 text-xs font-medium text-slate-700 dark:text-slate-300"
+                            >
+                                <x-ui.icon name="o-paper-clip" class="w-3.5 h-3.5 text-emerald-600" />
+                                <span>{{ __('Lampiran Dokumen Soal:') }} {{ $answer->question->attachment_name ?: 'Download' }}</span>
+                                <x-ui.icon name="o-arrow-down-tray" class="w-3 h-3 text-slate-400" />
+                            </a>
+                        </div>
+                    @endif
 
                     {{-- Student answer --}}
                     <div class="p-3 bg-slate-50 dark:bg-slate-800 rounded-lg">
                         <div class="text-xs font-medium text-slate-500 mb-1">{{ __('Jawaban Siswa:') }}</div>
                         @if($answer->question->isMultipleChoice())
-                            <div class="text-slate-900 dark:text-white">
+                            <div class="text-slate-900 dark:text-white flex items-start gap-1">
                                 <span class="font-semibold">{{ $answer->selected_option }}</span>
                                 @if($answer->question->options && $answer->selected_option)
                                     @php $optIndex = ord($answer->selected_option) - 65; @endphp
                                     @if(isset($answer->question->options[$optIndex]))
-                                        — {{ $answer->question->options[$optIndex] }}
+                                        <div class="inline-block exam-content-render font-normal" x-init="$nextTick(() => window.renderMathInElement($el))">
+                                            — {!! $answer->question->options[$optIndex] !!}
+                                        </div>
                                     @endif
                                 @endif
                             </div>
-                            <div class="text-xs text-emerald-600 mt-1">
-                                {{ __('Jawaban benar:') }} {{ $answer->question->correct_answer }}
+                            <div class="text-xs text-emerald-600 mt-1 flex items-start gap-1">
+                                <span>{{ __('Jawaban benar:') }} {{ $answer->question->correct_answer }}</span>
                                 @if($answer->question->options)
                                     @php $correctIndex = ord($answer->question->correct_answer) - 65; @endphp
                                     @if(isset($answer->question->options[$correctIndex]))
-                                        — {{ $answer->question->options[$correctIndex] }}
+                                        <div class="inline-block exam-content-render" x-init="$nextTick(() => window.renderMathInElement($el))">
+                                            — {!! $answer->question->options[$correctIndex] !!}
+                                        </div>
                                     @endif
                                 @endif
                             </div>

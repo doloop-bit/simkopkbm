@@ -16,6 +16,8 @@
 <link rel="stylesheet" href="{{ asset('fonts/fonts.css') }}" media="print" onload="this.media='all'" />
 
 
+<link rel="stylesheet" href="{{ asset('vendor/katex/katex.min.css') }}" />
+
 @vite(['resources/css/app.css'])
 
 <script>

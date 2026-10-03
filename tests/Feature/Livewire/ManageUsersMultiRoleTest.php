@@ -63,7 +63,7 @@ test('middleware does not redirect user with single role', function () {
 
     $this->actingAs($user)
         ->get(route('dashboard'))
-        ->assertOk(); // Should auto-select role and proceed
+        ->assertRedirect(route('teacher.dashboard')); // Should auto-select role and proceed to teacher portal
 
     expect(session('active_role_id'))->toBe($role->id);
 });

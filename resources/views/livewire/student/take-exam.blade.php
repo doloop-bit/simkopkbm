@@ -133,6 +133,10 @@ new #[Layout('components.layouts.student')] class extends Component {
     }
 }; ?>
 
+@once
+    @vite(['resources/js/rich-editor.js'])
+@endonce
+
 <div class="p-6 space-y-6" x-data="{
     timeLeft: {{ $exam->duration_minutes ? $exam->duration_minutes * 60 : 0 }},
     startTime: {{ $submission->started_at->timestamp ?? 'null' }},
@@ -182,10 +186,31 @@ new #[Layout('components.layouts.student')] class extends Component {
         </div>
     </div>
 
-    @if($exam->description)
-        <div class="p-3 bg-blue-50 dark:bg-blue-900/20 rounded-lg text-sm text-blue-700 dark:text-blue-300">
-            <x-ui.icon name="o-information-circle" class="w-4 h-4 inline mr-1" />
-            {{ $exam->description }}
+    @if($exam->description || $exam->attachment_path)
+        <div class="p-4 bg-blue-50 dark:bg-blue-900/20 rounded-xl text-sm text-blue-700 dark:text-blue-300 space-y-2 border border-blue-100 dark:border-blue-800">
+            @if($exam->description)
+                <div class="flex items-start gap-2">
+                    <x-ui.icon name="o-information-circle" class="w-5 h-5 shrink-0 mt-0.5" />
+                    <div>{{ $exam->description }}</div>
+                </div>
+            @endif
+
+            @if($exam->attachment_path)
+                <div class="pt-2 flex flex-wrap items-center justify-between gap-2 border-t border-blue-200/60 dark:border-blue-800/60">
+                    <div class="flex items-center gap-2 font-medium">
+                        <x-ui.icon name="o-document-arrow-down" class="w-5 h-5 text-blue-600 dark:text-blue-400" />
+                        <span>{{ __('Berkas Soal Ulangan (Word / PDF):') }} {{ $exam->attachment_name ?: 'Download Soal' }}</span>
+                    </div>
+                    <a
+                        href="{{ route('elearning.exams.download-attachment', $exam->id) }}"
+                        target="_blank"
+                        class="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-blue-600 hover:bg-blue-700 text-white text-xs font-semibold shadow-sm transition-colors"
+                    >
+                        <x-ui.icon name="o-arrow-down-tray" class="w-4 h-4" />
+                        {{ __('Unduh Berkas Soal') }}
+                    </a>
+                </div>
+            @endif
         </div>
     @endif
 
@@ -194,18 +219,34 @@ new #[Layout('components.layouts.student')] class extends Component {
         @foreach($questions as $index => $question)
             <x-ui.card shadow>
                 <div class="space-y-4">
-                    <div class="flex items-center gap-3">
-                        <span class="inline-flex items-center justify-center w-8 h-8 rounded-full bg-emerald-100 dark:bg-emerald-900/30 text-emerald-700 dark:text-emerald-400 text-sm font-bold">
-                            {{ $index + 1 }}
-                        </span>
-                        <span class="text-xs text-slate-500">{{ $question->points }} poin</span>
-                        @php
-                            $typeLabels = ['multiple_choice' => 'Pilihan Ganda', 'essay' => 'Essay', 'file_upload' => 'Upload File'];
-                        @endphp
-                        <x-ui.badge :label="$typeLabels[$question->question_type]" flat size="xs" />
+                    <div class="flex items-center justify-between">
+                        <div class="flex items-center gap-3">
+                            <span class="inline-flex items-center justify-center w-8 h-8 rounded-full bg-emerald-100 dark:bg-emerald-900/30 text-emerald-700 dark:text-emerald-400 text-sm font-bold">
+                                {{ $index + 1 }}
+                            </span>
+                            <span class="text-xs text-slate-500">{{ $question->points }} poin</span>
+                            @php
+                                $typeLabels = ['multiple_choice' => 'Pilihan Ganda', 'essay' => 'Essay', 'file_upload' => 'Upload File'];
+                            @endphp
+                            <x-ui.badge :label="$typeLabels[$question->question_type]" flat size="xs" />
+                        </div>
+
+                        @if($question->attachment_path)
+                            <a
+                                href="{{ route('elearning.questions.download-attachment', $question->id) }}"
+                                target="_blank"
+                                class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-md bg-slate-100 hover:bg-slate-200 dark:bg-slate-800 dark:hover:bg-slate-700 text-xs font-medium text-slate-700 dark:text-slate-300 transition-colors"
+                            >
+                                <x-ui.icon name="o-paper-clip" class="w-3.5 h-3.5 text-emerald-600" />
+                                <span>{{ __('Lampiran Dokumen Soal') }}</span>
+                                <x-ui.icon name="o-arrow-down-tray" class="w-3 h-3 text-slate-400" />
+                            </a>
+                        @endif
                     </div>
 
-                    <div class="text-slate-900 dark:text-white font-medium whitespace-pre-line">{{ $question->question_text }}</div>
+                    <div class="text-slate-900 dark:text-white font-medium prose dark:prose-invert max-w-none exam-content-render" x-init="$nextTick(() => window.renderMathInElement($el))">
+                        {!! $question->question_text !!}
+                    </div>
 
                     @if($question->question_type === 'multiple_choice' && $question->options)
                         <div class="space-y-2">
@@ -213,7 +254,7 @@ new #[Layout('components.layouts.student')] class extends Component {
                                 @php
                                     $letter = is_numeric($optIndex) ? chr(65 + (int) $optIndex) : (string) $optIndex;
                                 @endphp
-                                <label class="flex items-center gap-3 p-3 rounded-lg border cursor-pointer transition-colors
+                                <label class="flex items-start gap-3 p-3 rounded-xl border cursor-pointer transition-colors
                                     {{ ($answers[$question->id]['selected_option'] ?? '') === $letter
                                         ? 'border-emerald-500 bg-emerald-50 dark:bg-emerald-900/20'
                                         : 'border-slate-200 dark:border-slate-700 hover:bg-slate-50 dark:hover:bg-slate-800' }}">
@@ -221,12 +262,14 @@ new #[Layout('components.layouts.student')] class extends Component {
                                         wire:model="answers.{{ $question->id }}.selected_option"
                                         wire:change="saveAnswer({{ $question->id }})"
                                         value="{{ $letter }}"
-                                        class="text-emerald-600 focus:ring-emerald-500"
+                                        class="text-emerald-600 focus:ring-emerald-500 mt-1"
                                     />
-                                    <span class="w-6 h-6 flex items-center justify-center rounded-full bg-slate-100 dark:bg-slate-700 text-xs font-medium">
+                                    <span class="w-6 h-6 flex items-center justify-center shrink-0 rounded-full bg-slate-100 dark:bg-slate-700 text-xs font-medium mt-0.5">
                                         {{ $letter }}
                                     </span>
-                                    <span class="text-slate-700 dark:text-slate-300">{{ $option }}</span>
+                                    <div class="flex-1 text-slate-700 dark:text-slate-300 exam-content-render" x-init="$nextTick(() => window.renderMathInElement($el))">
+                                        {!! $option !!}
+                                    </div>
                                 </label>
                             @endforeach
                         </div>

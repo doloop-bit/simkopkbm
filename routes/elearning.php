@@ -40,3 +40,12 @@ Route::middleware(['auth'])->prefix('student')->name('student.')->group(function
     Route::livewire('/exams/{submissionId}/result', 'student.exam-result')
         ->name('exam-result');
 });
+
+// Shared / Authenticated Download Routes
+Route::middleware(['auth'])->group(function () {
+    Route::get('/elearning/exams/{exam}/attachment', [\App\Http\Controllers\ElearningDownloadController::class, 'downloadExamAttachment'])
+        ->name('elearning.exams.download-attachment');
+
+    Route::get('/elearning/questions/{question}/attachment', [\App\Http\Controllers\ElearningDownloadController::class, 'downloadQuestionAttachment'])
+        ->name('elearning.questions.download-attachment');
+});

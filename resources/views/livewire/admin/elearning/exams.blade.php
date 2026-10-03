@@ -6,12 +6,15 @@ use App\Models\AcademicYear;
 use App\Models\Classroom;
 use App\Models\OnlineExam;
 use App\Models\Subject;
+use Illuminate\Support\Facades\Storage;
 use Livewire\Attributes\Layout;
 use Livewire\Component;
+use Livewire\WithFileUploads;
 use Livewire\WithPagination;
 
 new #[Layout('components.layouts.app')] class extends Component {
     use WithPagination;
+    use WithFileUploads;
 
     public string $search = '';
     public ?int $filterClassroom = null;
@@ -33,6 +36,8 @@ new #[Layout('components.layouts.app')] class extends Component {
     public bool $is_published = false;
     public int $passing_grade = 70;
     public bool $shuffle_questions = false;
+    public $attachmentFile = null;
+    public ?string $currentAttachmentName = null;
 
     public function rules(): array
     {
@@ -50,6 +55,7 @@ new #[Layout('components.layouts.app')] class extends Component {
             'is_published' => ['boolean'],
             'passing_grade' => ['required', 'integer', 'min:0', 'max:100'],
             'shuffle_questions' => ['boolean'],
+            'attachmentFile' => ['nullable', 'file', 'mimes:pdf,doc,docx', 'max:10240'],
         ];
     }
 
@@ -60,7 +66,7 @@ new #[Layout('components.layouts.app')] class extends Component {
 
     public function createNew(): void
     {
-        $this->reset(['subject_id', 'classroom_id', 'academic_year_id', 'semester', 'title', 'description', 'exam_type', 'duration_minutes', 'start_time', 'end_time', 'is_published', 'passing_grade', 'shuffle_questions', 'editing']);
+        $this->reset(['subject_id', 'classroom_id', 'academic_year_id', 'semester', 'title', 'description', 'exam_type', 'duration_minutes', 'start_time', 'end_time', 'is_published', 'passing_grade', 'shuffle_questions', 'editing', 'attachmentFile', 'currentAttachmentName']);
         $activeYear = AcademicYear::where('is_active', true)->first();
         $this->academic_year_id = $activeYear?->id;
         $this->duration_minutes = 60;
@@ -84,7 +90,22 @@ new #[Layout('components.layouts.app')] class extends Component {
         $this->is_published = $exam->is_published;
         $this->passing_grade = $exam->passing_grade;
         $this->shuffle_questions = $exam->shuffle_questions;
+        $this->attachmentFile = null;
+        $this->currentAttachmentName = $exam->attachment_name;
         $this->examModal = true;
+    }
+
+    public function removeAttachment(): void
+    {
+        if ($this->editing && $this->editing->attachment_path) {
+            Storage::disk('private')->delete($this->editing->attachment_path);
+            $this->editing->update([
+                'attachment_path' => null,
+                'attachment_name' => null,
+            ]);
+            $this->currentAttachmentName = null;
+        }
+        $this->attachmentFile = null;
     }
 
     public function save(): void
@@ -107,6 +128,15 @@ new #[Layout('components.layouts.app')] class extends Component {
             'shuffle_questions' => $this->shuffle_questions,
         ];
 
+        if ($this->attachmentFile) {
+            if ($this->editing && $this->editing->attachment_path) {
+                Storage::disk('private')->delete($this->editing->attachment_path);
+            }
+            $storedPath = $this->attachmentFile->store('exam-documents', 'private');
+            $data['attachment_path'] = $storedPath;
+            $data['attachment_name'] = $this->attachmentFile->getClientOriginalName();
+        }
+
         if ($this->editing) {
             $this->editing->update($data);
         } else {
@@ -114,7 +144,7 @@ new #[Layout('components.layouts.app')] class extends Component {
             OnlineExam::create($data);
         }
 
-        $this->reset(['subject_id', 'classroom_id', 'academic_year_id', 'semester', 'title', 'description', 'exam_type', 'duration_minutes', 'start_time', 'end_time', 'is_published', 'passing_grade', 'shuffle_questions', 'editing']);
+        $this->reset(['subject_id', 'classroom_id', 'academic_year_id', 'semester', 'title', 'description', 'exam_type', 'duration_minutes', 'start_time', 'end_time', 'is_published', 'passing_grade', 'shuffle_questions', 'editing', 'attachmentFile', 'currentAttachmentName']);
         $this->examModal = false;
     }
 
@@ -125,6 +155,9 @@ new #[Layout('components.layouts.app')] class extends Component {
 
     public function delete(OnlineExam $exam): void
     {
+        if ($exam->attachment_path) {
+            Storage::disk('private')->delete($exam->attachment_path);
+        }
         $exam->delete();
     }
 
@@ -302,6 +335,59 @@ new #[Layout('components.layouts.app')] class extends Component {
             <div>
                 <label class="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-2">{{ __('Deskripsi / Petunjuk') }}</label>
                 <textarea wire:model="description" rows="3" class="w-full rounded-lg border-slate-300 dark:border-slate-600 dark:bg-slate-800 dark:text-white focus:border-emerald-500 focus:ring-emerald-500" placeholder="{{ __('Petunjuk pengerjaan ulangan...') }}"></textarea>
+            </div>
+
+            {{-- Lampiran Berkas Soal (Word / PDF) --}}
+            <div class="p-4 rounded-xl border border-dashed border-slate-300 dark:border-slate-700 bg-slate-50/50 dark:bg-slate-800/40 space-y-3">
+                <div class="flex items-center justify-between">
+                    <div>
+                        <label class="block text-sm font-semibold text-slate-700 dark:text-slate-300">
+                            {{ __('Berkas Lampiran Soal (Word / PDF)') }}
+                        </label>
+                        <p class="text-xs text-slate-500">
+                            {{ __('Unggah naskah soal lengkap dalam bentuk dokumen (.pdf, .doc, .docx maks 10MB) yang dapat diunduh siswa.') }}
+                        </p>
+                    </div>
+                    @if($editing && $editing->attachment_path)
+                        <a
+                            href="{{ route('elearning.exams.download-attachment', $editing->id) }}"
+                            target="_blank"
+                            class="inline-flex items-center gap-1 text-xs text-emerald-600 hover:text-emerald-700 font-medium"
+                        >
+                            <x-ui.icon name="o-arrow-down-tray" class="w-4 h-4" />
+                            {{ __('Unduh Berkas Saat Ini') }}
+                        </a>
+                    @endif
+                </div>
+
+                @if($currentAttachmentName)
+                    <div class="flex items-center justify-between p-2.5 rounded-lg bg-emerald-50 dark:bg-emerald-950/30 border border-emerald-200 dark:border-emerald-800 text-xs">
+                        <span class="flex items-center gap-2 text-emerald-800 dark:text-emerald-300 font-medium truncate">
+                            <x-ui.icon name="o-document-text" class="w-4 h-4 shrink-0 text-emerald-600" />
+                            <span class="truncate">{{ $currentAttachmentName }}</span>
+                        </span>
+                        <x-ui.button
+                            icon="o-trash"
+                            class="text-red-500 hover:text-red-700 btn-xs"
+                            ghost
+                            wire:click="removeAttachment"
+                            wire:confirm="{{ __('Hapus berkas lampiran ini?') }}"
+                        />
+                    </div>
+                @endif
+
+                <input
+                    type="file"
+                    wire:model="attachmentFile"
+                    accept=".pdf,.doc,.docx,application/pdf,application/msword,application/vnd.openxmlformats-officedocument.wordprocessingml.document"
+                    class="block w-full text-xs text-slate-500 file:mr-3 file:py-2 file:px-4 file:rounded-xl file:border-0 file:text-xs file:font-semibold file:bg-emerald-500 file:text-white hover:file:bg-emerald-600 cursor-pointer"
+                />
+
+                <div wire:loading wire:target="attachmentFile" class="text-xs text-emerald-600 flex items-center gap-1.5 font-medium">
+                    <span class="animate-spin inline-block w-3.5 h-3.5 border-2 border-emerald-600 border-t-transparent rounded-full"></span>
+                    {{ __('Mengunggah berkas soal...') }}
+                </div>
+                @error('attachmentFile') <span class="text-xs text-red-500 font-medium">{{ $message }}</span> @enderror
             </div>
 
             <x-ui.checkbox wire:model="is_published" :label="__('Terbitkan sekarang')" />
