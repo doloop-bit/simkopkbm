@@ -9,7 +9,7 @@ class AcademicYear extends Model
 {
     use HasFactory;
 
-    protected $fillable = ['name', 'start_date', 'end_date', 'is_active', 'status'];
+    protected $fillable = ['name', 'start_date', 'end_date', 'is_active', 'active_semester', 'status'];
 
     protected function casts(): array
     {

@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 use App\Models\AcademicYear;
 use App\Models\Classroom;
+use App\Models\MaterialChapter;
 use App\Models\OnlineExam;
 use App\Models\Subject;
 use Illuminate\Support\Facades\Storage;
@@ -19,18 +20,20 @@ new #[Layout('components.layouts.app')] class extends Component {
     public string $search = '';
     public ?int $filterClassroom = null;
     public ?int $filterSubject = null;
+    public ?int $filterChapter = null;
 
     // Form fields
     public bool $examModal = false;
     public ?OnlineExam $editing = null;
     public ?int $subject_id = null;
+    public ?int $chapter_id = null;
     public ?int $classroom_id = null;
     public ?int $academic_year_id = null;
-    public string $semester = '1';
+    public string $semester = 'Ganjil';
     public string $title = '';
     public string $description = '';
-    public string $exam_type = 'daily';
-    public ?int $duration_minutes = 60;
+    public string $exam_type = 'quiz'; // quiz, daily, midterm, final
+    public ?int $duration_minutes = 30;
     public ?string $start_time = null;
     public ?string $end_time = null;
     public bool $is_published = false;
@@ -43,12 +46,13 @@ new #[Layout('components.layouts.app')] class extends Component {
     {
         return [
             'subject_id' => ['required', 'exists:subjects,id'],
+            'chapter_id' => ['nullable', 'exists:material_chapters,id'],
             'classroom_id' => ['required', 'exists:classrooms,id'],
             'academic_year_id' => ['required', 'exists:academic_years,id'],
-            'semester' => ['required', 'in:1,2'],
+            'semester' => ['required', 'in:Ganjil,Genap'],
             'title' => ['required', 'string', 'max:255'],
             'description' => ['nullable', 'string'],
-            'exam_type' => ['required', 'in:daily,midterm,final'],
+            'exam_type' => ['required', 'in:quiz,daily,midterm,final'],
             'duration_minutes' => ['nullable', 'integer', 'min:1'],
             'start_time' => ['nullable', 'date'],
             'end_time' => ['nullable', 'date', 'after:start_time'],
@@ -66,11 +70,13 @@ new #[Layout('components.layouts.app')] class extends Component {
 
     public function createNew(): void
     {
-        $this->reset(['subject_id', 'classroom_id', 'academic_year_id', 'semester', 'title', 'description', 'exam_type', 'duration_minutes', 'start_time', 'end_time', 'is_published', 'passing_grade', 'shuffle_questions', 'editing', 'attachmentFile', 'currentAttachmentName']);
+        $this->reset(['subject_id', 'chapter_id', 'classroom_id', 'academic_year_id', 'semester', 'title', 'description', 'exam_type', 'duration_minutes', 'start_time', 'end_time', 'is_published', 'passing_grade', 'shuffle_questions', 'editing', 'attachmentFile', 'currentAttachmentName']);
         $activeYear = AcademicYear::where('is_active', true)->first();
         $this->academic_year_id = $activeYear?->id;
-        $this->duration_minutes = 60;
+        $this->semester = $activeYear?->active_semester ?? 'Ganjil';
+        $this->duration_minutes = 30;
         $this->passing_grade = 70;
+        $this->exam_type = 'quiz';
         $this->examModal = true;
     }
 
@@ -78,6 +84,7 @@ new #[Layout('components.layouts.app')] class extends Component {
     {
         $this->editing = $exam;
         $this->subject_id = $exam->subject_id;
+        $this->chapter_id = $exam->chapter_id;
         $this->classroom_id = $exam->classroom_id;
         $this->academic_year_id = $exam->academic_year_id;
         $this->semester = $exam->semester;
@@ -114,6 +121,7 @@ new #[Layout('components.layouts.app')] class extends Component {
 
         $data = [
             'subject_id' => $this->subject_id,
+            'chapter_id' => $this->chapter_id,
             'classroom_id' => $this->classroom_id,
             'academic_year_id' => $this->academic_year_id,
             'semester' => $this->semester,
@@ -144,7 +152,7 @@ new #[Layout('components.layouts.app')] class extends Component {
             OnlineExam::create($data);
         }
 
-        $this->reset(['subject_id', 'classroom_id', 'academic_year_id', 'semester', 'title', 'description', 'exam_type', 'duration_minutes', 'start_time', 'end_time', 'is_published', 'passing_grade', 'shuffle_questions', 'editing', 'attachmentFile', 'currentAttachmentName']);
+        $this->reset(['subject_id', 'chapter_id', 'classroom_id', 'academic_year_id', 'semester', 'title', 'description', 'exam_type', 'duration_minutes', 'start_time', 'end_time', 'is_published', 'passing_grade', 'shuffle_questions', 'editing', 'attachmentFile', 'currentAttachmentName']);
         $this->examModal = false;
     }
 
@@ -164,12 +172,19 @@ new #[Layout('components.layouts.app')] class extends Component {
     public function with(): array
     {
         $query = OnlineExam::query()
-            ->with(['subject', 'classroom', 'academicYear', 'creator'])
+            ->with(['subject', 'chapter', 'classroom', 'academicYear', 'creator'])
             ->withCount(['questions', 'submissions'])
             ->when($this->search, fn ($q) => $q->where('title', 'like', "%{$this->search}%"))
             ->when($this->filterClassroom, fn ($q) => $q->where('classroom_id', $this->filterClassroom))
             ->when($this->filterSubject, fn ($q) => $q->where('subject_id', $this->filterSubject))
+            ->when($this->filterChapter, fn ($q) => $q->where('chapter_id', $this->filterChapter))
             ->latest();
+
+        $availableChapters = MaterialChapter::when($this->subject_id, fn($q) => $q->where('subject_id', $this->subject_id))
+            ->when($this->classroom_id, fn($q) => $q->where('classroom_id', $this->classroom_id))
+            ->orderBy('order')
+            ->get()
+            ->map(fn ($c) => ['id' => $c->id, 'name' => 'Bab ' . $c->order . ' - ' . $c->title]);
 
         return [
             'exams' => $query->paginate(10),
@@ -179,22 +194,23 @@ new #[Layout('components.layouts.app')] class extends Component {
                 ->get()
                 ->map(fn ($c) => ['id' => $c->id, 'name' => ($c->level?->name ?? '') . ' - ' . $c->name]),
             'subjects' => Subject::orderBy('name')->get()->map(fn ($s) => ['id' => $s->id, 'name' => $s->name]),
+            'availableChapters' => $availableChapters,
             'academicYears' => AcademicYear::latest()->get()->map(fn ($y) => ['id' => $y->id, 'name' => $y->name]),
         ];
     }
 }; ?>
 
 <div class="p-6 space-y-6">
-    <x-ui.header :title="__('Ulangan Online')" :subtitle="__('Kelola ulangan dan ujian online untuk siswa daring.')" separator>
+    <x-ui.header :title="__('Kuis & Ujian Online')" :subtitle="__('Kelola kuis bab, ulangan harian, UTS, dan UAS.')" separator>
         <x-slot:actions>
-            <x-ui.button :label="__('Tambah Ulangan')" icon="o-plus" class="btn-primary" wire:click="createNew" />
+            <x-ui.button :label="__('Tambah Ujian / Kuis')" icon="o-plus" class="btn-primary" wire:click="createNew" />
         </x-slot:actions>
     </x-ui.header>
 
     {{-- Filters --}}
     <x-ui.card shadow>
         <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
-            <x-ui.input wire:model.live.debounce.300ms="search" :placeholder="__('Cari ulangan...')" icon="o-magnifying-glass" />
+            <x-ui.input wire:model.live.debounce.300ms="search" :placeholder="__('Cari ujian...')" icon="o-magnifying-glass" />
             <x-ui.select wire:model.live="filterClassroom" :placeholder="__('Semua Kelas')" :options="$classrooms" option-label="name" />
             <x-ui.select wire:model.live="filterSubject" :placeholder="__('Semua Mata Pelajaran')" :options="$subjects" option-label="name" />
         </div>
@@ -204,10 +220,11 @@ new #[Layout('components.layouts.app')] class extends Component {
     <x-ui.card shadow padding="false">
         <x-ui.table
             :headers="[
-                ['key' => 'title', 'label' => __('Judul Ulangan')],
+                ['key' => 'title', 'label' => __('Judul')],
+                ['key' => 'exam_type', 'label' => __('Tipe')],
+                ['key' => 'chapter', 'label' => __('Bab / Modul')],
                 ['key' => 'subject', 'label' => __('Mapel')],
                 ['key' => 'classroom', 'label' => __('Kelas')],
-                ['key' => 'exam_type', 'label' => __('Tipe')],
                 ['key' => 'questions_count', 'label' => __('Soal')],
                 ['key' => 'submissions_count', 'label' => __('Peserta')],
                 ['key' => 'status', 'label' => __('Status')],
@@ -224,19 +241,33 @@ new #[Layout('components.layouts.app')] class extends Component {
                 </div>
             @endscope
 
+            @scope('cell_exam_type', $exam)
+                @php
+                    $types = [
+                        'quiz' => ['label' => 'Kuis Bab', 'variant' => 'info'],
+                        'daily' => ['label' => 'Ulangan Harian', 'variant' => 'neutral'],
+                        'midterm' => ['label' => 'UTS', 'variant' => 'warning'],
+                        'final' => ['label' => 'UAS', 'variant' => 'error'],
+                    ];
+                    $t = $types[$exam->exam_type] ?? ['label' => $exam->exam_type, 'variant' => 'neutral'];
+                @endphp
+                <x-ui.badge :label="$t['label']" :variant="$t['variant']" flat size="xs" />
+            @endscope
+
+            @scope('cell_chapter', $exam)
+                @if($exam->chapter)
+                    <span class="text-sm font-medium">Bab {{ $exam->chapter->order }}: {{ $exam->chapter->title }}</span>
+                @else
+                    <span class="text-xs text-slate-400 italic">Tanpa Bab</span>
+                @endif
+            @endscope
+
             @scope('cell_subject', $exam)
                 <span class="text-sm">{{ $exam->subject?->name }}</span>
             @endscope
 
             @scope('cell_classroom', $exam)
                 <span class="text-sm">{{ $exam->classroom?->name }}</span>
-            @endscope
-
-            @scope('cell_exam_type', $exam)
-                @php
-                    $types = ['daily' => 'Harian', 'midterm' => 'UTS', 'final' => 'UAS'];
-                @endphp
-                <x-ui.badge :label="$types[$exam->exam_type] ?? $exam->exam_type" flat size="xs" />
             @endscope
 
             @scope('cell_questions_count', $exam)
@@ -287,14 +318,37 @@ new #[Layout('components.layouts.app')] class extends Component {
 
     {{-- Modal --}}
     <x-ui.modal wire:model="examModal" persistent class="max-w-3xl">
-        <x-ui.header :title="$editing ? __('Edit Ulangan') : __('Tambah Ulangan Baru')" :subtitle="__('Masukkan detail ulangan online.')" separator />
+        <x-ui.header :title="$editing ? __('Edit Ujian / Kuis') : __('Tambah Ujian / Kuis Baru')" :subtitle="__('Masukkan detail ujian atau kuis bab online.')" separator />
 
         <form wire:submit="save" class="space-y-6">
-            <x-ui.input wire:model="title" :label="__('Judul Ulangan')" required />
+            <x-ui.input wire:model="title" :label="__('Judul Ujian / Kuis')" required />
 
             <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-                <x-ui.select wire:model="classroom_id" :label="__('Kelas')" :options="$classrooms" option-label="name" required />
-                <x-ui.select wire:model="subject_id" :label="__('Mata Pelajaran')" :options="$subjects" option-label="name" required />
+                <x-ui.select wire:model.live="classroom_id" :label="__('Kelas')" :options="$classrooms" option-label="name" required />
+                <x-ui.select wire:model.live="subject_id" :label="__('Mata Pelajaran')" :options="$subjects" option-label="name" required />
+            </div>
+
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <x-ui.select
+                    wire:model="exam_type"
+                    :label="__('Tipe Ujian')"
+                    :options="[
+                        ['id' => 'quiz', 'name' => __('Kuis Bab / Modul')],
+                        ['id' => 'daily', 'name' => __('Ulangan Harian')],
+                        ['id' => 'midterm', 'name' => __('Ujian Tengah Semester (UTS)')],
+                        ['id' => 'final', 'name' => __('Ujian Akhir Semester (UAS)')],
+                    ]"
+                    option-label="name"
+                    required
+                />
+
+                <x-ui.select
+                    wire:model="chapter_id"
+                    :label="__('Modul / Bab (Khusus Kuis Bab)')"
+                    :options="$availableChapters"
+                    option-label="name"
+                    placeholder="-- Tanpa Bab / UTS / UAS --"
+                />
             </div>
 
             <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
@@ -302,25 +356,14 @@ new #[Layout('components.layouts.app')] class extends Component {
                 <x-ui.select
                     wire:model="semester"
                     :label="__('Semester')"
-                    :options="[['id' => '1', 'name' => __('Semester 1')], ['id' => '2', 'name' => __('Semester 2')]]"
+                    :options="[['id' => 'Ganjil', 'name' => __('Semester Ganjil')], ['id' => 'Genap', 'name' => __('Semester Genap')]]"
                     option-label="name"
                     required
                 />
-                <x-ui.select
-                    wire:model="exam_type"
-                    :label="__('Tipe Ujian')"
-                    :options="[
-                        ['id' => 'daily', 'name' => __('Ulangan Harian')],
-                        ['id' => 'midterm', 'name' => __('UTS')],
-                        ['id' => 'final', 'name' => __('UAS')],
-                    ]"
-                    option-label="name"
-                    required
-                />
+                <x-ui.input wire:model="duration_minutes" :label="__('Durasi (menit)')" type="number" min="1" />
             </div>
 
-            <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
-                <x-ui.input wire:model="duration_minutes" :label="__('Durasi (menit)')" type="number" min="1" />
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <x-ui.input wire:model="start_time" :label="__('Waktu Mulai')" type="datetime-local" />
                 <x-ui.input wire:model="end_time" :label="__('Waktu Selesai')" type="datetime-local" />
             </div>
@@ -334,10 +377,10 @@ new #[Layout('components.layouts.app')] class extends Component {
 
             <div>
                 <label class="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-2">{{ __('Deskripsi / Petunjuk') }}</label>
-                <textarea wire:model="description" rows="3" class="w-full rounded-lg border-slate-300 dark:border-slate-600 dark:bg-slate-800 dark:text-white focus:border-emerald-500 focus:ring-emerald-500" placeholder="{{ __('Petunjuk pengerjaan ulangan...') }}"></textarea>
+                <textarea wire:model="description" rows="3" class="w-full rounded-lg border-slate-300 dark:border-slate-600 dark:bg-slate-800 dark:text-white focus:border-emerald-500 focus:ring-emerald-500" placeholder="{{ __('Petunjuk pengerjaan kuis/ujian...') }}"></textarea>
             </div>
 
-            {{-- Lampiran Berkas Soal (Word / PDF) --}}
+            {{-- Lampiran Berkas Soal --}}
             <div class="p-4 rounded-xl border border-dashed border-slate-300 dark:border-slate-700 bg-slate-50/50 dark:bg-slate-800/40 space-y-3">
                 <div class="flex items-center justify-between">
                     <div>
@@ -345,7 +388,7 @@ new #[Layout('components.layouts.app')] class extends Component {
                             {{ __('Berkas Lampiran Soal (Word / PDF)') }}
                         </label>
                         <p class="text-xs text-slate-500">
-                            {{ __('Unggah naskah soal lengkap dalam bentuk dokumen (.pdf, .doc, .docx maks 10MB) yang dapat diunduh siswa.') }}
+                            {{ __('Unggah naskah soal lengkap (.pdf, .doc, .docx maks 10MB) yang dapat diunduh siswa.') }}
                         </p>
                     </div>
                     @if($editing && $editing->attachment_path)

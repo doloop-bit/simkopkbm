@@ -19,13 +19,20 @@ new #[Layout('components.layouts.student')] class extends Component {
     public $uploadedFiles = [];
     public bool $confirmSubmitModal = false;
 
-    public function mount(int $examId): void
+    public function mount(int $examId, \App\Services\ElearningCourseOutlineService $outlineService): void
     {
         $this->exam = OnlineExam::where('is_published', true)
             ->with('questions')
             ->findOrFail($examId);
 
         $studentId = auth()->id();
+
+        // Check if exam is accessible (not locked)
+        if (!$outlineService->isExamAccessible(auth()->user(), $this->exam)) {
+            session()->flash('error', 'Kuis/Ujian ini masih terkunci. Selesaikan materi/bab sebelumnya terlebih dahulu.');
+            $this->redirect(route('student.subject-outline', $this->exam->subject_id));
+            return;
+        }
 
         // Find or create submission
         $this->submission = OnlineExamSubmission::firstOrCreate(

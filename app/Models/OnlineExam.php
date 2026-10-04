@@ -13,6 +13,7 @@ class OnlineExam extends Model
 
     protected $fillable = [
         'subject_id',
+        'chapter_id',
         'classroom_id',
         'academic_year_id',
         'semester',
@@ -38,6 +39,11 @@ class OnlineExam extends Model
             'start_time' => 'datetime',
             'end_time' => 'datetime',
         ];
+    }
+
+    public function chapter(): BelongsTo
+    {
+        return $this->belongsTo(MaterialChapter::class, 'chapter_id');
     }
 
     public function subject(): BelongsTo

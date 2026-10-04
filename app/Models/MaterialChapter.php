@@ -5,41 +5,33 @@ namespace App\Models;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Illuminate\Database\Eloquent\Relations\HasMany;
 
-class OnlineMaterial extends Model
+class MaterialChapter extends Model
 {
+    /** @use HasFactory<\Database\Factories\MaterialChapterFactory> */
     use HasFactory;
 
     protected $fillable = [
         'subject_id',
-        'chapter_id',
         'classroom_id',
         'academic_year_id',
         'semester',
         'title',
-        'type',
-        'video_url',
-        'transcript',
-        'content',
-        'attachments',
+        'description',
+        'order',
         'is_published',
         'published_at',
-        'order',
         'created_by',
     ];
 
     protected function casts(): array
     {
         return [
-            'attachments' => 'array',
             'is_published' => 'boolean',
             'published_at' => 'datetime',
+            'order' => 'integer',
         ];
-    }
-
-    public function chapter(): BelongsTo
-    {
-        return $this->belongsTo(MaterialChapter::class, 'chapter_id');
     }
 
     public function subject(): BelongsTo
@@ -60,5 +52,15 @@ class OnlineMaterial extends Model
     public function creator(): BelongsTo
     {
         return $this->belongsTo(User::class, 'created_by');
+    }
+
+    public function materials(): HasMany
+    {
+        return $this->hasMany(OnlineMaterial::class, 'chapter_id')->orderBy('order');
+    }
+
+    public function exams(): HasMany
+    {
+        return $this->hasMany(OnlineExam::class, 'chapter_id');
     }
 }

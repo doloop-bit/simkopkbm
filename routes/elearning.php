@@ -4,6 +4,9 @@ use Illuminate\Support\Facades\Route;
 
 // Admin E-Learning Routes
 Route::middleware(['auth'])->prefix('admin')->name('admin.')->group(function () {
+    Route::livewire('/elearning/chapters', 'admin.elearning.chapters')
+        ->name('elearning.chapters');
+
     Route::livewire('/elearning/materials', 'admin.elearning.materials')
         ->name('elearning.materials');
 
@@ -27,6 +30,9 @@ Route::middleware(['auth'])->prefix('student')->name('student.')->group(function
 
     Route::livewire('/materials', 'student.materials')
         ->name('materials');
+
+    Route::livewire('/materials/subject/{subjectId}', 'student.subject-outline')
+        ->name('subject-outline');
 
     Route::livewire('/materials/{materialId}', 'student.material-detail')
         ->name('material-detail');
