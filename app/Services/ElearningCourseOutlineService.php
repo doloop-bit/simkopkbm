@@ -19,7 +19,7 @@ class ElearningCourseOutlineService
     public function getActiveAcademicYearAndSemester(): array
     {
         $activeYear = AcademicYear::where('is_active', true)->first();
-        if (!$activeYear) {
+        if (! $activeYear) {
             return [null, 'Ganjil'];
         }
 
@@ -29,17 +29,19 @@ class ElearningCourseOutlineService
     /**
      * Get list of subjects for a student with progress summary for active semester.
      */
-    public function getStudentSubjectsSummary(User $student): array
+    public function getStudentSubjectsSummary(User $student, ?string $semester = null): array
     {
         $classroomId = $student->latestProfile?->profileable?->classroom_id;
-        if (!$classroomId) {
+        if (! $classroomId) {
             return [];
         }
 
-        [$activeYear, $activeSemester] = $this->getActiveAcademicYearAndSemester();
-        if (!$activeYear) {
+        [$activeYear, $defaultSemester] = $this->getActiveAcademicYearAndSemester();
+        if (! $activeYear) {
             return [];
         }
+
+        $activeSemester = $semester ?? $defaultSemester;
 
         // Get subjects that have chapters/materials/exams for student's classroom
         $subjectIds = MaterialChapter::where('classroom_id', $classroomId)
@@ -124,8 +126,8 @@ class ElearningCourseOutlineService
             ->where('semester', $semester)
             ->where('is_published', true)
             ->with([
-                'materials' => fn($q) => $q->where('is_published', true)->orderBy('order'),
-                'exams' => fn($q) => $q->where('is_published', true)->where('exam_type', 'quiz'),
+                'materials' => fn ($q) => $q->where('is_published', true)->orderBy('order'),
+                'exams' => fn ($q) => $q->where('is_published', true)->where('exam_type', 'quiz'),
             ])
             ->orderBy('order')
             ->get();
@@ -142,16 +144,16 @@ class ElearningCourseOutlineService
 
             foreach ($chapter->materials as $material) {
                 $isCompleted = in_array($material->id, $completedMaterialIds);
-                $isLocked = !$previousChapterCompleted;
+                $isLocked = ! $previousChapterCompleted;
 
                 $totalItems++;
                 if ($isCompleted) {
                     $completedItems++;
-                } elseif (!$isLocked && !$nextUnlockedItem) {
+                } elseif (! $isLocked && ! $nextUnlockedItem) {
                     $nextUnlockedItem = ['type' => 'material', 'id' => $material->id];
                 }
 
-                if (!$isCompleted) {
+                if (! $isCompleted) {
                     $allMaterialsCompleted = false;
                 }
 
@@ -172,16 +174,16 @@ class ElearningCourseOutlineService
             foreach ($chapter->exams as $exam) {
                 $isCompleted = in_array($exam->id, $completedExamIds);
                 // Quiz is locked if chapter is locked OR materials in this chapter not all completed
-                $isLocked = !$previousChapterCompleted || !$allMaterialsCompleted;
+                $isLocked = ! $previousChapterCompleted || ! $allMaterialsCompleted;
 
                 $totalItems++;
                 if ($isCompleted) {
                     $completedItems++;
-                } elseif (!$isLocked && !$nextUnlockedItem) {
+                } elseif (! $isLocked && ! $nextUnlockedItem) {
                     $nextUnlockedItem = ['type' => 'exam', 'id' => $exam->id];
                 }
 
-                if (!$isCompleted) {
+                if (! $isCompleted) {
                     $allQuizzesAttempted = false;
                 }
 
@@ -203,7 +205,7 @@ class ElearningCourseOutlineService
                 'title' => $chapter->title,
                 'description' => $chapter->description,
                 'order' => $chapter->order,
-                'is_locked' => !$previousChapterCompleted,
+                'is_locked' => ! $previousChapterCompleted,
                 'is_completed' => $chapterCompleted,
                 'materials' => $chapterMaterials,
                 'quizzes' => $chapterQuizzes,
@@ -224,12 +226,12 @@ class ElearningCourseOutlineService
             ->map(function ($exam) use ($completedExamIds, $previousChapterCompleted, &$totalItems, &$completedItems, &$nextUnlockedItem) {
                 $isCompleted = in_array($exam->id, $completedExamIds);
                 // UTS/UAS unlocked if all chapters are completed
-                $isLocked = !$previousChapterCompleted;
+                $isLocked = ! $previousChapterCompleted;
 
                 $totalItems++;
                 if ($isCompleted) {
                     $completedItems++;
-                } elseif (!$isLocked && !$nextUnlockedItem) {
+                } elseif (! $isLocked && ! $nextUnlockedItem) {
                     $nextUnlockedItem = ['type' => 'exam', 'id' => $exam->id];
                 }
 
@@ -259,7 +261,7 @@ class ElearningCourseOutlineService
     public function isMaterialAccessible(User $student, OnlineMaterial $material): bool
     {
         // Handbooks without chapter are always accessible
-        if (!$material->chapter_id) {
+        if (! $material->chapter_id) {
             return true;
         }
 
@@ -274,7 +276,7 @@ class ElearningCourseOutlineService
         foreach ($outline['chapters'] as $ch) {
             foreach ($ch['materials'] as $mat) {
                 if ($mat['id'] === $material->id) {
-                    return !$mat['is_locked'];
+                    return ! $mat['is_locked'];
                 }
             }
         }
@@ -298,14 +300,14 @@ class ElearningCourseOutlineService
         foreach ($outline['chapters'] as $ch) {
             foreach ($ch['quizzes'] as $qz) {
                 if ($qz['id'] === $exam->id) {
-                    return !$qz['is_locked'];
+                    return ! $qz['is_locked'];
                 }
             }
         }
 
         foreach ($outline['term_exams'] as $te) {
             if ($te['id'] === $exam->id) {
-                return !$te['is_locked'];
+                return ! $te['is_locked'];
             }
         }
 

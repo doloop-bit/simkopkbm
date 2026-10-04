@@ -14,10 +14,30 @@ use Livewire\WithPagination;
 new #[Layout('components.layouts.app')] class extends Component {
     use WithPagination;
 
+    public ?int $filterAcademicYear = null;
+
+    public string $filterSemester = '';
+
     public ?int $filterClassroom = null;
+
     public ?int $filterSubject = null;
+
     public ?int $filterExam = null;
+
     public string $filterStatus = '';
+
+    public function updatedFilterAcademicYear(): void
+    {
+        $this->filterClassroom = null;
+        $this->filterExam = null;
+        $this->resetPage();
+    }
+
+    public function updatedFilterSemester(): void
+    {
+        $this->filterExam = null;
+        $this->resetPage();
+    }
 
     public function updatedFilterClassroom(): void
     {
@@ -44,12 +64,16 @@ new #[Layout('components.layouts.app')] class extends Component {
     public function with(): array
     {
         $activeYear = AcademicYear::where('is_active', true)->first();
+        $selectedYearId = $this->filterAcademicYear ?? $activeYear?->id;
 
         $submissionsQuery = OnlineExamSubmission::query()
-            ->with(['student', 'exam.subject', 'exam.classroom'])
-            ->whereHas('exam', function ($q) use ($activeYear) {
-                if ($activeYear) {
-                    $q->where('academic_year_id', $activeYear->id);
+            ->with(['student', 'exam.subject', 'exam.classroom', 'exam.academicYear'])
+            ->whereHas('exam', function ($q) use ($selectedYearId) {
+                if ($selectedYearId) {
+                    $q->where('academic_year_id', $selectedYearId);
+                }
+                if ($this->filterSemester) {
+                    $q->where('semester', $this->filterSemester);
                 }
                 if ($this->filterClassroom) {
                     $q->where('classroom_id', $this->filterClassroom);
@@ -72,20 +96,27 @@ new #[Layout('components.layouts.app')] class extends Component {
             ->whereHas('exam', fn ($q) => $q->whereColumn('online_exam_submissions.total_score', '>=', 'online_exams.passing_grade'))
             ->count();
 
-        // Exams dropdown (filtered by classroom/subject)
+        // Exams dropdown (filtered by academic year, semester, classroom, subject)
         $examsQuery = OnlineExam::query()
-            ->when($activeYear, fn ($q) => $q->where('academic_year_id', $activeYear->id))
+            ->when($selectedYearId, fn ($q) => $q->where('academic_year_id', $selectedYearId))
+            ->when($this->filterSemester, fn ($q) => $q->where('semester', $this->filterSemester))
             ->when($this->filterClassroom, fn ($q) => $q->where('classroom_id', $this->filterClassroom))
             ->when($this->filterSubject, fn ($q) => $q->where('subject_id', $this->filterSubject))
             ->orderBy('title');
 
+        $academicYears = AcademicYear::orderByDesc('name')->get()->map(fn ($y) => [
+            'id' => $y->id,
+            'name' => $y->name.($y->is_active ? ' ('.__('Aktif').')' : ''),
+        ]);
+
         return [
             'submissions' => $submissionsQuery->paginate(15),
-            'classrooms' => Classroom::whereHas('academicYear', fn ($q) => $q->where('is_active', true))
+            'academicYears' => $academicYears,
+            'classrooms' => Classroom::when($selectedYearId, fn ($q) => $q->where('academic_year_id', $selectedYearId))
                 ->with('level')
                 ->orderBy('name')
                 ->get()
-                ->map(fn ($c) => ['id' => $c->id, 'name' => ($c->level?->name ?? '') . ' - ' . $c->name]),
+                ->map(fn ($c) => ['id' => $c->id, 'name' => trim(($c->level?->name ?? '').' - '.$c->name, ' -')]),
             'subjects' => Subject::orderBy('name')->get()->map(fn ($s) => ['id' => $s->id, 'name' => $s->name]),
             'exams' => $examsQuery->get()->map(fn ($e) => ['id' => $e->id, 'name' => $e->title]),
             'totalSubmissions' => $totalSubmissions,
@@ -97,7 +128,11 @@ new #[Layout('components.layouts.app')] class extends Component {
 }; ?>
 
 <div class="p-6 space-y-6">
-    <x-ui.header :title="__('Rekap Nilai Ulangan Online')" :subtitle="__('Dashboard rekap nilai dan statistik ulangan siswa daring.')" separator />
+    <x-ui.header
+        :title="__('Rekap Nilai Ulangan Online')"
+        :subtitle="__('Dashboard rekap nilai dan statistik ulangan siswa daring per semester.')"
+        separator
+    />
 
     {{-- Stats Cards --}}
     <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
@@ -129,7 +164,22 @@ new #[Layout('components.layouts.app')] class extends Component {
 
     {{-- Filters --}}
     <x-ui.card shadow>
-        <div class="grid grid-cols-1 md:grid-cols-4 gap-4">
+        <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-6 gap-3">
+            <x-ui.select
+                wire:model.live="filterAcademicYear"
+                :placeholder="__('Tahun Ajaran Aktif')"
+                :options="$academicYears"
+                option-label="name"
+            />
+            <x-ui.select
+                wire:model.live="filterSemester"
+                :placeholder="__('Semua Semester')"
+                :options="[
+                    ['id' => 'Ganjil', 'name' => __('Semester Ganjil')],
+                    ['id' => 'Genap', 'name' => __('Semester Genap')],
+                ]"
+                option-label="name"
+            />
             <x-ui.select wire:model.live="filterClassroom" :placeholder="__('Semua Kelas')" :options="$classrooms" option-label="name" />
             <x-ui.select wire:model.live="filterSubject" :placeholder="__('Semua Mata Pelajaran')" :options="$subjects" option-label="name" />
             <x-ui.select wire:model.live="filterExam" :placeholder="__('Semua Ulangan')" :options="$exams" option-label="name" />
@@ -152,6 +202,7 @@ new #[Layout('components.layouts.app')] class extends Component {
             :headers="[
                 ['key' => 'student', 'label' => __('Siswa')],
                 ['key' => 'exam', 'label' => __('Ulangan')],
+                ['key' => 'semester', 'label' => __('Semester')],
                 ['key' => 'subject', 'label' => __('Mapel')],
                 ['key' => 'classroom', 'label' => __('Kelas')],
                 ['key' => 'score', 'label' => __('Nilai')],
@@ -166,7 +217,11 @@ new #[Layout('components.layouts.app')] class extends Component {
             @endscope
 
             @scope('cell_exam', $submission)
-                <span class="text-sm">{{ $submission->exam?->title }}</span>
+                <span class="text-sm font-semibold text-slate-800 dark:text-slate-200">{{ $submission->exam?->title }}</span>
+            @endscope
+
+            @scope('cell_semester', $submission)
+                <x-ui.badge :label="$submission->exam?->semester ?? '-'" variant="info" flat size="xs" />
             @endscope
 
             @scope('cell_subject', $submission)
@@ -184,7 +239,7 @@ new #[Layout('components.layouts.app')] class extends Component {
                         $passed = $submission->total_score >= $passing;
                     @endphp
                     <span class="font-bold {{ $passed ? 'text-emerald-600' : 'text-red-600' }}">
-                        {{ number_format($submission->total_score, 1) }}
+                        {{ number_format((float) $submission->total_score, 1) }}
                     </span>
                 @else
                     <span class="text-slate-400">-</span>

@@ -888,21 +888,22 @@ Modul E-Learning diperuntukkan bagi siswa daring untuk mengakses materi dan meng
 
 ### **2. Route & Hak Akses**
 - **Admin**:
-  - `admin.elearning.course` — Kelola materi per kelas/mapel pada semester aktif dalam satu halaman: Buku Pegangan, Bab (materi + kuis), UTS/UAS. Siswa: `student.subject-outline` dengan penguncian berurutan (`ElearningCourseOutlineService`).
+  - `admin.elearning.course` — Kelola materi per kelas/mapel dengan switcher Semester Ganjil & Genap, filter Tahun Ajaran, serta fitur Salin/Klon Materi (`ElearningCourseCloneService`) antar semester/tahun ajaran tanpa menduplikasi storage berkas PDF dan tanpa merusak riwayat penilaian siswa lama.
   - `admin.elearning.exams` — Manajemen ulangan daring
   - `admin.elearning.exam-questions` — Kelola butir soal ulangan
-  - `admin.elearning.grade-recap` — Dashboard rekap nilai seluruh siswa & filter kelas/mapel
+  - `admin.elearning.grade-recap` — Dashboard rekap nilai seluruh siswa dengan filter Tahun Ajaran, Semester (Ganjil/Genap), kelas, mapel, dan status
   - `admin.elearning.submission-detail` — Detail jawaban & form koreksi manual essay
 - **Siswa**:
   - `student.dashboard` — Dashboard siswa (ringkasan tugas, materi terbaru, rata-rata nilai)
-  - `student.materials` & `student.material-detail` — Daftar materi & pembaca materi
+  - `student.materials` & `student.material-detail` — Daftar materi per semester (Ganjil & Genap) & pembaca materi modul
+  - `student.subject-outline` — Outline modul pembelajaran berurutan dengan opsi semester
   - `student.exams` — Daftar ulangan aktif & riwayat pengerjaan
   - `student.take-exam` — Ruang ujian dengan timer hitung mundur dan auto-save jawaban
   - `student.exam-result` — Review hasil pengerjaan, skor, status kelulusan, dan feedback guru
 
 ---
 
-**Last Updated:** 2026-10-02
-**Version:** 3.1 (E-Learning Feature Added)
+**Last Updated:** 2026-10-05
+**Version:** 3.2 (E-Learning Course Semester Switcher & Course Cloning Support)
 **Maintained By:** Antigravity AI Assistant
 

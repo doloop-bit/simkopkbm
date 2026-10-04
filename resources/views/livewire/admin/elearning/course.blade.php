@@ -8,6 +8,7 @@ use App\Models\MaterialChapter;
 use App\Models\OnlineExam;
 use App\Models\OnlineMaterial;
 use App\Models\Subject;
+use App\Services\ElearningCourseCloneService;
 use Illuminate\Support\Facades\Storage;
 use Livewire\Attributes\Layout;
 use Livewire\Attributes\Url;
@@ -16,6 +17,12 @@ use Livewire\WithFileUploads;
 
 new #[Layout('components.layouts.app')] class extends Component {
     use WithFileUploads;
+
+    #[Url]
+    public ?int $academicYearId = null;
+
+    #[Url]
+    public ?string $selectedSemester = null;
 
     #[Url]
     public ?int $classroomId = null;
@@ -46,9 +53,29 @@ new #[Layout('components.layouts.app')] class extends Component {
     public ?int $durationMinutes = 30;
     public int $passingGrade = 70;
 
+    // Clone Course Modal
+    public bool $cloneModal = false;
+    public ?int $cloneSourceYearId = null;
+    public string $cloneSourceSemester = 'Ganjil';
+    public ?int $cloneSourceClassroomId = null;
+    public ?int $cloneSourceSubjectId = null;
+
+    public function updatedAcademicYearId(): void
+    {
+        $this->classroomId = null;
+        $this->subjectId = null;
+    }
+
     public function updatedClassroomId(): void
     {
         $this->subjectId = null;
+    }
+
+    public function setSemester(string $semester): void
+    {
+        if (in_array($semester, ['Ganjil', 'Genap'], true)) {
+            $this->selectedSemester = $semester;
+        }
     }
 
     public function openSubject(int $subjectId): void
@@ -66,9 +93,15 @@ new #[Layout('components.layouts.app')] class extends Component {
      */
     protected function activeTerm(): array
     {
-        $year = AcademicYear::where('is_active', true)->first();
+        $activeYear = AcademicYear::where('is_active', true)->first();
+        $year = $this->academicYearId ? AcademicYear::find($this->academicYearId) : $activeYear;
+        if (! $year && $activeYear) {
+            $year = $activeYear;
+        }
 
-        return [$year, $year?->active_semester ?? 'Ganjil'];
+        $semester = $this->selectedSemester ?? $year?->active_semester ?? 'Ganjil';
+
+        return [$year, $semester];
     }
 
     /**
@@ -86,6 +119,77 @@ new #[Layout('components.layouts.app')] class extends Component {
             'academic_year_id' => $year->id,
             'semester' => $semester,
         ];
+    }
+
+    public function openCloneModal(): void
+    {
+        [$year, $semester] = $this->activeTerm();
+        $this->cloneSourceYearId = $year?->id;
+        $this->cloneSourceSemester = $semester === 'Ganjil' ? 'Genap' : 'Ganjil';
+        $this->cloneSourceClassroomId = $this->classroomId;
+        $this->cloneSourceSubjectId = $this->subjectId;
+        $this->cloneModal = true;
+    }
+
+    public function executeClone(ElearningCourseCloneService $cloneService): void
+    {
+        $this->validate([
+            'cloneSourceYearId' => ['required', 'exists:academic_years,id'],
+            'cloneSourceSemester' => ['required', 'in:Ganjil,Genap'],
+            'cloneSourceClassroomId' => ['required', 'exists:classrooms,id'],
+            'cloneSourceSubjectId' => ['required', 'exists:subjects,id'],
+        ]);
+
+        [$targetYear, $targetSemester] = $this->activeTerm();
+
+        abort_unless($targetYear && $this->classroomId && $this->subjectId, 422);
+
+        // Cegah salin ke target yang sama persis
+        if (
+            (int) $this->cloneSourceYearId === (int) $targetYear->id &&
+            $this->cloneSourceSemester === $targetSemester &&
+            (int) $this->cloneSourceClassroomId === (int) $this->classroomId &&
+            (int) $this->cloneSourceSubjectId === (int) $this->subjectId
+        ) {
+            session()->flash('error', __('Sumber materi dan tujuan salin tidak boleh sama persis.'));
+
+            return;
+        }
+
+        $source = [
+            'subject_id' => (int) $this->cloneSourceSubjectId,
+            'classroom_id' => (int) $this->cloneSourceClassroomId,
+            'academic_year_id' => (int) $this->cloneSourceYearId,
+            'semester' => $this->cloneSourceSemester,
+        ];
+
+        $target = [
+            'subject_id' => (int) $this->subjectId,
+            'classroom_id' => (int) $this->classroomId,
+            'academic_year_id' => (int) $targetYear->id,
+            'semester' => $targetSemester,
+            'created_by' => (int) auth()->id(),
+        ];
+
+        $result = $cloneService->cloneCourse($source, $target);
+
+        $totalCopied = $result['handbooks_count'] + $result['chapters_count'] + $result['materials_count'] + $result['exams_count'];
+
+        if ($totalCopied === 0) {
+            session()->flash('error', __('Tidak ada modul/materi pada sumber yang dipilih untuk disalin.'));
+        } else {
+            session()->flash('success', __(
+                'Berhasil menyalin materi: :chapters bab, :materials materi, dan :exams kuis/evaluasi (:questions butir soal). Riwayat nilai siswa tahun lalu tetap aman.',
+                [
+                    'chapters' => $result['chapters_count'],
+                    'materials' => $result['materials_count'] + $result['handbooks_count'],
+                    'exams' => $result['exams_count'],
+                    'questions' => $result['questions_count'],
+                ]
+            ));
+        }
+
+        $this->cloneModal = false;
     }
 
     public function createChapter(): void
@@ -357,12 +461,27 @@ new #[Layout('components.layouts.app')] class extends Component {
 
     public function deleteExam(int $id): void
     {
-        OnlineExam::findOrFail($id)->delete();
+        $exam = OnlineExam::withCount('submissions')->findOrFail($id);
+
+        if ($exam->submissions_count > 0) {
+            session()->flash('error', __('Ujian ini tidak dapat dihapus karena sudah memiliki riwayat pengerjaan siswa (:count pengerjaan). Anda dapat menonaktifkan status publikasinya agar nilai siswa tetap aman.', ['count' => $exam->submissions_count]));
+
+            return;
+        }
+
+        $exam->delete();
+        session()->flash('success', __('Ujian berhasil dihapus.'));
     }
 
     public function with(): array
     {
+        $activeYear = AcademicYear::where('is_active', true)->first();
         [$year, $semester] = $this->activeTerm();
+
+        $academicYears = AcademicYear::orderByDesc('name')->get()->map(fn ($y) => [
+            'id' => $y->id,
+            'name' => $y->name.($y->is_active ? ' ('.__('Aktif').')' : ''),
+        ]);
 
         $classrooms = Classroom::query()
             ->when($year, fn ($q) => $q->where('academic_year_id', $year->id))
@@ -372,7 +491,7 @@ new #[Layout('components.layouts.app')] class extends Component {
             ->map(fn ($c) => ['id' => $c->id, 'name' => trim(($c->level?->name ?? '').' - '.$c->name, ' -')]);
 
         $classroom = $this->classroomId ? Classroom::with('level')->find($this->classroomId) : null;
-        
+
         $subjects = collect();
         if ($classroom) {
             $phase = $classroom->level?->phase_map[$classroom->class_level] ?? null;
@@ -414,7 +533,7 @@ new #[Layout('components.layouts.app')] class extends Component {
             $chapters = MaterialChapter::where($scope)
                 ->with([
                     'materials',
-                    'exams' => fn ($q) => $q->where('exam_type', 'quiz')->withCount('questions'),
+                    'exams' => fn ($q) => $q->where('exam_type', 'quiz')->withCount('questions')->withCount('submissions'),
                 ])
                 ->orderBy('order')
                 ->orderBy('id')
@@ -423,10 +542,23 @@ new #[Layout('components.layouts.app')] class extends Component {
                 ->whereNull('chapter_id')
                 ->whereIn('exam_type', ['midterm', 'final'])
                 ->withCount('questions')
+                ->withCount('submissions')
                 ->get();
         }
 
+        // Dropdown options for clone modal
+        $cloneSourceClassrooms = Classroom::query()
+            ->when($this->cloneSourceYearId, fn ($q) => $q->where('academic_year_id', $this->cloneSourceYearId))
+            ->with('level')
+            ->orderBy('name')
+            ->get()
+            ->map(fn ($c) => ['id' => $c->id, 'name' => trim(($c->level?->name ?? '').' - '.$c->name, ' -')]);
+
+        $cloneSourceSubjects = Subject::orderBy('name')->get()->map(fn ($s) => ['id' => $s->id, 'name' => $s->name]);
+
         return [
+            'activeYear' => $activeYear,
+            'academicYears' => $academicYears,
             'year' => $year,
             'semester' => $semester,
             'classrooms' => $classrooms,
@@ -436,6 +568,8 @@ new #[Layout('components.layouts.app')] class extends Component {
             'handbooks' => $handbooks,
             'chapters' => $chapters,
             'termExams' => $termExams,
+            'cloneSourceClassrooms' => $cloneSourceClassrooms,
+            'cloneSourceSubjects' => $cloneSourceSubjects,
         ];
     }
 }; ?>
@@ -443,39 +577,109 @@ new #[Layout('components.layouts.app')] class extends Component {
 <div class="p-6 space-y-6 max-w-5xl mx-auto">
     <x-ui.header
         :title="__('Materi Pelajaran')"
-        :subtitle="'Semester '.$semester.' - '.($year?->name ?? __('belum ada tahun ajaran aktif'))"
+        :subtitle="__('Kelola modul materi, buku pegangan, dan kuis online per semester.')"
         separator
     />
+
+    @if(session('success'))
+        <x-ui.alert variant="success" icon="o-check-circle" :title="session('success')" />
+    @endif
+
+    @if(session('error'))
+        <x-ui.alert variant="error" icon="o-exclamation-triangle" :title="session('error')" />
+    @endif
 
     @if(! $year)
         <x-ui.card shadow>
             <p class="text-sm text-slate-500">{{ __('Aktifkan tahun ajaran terlebih dahulu di menu Akademik.') }}</p>
         </x-ui.card>
     @else
-        <div class="max-w-sm">
-            <x-ui.select wire:model.live="classroomId" :label="__('Kelas')" :placeholder="__('Pilih kelas')" :options="$classrooms" option-label="name" />
-        </div>
+        {{-- Filter & Pengaturan Semester --}}
+        <x-ui.card shadow class="bg-slate-50/70 dark:bg-slate-900/60 border border-slate-200/80 dark:border-slate-800">
+            <div class="flex flex-col md:flex-row items-stretch md:items-center justify-between gap-4">
+                {{-- Pemilih Tahun Ajaran & Kelas --}}
+                <div class="grid grid-cols-1 sm:grid-cols-2 gap-3 flex-1 max-w-xl">
+                    <x-ui.select
+                        wire:model.live="academicYearId"
+                        :label="__('Tahun Ajaran')"
+                        :options="$academicYears"
+                        option-label="name"
+                        :hint="$activeYear && $year?->id === $activeYear->id ? __('Tahun ajaran aktif saat ini') : null"
+                    />
+
+                    <x-ui.select
+                        wire:model.live="classroomId"
+                        :label="__('Kelas')"
+                        :placeholder="__('Pilih kelas')"
+                        :options="$classrooms"
+                        option-label="name"
+                    />
+                </div>
+
+                {{-- Switcher Semester Ganjil & Genap --}}
+                <div class="flex flex-col items-start md:items-end justify-center gap-1.5">
+                    <label class="text-xs font-semibold uppercase tracking-wider text-slate-500 dark:text-slate-400">
+                        {{ __('Pilihan Semester') }}
+                    </label>
+                    <div class="inline-flex p-1 bg-white dark:bg-slate-800 rounded-xl border border-slate-200 dark:border-slate-700 shadow-xs">
+                        <button
+                            type="button"
+                            wire:click="setSemester('Ganjil')"
+                            class="px-4 py-2 rounded-lg text-xs font-semibold transition-all flex items-center gap-2 {{ $semester === 'Ganjil' ? 'bg-emerald-600 text-white shadow-xs' : 'text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white' }}"
+                        >
+                            <x-ui.icon name="o-calendar" class="w-4 h-4" />
+                            <span>{{ __('Semester Ganjil') }}</span>
+                            @if($activeYear && $activeYear->id === $year?->id && ($activeYear->active_semester ?? 'Ganjil') === 'Ganjil')
+                                <span class="px-1.5 py-0.5 rounded-full text-[10px] {{ $semester === 'Ganjil' ? 'bg-white/20 text-white' : 'bg-emerald-100 text-emerald-700 dark:bg-emerald-950 dark:text-emerald-300' }}">
+                                    {{ __('Aktif') }}
+                                </span>
+                            @endif
+                        </button>
+
+                        <button
+                            type="button"
+                            wire:click="setSemester('Genap')"
+                            class="px-4 py-2 rounded-lg text-xs font-semibold transition-all flex items-center gap-2 {{ $semester === 'Genap' ? 'bg-emerald-600 text-white shadow-xs' : 'text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white' }}"
+                        >
+                            <x-ui.icon name="o-calendar" class="w-4 h-4" />
+                            <span>{{ __('Semester Genap') }}</span>
+                            @if($activeYear && $activeYear->id === $year?->id && ($activeYear->active_semester ?? 'Ganjil') === 'Genap')
+                                <span class="px-1.5 py-0.5 rounded-full text-[10px] {{ $semester === 'Genap' ? 'bg-white/20 text-white' : 'bg-emerald-100 text-emerald-700 dark:bg-emerald-950 dark:text-emerald-300' }}">
+                                    {{ __('Aktif') }}
+                                </span>
+                            @endif
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </x-ui.card>
 
         {{-- STEP 1: pilih mapel --}}
         @if($classroom && ! $subject)
-            <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-                @forelse($subjects as $item)
-                    <button type="button" wire:click="openSubject({{ $item->id }})" class="text-left" wire:key="subject-{{ $item->id }}">
-                        <x-ui.card shadow class="hover:shadow-lg transition-shadow h-full">
-                            <div class="flex items-center gap-3">
-                                <div class="p-3 rounded-xl bg-emerald-50 text-emerald-600">
-                                    <x-ui.icon name="o-book-open" class="w-6 h-6" />
+            <div class="space-y-3">
+                <div class="flex items-center justify-between text-xs text-slate-500">
+                    <span>{{ __('Menampilkan mata pelajaran untuk') }}: <strong class="text-slate-700 dark:text-slate-300">{{ $classroom->name }}</strong> · <strong class="text-emerald-600">Semester {{ $semester }}</strong> ({{ $year?->name }})</span>
+                </div>
+
+                <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                    @forelse($subjects as $item)
+                        <button type="button" wire:click="openSubject({{ $item->id }})" class="text-left" wire:key="subject-{{ $item->id }}">
+                            <x-ui.card shadow class="hover:shadow-lg transition-shadow h-full">
+                                <div class="flex items-center gap-3">
+                                    <div class="p-3 rounded-xl bg-emerald-50 dark:bg-emerald-950/40 text-emerald-600">
+                                        <x-ui.icon name="o-book-open" class="w-6 h-6" />
+                                    </div>
+                                    <div>
+                                        <h3 class="font-bold text-slate-900 dark:text-white">{{ $item->name }}</h3>
+                                        <p class="text-xs text-slate-500">{{ __('Klik untuk kelola materi') }}</p>
+                                    </div>
                                 </div>
-                                <div>
-                                    <h3 class="font-bold text-slate-900 dark:text-white">{{ $item->name }}</h3>
-                                    <p class="text-xs text-slate-500">{{ __('Klik untuk kelola materi') }}</p>
-                                </div>
-                            </div>
-                        </x-ui.card>
-                    </button>
-                @empty
-                    <p class="text-sm text-slate-500 col-span-full">{{ __('Belum ada mata pelajaran untuk jenjang kelas ini.') }}</p>
-                @endforelse
+                            </x-ui.card>
+                        </button>
+                    @empty
+                        <p class="text-sm text-slate-500 col-span-full">{{ __('Belum ada mata pelajaran untuk jenjang kelas ini.') }}</p>
+                    @endforelse
+                </div>
             </div>
         @endif
 
@@ -486,9 +690,25 @@ new #[Layout('components.layouts.app')] class extends Component {
                     <button type="button" wire:click="backToSubjects" class="inline-flex items-center gap-1 text-xs text-slate-500 hover:text-emerald-600 mb-1">
                         <x-ui.icon name="o-arrow-left" class="w-4 h-4" /> {{ __('Semua mata pelajaran') }}
                     </button>
-                    <h2 class="text-xl font-bold text-slate-900 dark:text-white">{{ $subject->name }} <span class="text-slate-400 font-normal">· {{ $classroom->name }}</span></h2>
+                    <div class="flex flex-wrap items-center gap-2">
+                        <h2 class="text-xl font-bold text-slate-900 dark:text-white">{{ $subject->name }}</h2>
+                        <span class="text-slate-400 font-normal">· {{ $classroom->name }}</span>
+                        <x-ui.badge :label="'Semester ' . $semester . ' (' . ($year?->name ?? '') . ')'" variant="info" flat size="xs" />
+                    </div>
                 </div>
-                <x-ui.button :label="__('Tambah Bab')" icon="o-plus" class="btn-primary" wire:click="createChapter" />
+
+                <div class="flex items-center gap-2">
+                    <x-ui.button
+                        :label="__('Salin Materi')"
+                        icon="o-document-duplicate"
+                        ghost
+                        size="sm"
+                        class="text-indigo-600 hover:bg-indigo-50 dark:hover:bg-indigo-950/30"
+                        wire:click="openCloneModal"
+                        :title="__('Salin materi atau kuis dari semester / tahun ajaran lain')"
+                    />
+                    <x-ui.button :label="__('Tambah Bab')" icon="o-plus" class="btn-primary" wire:click="createChapter" />
+                </div>
             </div>
 
             {{-- Buku Pegangan --}}
@@ -500,7 +720,7 @@ new #[Layout('components.layouts.app')] class extends Component {
                 @forelse($handbooks as $material)
                     @include('partials.elearning.material-row', ['material' => $material, 'first' => $loop->first, 'last' => $loop->last])
                 @empty
-                    <p class="text-xs text-slate-400">{{ __('Belum ada buku pegangan.') }}</p>
+                    <p class="text-xs text-slate-400">{{ __('Belum ada buku pegangan pada Semester :semester ini.', ['semester' => $semester]) }}</p>
                 @endforelse
             </x-ui.card>
 
@@ -552,9 +772,12 @@ new #[Layout('components.layouts.app')] class extends Component {
             @if($chapters->isEmpty())
                 <div class="text-center py-10 bg-slate-50 dark:bg-slate-800/40 rounded-2xl border border-dashed border-slate-200 dark:border-slate-700">
                     <x-ui.icon name="o-squares-2x2" class="w-12 h-12 mx-auto mb-2 text-slate-300 dark:text-slate-600" />
-                    <h4 class="font-semibold text-slate-700 dark:text-slate-300 text-sm">{{ __('Belum ada modul / bab') }}</h4>
-                    <p class="text-xs text-slate-500 mt-1 mb-3">{{ __('Mulai susun materi dengan membuat bab pertama pembelajaran.') }}</p>
-                    <x-ui.button :label="__('Tambah Bab Pertama')" icon="o-plus" class="btn-primary btn-sm" wire:click="createChapter" />
+                    <h4 class="font-semibold text-slate-700 dark:text-slate-300 text-sm">{{ __('Belum ada modul / bab untuk Semester :semester', ['semester' => $semester]) }}</h4>
+                    <p class="text-xs text-slate-500 mt-1 mb-3">{{ __('Mulai susun materi dengan membuat bab pertama atau salin materi dari semester lain.') }}</p>
+                    <div class="flex items-center justify-center gap-2">
+                        <x-ui.button :label="__('Tambah Bab Pertama')" icon="o-plus" class="btn-primary btn-sm" wire:click="createChapter" />
+                        <x-ui.button :label="__('Salin dari Semester Lain')" icon="o-document-duplicate" ghost size="sm" class="text-indigo-600" wire:click="openCloneModal" />
+                    </div>
                 </div>
             @endif
 
@@ -564,7 +787,7 @@ new #[Layout('components.layouts.app')] class extends Component {
                     <div>
                         <h3 class="font-bold text-sm uppercase tracking-wide text-slate-700 dark:text-slate-300 flex items-center gap-2">
                             <x-ui.icon name="o-academic-cap" class="w-4 h-4 text-emerald-600" />
-                            {{ __('Evaluasi Semester (UTS / UAS)') }}
+                            {{ __('Evaluasi Semester (UTS / UAS) - Semester :semester', ['semester' => $semester]) }}
                         </h3>
                         <p class="text-xs text-slate-400 mt-0.5">{{ __('Ujian evaluasi tengah atau akhir semester untuk siswa.') }}</p>
                     </div>
@@ -576,11 +799,93 @@ new #[Layout('components.layouts.app')] class extends Component {
                 @forelse($termExams as $exam)
                     @include('partials.elearning.exam-row', ['exam' => $exam])
                 @empty
-                    <p class="text-xs text-slate-400">{{ __('Belum ada UTS / UAS.') }}</p>
+                    <p class="text-xs text-slate-400">{{ __('Belum ada UTS / UAS pada Semester :semester.', ['semester' => $semester]) }}</p>
                 @endforelse
             </x-ui.card>
         @endif
     @endif
+
+    {{-- Modal Salin / Klon Materi --}}
+    <x-ui.modal wire:model="cloneModal" persistent class="max-w-xl">
+        <x-ui.header
+            :title="__('Salin Materi & Kuis')"
+            :subtitle="__('Salin struktur bab, materi pembelajaran, dan bank soal dari semester/tahun ajaran lain.')"
+            separator
+        />
+
+        <div class="space-y-4">
+            <div class="p-3.5 rounded-xl bg-indigo-50/70 dark:bg-indigo-950/30 border border-indigo-200/80 dark:border-indigo-800/60 text-xs text-indigo-900 dark:text-indigo-200 space-y-1">
+                <div class="font-semibold flex items-center gap-1.5 text-indigo-700 dark:text-indigo-300">
+                    <x-ui.icon name="o-shield-check" class="w-4 h-4" />
+                    {{ __('Keamanan Riwayat Nilai & Hemat Memori') }}
+                </div>
+                <p>
+                    {{ __('Berkas lampiran PDF/dokumen akan memakai file fisik yang sama (0 byte tambahan harddisk). Soal & materi disalin sebagai data baru khusus semester tujuan, sehingga riwayat jawaban dan nilai siswa lama tetap 100% aman.') }}
+                </p>
+            </div>
+
+            <div class="p-3 rounded-xl bg-slate-50 dark:bg-slate-800/60 border border-slate-200 dark:border-slate-700 text-xs">
+                <span class="text-slate-500 uppercase font-semibold text-[10px] tracking-wider">{{ __('Target Tujuan Salin:') }}</span>
+                <div class="font-bold text-slate-900 dark:text-white mt-0.5">
+                    {{ $subject?->name }} · {{ $classroom?->name }} · <span class="text-emerald-600">Semester {{ $semester }} ({{ $year?->name }})</span>
+                </div>
+            </div>
+
+            <form wire:submit="executeClone" class="space-y-4">
+                <div class="grid grid-cols-2 gap-3">
+                    <x-ui.select
+                        wire:model.live="cloneSourceYearId"
+                        :label="__('Tahun Ajaran Sumber')"
+                        :options="$academicYears"
+                        option-label="name"
+                        required
+                    />
+
+                    <x-ui.select
+                        wire:model.live="cloneSourceSemester"
+                        :label="__('Semester Sumber')"
+                        :options="[
+                            ['id' => 'Ganjil', 'name' => __('Semester Ganjil')],
+                            ['id' => 'Genap', 'name' => __('Semester Genap')],
+                        ]"
+                        option-label="name"
+                        required
+                    />
+                </div>
+
+                <div class="grid grid-cols-2 gap-3">
+                    <x-ui.select
+                        wire:model.live="cloneSourceClassroomId"
+                        :label="__('Kelas Sumber')"
+                        :placeholder="__('Pilih kelas sumber')"
+                        :options="$cloneSourceClassrooms"
+                        option-label="name"
+                        required
+                    />
+
+                    <x-ui.select
+                        wire:model.live="cloneSourceSubjectId"
+                        :label="__('Mapel Sumber')"
+                        :placeholder="__('Pilih mapel sumber')"
+                        :options="$cloneSourceSubjects"
+                        option-label="name"
+                        required
+                    />
+                </div>
+
+                <div class="flex justify-end gap-2 pt-3 border-t border-slate-100 dark:border-slate-800">
+                    <x-ui.button :label="__('Batal')" ghost @click="show = false" />
+                    <x-ui.button
+                        :label="__('Salin Sekarang')"
+                        icon="o-document-duplicate"
+                        type="submit"
+                        class="btn-primary"
+                        spinner="executeClone"
+                    />
+                </div>
+            </form>
+        </div>
+    </x-ui.modal>
 
     {{-- Modal bab --}}
     <x-ui.modal wire:model="chapterModal" persistent class="max-w-lg">
@@ -600,7 +905,7 @@ new #[Layout('components.layouts.app')] class extends Component {
         <x-ui.header :title="$editingMaterialId ? __('Edit Materi') : __('Tambah Materi Baru')" :subtitle="__('Masukkan detail materi pembelajaran modul.')" separator />
         <form wire:submit="saveMaterial" class="space-y-4">
             <x-ui.input wire:model="materialTitle" :label="__('Judul Materi')" placeholder="misal: Pengenalan Variabel dan Konstanta" required />
-            
+
             <x-ui.select
                 wire:model.live="materialType"
                 :label="__('Tipe Materi')"

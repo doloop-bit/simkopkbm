@@ -10,6 +10,9 @@ use Livewire\Component;
 new #[Layout('components.layouts.student')] class extends Component {
     public int $subjectId;
 
+    #[Livewire\Attributes\Url]
+    public ?string $semester = null;
+
     public function mount(int $subjectId): void
     {
         $this->subjectId = $subjectId;
@@ -22,19 +25,21 @@ new #[Layout('components.layouts.student')] class extends Component {
         $subject = Subject::findOrFail($this->subjectId);
 
         [$activeYear, $activeSemester] = $outlineService->getActiveAcademicYearAndSemester();
+        $selectedSemester = $this->semester ?? $activeSemester;
 
         $outline = $outlineService->getSubjectOutlineForStudent(
             $student,
             $this->subjectId,
             $classroomId ?? 0,
             $activeYear?->id ?? 0,
-            $activeSemester
+            $selectedSemester
         );
 
         return [
             'subject' => $subject,
             'activeYear' => $activeYear,
             'activeSemester' => $activeSemester,
+            'selectedSemester' => $selectedSemester,
             'outline' => $outline,
         ];
     }
@@ -51,7 +56,7 @@ new #[Layout('components.layouts.student')] class extends Component {
         <div class="bg-gradient-to-r from-emerald-600 to-teal-700 rounded-2xl p-6 text-white shadow-lg space-y-4">
             <div class="flex flex-wrap items-center justify-between gap-4">
                 <div>
-                    <x-ui.badge :label="'Semester ' . $activeSemester" class="bg-white/20 text-white border-0 font-medium mb-2" size="xs" />
+                    <x-ui.badge :label="'Semester ' . $selectedSemester" class="bg-white/20 text-white border-0 font-medium mb-2" size="xs" />
                     <h1 class="text-2xl font-bold">{{ $subject->name }}</h1>
                     <p class="text-xs text-emerald-100 mt-1">Struktur Modul & Kurikulum Pembelajaran Berurutan</p>
                 </div>
