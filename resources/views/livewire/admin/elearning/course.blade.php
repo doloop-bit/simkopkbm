@@ -371,10 +371,31 @@ new #[Layout('components.layouts.app')] class extends Component {
             ->get()
             ->map(fn ($c) => ['id' => $c->id, 'name' => trim(($c->level?->name ?? '').' - '.$c->name, ' -')]);
 
-        $classroom = $this->classroomId ? Classroom::find($this->classroomId) : null;
-        $subjects = $classroom
-            ? Subject::where('level_id', $classroom->level_id)->orderBy('name')->get()
-            : collect();
+        $classroom = $this->classroomId ? Classroom::with('level')->find($this->classroomId) : null;
+        
+        $subjects = collect();
+        if ($classroom) {
+            $phase = $classroom->level?->phase_map[$classroom->class_level] ?? null;
+
+            $subjects = Subject::query()
+                ->where(function ($q) use ($classroom, $phase) {
+                    if ($phase) {
+                        $q->where('phase', $phase);
+                    }
+                    if ($classroom->level_id) {
+                        $q->orWhere('level_id', $classroom->level_id);
+                    }
+                    $q->orWhereNull('level_id');
+                })
+                ->orderBy('name')
+                ->get();
+
+            // Fallback jika tidak ada filter yang match, tampilkan seluruh mata pelajaran yang ada
+            if ($subjects->isEmpty()) {
+                $subjects = Subject::orderBy('name')->get();
+            }
+        }
+
         $subject = $this->subjectId ? Subject::find($this->subjectId) : null;
 
         $handbooks = collect();
@@ -521,24 +542,35 @@ new #[Layout('components.layouts.app')] class extends Component {
                         @endif
                     </div>
 
-                    <div class="flex gap-2 pt-2 border-t border-slate-100 dark:border-slate-800">
-                        <x-ui.button :label="__('Materi')" icon="o-plus" ghost size="sm" wire:click="createMaterial({{ $chapter->id }})" />
-                        <x-ui.button :label="__('Kuis')" icon="o-plus" ghost size="sm" wire:click="createExam({{ $chapter->id }}, 'quiz')" />
+                    <div class="flex gap-2 pt-3 border-t border-slate-100 dark:border-slate-800">
+                        <x-ui.button :label="__('Tambah Materi')" icon="o-document-plus" ghost size="sm" class="text-emerald-600 hover:bg-emerald-50 dark:hover:bg-emerald-950/30" wire:click="createMaterial({{ $chapter->id }})" />
+                        <x-ui.button :label="__('Tambah Kuis')" icon="o-plus-circle" ghost size="sm" class="text-amber-600 hover:bg-amber-50 dark:hover:bg-amber-950/30" wire:click="createExam({{ $chapter->id }}, 'quiz')" />
                     </div>
                 </x-ui.card>
             @endforeach
 
             @if($chapters->isEmpty())
-                <p class="text-sm text-slate-500 text-center py-4">{{ __('Belum ada bab. Klik "Tambah Bab" untuk memulai.') }}</p>
+                <div class="text-center py-10 bg-slate-50 dark:bg-slate-800/40 rounded-2xl border border-dashed border-slate-200 dark:border-slate-700">
+                    <x-ui.icon name="o-squares-2x2" class="w-12 h-12 mx-auto mb-2 text-slate-300 dark:text-slate-600" />
+                    <h4 class="font-semibold text-slate-700 dark:text-slate-300 text-sm">{{ __('Belum ada modul / bab') }}</h4>
+                    <p class="text-xs text-slate-500 mt-1 mb-3">{{ __('Mulai susun materi dengan membuat bab pertama pembelajaran.') }}</p>
+                    <x-ui.button :label="__('Tambah Bab Pertama')" icon="o-plus" class="btn-primary btn-sm" wire:click="createChapter" />
+                </div>
             @endif
 
             {{-- UTS / UAS --}}
             <x-ui.card shadow>
-                <div class="flex flex-wrap items-center justify-between gap-2 mb-2">
-                    <h3 class="font-bold text-sm uppercase tracking-wide text-slate-700 dark:text-slate-300">{{ __('Ujian Tengah / Akhir Semester') }}</h3>
+                <div class="flex flex-wrap items-center justify-between gap-2 mb-3 pb-2 border-b border-slate-100 dark:border-slate-800">
+                    <div>
+                        <h3 class="font-bold text-sm uppercase tracking-wide text-slate-700 dark:text-slate-300 flex items-center gap-2">
+                            <x-ui.icon name="o-academic-cap" class="w-4 h-4 text-emerald-600" />
+                            {{ __('Evaluasi Semester (UTS / UAS)') }}
+                        </h3>
+                        <p class="text-xs text-slate-400 mt-0.5">{{ __('Ujian evaluasi tengah atau akhir semester untuk siswa.') }}</p>
+                    </div>
                     <div class="flex gap-2">
-                        <x-ui.button :label="__('UTS')" icon="o-plus" ghost size="sm" wire:click="createExam(null, 'midterm')" />
-                        <x-ui.button :label="__('UAS')" icon="o-plus" ghost size="sm" wire:click="createExam(null, 'final')" />
+                        <x-ui.button :label="__('+ UTS')" icon="o-clipboard-document-check" ghost size="sm" class="text-amber-600 hover:bg-amber-50 dark:hover:bg-amber-950/30" wire:click="createExam(null, 'midterm')" />
+                        <x-ui.button :label="__('+ UAS')" icon="o-academic-cap" ghost size="sm" class="text-rose-600 hover:bg-rose-50 dark:hover:bg-rose-950/30" wire:click="createExam(null, 'final')" />
                     </div>
                 </div>
                 @forelse($termExams as $exam)
@@ -552,14 +584,11 @@ new #[Layout('components.layouts.app')] class extends Component {
 
     {{-- Modal bab --}}
     <x-ui.modal wire:model="chapterModal" persistent class="max-w-lg">
-        <x-ui.header :title="$editingChapterId ? __('Edit Bab') : __('Tambah Bab')" separator />
+        <x-ui.header :title="$editingChapterId ? __('Edit Bab') : __('Tambah Bab Baru')" :subtitle="__('Masukkan judul dan deskripsi bab / modul.')" separator />
         <form wire:submit="saveChapter" class="space-y-4">
-            <x-ui.input wire:model="chapterTitle" :label="__('Judul Bab')" placeholder="Pengenalan Aljabar" required />
-            <div>
-                <label class="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1">{{ __('Deskripsi (opsional)') }}</label>
-                <textarea wire:model="chapterDescription" rows="3" class="w-full rounded-lg border-slate-300 dark:border-slate-600 dark:bg-slate-800 dark:text-white"></textarea>
-            </div>
-            <div class="flex justify-end gap-2">
+            <x-ui.input wire:model="chapterTitle" :label="__('Judul Bab')" placeholder="misal: Bab 1 - Pengenalan Aljabar" required />
+            <x-ui.textarea wire:model="chapterDescription" :label="__('Deskripsi (opsional)')" rows="3" placeholder="Ringkasan kompetensi atau isi bab..." />
+            <div class="flex justify-end gap-2 pt-2">
                 <x-ui.button :label="__('Batal')" ghost @click="show = false" />
                 <x-ui.button :label="__('Simpan')" type="submit" class="btn-primary" spinner="saveChapter" />
             </div>
@@ -568,56 +597,68 @@ new #[Layout('components.layouts.app')] class extends Component {
 
     {{-- Modal materi --}}
     <x-ui.modal wire:model="materialModal" persistent class="max-w-2xl">
-        <x-ui.header :title="$editingMaterialId ? __('Edit Materi') : __('Tambah Materi')" separator />
+        <x-ui.header :title="$editingMaterialId ? __('Edit Materi') : __('Tambah Materi Baru')" :subtitle="__('Masukkan detail materi pembelajaran modul.')" separator />
         <form wire:submit="saveMaterial" class="space-y-4">
-            <x-ui.input wire:model="materialTitle" :label="__('Judul')" required />
+            <x-ui.input wire:model="materialTitle" :label="__('Judul Materi')" placeholder="misal: Pengenalan Variabel dan Konstanta" required />
+            
             <x-ui.select
                 wire:model.live="materialType"
-                :label="__('Tipe')"
+                :label="__('Tipe Materi')"
                 :options="[
-                    ['id' => 'text', 'name' => __('Teks')],
-                    ['id' => 'slides', 'name' => __('Slide / PDF')],
-                    ['id' => 'video', 'name' => __('Video + Transkrip')],
-                    ['id' => 'handbook', 'name' => __('Buku Pegangan')],
+                    ['id' => 'text', 'name' => __('Artikel / Teks')],
+                    ['id' => 'slides', 'name' => __('Slide Presentasi (PDF)')],
+                    ['id' => 'video', 'name' => __('Video Pembelajaran + Transkrip')],
+                    ['id' => 'handbook', 'name' => __('Buku Pegangan Utama (PDF)')],
                 ]"
                 option-label="name"
             />
 
             @if($materialType === 'video')
-                <x-ui.input wire:model="videoUrl" :label="__('Tautan Video (YouTube / Google Drive)')" placeholder="https://..." />
-                <div>
-                    <label class="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1">{{ __('Transkrip') }}</label>
-                    <textarea wire:model="transcript" rows="4" class="w-full rounded-lg border-slate-300 dark:border-slate-600 dark:bg-slate-800 dark:text-white"></textarea>
+                <div class="space-y-3 p-4 rounded-xl bg-slate-50 dark:bg-slate-800/60 border border-slate-200 dark:border-slate-700">
+                    <x-ui.input wire:model="videoUrl" :label="__('Tautan Video (YouTube / Google Drive)')" placeholder="https://www.youtube.com/watch?v=..." />
+                    <x-ui.textarea wire:model="transcript" :label="__('Transkrip & Ringkasan Video')" rows="4" placeholder="Tuliskan poin-poin penjelasan penting atau transkrip video di sini..." />
                 </div>
             @endif
 
             @if($materialType !== 'slides')
-                <div>
-                    <label class="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1">{{ __('Isi / Penjelasan') }}</label>
-                    <textarea wire:model="materialContent" rows="5" class="w-full rounded-lg border-slate-300 dark:border-slate-600 dark:bg-slate-800 dark:text-white"></textarea>
-                </div>
+                <x-ui.textarea wire:model="materialContent" :label="__('Isi / Penjelasan Materi')" rows="6" placeholder="Tuliskan materi pembelajaran lengkap di sini..." />
             @endif
 
             @if(in_array($materialType, ['slides', 'handbook', 'text'], true))
-                <div>
-                    <label class="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1">{{ __('File (PDF)') }}</label>
-                    <input type="file" wire:model="uploadFiles" multiple accept=".pdf,application/pdf" class="block w-full text-sm text-slate-500" />
-                    <div wire:loading wire:target="uploadFiles" class="text-xs text-emerald-600 mt-1">{{ __('Mengunggah...') }}</div>
-                    @error('uploadFiles.*') <span class="text-xs text-red-500">{{ $message }}</span> @enderror
+                <div class="space-y-2">
+                    <x-ui.file
+                        wire:model="uploadFiles"
+                        :label="__('Berkas Dokumen / Slide (PDF)')"
+                        accept=".pdf,application/pdf"
+                        multiple
+                        :hint="__('Pilih satu atau beberapa berkas PDF (maksimal 50MB per berkas).')"
+                    />
+                    <div wire:loading wire:target="uploadFiles" class="text-xs text-emerald-600 flex items-center gap-1.5 font-medium">
+                        <span class="animate-spin inline-block w-3.5 h-3.5 border-2 border-emerald-600 border-t-transparent rounded-full"></span>
+                        {{ __('Mengunggah berkas...') }}
+                    </div>
                 </div>
             @endif
 
             @if($editingMaterialId)
                 @php($editingMaterial = \App\Models\OnlineMaterial::find($editingMaterialId))
-                @foreach($editingMaterial?->attachments ?? [] as $index => $attachment)
-                    <div class="flex items-center justify-between text-xs p-2 bg-slate-50 dark:bg-slate-800 rounded-lg" wire:key="att-{{ $index }}">
-                        <span>{{ $attachment['name'] }}</span>
-                        <x-ui.button icon="o-x-mark" ghost size="xs" class="text-red-500" wire:confirm="{{ __('Hapus file ini?') }}" wire:click="removeAttachment({{ $editingMaterialId }}, {{ $index }})" />
+                @if(!empty($editingMaterial?->attachments))
+                    <div class="space-y-1.5 pt-2">
+                        <label class="block text-xs font-semibold text-slate-500 uppercase tracking-wider">{{ __('Berkas Terlampir Saat Ini') }}</label>
+                        @foreach($editingMaterial->attachments as $index => $attachment)
+                            <div class="flex items-center justify-between text-xs p-2.5 bg-slate-50 dark:bg-slate-800 rounded-xl border border-slate-200 dark:border-slate-700" wire:key="att-{{ $index }}">
+                                <span class="font-medium truncate flex items-center gap-2">
+                                    <x-ui.icon name="o-paper-clip" class="w-4 h-4 text-emerald-600 shrink-0" />
+                                    <span class="truncate">{{ $attachment['name'] }}</span>
+                                </span>
+                                <x-ui.button icon="o-trash" ghost size="xs" class="text-red-500 hover:text-red-700" wire:confirm="{{ __('Hapus file ini?') }}" wire:click="removeAttachment({{ $editingMaterialId }}, {{ $index }})" />
+                            </div>
+                        @endforeach
                     </div>
-                @endforeach
+                @endif
             @endif
 
-            <div class="flex justify-end gap-2">
+            <div class="flex justify-end gap-2 pt-2">
                 <x-ui.button :label="__('Batal')" ghost @click="show = false" />
                 <x-ui.button :label="__('Simpan')" type="submit" class="btn-primary" spinner="saveMaterial" />
             </div>
@@ -626,15 +667,18 @@ new #[Layout('components.layouts.app')] class extends Component {
 
     {{-- Modal kuis / ujian --}}
     <x-ui.modal wire:model="examModal" persistent class="max-w-lg">
-        <x-ui.header :title="$editingExamId ? __('Edit Kuis / Ujian') : __('Tambah Kuis / Ujian')" separator />
+        <x-ui.header :title="$editingExamId ? __('Edit Kuis / Ujian') : __('Tambah Kuis / Ujian')" :subtitle="__('Atur judul, durasi pengerjaan, dan KKM kelulusan.')" separator />
         <form wire:submit="saveExam" class="space-y-4">
-            <x-ui.input wire:model="examTitle" :label="__('Judul')" required />
+            <x-ui.input wire:model="examTitle" :label="__('Judul Kuis / Ujian')" placeholder="misal: Kuis Evaluasi Bab 1" required />
             <div class="grid grid-cols-2 gap-4">
                 <x-ui.input wire:model="durationMinutes" :label="__('Durasi (menit)')" type="number" min="1" />
-                <x-ui.input wire:model="passingGrade" :label="__('Nilai minimal (KKM)')" type="number" min="0" max="100" />
+                <x-ui.input wire:model="passingGrade" :label="__('Nilai Minimal (KKM)')" type="number" min="0" max="100" />
             </div>
-            <p class="text-xs text-slate-500">{{ __('Soal ditambahkan setelah disimpan, lewat tombol "Soal".') }}</p>
-            <div class="flex justify-end gap-2">
+            <div class="p-3 bg-amber-50 dark:bg-amber-950/30 rounded-xl border border-amber-200 dark:border-amber-800/60 text-xs text-amber-800 dark:text-amber-300 flex items-center gap-2">
+                <x-ui.icon name="o-information-circle" class="w-5 h-5 shrink-0 text-amber-600" />
+                <span>{{ __('Setelah kuis/ujian dibuat, klik tombol "Soal" pada baris kuis untuk mengisi butir pertanyaan.') }}</span>
+            </div>
+            <div class="flex justify-end gap-2 pt-2">
                 <x-ui.button :label="__('Batal')" ghost @click="show = false" />
                 <x-ui.button :label="__('Simpan')" type="submit" class="btn-primary" spinner="saveExam" />
             </div>
