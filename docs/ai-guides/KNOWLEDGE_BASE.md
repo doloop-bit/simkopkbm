@@ -888,7 +888,7 @@ Modul E-Learning diperuntukkan bagi siswa daring untuk mengakses materi dan meng
 
 ### **2. Route & Hak Akses**
 - **Admin**:
-  - `admin.elearning.materials` — Manajemen materi daring
+  - `admin.elearning.course` — Kelola materi per kelas/mapel pada semester aktif dalam satu halaman: Buku Pegangan, Bab (materi + kuis), UTS/UAS. Siswa: `student.subject-outline` dengan penguncian berurutan (`ElearningCourseOutlineService`).
   - `admin.elearning.exams` — Manajemen ulangan daring
   - `admin.elearning.exam-questions` — Kelola butir soal ulangan
   - `admin.elearning.grade-recap` — Dashboard rekap nilai seluruh siswa & filter kelas/mapel
