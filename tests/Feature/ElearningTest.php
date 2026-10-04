@@ -5,6 +5,7 @@ declare(strict_types=1);
 use App\Models\AcademicYear;
 use App\Models\Classroom;
 use App\Models\Level;
+use App\Models\MaterialChapter;
 use App\Models\OnlineExam;
 use App\Models\OnlineExamAnswer;
 use App\Models\OnlineExamQuestion;
@@ -21,35 +22,69 @@ beforeEach(function () {
     $this->withoutVite();
 });
 
-test('admin can access elearning materials page', function () {
+test('admin can access elearning course page', function () {
     $admin = User::factory()->admin()->create();
 
     $this->actingAs($admin)
-        ->get(route('admin.elearning.materials'))
+        ->get(route('admin.elearning.course'))
         ->assertOk()
-        ->assertSee('Materi Online');
+        ->assertSee('Materi Pelajaran');
 });
 
-test('admin can create online material via livewire', function () {
+test('admin can build chapter, material, and quiz from the course page', function () {
     $admin = User::factory()->admin()->create();
     $level = Level::factory()->create();
-    $classroom = Classroom::factory()->create(['level_id' => $level->id]);
-    $subject = Subject::factory()->create(['level_id' => $level->id]);
     $academicYear = AcademicYear::factory()->create(['is_active' => true, 'active_semester' => 'Ganjil']);
+    $classroom = Classroom::factory()->create(['level_id' => $level->id, 'academic_year_id' => $academicYear->id]);
+    $subject = Subject::factory()->create(['level_id' => $level->id]);
 
-    Livewire::actingAs($admin)
-        ->test('admin.elearning.materials')
-        ->set('subject_id', $subject->id)
-        ->set('classroom_id', $classroom->id)
-        ->set('academic_year_id', $academicYear->id)
-        ->set('semester', 'Ganjil')
-        ->set('title', 'Materi Aljabar Linear')
-        ->set('content', '<p>Pembahasan matriks dan vektor.</p>')
-        ->set('is_published', true)
-        ->call('save')
+    $component = Livewire::actingAs($admin)
+        ->test('admin.elearning.course')
+        ->set('classroomId', $classroom->id)
+        ->call('openSubject', $subject->id)
+        ->set('chapterTitle', 'Aljabar')
+        ->call('saveChapter')
         ->assertHasNoErrors();
 
-    expect(OnlineMaterial::where('title', 'Materi Aljabar Linear')->exists())->toBeTrue();
+    $chapter = MaterialChapter::firstWhere('title', 'Aljabar');
+    expect($chapter->classroom_id)->toBe($classroom->id)
+        ->and($chapter->semester)->toBe('Ganjil')
+        ->and($chapter->order)->toBe(1);
+
+    $component
+        ->call('createMaterial', $chapter->id)
+        ->set('materialTitle', 'Pengenalan Aljabar')
+        ->call('saveMaterial')
+        ->assertHasNoErrors()
+        ->call('createExam', $chapter->id, 'quiz')
+        ->call('saveExam')
+        ->assertHasNoErrors();
+
+    expect(OnlineMaterial::firstWhere('title', 'Pengenalan Aljabar')->chapter_id)->toBe($chapter->id)
+        ->and(OnlineExam::firstWhere('title', 'Kuis')->exam_type)->toBe('quiz');
+});
+
+test('admin can reorder chapters from the course page', function () {
+    $admin = User::factory()->admin()->create();
+    $level = Level::factory()->create();
+    $academicYear = AcademicYear::factory()->create(['is_active' => true]);
+    $classroom = Classroom::factory()->create(['level_id' => $level->id, 'academic_year_id' => $academicYear->id]);
+    $subject = Subject::factory()->create(['level_id' => $level->id]);
+
+    $component = Livewire::actingAs($admin)
+        ->test('admin.elearning.course')
+        ->set('classroomId', $classroom->id)
+        ->call('openSubject', $subject->id);
+
+    foreach (['Satu', 'Dua'] as $title) {
+        $component->call('createChapter')->set('chapterTitle', $title)->call('saveChapter');
+    }
+
+    $second = MaterialChapter::firstWhere('title', 'Dua');
+    $component->call('moveChapter', $second->id, 'up');
+
+    expect(MaterialChapter::firstWhere('title', 'Dua')->order)->toBe(1)
+        ->and(MaterialChapter::firstWhere('title', 'Satu')->order)->toBe(2);
 });
 
 test('admin can access elearning exams page and create exam', function () {
