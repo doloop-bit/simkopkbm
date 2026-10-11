@@ -496,23 +496,9 @@ new #[Layout('components.layouts.app')] class extends Component {
         if ($classroom) {
             $phase = $classroom->level?->phase_map[$classroom->class_level] ?? null;
 
-            $subjects = Subject::query()
-                ->where(function ($q) use ($classroom, $phase) {
-                    if ($phase) {
-                        $q->where('phase', $phase);
-                    }
-                    if ($classroom->level_id) {
-                        $q->orWhere('level_id', $classroom->level_id);
-                    }
-                    $q->orWhereNull('level_id');
-                })
-                ->orderBy('name')
-                ->get();
-
-            // Fallback jika tidak ada filter yang match, tampilkan seluruh mata pelajaran yang ada
-            if ($subjects->isEmpty()) {
-                $subjects = Subject::orderBy('name')->get();
-            }
+            $subjects = $phase
+                ? Subject::query()->where('phase', $phase)->orderBy('name')->get()
+                : collect();
         }
 
         $subject = $this->subjectId ? Subject::find($this->subjectId) : null;
@@ -669,10 +655,20 @@ new #[Layout('components.layouts.app')] class extends Component {
                                     <div class="p-3 rounded-xl bg-emerald-50 dark:bg-emerald-950/40 text-emerald-600">
                                         <x-ui.icon name="o-book-open" class="w-6 h-6" />
                                     </div>
-                                    <div>
+                                    <div class="min-w-0">
                                         <h3 class="font-bold text-slate-900 dark:text-white">{{ $item->name }}</h3>
-                                        <p class="text-xs text-slate-500">{{ __('Klik untuk kelola materi') }}</p>
+                                        @if($item->phase || $item->code)
+                                            <div class="flex flex-wrap items-center gap-1.5 mt-1">
+                                                @if($item->phase)
+                                                    <x-ui.badge :label="'Fase ' . $item->phase" variant="info" flat size="xs" />
+                                                @endif
+                                                @if($item->code)
+                                                    <span class="text-[10px] font-mono text-slate-400">{{ $item->code }}</span>
+                                                @endif
+                                            </div>
+                                        @endif
                                     </div>
+
                                 </div>
                             </x-ui.card>
                         </button>
