@@ -9,6 +9,11 @@ updates:
     labels:
       - "dependencies"
       - "php"
+    groups:
+      composer-routine:
+        update-types:
+          - "minor"
+          - "patch"
 
   # Update for NPM (JavaScript & CSS) dependencies
   - package-ecosystem: "npm"
@@ -20,6 +25,11 @@ updates:
       - "dependencies"
       - "javascript"
       - "css"
+    groups:
+      npm-routine:
+        update-types:
+          - "minor"
+          - "patch"
 
   # Update for GitHub Actions
   - package-ecosystem: "github-actions"

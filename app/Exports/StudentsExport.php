@@ -29,9 +29,11 @@ class StudentsExport implements FromQuery, WithHeadings, WithMapping
                     ]);
                 },
             ])
-            ->when($this->search, fn ($q) => $q->where('name', 'like', "%{$this->search}%")
-                ->orWhere('email', 'like', "%{$this->search}%")
-                ->orWhereHas('latestProfile', fn ($pq) => $pq->whereHasMorph('profileable', [StudentProfile::class], fn ($sq) => $sq->where('nis', 'like', "%{$this->search}%")->orWhere('nisn', 'like', "%{$this->search}%"))))
+            ->when($this->search, fn ($q) => $q->where(function ($sub) {
+                $sub->where('name', 'like', "%{$this->search}%")
+                    ->orWhere('email', 'like', "%{$this->search}%")
+                    ->orWhereHas('latestProfile', fn ($pq) => $pq->whereHasMorph('profileable', [StudentProfile::class], fn ($sq) => $sq->where('nis', 'like', "%{$this->search}%")->orWhere('nisn', 'like', "%{$this->search}%")));
+            }))
             ->when($this->filter_classroom_id, fn ($q) => $q->whereHas('latestProfile', fn ($pq) => $pq->whereHasMorph('profileable', [StudentProfile::class], fn ($sq) => $sq->where('classroom_id', $this->filter_classroom_id))))
             ->when($this->filter_level_id, fn ($q) => $q->whereHas('latestProfile', fn ($pq) => $pq->whereHasMorph('profileable', [StudentProfile::class], fn ($sq) => $sq->whereHas('classroom', fn ($cq) => $cq->where('level_id', $this->filter_level_id)))))
             ->orderBy('name');

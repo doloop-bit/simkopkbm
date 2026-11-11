@@ -75,4 +75,59 @@ class Classroom extends Model
 
         return $phase ? "Fase {$phase}" : '-';
     }
+
+    /**
+     * Copy classrooms (and optionally homeroom teachers & teacher assignments) from one academic year to another.
+     *
+     * @return int Number of newly created classrooms
+     */
+    public static function copyFromYear(
+        int $sourceYearId,
+        int $targetYearId,
+        bool $copyHomeroom = true,
+        bool $copyAssignments = false
+    ): int {
+        if ($sourceYearId === $targetYearId) {
+            return 0;
+        }
+
+        $sourceClassrooms = self::with('teacherAssignments')
+            ->where('academic_year_id', $sourceYearId)
+            ->get();
+
+        $copiedCount = 0;
+
+        foreach ($sourceClassrooms as $source) {
+            $newClassroom = self::firstOrCreate(
+                [
+                    'academic_year_id' => $targetYearId,
+                    'level_id' => $source->level_id,
+                    'name' => $source->name,
+                ],
+                [
+                    'class_level' => $source->class_level,
+                    'homeroom_teacher_id' => $copyHomeroom ? $source->homeroom_teacher_id : null,
+                ]
+            );
+
+            if ($newClassroom->wasRecentlyCreated) {
+                $copiedCount++;
+            }
+
+            if ($copyAssignments) {
+                foreach ($source->teacherAssignments as $assignment) {
+                    TeacherAssignment::firstOrCreate([
+                        'academic_year_id' => $targetYearId,
+                        'classroom_id' => $newClassroom->id,
+                        'teacher_id' => $assignment->teacher_id,
+                        'subject_id' => $assignment->subject_id,
+                        'diniyah_subject_id' => $assignment->diniyah_subject_id,
+                        'type' => $assignment->type,
+                    ]);
+                }
+            }
+        }
+
+        return $copiedCount;
+    }
 }

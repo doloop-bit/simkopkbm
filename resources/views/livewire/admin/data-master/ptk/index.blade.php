@@ -183,8 +183,10 @@ new #[Layout('components.layouts.app')] class extends Component {
                 ->whereNotIn('role', ['siswa'])
                 ->with(['profile.profileable'])
                 ->when($this->search, function ($query) {
-                    $query->where('name', 'like', '%' . $this->search . '%')
-                        ->orWhere('email', 'like', '%' . $this->search . '%');
+                    $query->where(function ($sub) {
+                        $sub->where('name', 'like', '%' . $this->search . '%')
+                            ->orWhere('email', 'like', '%' . $this->search . '%');
+                    });
                 })
                 ->latest()
                 ->paginate(10),
