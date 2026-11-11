@@ -20,6 +20,13 @@ new #[Layout('components.layouts.app')] class extends Component {
     public ?int $homeroom_teacher_id = null;
     public bool $classroomModal = false;
 
+    // Copy Classrooms Modal
+    public bool $copyModal = false;
+    public ?int $copy_source_year_id = null;
+    public ?int $copy_target_year_id = null;
+    public bool $copy_homeroom = true;
+    public bool $copy_assignments = true;
+
     // Filter and Sort
     public string $search = '';
     public ?int $filter_level_id = null;
@@ -138,6 +145,46 @@ new #[Layout('components.layouts.app')] class extends Component {
         $classroom->delete();
     }
 
+    public function openCopyModal(): void
+    {
+        $this->resetValidation();
+        $activeYear = AcademicYear::where('is_active', true)->first();
+        $this->copy_target_year_id = $this->academic_year_id ?? $activeYear?->id;
+
+        $previousYear = AcademicYear::where('id', '!=', $this->copy_target_year_id)
+            ->orderByDesc('end_date')
+            ->first();
+
+        $this->copy_source_year_id = $previousYear?->id;
+        $this->copy_homeroom = true;
+        $this->copy_assignments = true;
+        $this->copyModal = true;
+    }
+
+    public function copyClassrooms(): void
+    {
+        $this->validate([
+            'copy_source_year_id' => ['required', 'exists:academic_years,id', 'different:copy_target_year_id'],
+            'copy_target_year_id' => ['required', 'exists:academic_years,id'],
+        ], [
+            'copy_source_year_id.different' => __('Tahun ajaran asal dan tujuan tidak boleh sama.'),
+        ]);
+
+        $copiedCount = Classroom::copyFromYear(
+            (int) $this->copy_source_year_id,
+            (int) $this->copy_target_year_id,
+            $this->copy_homeroom,
+            $this->copy_assignments
+        );
+
+        $this->academic_year_id = (int) $this->copy_target_year_id;
+        $this->copyModal = false;
+
+        session()->flash('success', __('Berhasil menyalin :count kelas ke tahun ajaran tujuan.', [
+            'count' => $copiedCount,
+        ]));
+    }
+
     public function with(): array
     {
         return [
@@ -155,10 +202,17 @@ new #[Layout('components.layouts.app')] class extends Component {
 }; ?>
 
 <div class="p-6 space-y-6 text-slate-900 dark:text-white">
+    @if (session('success'))
+        <x-ui.alert :title="__('Berhasil')" icon="o-check-circle" class="bg-emerald-50 text-emerald-800 border-emerald-100" dismissible>
+            {{ session('success') }}
+        </x-ui.alert>
+    @endif
+
     <x-ui.header :title="__('Manajemen Kelas')" :subtitle="__('Kelola rombongan belajar dan wali kelas.')" separator>
         <x-slot:actions>
-            <div class="flex items-center gap-3">
+            <div class="flex flex-wrap items-center gap-3">
                 <x-ui.input wire:model.live.debounce.300ms="search" :placeholder="__('Cari kelas...')" icon="o-magnifying-glass" class="w-64" clearable />
+                <x-ui.button :label="__('Salin Kelas')" icon="o-document-duplicate" ghost wire:click="openCopyModal" wire:loading.attr="disabled" />
                 <x-ui.button :label="__('Tambah Kelas')" icon="o-plus" class="btn-primary" wire:click="createNew" wire:loading.attr="disabled" />
             </div>
         </x-slot:actions>
@@ -271,6 +325,42 @@ new #[Layout('components.layouts.app')] class extends Component {
             <div class="flex justify-end gap-2 pt-4">
                 <x-ui.button :label="__('Batal')" ghost @click="show = false" />
                 <x-ui.button :label="__('Simpan')" type="submit" class="btn-primary" spinner="save" />
+            </div>
+        </form>
+    </x-ui.modal>
+
+    <x-ui.modal wire:model="copyModal" persistent>
+        <x-ui.header :title="__('Salin Kelas Antar Tahun Ajaran')" :subtitle="__('Duplikasi daftar rombongan belajar dari tahun ajaran sebelumnya.')" separator />
+
+        <form wire:submit="copyClassrooms" class="space-y-6">
+            <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                <x-ui.select
+                    wire:model="copy_source_year_id"
+                    :label="__('Dari Tahun Ajaran (Asal)')"
+                    :options="$years"
+                    :placeholder="__('Pilih Tahun Asal')"
+                    required
+                />
+                <x-ui.select
+                    wire:model="copy_target_year_id"
+                    :label="__('Ke Tahun Ajaran (Tujuan)')"
+                    :options="$years"
+                    :placeholder="__('Pilih Tahun Tujuan')"
+                    required
+                />
+            </div>
+
+            <div class="p-4 rounded-xl bg-slate-50 dark:bg-slate-800/60 border border-slate-200 dark:border-slate-700 space-y-3">
+                <span class="text-xs font-semibold uppercase tracking-wider text-slate-500 dark:text-slate-400 block">
+                    {{ __('Opsi Penyalinan') }}
+                </span>
+                <x-ui.checkbox wire:model="copy_homeroom" :label="__('Sertakan Wali Kelas (Homeroom Teacher)')" />
+                <x-ui.checkbox wire:model="copy_assignments" :label="__('Sertakan Penugasan Guru Mata Pelajaran & Kelas')" />
+            </div>
+
+            <div class="flex justify-end gap-2 pt-4">
+                <x-ui.button :label="__('Batal')" ghost @click="show = false" />
+                <x-ui.button :label="__('Salin Kelas')" icon="o-document-duplicate" type="submit" class="btn-primary" spinner="copyClassrooms" />
             </div>
         </form>
     </x-ui.modal>
