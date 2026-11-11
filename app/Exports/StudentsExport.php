@@ -22,7 +22,13 @@ class StudentsExport implements FromQuery, WithHeadings, WithMapping
     public function query()
     {
         return User::where('role', 'siswa')
-            ->with(['latestProfile.profileable.classroom.level'])
+            ->with([
+                'latestProfile.profileable' => function (\Illuminate\Database\Eloquent\Relations\MorphTo $morphTo) {
+                    $morphTo->morphWith([
+                        StudentProfile::class => ['classroom.level'],
+                    ]);
+                },
+            ])
             ->when($this->search, fn ($q) => $q->where('name', 'like', "%{$this->search}%")
                 ->orWhere('email', 'like', "%{$this->search}%")
                 ->orWhereHas('latestProfile', fn ($pq) => $pq->whereHasMorph('profileable', [StudentProfile::class], fn ($sq) => $sq->where('nis', 'like', "%{$this->search}%")->orWhere('nisn', 'like', "%{$this->search}%"))))
