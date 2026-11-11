@@ -20,7 +20,13 @@ new #[Layout('components.layouts.app')] class extends Component {
 
         $students = User::where('role', 'siswa')
             ->whereHas('latestProfile', fn($q) => $q->whereIn('classroom_id', $assignedClassroomIds))
-            ->with(['latestProfile.profileable.classroom.level', 'latestProfile.profileable.classroom.academicYear'])
+            ->with([
+                'latestProfile.profileable' => function (\Illuminate\Database\Eloquent\Relations\MorphTo $morphTo) {
+                    $morphTo->morphWith([
+                        \App\Models\StudentProfile::class => ['classroom.level', 'classroom.academicYear'],
+                    ]);
+                },
+            ])
             ->orderBy('name')
             ->get();
 

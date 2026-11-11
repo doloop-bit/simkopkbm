@@ -350,7 +350,13 @@ new #[Layout('components.layouts.app')] class extends Component {
     {
         return [
             'students' => User::where('role', 'siswa')
-                ->with(['latestProfile.profileable.classroom.level'])
+                ->with([
+                    'latestProfile.profileable' => function (\Illuminate\Database\Eloquent\Relations\MorphTo $morphTo) {
+                        $morphTo->morphWith([
+                            StudentProfile::class => ['classroom.level'],
+                        ]);
+                    },
+                ])
                 ->when(
                     $this->search,
                     fn($q) => $q
