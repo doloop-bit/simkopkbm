@@ -196,7 +196,7 @@ new #[Layout('components.layouts.app')] class extends Component {
                 </span>
             @endscope
 
-            @scope('cell_is_active', $activity)
+            @scope('cell_is_active', $activity, $isAdmin)
                 @if($isAdmin)
                     <button wire:click="toggleStatus({{ $activity->id }})" class="focus:outline-none group">
                         @if($activity->is_active)
@@ -214,7 +214,7 @@ new #[Layout('components.layouts.app')] class extends Component {
                 @endif
             @endscope
 
-            @scope('cell_actions', $activity)
+            @scope('cell_actions', $activity, $isAdmin)
                 @if($isAdmin)
                     <div class="flex justify-end gap-1">
                         <x-ui.button icon="o-pencil-square" wire:click="edit({{ $activity->id }})" ghost wire:loading.attr="disabled" />

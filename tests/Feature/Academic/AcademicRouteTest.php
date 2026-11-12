@@ -1,5 +1,7 @@
 <?php
 
+use App\Models\ExtracurricularActivity;
+use App\Models\Level;
 use App\Models\User;
 
 use function Pest\Laravel\actingAs;
@@ -50,6 +52,26 @@ test('admin can access assignments page', function () {
         ->get(route('academic.assignments'))
         ->assertOk()
         ->assertSeeLivewire('admin.academic.teacher-assignments');
+});
+
+test('admin can access extracurriculars page with existing activities', function () {
+    $user = User::factory()->create(['role' => 'admin']);
+    $level = Level::create([
+        'name' => 'Paket B',
+        'education_level' => 'smp',
+        'type' => 'subject_teacher',
+    ]);
+    ExtracurricularActivity::create([
+        'name' => 'Pramuka',
+        'instructor' => 'Pak Budi',
+        'level_id' => $level->id,
+        'is_active' => true,
+    ]);
+
+    actingAs($user)
+        ->get(route('academic.extracurriculars'))
+        ->assertOk()
+        ->assertSee('Pramuka');
 });
 
 test('non-admin cannot access academic routes', function (string $role) {

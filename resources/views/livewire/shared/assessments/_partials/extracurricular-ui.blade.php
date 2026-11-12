@@ -77,7 +77,7 @@
                     </div>
                 @endscope
 
-                @scope('cell_capaian_level', $student)
+                @scope('cell_capaian_level', $student, $isReadonly)
                     <div class="flex justify-center">
                         <x-ui.select 
                             wire:model="assessments_data.{{ $student->id }}.level" 
@@ -93,7 +93,7 @@
                     </div>
                 @endscope
 
-                @scope('cell_capaian_desc', $student)
+                @scope('cell_capaian_desc', $student, $isReadonly)
                     <x-ui.input 
                         wire:model="assessments_data.{{ $student->id }}.description" 
                         :placeholder="__('Keterangan pencapaian siswa...')"
