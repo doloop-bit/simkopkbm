@@ -218,6 +218,7 @@ new #[Layout('components.layouts.app')] class extends Component {
         }
         $this->promoSourceClassrooms = Classroom::where('academic_year_id', $this->promo_source_year_id)
             ->where('level_id', $this->promo_source_level_id)
+            ->orderBy('class_level')
             ->orderBy('name')
             ->get()
             ->map(fn ($c) => ['id' => $c->id, 'name' => $c->name])
@@ -232,6 +233,7 @@ new #[Layout('components.layouts.app')] class extends Component {
         }
         $this->promoTargetClassrooms = Classroom::where('academic_year_id', $this->promo_target_year_id)
             ->where('level_id', $this->promo_target_level_id)
+            ->orderBy('class_level')
             ->orderBy('name')
             ->get()
             ->map(fn ($c) => ['id' => $c->id, 'name' => $c->name])
@@ -314,6 +316,7 @@ new #[Layout('components.layouts.app')] class extends Component {
         }
         $this->gradClassrooms = Classroom::where('academic_year_id', $this->grad_year_id)
             ->where('level_id', $this->grad_level_id)
+            ->orderBy('class_level')
             ->orderBy('name')
             ->get()
             ->map(fn ($c) => ['id' => $c->id, 'name' => $c->name])
@@ -366,6 +369,7 @@ new #[Layout('components.layouts.app')] class extends Component {
         if ($this->academic_year_id && $this->level_id) {
             $classrooms = Classroom::where('academic_year_id', $this->academic_year_id)
                 ->where('level_id', $this->level_id)
+                ->orderBy('class_level')
                 ->orderBy('name')
                 ->get();
         }

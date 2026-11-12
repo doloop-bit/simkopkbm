@@ -147,6 +147,8 @@ new #[Layout('components.layouts.app')] class extends Component {
 
     public function with(): array
     {
+        $activeYearId = \App\Models\AcademicYear::where('is_active', true)->value('id');
+
         return [
             'registrations' => Registration::with(['preferredLevel', 'academicYear'])
                 ->when($this->search, fn($q) => $q->where(function($sub) {
@@ -160,7 +162,12 @@ new #[Layout('components.layouts.app')] class extends Component {
                 ->orderByDesc('created_at')
                 ->paginate(15),
             'levels' => Level::orderBy('name')->get(),
-            'classrooms' => Classroom::with(['academicYear', 'level'])->orderBy('name')->get(),
+            'classrooms' => Classroom::with(['academicYear', 'level'])
+                ->when($activeYearId, fn($q) => $q->where('academic_year_id', $activeYearId))
+                ->orderBy('class_level')
+                ->orderBy('level_id')
+                ->orderBy('name')
+                ->get(),
             'statusCounts' => [
                 'all' => Registration::count(),
                 'pending' => Registration::pending()->count(),

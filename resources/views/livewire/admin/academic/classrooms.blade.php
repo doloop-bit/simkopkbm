@@ -30,10 +30,12 @@ new #[Layout('components.layouts.app')] class extends Component {
     // Filter and Sort
     public string $search = '';
     public ?int $filter_level_id = null;
-    public string $sortField = 'name';
+    public string $sortField = 'class_level';
     public string $sortDirection = 'asc';
 
     public ?Classroom $editing = null;
+    public ?Classroom $viewingClassroom = null;
+    public bool $detailModal = false;
     public array $classLevelOptions = [];
 
     public function createNew(): void
@@ -145,6 +147,21 @@ new #[Layout('components.layouts.app')] class extends Component {
         $classroom->delete();
     }
 
+    public function viewDetail(int $classroomId): void
+    {
+        $this->viewingClassroom = Classroom::with([
+            'academicYear',
+            'level',
+            'homeroomTeacher',
+            'teacherAssignments.teacher',
+            'teacherAssignments.subject',
+            'teacherAssignments.diniyahSubject',
+            'students.profile.user',
+        ])->findOrFail($classroomId);
+
+        $this->detailModal = true;
+    }
+
     public function openCopyModal(): void
     {
         $this->resetValidation();
@@ -189,10 +206,13 @@ new #[Layout('components.layouts.app')] class extends Component {
     {
         return [
             'classrooms' => Classroom::with(['academicYear', 'level', 'homeroomTeacher'])
+                ->withCount(['students', 'teacherAssignments'])
                 ->when($this->academic_year_id, fn($q) => $q->where('academic_year_id', $this->academic_year_id))
                 ->when($this->filter_level_id, fn($q) => $q->where('level_id', $this->filter_level_id))
                 ->when($this->search, fn($q) => $q->where('name', 'like', "%{$this->search}%"))
                 ->orderBy($this->sortField, $this->sortDirection)
+                ->orderBy('level_id')
+                ->orderBy('name')
                 ->paginate(15),
             'years' => AcademicYear::all(),
             'levels' => Level::all(),
@@ -250,12 +270,19 @@ new #[Layout('components.layouts.app')] class extends Component {
                 ['key' => 'phase', 'label' => __('Fase')],
                 ['key' => 'academic_year', 'label' => __('Tahun Ajaran')],
                 ['key' => 'homeroom', 'label' => __('Wali Kelas')],
+                ['key' => 'students_count', 'label' => __('Siswa'), 'class' => 'text-center'],
                 ['key' => 'actions', 'label' => '', 'class' => 'text-right']
             ]" 
             :rows="$classrooms"
         >
             @scope('cell_name', $classroom)
-                <span class="font-bold text-slate-900 dark:text-white">{{ $classroom->name }}</span>
+                <button
+                    type="button"
+                    wire:click="viewDetail({{ $classroom->id }})"
+                    class="font-bold text-slate-900 dark:text-white hover:text-indigo-600 dark:hover:text-indigo-400 transition-colors text-left"
+                >
+                    {{ $classroom->name }}
+                </button>
             @endscope
 
             @scope('cell_level', $classroom)
@@ -289,8 +316,20 @@ new #[Layout('components.layouts.app')] class extends Component {
                 </div>
             @endscope
 
+            @scope('cell_students_count', $classroom)
+                <button
+                    type="button"
+                    wire:click="viewDetail({{ $classroom->id }})"
+                    class="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-xs font-semibold bg-slate-100 hover:bg-indigo-50 text-slate-700 hover:text-indigo-700 dark:bg-slate-800 dark:hover:bg-indigo-900/30 dark:text-slate-300 dark:hover:text-indigo-300 transition-colors"
+                >
+                    <x-ui.icon name="o-users" class="size-3.5" />
+                    <span>{{ $classroom->students_count }}</span>
+                </button>
+            @endscope
+
             @scope('cell_actions', $classroom)
                 <div class="flex justify-end gap-1">
+                    <x-ui.button icon="o-eye" wire:click="viewDetail({{ $classroom->id }})" ghost wire:loading.attr="disabled" />
                     <x-ui.button icon="o-pencil-square" wire:click="edit({{ $classroom->id }})" ghost wire:loading.attr="disabled" />
                     <x-ui.button 
                         icon="o-trash" 
@@ -363,5 +402,122 @@ new #[Layout('components.layouts.app')] class extends Component {
                 <x-ui.button :label="__('Salin Kelas')" icon="o-document-duplicate" type="submit" class="btn-primary" spinner="copyClassrooms" />
             </div>
         </form>
+    </x-ui.modal>
+
+    <x-ui.modal wire:model="detailModal" maxWidth="max-w-3xl">
+        @if($viewingClassroom)
+            @php
+                $classTeachers = $viewingClassroom->teacherAssignments->where('type', 'class_teacher');
+                $subjectAssignments = $viewingClassroom->teacherAssignments->where('type', 'subject_teacher');
+                $homeroomName = $viewingClassroom->homeroomTeacher?->name
+                    ?? $classTeachers->first()?->teacher?->name
+                    ?? __('Belum Ditentukan');
+                $studentsList = $viewingClassroom->students
+                    ->filter(fn($sp) => $sp->profile?->user !== null)
+                    ->sortBy(fn($sp) => $sp->profile->user->name);
+            @endphp
+
+            <x-ui.header
+                :title="$viewingClassroom->name"
+                :subtitle="$viewingClassroom->level->name . ' • ' . __('Tahun Ajaran') . ' ' . $viewingClassroom->academicYear->name"
+                separator
+            />
+
+            <div class="space-y-6">
+                {{-- Info Ringkas & Wali Kelas --}}
+                <div class="grid grid-cols-1 sm:grid-cols-3 gap-4">
+                    <div class="p-4 rounded-xl bg-slate-50 dark:bg-slate-800/60 border border-slate-100 dark:border-slate-800">
+                        <span class="text-[11px] font-bold uppercase tracking-wider text-slate-400 block mb-1">{{ __('Wali Kelas / Guru Kelas') }}</span>
+                        <div class="flex items-center gap-2">
+                            <x-ui.icon name="o-user" class="size-4 text-indigo-500 shrink-0" />
+                            <span class="font-bold text-slate-900 dark:text-white text-sm">{{ $homeroomName }}</span>
+                        </div>
+                    </div>
+
+                    <div class="p-4 rounded-xl bg-slate-50 dark:bg-slate-800/60 border border-slate-100 dark:border-slate-800">
+                        <span class="text-[11px] font-bold uppercase tracking-wider text-slate-400 block mb-1">{{ __('Tingkat & Fase') }}</span>
+                        <span class="font-bold text-slate-900 dark:text-white text-sm">
+                            {{ $viewingClassroom->class_level !== null ? __('Kelas :level', ['level' => $viewingClassroom->class_level]) : '-' }}
+                            @if($viewingClassroom->getPhase())
+                                ({{ $viewingClassroom->phase_label }})
+                            @endif
+                        </span>
+                    </div>
+
+                    <div class="p-4 rounded-xl bg-slate-50 dark:bg-slate-800/60 border border-slate-100 dark:border-slate-800">
+                        <span class="text-[11px] font-bold uppercase tracking-wider text-slate-400 block mb-1">{{ __('Total Siswa') }}</span>
+                        <span class="font-bold text-slate-900 dark:text-white text-sm">
+                            {{ $studentsList->count() }} {{ __('Siswa') }}
+                        </span>
+                    </div>
+                </div>
+
+                {{-- Daftar Guru Pengampu --}}
+                <div class="space-y-2">
+                    <h4 class="text-xs font-bold uppercase tracking-wider text-slate-500 dark:text-slate-400">
+                        {{ __('Guru Pengampu Mata Pelajaran') }} ({{ $subjectAssignments->count() }})
+                    </h4>
+                    @if($subjectAssignments->isNotEmpty())
+                        <div class="grid grid-cols-1 sm:grid-cols-2 gap-2.5 max-h-48 overflow-y-auto pr-1">
+                            @foreach($subjectAssignments as $assignment)
+                                <div class="flex items-center justify-between p-3 rounded-xl border border-slate-100 dark:border-slate-800 bg-white dark:bg-slate-900">
+                                    <div class="min-w-0">
+                                        <p class="text-xs font-bold text-slate-900 dark:text-white truncate">
+                                            {{ $assignment->subject?->name ?? $assignment->diniyahSubject?->name ?? __('Mata Pelajaran') }}
+                                        </p>
+                                        <p class="text-xs text-slate-500 dark:text-slate-400 truncate">
+                                            {{ $assignment->teacher?->name ?? '-' }}
+                                        </p>
+                                    </div>
+                                    @if($assignment->diniyah_subject_id)
+                                        <x-ui.badge :label="__('Diniyah')" class="bg-emerald-50 text-emerald-700 dark:bg-emerald-900/30 dark:text-emerald-400 text-[10px]" />
+                                    @endif
+                                </div>
+                            @endforeach
+                        </div>
+                    @else
+                        <div class="p-4 rounded-xl border border-dashed border-slate-200 dark:border-slate-800 text-center text-xs text-slate-400 italic">
+                            {{ __('Belum ada penugasan guru mata pelajaran di kelas ini.') }}
+                        </div>
+                    @endif
+                </div>
+
+                {{-- Daftar Siswa --}}
+                <div class="space-y-2">
+                    <h4 class="text-xs font-bold uppercase tracking-wider text-slate-500 dark:text-slate-400">
+                        {{ __('Daftar Siswa') }} ({{ $studentsList->count() }})
+                    </h4>
+                    @if($studentsList->isNotEmpty())
+                        <div class="max-h-64 overflow-y-auto rounded-xl border border-slate-100 dark:border-slate-800 divide-y divide-slate-100 dark:divide-slate-800">
+                            @foreach($studentsList as $studentProfile)
+                                @php $studentUser = $studentProfile->profile->user; @endphp
+                                <div class="flex items-center justify-between px-4 py-2.5 bg-white dark:bg-slate-900 hover:bg-slate-50 dark:hover:bg-slate-800/50">
+                                    <div class="flex items-center gap-3 min-w-0">
+                                        <div class="size-7 rounded-full bg-indigo-50 dark:bg-indigo-900/30 text-indigo-600 dark:text-indigo-400 flex items-center justify-center text-xs font-bold shrink-0">
+                                            {{ substr($studentUser->name, 0, 1) }}
+                                        </div>
+                                        <div class="min-w-0">
+                                            <p class="text-sm font-semibold text-slate-900 dark:text-white truncate">{{ $studentUser->name }}</p>
+                                            <p class="text-[11px] text-slate-400 font-mono">
+                                                NIS: {{ $studentProfile->nis ?? '-' }} • NISN: {{ $studentProfile->nisn ?? '-' }}
+                                            </p>
+                                        </div>
+                                    </div>
+                                    <x-ui.badge :label="ucfirst($studentProfile->status ?? 'aktif')" class="bg-slate-100 text-slate-600 dark:bg-slate-800 dark:text-slate-300 text-[10px]" />
+                                </div>
+                            @endforeach
+                        </div>
+                    @else
+                        <div class="p-6 rounded-xl border border-dashed border-slate-200 dark:border-slate-800 text-center text-xs text-slate-400 italic">
+                            {{ __('Belum ada siswa yang ditempatkan di kelas ini.') }}
+                        </div>
+                    @endif
+                </div>
+
+                <div class="flex justify-end pt-2 border-t border-slate-100 dark:border-slate-800">
+                    <x-ui.button :label="__('Tutup')" ghost @click="show = false" />
+                </div>
+            </div>
+        @endif
     </x-ui.modal>
 </div>

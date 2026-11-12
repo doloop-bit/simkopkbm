@@ -130,3 +130,63 @@ it('can copy classrooms from classrooms management modal without duplicates', fu
     expect(Classroom::where('academic_year_id', $targetYear->id)->count())->toBe(1);
 });
 
+it('can view classroom detail modal with students and teachers', function () {
+    $student = User::factory()->siswa()->create(['name' => 'Siswa Teladan']);
+    $student->studentProfile->update(['classroom_id' => $this->sourceClassroom->id]);
+
+    Livewire::test('admin.academic.classrooms')
+        ->call('viewDetail', $this->sourceClassroom->id)
+        ->assertSet('detailModal', true)
+        ->assertSee('Kelas 1 - Paket A')
+        ->assertSee($this->teacher->name)
+        ->assertSee($this->subject->name)
+        ->assertSee('Siswa Teladan');
+});
+
+it('only shows classrooms from active academic year in students index filter', function () {
+    $oldYear = AcademicYear::create([
+        'name' => '2024/2025',
+        'start_date' => '2024-07-01',
+        'end_date' => '2025-06-30',
+        'is_active' => false,
+        'status' => 'closed',
+    ]);
+
+    $oldClassroom = Classroom::create([
+        'academic_year_id' => $oldYear->id,
+        'level_id' => $this->level->id,
+        'name' => 'Kelas Lama 2024',
+        'class_level' => 1,
+    ]);
+
+    $component = Livewire::test('admin.data-master.students.index');
+    $filterClassrooms = $component->viewData('filter_classrooms');
+
+    expect($filterClassrooms->pluck('id'))->toContain($this->sourceClassroom->id)
+        ->and($filterClassrooms->pluck('id'))->not->toContain($oldClassroom->id);
+});
+
+it('orders classrooms by class_level numerically so Kelas 2 comes before Kelas 10', function () {
+    $class10 = Classroom::create([
+        'academic_year_id' => $this->sourceYear->id,
+        'level_id' => $this->level->id,
+        'name' => 'Kelas 10 - Paket C',
+        'class_level' => 10,
+    ]);
+
+    $class2 = Classroom::create([
+        'academic_year_id' => $this->sourceYear->id,
+        'level_id' => $this->level->id,
+        'name' => 'Kelas 2 - Paket A',
+        'class_level' => 2,
+    ]);
+
+    $component = Livewire::test('admin.academic.classrooms');
+    $ids = $component->viewData('classrooms')->pluck('id')->values()->all();
+
+    expect($ids)->toBe([
+        $this->sourceClassroom->id, // class_level 1
+        $class2->id,                // class_level 2
+        $class10->id,               // class_level 10
+    ]);
+});

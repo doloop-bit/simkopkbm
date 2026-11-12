@@ -2,6 +2,7 @@
 
 declare(strict_types=1);
 
+use App\Models\AcademicYear;
 use App\Models\Classroom;
 use App\Models\StudentProfile;
 use App\Models\User;
@@ -348,6 +349,8 @@ new #[Layout('components.layouts.app')] class extends Component {
 
     public function with(): array
     {
+        $activeYearId = AcademicYear::where('is_active', true)->value('id');
+
         return [
             'students' => User::where('role', 'siswa')
                 ->with([
@@ -369,9 +372,23 @@ new #[Layout('components.layouts.app')] class extends Component {
                 ->when($this->filter_level_id, fn($q) => $q->whereHas('latestProfile', fn($pq) => $pq->whereHasMorph('profileable', [StudentProfile::class], fn($sq) => $sq->whereHas('classroom', fn($cq) => $cq->where('level_id', $this->filter_level_id)))))
                 ->orderBy($this->sortField === 'name' ? 'name' : ($this->sortField === 'email' ? 'email' : 'created_at'), $this->sortDirection)
                 ->paginate(15),
-            'classrooms' => Classroom::with(['academicYear', 'level'])->get(),
+            'classrooms' => Classroom::with(['academicYear', 'level'])
+                ->when($activeYearId, fn($q) => $q->where(function ($sub) use ($activeYearId) {
+                    $sub->where('academic_year_id', $activeYearId);
+                    if ($this->classroom_id) {
+                        $sub->orWhere('id', $this->classroom_id);
+                    }
+                }))
+                ->orderBy('class_level')
+                ->orderBy('level_id')
+                ->orderBy('name')
+                ->get(),
             'filter_classrooms' => Classroom::with(['academicYear', 'level'])
+                ->when($activeYearId, fn($q) => $q->where('academic_year_id', $activeYearId))
                 ->when($this->filter_level_id, fn($q) => $q->where('level_id', $this->filter_level_id))
+                ->orderBy('class_level')
+                ->orderBy('level_id')
+                ->orderBy('name')
                 ->get(),
             'levels' => \App\Models\Level::all(),
         ];

@@ -93,7 +93,11 @@ new #[Layout('components.layouts.app')] class extends Component {
                 ->when($this->classroom_id, fn($q) => $q->where('classroom_id', $this->classroom_id))
                 ->get(),
             'years' => AcademicYear::all(),
-            'classrooms' => Classroom::when($this->academic_year_id, fn($q) => $q->where('academic_year_id', $this->academic_year_id))->get(),
+            'classrooms' => Classroom::when($this->academic_year_id, fn($q) => $q->where('academic_year_id', $this->academic_year_id))
+                ->orderBy('class_level')
+                ->orderBy('level_id')
+                ->orderBy('name')
+                ->get(),
             'subjects' => Subject::all(),
             'teachers' => User::where('role', 'guru')->get(),
         ];
@@ -192,7 +196,7 @@ new #[Layout('components.layouts.app')] class extends Component {
         <form wire:submit="save" class="space-y-6">
             <div class="grid grid-cols-2 gap-4">
                 <x-ui.select wire:model="academic_year_id" :label="__('Tahun Ajaran')" :options="$years" required />
-                <x-ui.select wire:model.live="classroom_id" :label="__('Kelas')" :options="App\Models\Classroom::where('academic_year_id', $academic_year_id)->get()" :placeholder="__('Pilih Kelas')" required />
+                <x-ui.select wire:model.live="classroom_id" :label="__('Kelas')" :options="App\Models\Classroom::where('academic_year_id', $academic_year_id)->orderBy('class_level')->orderBy('level_id')->orderBy('name')->get()" :placeholder="__('Pilih Kelas')" required />
             </div>
 
             <x-ui.select wire:model="teacher_id" :label="__('Guru')" :options="$teachers" :placeholder="__('Pilih Guru')" required />

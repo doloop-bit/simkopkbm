@@ -26,6 +26,11 @@ class TeacherAssignment extends Model
         return $this->belongsTo(Subject::class);
     }
 
+    public function diniyahSubject()
+    {
+        return $this->belongsTo(DiniyahSubject::class, 'diniyah_subject_id');
+    }
+
     public function academicYear()
     {
         return $this->belongsTo(AcademicYear::class);
