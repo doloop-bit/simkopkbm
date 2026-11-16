@@ -329,7 +329,6 @@ new #[Layout('components.layouts.app')] class extends Component {
 
             @scope('cell_actions', $classroom)
                 <div class="flex justify-end gap-1">
-                    <x-ui.button icon="o-eye" wire:click="viewDetail({{ $classroom->id }})" ghost wire:loading.attr="disabled" />
                     <x-ui.button icon="o-pencil-square" wire:click="edit({{ $classroom->id }})" ghost wire:loading.attr="disabled" />
                     <x-ui.button 
                         icon="o-trash" 
